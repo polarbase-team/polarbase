@@ -1,0 +1,7 @@
+# Ignore build artifacts
+build
+coverage
+dist
+
+# Ignore dependency directory
+node_modules

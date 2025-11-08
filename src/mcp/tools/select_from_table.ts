@@ -1,0 +1,189 @@
+import { FastMCP, UserError } from 'fastmcp';
+import { z } from 'zod';
+import db from '../../database/db.ts';
+
+export default function register(server: FastMCP) {
+  server.addTool({
+    name: 'selectFromTable',
+    description: `
+    Select data from a database table using Knex.js. Supports grouping, ordering, filtering, and pagination.
+    Set 'preview' to true to return the SQL query without executing.
+    Set 'confirm' to true to execute when 'preview' is false; otherwise, an error is thrown.
+    Steps for AI:
+    - Fetch 'db://tables' to validate the table name.
+    - Fetch 'db://table/{tableName}/columns' to validate column names.
+  `,
+    parameters: z.object({
+      select: z
+        .string()
+        .describe(
+          "Columns to select, e.g., 'column1, column2' or '*'. Check 'db://table/{tableName}/columns' for valid column names."
+        ),
+      from: z
+        .string()
+        .describe(
+          "Name of the table to query. Must be a valid table name from 'db://tables'. DO NOT use resource URIs like 'db://tables'."
+        ),
+      where: z
+        .record(z.any())
+        .optional()
+        .describe(
+          "Key-value pairs for WHERE conditions, e.g., { age: 25 }. Keys should match column names from 'db://table/{tableName}/columns'."
+        ),
+      group: z
+        .string()
+        .optional()
+        .describe(
+          "Columns for GROUP BY, e.g., 'column1, column2'. Check 'db://table/{tableName}/columns' for valid column names."
+        ),
+      order: z
+        .string()
+        .optional()
+        .describe(
+          "Columns for ORDER BY, e.g., 'column1 ASC, column2 DESC'. Check 'db://table/{tableName}/columns' for valid column names."
+        ),
+      limit: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe('Maximum number of rows to return'),
+      offset: z
+        .number()
+        .int()
+        .nonnegative()
+        .optional()
+        .describe('Number of rows to skip'),
+      preview: z
+        .boolean()
+        .default(false)
+        .describe(
+          "If true, return the SQL query without executing. If false, execute only if 'confirm' is true."
+        ),
+      confirm: z
+        .boolean()
+        .optional()
+        .describe(
+          "Required when 'preview' is false. Set to true to execute the query; otherwise, an error is thrown."
+        ),
+    }),
+    annotations: {
+      title: 'Select Data from Table',
+      readOnlyHint: true,
+      openWorldHint: false,
+    },
+    async execute(args, { log }) {
+      try {
+        const {
+          select,
+          from,
+          where,
+          group,
+          order,
+          limit,
+          offset,
+          preview,
+          confirm,
+        } = args;
+
+        // Validate that 'from' is not a resource URI
+        if (from.startsWith('db://')) {
+          throw new UserError(
+            "Invalid table name: 'from' parameter cannot be a resource URI like 'db://tables'. Fetch valid table names from 'db://tables'."
+          );
+        }
+
+        // Validate table name against db://tables
+        const tablesResource = await server.embedded('db://tables');
+        const tables = JSON.parse(tablesResource.text || '[]') as string[];
+        if (!tables.includes(from)) {
+          throw new UserError(
+            `Table '${from}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(tables)}`
+          );
+        }
+
+        // Build Knex query
+        const columns =
+          select === '*' ? '*' : select.split(',').map((col) => col.trim());
+        let query = db.select(columns).from(from);
+
+        // Apply WHERE clause
+        if (where) {
+          query = query.where(where);
+        }
+
+        // Apply GROUP BY clause
+        if (group) {
+          const groupColumns = group.split(',').map((col) => col.trim());
+          query = query.groupBy(groupColumns);
+        }
+
+        // Apply ORDER BY clause
+        if (order) {
+          const orderClauses = order.split(',').map((clause) => {
+            const [column, direction = 'ASC'] = clause.trim().split(/\s+/);
+            return { column, order: direction.toUpperCase() };
+          });
+          // @ts-ignore
+          query = query.orderBy(orderClauses);
+        }
+
+        // Apply LIMIT and OFFSET
+        if (limit) {
+          query = query.limit(limit);
+        }
+        if (offset) {
+          query = query.offset(offset);
+        }
+
+        // Preview mode
+        if (preview) {
+          const sql = query.toSQL().sql;
+          log.info('Returning SQL preview', { sql });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({ status: 'preview', sql }, null, 2),
+              },
+            ],
+          };
+        }
+
+        // Check confirmation
+        if (!confirm) {
+          throw new UserError(
+            "Confirmation required: set 'confirm' to true to execute the query."
+          );
+        }
+
+        // Execute query
+        const results = await query;
+
+        // Log query completion
+        log.info('Query completed', { rowCount: results.length });
+
+        // Return results
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'success',
+                  data: results,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        const err = error as Error;
+        log.error('Query error', { error: err.message });
+        throw new UserError(err.message || 'Failed to execute query');
+      }
+    },
+  });
+}

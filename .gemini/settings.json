@@ -1,0 +1,17 @@
+{
+  "tools": {
+    "core": [],
+    "exclude": ["ShellTool(rm -rf)"]
+  },
+  "mcpServers": {
+    "db-gazer-server": {
+      "httpUrl": "http://localhost:8080/mcp"
+    }
+  },
+  "model": {
+    "name": "gemini-2.5-flash"
+  },
+  "mcp": {
+    "discovery": true
+  }
+}
