@@ -6,48 +6,48 @@ export default function register(server: FastMCP) {
   server.addTool({
     name: 'upsertIntoTable',
     description: `
-    Inserts or updates records in a database table based on a conflict condition (e.g., primary key).
-    Set 'preview' to true to return the SQL query without executing.
-    Set 'confirm' to true to execute when 'preview' is false; otherwise, an error is thrown.
-    Steps for AI:
-    - Fetch 'db://tables' to validate the table name.
-    - Fetch 'db://table/{tableName}/columns' to validate column names in the data and update fields.
-    - Specify the conflict target (e.g., primary key column) and update fields.
-  `,
+      Inserts or updates records in a database table based on a conflict condition (e.g., primary key).
+      Steps for AI:
+      - Call 'findTables' to validate the table name for the 'table' parameter.
+      - Call 'findColumns' with the table name to validate column names in 'data', 'conflictTarget', and 'updateColumns'.
+      - Specify the conflict target (e.g., primary key column) and update columns.
+      - Set 'preview' to true to return the SQL query without executing.
+      - Set 'confirm' to true to execute when 'preview' is false.
+    `,
     parameters: z.object({
       table: z
         .string()
         .describe(
-          "Name of the table to upsert into. Must be a valid table name from 'db://tables'. DO NOT use resource URIs like 'db://tables'."
+          "Name of the table to upsert into. Call 'findTables' to get valid table names."
         ),
       data: z
         .array(z.record(z.any()))
         .min(1, 'At least one record is required')
         .describe(
-          'Array of records to upsert, each as a key-value object with column names and values.'
+          "Array of records to upsert, each as a key-value object. Keys must be valid column names; call 'findColumns' to validate."
         ),
       conflictTarget: z
         .string()
         .describe(
-          "Column name(s) to check for conflicts (e.g., 'id' for primary key). Must be a valid column from 'db://table/{tableName}/columns'."
+          "Column name(s) to check for conflicts (e.g., 'id'). Must be a valid column; call 'findColumns' to validate."
         ),
       updateColumns: z
         .array(z.string())
         .min(1, 'At least one column to update is required')
         .describe(
-          "Columns to update on conflict. Must be valid columns from 'db://table/{tableName}/columns'."
+          "Columns to update on conflict. Must be valid columns; call 'findColumns' to validate."
         ),
       preview: z
         .boolean()
         .default(false)
         .describe(
-          "If true, return the SQL query without executing. If false, execute only if 'confirm' is true."
+          'If true, returns the SQL query without executing. If false, executes the query.'
         ),
       confirm: z
         .boolean()
         .optional()
         .describe(
-          "Required when 'preview' is false. Set to true to execute the query; otherwise, an error is thrown."
+          "Required when 'preview' is false. Set to true to execute the query."
         ),
     }),
     annotations: {

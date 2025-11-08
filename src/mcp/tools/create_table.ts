@@ -7,16 +7,12 @@ export default function register(server: FastMCP) {
   server.addTool({
     name: 'createTable',
     description: `
-    Creates a new database table based on a user prompt and a JSON structure.
-    The AI must use 'suggestTableStructure' to generate the structure.
-    Set 'preview' to true to return the SQL query without executing.
-    Set 'confirm' to true to execute when 'preview' is false; otherwise, an error is thrown.
-    Steps for AI:
-    1. Fetch 'db://tables' to ensure the table name is unique.
-    2. Call 'suggestTableStructure' to get the JSON structure.
-    3. Pass the prompt and structure to this tool.
-    4. After creation, verify the table in 'db://tables' and its columns in 'db://table/{tableName}/columns'.
-  `,
+      Creates a new database table based on a user prompt and a JSON structure.
+      Steps for AI:
+      - Call 'findTables' to ensure the table name is unique.
+      - Use 'suggestTableStructure' to generate the JSON structure from the prompt.
+      - Pass the prompt and structure to this tool.
+    `,
     parameters: z.object({
       prompt: z
         .string()
@@ -30,6 +26,9 @@ export default function register(server: FastMCP) {
             .regex(
               /^[a-zA-Z_][a-zA-Z0-9_]*$/,
               'Table name must be alphanumeric starting with a letter or underscore'
+            )
+            .describe(
+              "Name of the table to create. Must be unique; call 'findTables' to validate against existing tables."
             ),
           columns: z
             .array(
@@ -39,16 +38,19 @@ export default function register(server: FastMCP) {
                   .regex(
                     /^[a-zA-Z_][a-zA-Z0-9_]*$/,
                     'Column name must be alphanumeric starting with a letter or underscore'
-                  ),
-                type: z.enum([
-                  'integer',
-                  'numeric',
-                  'varchar',
-                  'text',
-                  'date',
-                  'timestamp',
-                  'boolean',
-                ]),
+                  )
+                  .describe('Column name, must be unique within the table.'),
+                type: z
+                  .enum([
+                    'integer',
+                    'numeric',
+                    'varchar',
+                    'text',
+                    'date',
+                    'timestamp',
+                    'boolean',
+                  ])
+                  .describe('Column data type.'),
                 constraints: z
                   .array(
                     z.enum([
@@ -57,25 +59,29 @@ export default function register(server: FastMCP) {
                       'generated always as identity',
                     ])
                   )
-                  .optional(),
+                  .optional()
+                  .describe(
+                    "Optional constraints like 'primary key', 'not null', or 'generated always as identity'."
+                  ),
               })
             )
-            .min(1, 'At least one column is required'),
+            .min(1, 'At least one column is required')
+            .describe(
+              'Array of columns with names, types, and optional constraints.'
+            ),
         })
-        .describe(
-          'The inferred table structure in JSON format, including table name and columns with their types and optional constraints.'
-        ),
+        .describe('The inferred table structure in JSON format.'),
       preview: z
         .boolean()
         .default(false)
         .describe(
-          "If true, return the SQL query without executing. If false, execute only if 'confirm' is true."
+          'If true, returns the SQL query without executing. If false, executes the query.'
         ),
       confirm: z
         .boolean()
         .optional()
         .describe(
-          "Required when 'preview' is false. Set to true to execute the query; otherwise, an error is thrown."
+          "Required when 'preview' is false. Set to true to execute the query."
         ),
     }),
     annotations: {

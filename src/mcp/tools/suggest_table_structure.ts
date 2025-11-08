@@ -4,19 +4,20 @@ export default function register(server: FastMCP) {
   server.addPrompt({
     name: 'suggestTableStructure',
     description: `
-      Suggest a JSON table structure based on a user prompt describing the table's purpose.
+      Suggests a JSON table structure based on a user prompt describing the table's purpose.
       Steps for AI:
-      1. Fetch 'db://tables' to ensure the suggested table name is unique.
-      2. Derive a table name from the prompt, converting it to a valid SQL identifier (alphanumeric, starting with a letter or underscore).
-      3. Infer columns based on the prompt's intent, choosing appropriate types (integer, numeric, varchar, text, date, timestamp, boolean) and constraints (primary key, not null, generated always as identity).
-      4. Include at least one column, typically an 'id' with 'primary key' and 'generated always as identity' constraints, unless inappropriate.
-      5. Ensure column names are unique and follow SQL naming conventions.
-      6. Return a JSON object with 'tableName' and 'columns' fields.
+      - Call 'findTables' to ensure the suggested table name is unique.
+      - Derive a table name from the prompt, converting it to a valid SQL identifier (alphanumeric, starting with a letter or underscore).
+      - Infer columns based on the prompt's intent, using types: integer, numeric, varchar, text, date, timestamp, boolean.
+      - Include an 'id' column with 'primary key' and 'generated always as identity' unless inappropriate.
+      - Ensure column names are unique and follow SQL naming conventions.
+      - Return a JSON object with 'tableName' and 'columns' fields.
     `,
     arguments: [
       {
         name: 'prompt',
-        description: "Description of the table's purpose",
+        description:
+          "Description of the table's purpose, used to infer the table structure.",
         required: true,
       },
     ],

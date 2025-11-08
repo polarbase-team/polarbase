@@ -2,6 +2,8 @@ import { FastMCP } from 'fastmcp';
 import registerTablesResource from './resources/tables.ts';
 import registerColumnsResource from './resources/columns.ts';
 import registerSuggestTableStructureTool from './tools/suggest_table_structure.ts';
+import registerFindTablesTool from './tools/find_tables.ts';
+import registerFindColumnsTool from './tools/find_coumns.ts';
 import registerCreateTableTool from './tools/create_table.ts';
 import registerSelectFromTableTool from './tools/select_from_table.ts';
 import registerInsertIntoTableTool from './tools/insert_into_table.ts';
@@ -13,22 +15,18 @@ export const mcpServer = new FastMCP({
   name: 'Database Server',
   version: '1.0.0',
   instructions: `
-    This server manages a database through resources, tools, and prompts.
+    I am an AI assistant for managing a database through tools and prompts.
     To understand the database structure:
-    - Use 'db://tables' to get a JSON array of existing table names.
-    - Use 'db://table/{tableName}/columns' to get columns and their data types for a specific table.
+    - Use the 'findTables' tool to get a JSON array of existing table names.
+    - Use the 'findColumns' tool with a valid table name from 'findTables' to get columns and their data types.
     To create a table:
-    - Use 'suggestTableStructure' to analyze a user prompt and generate a JSON table structure.
+    - Call 'findTables' to ensure the table name is unique.
+    - Use 'suggestTableStructure' to generate a JSON structure based on the user prompt.
     - Use 'createTable' with the prompt and structure.
-    - Steps for AI:
-      1. Fetch 'db://tables' to ensure the table name is unique.
-      2. Call 'suggestTableStructure' to infer table name and columns.
-      3. Pass the structure to 'createTable'.
     To manipulate data:
-    - Use 'insertIntoTable', 'upsertIntoTable', 'updateFromTable', or 'deleteFromTable'.
-    - For all tools, set 'preview' to true to preview the SQL query without executing.
-    - Set 'confirm' to true to execute when 'preview' is false; otherwise, an error is thrown.
-    - Validate table names with 'db://tables' and column names with 'db://table/{tableName}/columns'.
+    - Call 'findTables' to validate table names for 'table' or 'from' parameters.
+    - Call 'findColumns' to validate column names for 'select', 'data', 'where', 'conflictTarget', or 'updateColumns'.
+    - Use 'selectFromTable', 'insertIntoTable', 'upsertIntoTable', 'updateTable', or 'deleteFromTable'.
   `,
 });
 
@@ -37,8 +35,10 @@ registerTablesResource(mcpServer);
 registerColumnsResource(mcpServer);
 
 // Register tools
-registerSuggestTableStructureTool(mcpServer);
+registerFindTablesTool(mcpServer);
+registerFindColumnsTool(mcpServer);
 registerCreateTableTool(mcpServer);
+registerSuggestTableStructureTool(mcpServer);
 registerSelectFromTableTool(mcpServer);
 registerInsertIntoTableTool(mcpServer);
 registerUpsertIntoTableTool(mcpServer);

@@ -6,65 +6,65 @@ export default function register(server: FastMCP) {
   server.addTool({
     name: 'selectFromTable',
     description: `
-    Select data from a database table using Knex.js. Supports grouping, ordering, filtering, and pagination.
-    Set 'preview' to true to return the SQL query without executing.
-    Set 'confirm' to true to execute when 'preview' is false; otherwise, an error is thrown.
-    Steps for AI:
-    - Fetch 'db://tables' to validate the table name.
-    - Fetch 'db://table/{tableName}/columns' to validate column names.
-  `,
+      Selects data from a database table using Knex.js. Supports grouping, ordering, filtering, and pagination.
+      Steps for AI:
+      - Call 'findTables' to get a list of valid table names and use one in the 'from' parameter.
+      - Call 'findColumns' with the chosen table name to validate column names for 'select', 'where', 'group', and 'order'.
+      - Set 'preview' to true to return the SQL query without executing.
+      - Set 'confirm' to true to execute when 'preview' is false.
+    `,
     parameters: z.object({
       select: z
         .string()
         .describe(
-          "Columns to select, e.g., 'column1, column2' or '*'. Check 'db://table/{tableName}/columns' for valid column names."
+          "Columns to select, e.g., 'column1, column2' or '*'. Call 'findColumns' to validate column names for the table."
         ),
       from: z
         .string()
         .describe(
-          "Name of the table to query. Must be a valid table name from 'db://tables'. DO NOT use resource URIs like 'db://tables'."
+          "Name of the table to query. Call 'findTables' to get valid table names."
         ),
       where: z
         .record(z.any())
         .optional()
         .describe(
-          "Key-value pairs for WHERE conditions, e.g., { age: 25 }. Keys should match column names from 'db://table/{tableName}/columns'."
+          "Key-value pairs for WHERE conditions, e.g., { age: 25 }. Keys must be valid column names; call 'findColumns' to validate."
         ),
       group: z
         .string()
         .optional()
         .describe(
-          "Columns for GROUP BY, e.g., 'column1, column2'. Check 'db://table/{tableName}/columns' for valid column names."
+          "Columns for GROUP BY, e.g., 'column1, column2'. Call 'findColumns' to validate column names."
         ),
       order: z
         .string()
         .optional()
         .describe(
-          "Columns for ORDER BY, e.g., 'column1 ASC, column2 DESC'. Check 'db://table/{tableName}/columns' for valid column names."
+          "Columns for ORDER BY, e.g., 'column1 ASC, column2 DESC'. Call 'findColumns' to validate column names."
         ),
       limit: z
         .number()
         .int()
         .positive()
         .optional()
-        .describe('Maximum number of rows to return'),
+        .describe('Maximum number of rows to return.'),
       offset: z
         .number()
         .int()
         .nonnegative()
         .optional()
-        .describe('Number of rows to skip'),
+        .describe('Number of rows to skip.'),
       preview: z
         .boolean()
         .default(false)
         .describe(
-          "If true, return the SQL query without executing. If false, execute only if 'confirm' is true."
+          'If true, returns the SQL query without executing. If false, executes the query.'
         ),
       confirm: z
         .boolean()
         .optional()
         .describe(
-          "Required when 'preview' is false. Set to true to execute the query; otherwise, an error is thrown."
+          "Required when 'preview' is false. Set to true to execute the query."
         ),
     }),
     annotations: {
