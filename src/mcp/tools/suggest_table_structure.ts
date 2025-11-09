@@ -4,21 +4,26 @@ export default function register(server: FastMCP) {
   server.addPrompt({
     name: 'suggestTableStructure',
     description: `
-      Suggests a JSON table structure based on a user prompt describing the table's purpose.
+      Infers a valid JSON table structure suitable for use with the 'createTable' tool, based on a description of the table's purpose.
       Steps for AI:
-      - Call 'findTables' to ensure the suggested table name is unique.
-      - Derive a table name from the prompt, converting it to a valid SQL identifier (alphanumeric, starting with a letter or underscore).
-      - Infer columns based on the prompt's intent, using types: integer, double, string, text, date, timestamp, boolean, json, enum.
-      - For 'enum', provide a 'values' array.
-      - Include an 'id' column with 'primary key' and 'generated always as identity' unless inappropriate.
-      - Ensure column names are unique and follow SQL naming conventions.
-      - Return a JSON object with 'tableName' and 'columns' fields.
+      - Call 'findTables' to fetch the list of existing tables and ensure uniqueness of the suggested table name.
+      - Derive a table name from the prompt. The table name must be alphanumeric, start with a letter or underscore, and not duplicate any existing table.
+      - Infer an array of columns, each as an object with:
+          - 'name': unique, valid SQL identifier for the column.
+          - 'type': one of "integer", "double", "string", "text", "date", "timestamp", "boolean", "json", "enum", or "increment".
+          - 'constraints': (optional) array of constraints such as 'primary key', 'not null', 'unique' for each column.
+          - 'values': (required for 'enum' type) array of allowed string values.
+      - For an auto-increment primary key, set the column's type to 'increment' and include 'primary key' in constraints.
+      - Avoid duplicate column names. All column/type/constraint combinations must follow standard SQL/knex naming and structure conventions.
+      - Respond with a JSON object { tableName: string, columns: [ { name, type, constraints?, values? } ] }.
+      - Do not add example data or comments, only the structure definition.
+      - See the documentation in 'createTable' for detailed requirements.
     `,
     arguments: [
       {
         name: 'prompt',
         description:
-          "Description of the table's purpose, used to infer the table structure.",
+          "A description of the table's purpose. Use this to infer a suitable table name and columns.",
         required: true,
       },
     ],
@@ -27,15 +32,24 @@ export default function register(server: FastMCP) {
         const tablesResource = await server.embedded('db://tables');
         const tables = JSON.parse(tablesResource.text || '[]') as string[];
         return `
-          Analyze the prompt "${prompt}" to suggest a JSON table structure.
-          - Fetch 'db://tables' to check existing tables: ${JSON.stringify(tables)}.
-          - Derive a valid SQL table name from the prompt (alphanumeric, starting with a letter or underscore).
-          - Ensure the table name is unique (not in ${JSON.stringify(tables)}).
-          - Infer columns based on the prompt's intent, using types: integer, double, string, text, date, timestamp, boolean, json, and enum.
-          - For 'enum', provide a 'values' array of allowed strings.
-          - Include an 'id' column with 'primary key' and 'generated always as identity' unless the prompt suggests otherwise.
-          - Ensure column names are unique and valid SQL identifiers.
-          - Return a JSON object with 'tableName' and 'columns' fields, where each column has 'name', 'type', and optional 'constraints' array, and (for 'enum') optional 'values'.
+          You are to draft the JSON structure for a SQL table based on this prompt: "${prompt}".
+          1. Fetch 'db://tables' for the list of existing tables: ${JSON.stringify(tables)}.
+          2. Generate a table name that is not present in ${JSON.stringify(tables)}, uses only alphanumeric characters and underscores, and starts with a letter or underscore.
+          3. Infer columns as:
+             - Each column must have a unique, valid SQL identifier as its name.
+             - Each must specify a supported type: "integer", "double", "string", "text", "date", "timestamp", "boolean", "json", "enum", or "increment".
+             - Include a 'constraints' array per column as needed, e.g. [ "primary key", "not null", "unique" ].
+             - For 'enum', add a required 'values' array of allowed strings.
+             - If an auto-increment primary key is needed, add a single column of type 'increment', constraints including 'primary key'.
+          4. All names and types must match the requirements for the 'createTable' tool.
+          5. Output only the JSON object in the following schema, no explanation or code comments:
+          {
+            "tableName": "<string>",
+            "columns": [
+              { "name": "<string>", "type": "<string>", "constraints": ["primary key", ...], "values": ["value1", ...] }
+              // Additional column objects...
+            ]
+          }
         `;
       } catch (error) {
         const err = error as any;

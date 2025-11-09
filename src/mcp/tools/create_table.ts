@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
-import type { Knex } from 'knex';
 import { z } from 'zod';
+import type { Knex } from 'knex';
 import db from '../../database/db.ts';
 
 export default function register(server: FastMCP) {
@@ -12,8 +12,11 @@ export default function register(server: FastMCP) {
       - Call 'findTables' to ensure the table name is unique.
       - Use 'suggestTableStructure' to generate the JSON structure from the prompt.
       - Pass the prompt and structure to this tool.
-      Supports types: integer, double, string, text, date, timestamp, boolean, json, and enum.
-      To use 'enum', specify a 'values' array in the column definition.
+      Supported types: integer, double, string, text, date, timestamp, boolean, json, enum, increment.
+      To define an enum, set the column's type to 'enum' and provide a 'values' array listing allowed values.
+      For auto-increment columns, set the type to 'increment'. When combined with 'primary key' in constraints, this creates a standard auto-incremented primary key.
+      To add uniqueness to a column, include 'unique' in its constraints array.
+      Specify additional constraints such as 'primary key' or 'not null' using the 'constraints' array for each column.
     `,
     parameters: z.object({
       prompt: z
@@ -52,25 +55,23 @@ export default function register(server: FastMCP) {
                     'timestamp',
                     'boolean',
                     'json',
-                    'enum'
+                    'enum',
+                    'increment',
                   ])
                   .describe('Column data type.'),
                 constraints: z
-                  .array(
-                    z.enum([
-                      'primary key',
-                      'not null',
-                      'generated always as identity',
-                    ])
-                  )
+                  .array(z.enum(['primary key', 'not null', 'unique']))
                   .optional()
                   .describe(
-                    "Optional constraints like 'primary key', 'not null', or 'generated always as identity'."
+                    "Optional constraints like 'primary key', 'not null', 'unique'."
                   ),
                 // For enum type, you must specify allowed values
-                values: z.array(z.string()).optional().describe(
-                  "For columns of type 'enum', specify an array of allowed string values."
-                ),
+                values: z
+                  .array(z.string())
+                  .optional()
+                  .describe(
+                    "For columns of type 'enum', specify an array of allowed string values."
+                  ),
               })
             )
             .min(1, 'At least one column is required')
@@ -115,7 +116,11 @@ export default function register(server: FastMCP) {
         // Validate 'enum' types have values
         columns.forEach((col) => {
           if (col.type === 'enum') {
-            if (!col.values || !Array.isArray(col.values) || col.values.length === 0) {
+            if (
+              !col.values ||
+              !Array.isArray(col.values) ||
+              col.values.length === 0
+            ) {
               throw new UserError(
                 `Column '${col.name}' of type 'enum' must specify a non-empty 'values' array`
               );
@@ -123,43 +128,68 @@ export default function register(server: FastMCP) {
           }
         });
 
-        // Create the table using Knex
-        await db.schema.createTable(tableName, (table) => {
+        await db.schema.createTable(tableName, (table: Knex.TableBuilder) => {
           columns.forEach((col) => {
-            let column;
+            let column: Knex.ColumnBuilder;
 
-            if (col.type === 'enum') {
-              // knex requires the native .enu method for enum types
-              // @ts-ignore
-              column = (table.enu as any)(col.name, col.values);
-            } else if (col.type === 'json') {
-              // Most dialects now support .json, fallback to .jsonb for PostgreSQL-like support
-              if (typeof table.json === 'function') {
-                column = table.json(col.name);
-              } else if (typeof table.jsonb === 'function') {
-                column = (table as any).jsonb(col.name);
-              } else {
-                // fallback to text if DB does not support json
-                column = table.text(col.name);
-              }
-            } else {
-              // @ts-ignore
-              column = table[col.type as keyof Knex.TableBuilder](col.name);
-            }
-
-            if (col.constraints) {
-              col.constraints.forEach((constraint) => {
-                if (constraint === 'primary key') {
-                  column = column.primary();
-                } else if (constraint === 'generated always as identity') {
-                  if (typeof column.generatedAlwaysAsIdentity === 'function') {
-                    column = column.generatedAlwaysAsIdentity();
-                  }
-                } else if (constraint === 'not null') {
-                  column = column.notNullable();
+            switch (col.type) {
+              case 'enum':
+                // knex requires the native .enu method for enum types
+                // @ts-ignore
+                column = (table.enu as any)(col.name, col.values);
+                break;
+              case 'json':
+                // Most dialects now support .json, fallback to .jsonb for PostgreSQL-like support
+                if (typeof table.json === 'function') {
+                  column = table.json(col.name);
+                } else if (typeof table.jsonb === 'function') {
+                  column = (table as any).jsonb(col.name);
+                } else {
+                  // fallback to text if DB does not support json
+                  column = table.text(col.name);
                 }
-              });
+                break;
+              case 'increment':
+                column = table.increments(col.name);
+                break;
+              case 'integer':
+                column = table.integer(col.name);
+                break;
+              case 'double':
+                column = table.float(col.name); // knex uses float for doubles
+                break;
+              case 'string':
+                column = table.string(col.name);
+                break;
+              case 'text':
+                column = table.text(col.name);
+                break;
+              case 'date':
+                column = table.date(col.name);
+                break;
+              case 'timestamp':
+                column = table.timestamp(col.name);
+                break;
+              case 'boolean':
+                column = table.boolean(col.name);
+                break;
+              default:
+                throw new UserError(`Unknown column type: ${col.type}`);
             }
+
+            col.constraints?.forEach((constraint) => {
+              switch (constraint) {
+                case 'primary key':
+                  column = column.primary();
+                  break;
+                case 'not null':
+                  column = column.notNullable();
+                  break;
+                case 'unique':
+                  column = column.unique();
+                  break;
+              }
+            });
           });
         });
 
