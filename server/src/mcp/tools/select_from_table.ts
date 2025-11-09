@@ -23,7 +23,7 @@ export default function register(server: FastMCP) {
           "Name of the table to query. Call 'findTables' to get valid table names."
         ),
       where: z
-        .record(z.any())
+        .record(z.any(), z.any())
         .optional()
         .describe(
           "Key-value pairs for WHERE conditions, e.g., { age: 25 }. Keys must be valid column names; call 'findColumns' to validate."
@@ -74,7 +74,9 @@ export default function register(server: FastMCP) {
         const tables = JSON.parse(tablesResource.text || '[]') as string[];
         if (!tables.includes(from)) {
           throw new UserError(
-            `Table '${from}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(tables)}`
+            `Table '${from}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(
+              tables
+            )}`
           );
         }
 

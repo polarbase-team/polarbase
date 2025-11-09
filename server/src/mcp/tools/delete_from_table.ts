@@ -19,7 +19,7 @@ export default function register(server: FastMCP) {
           "Name of the table to delete from. Call 'findTables' to get valid table names."
         ),
       where: z
-        .record(z.any())
+        .record(z.any(), z.any())
         .refine((obj) => Object.keys(obj).length >= 1, {
           message: 'At least one WHERE condition is required',
         })
@@ -46,7 +46,9 @@ export default function register(server: FastMCP) {
         const tables = JSON.parse(tablesResource.text || '[]') as string[];
         if (!tables.includes(table)) {
           throw new UserError(
-            `Table '${table}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(tables)}`
+            `Table '${table}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(
+              tables
+            )}`
           );
         }
 
@@ -62,7 +64,9 @@ export default function register(server: FastMCP) {
         for (const key of Object.keys(where)) {
           if (!validColumns.includes(key)) {
             throw new UserError(
-              `Invalid column '${key}' in WHERE condition. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
+              `Invalid column '${key}' in WHERE condition. Valid columns for '${table}': ${JSON.stringify(
+                validColumns
+              )}`
             );
           }
         }

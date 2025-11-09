@@ -19,7 +19,7 @@ export default function register(server: FastMCP) {
           "Name of the table to upsert into. Call 'findTables' to get valid table names."
         ),
       data: z
-        .array(z.record(z.any()))
+        .array(z.record(z.any(), z.any()))
         .min(1, 'At least one record is required')
         .describe(
           "Array of records to upsert, each as a key-value object. Keys must be valid column names; call 'findColumns' to validate."
@@ -55,7 +55,9 @@ export default function register(server: FastMCP) {
         const tables = JSON.parse(tablesResource.text || '[]') as string[];
         if (!tables.includes(table)) {
           throw new UserError(
-            `Table '${table}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(tables)}`
+            `Table '${table}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(
+              tables
+            )}`
           );
         }
 
@@ -72,20 +74,26 @@ export default function register(server: FastMCP) {
           for (const key of Object.keys(record)) {
             if (!validColumns.includes(key)) {
               throw new UserError(
-                `Invalid column '${key}' in data. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
+                `Invalid column '${key}' in data. Valid columns for '${table}': ${JSON.stringify(
+                  validColumns
+                )}`
               );
             }
           }
         }
         if (!validColumns.includes(conflictTarget)) {
           throw new UserError(
-            `Invalid conflict target '${conflictTarget}'. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
+            `Invalid conflict target '${conflictTarget}'. Valid columns for '${table}': ${JSON.stringify(
+              validColumns
+            )}`
           );
         }
         for (const col of updateColumns) {
           if (!validColumns.includes(col)) {
             throw new UserError(
-              `Invalid update column '${col}'. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
+              `Invalid update column '${col}'. Valid columns for '${table}': ${JSON.stringify(
+                validColumns
+              )}`
             );
           }
         }
@@ -125,7 +133,9 @@ export default function register(server: FastMCP) {
                   status: 'success',
                   table,
                   rowCount: result.length || result,
-                  message: `Upserted ${result.length || result} record(s) into '${table}'.`,
+                  message: `Upserted ${
+                    result.length || result
+                  } record(s) into '${table}'.`,
                 },
                 null,
                 2

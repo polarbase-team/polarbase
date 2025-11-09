@@ -19,7 +19,7 @@ export default function register(server: FastMCP) {
           "Name of the table to update. Call 'findTables' to get valid table names."
         ),
       data: z
-        .record(z.any())
+        .record(z.any(), z.any())
         .refine((obj) => Object.keys(obj).length >= 1, {
           message: 'At least one column to update is required',
         })
@@ -27,7 +27,7 @@ export default function register(server: FastMCP) {
           "Key-value object with columns and values to update. Keys must be valid column names; call 'findColumns' to validate."
         ),
       where: z
-        .record(z.any())
+        .record(z.any(), z.any())
         .refine((obj) => Object.keys(obj).length >= 1, {
           message: 'At least one column to update is required',
         })
@@ -54,7 +54,9 @@ export default function register(server: FastMCP) {
         const tables = JSON.parse(tablesResource.text || '[]') as string[];
         if (!tables.includes(table)) {
           throw new UserError(
-            `Table '${table}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(tables)}`
+            `Table '${table}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(
+              tables
+            )}`
           );
         }
 
@@ -70,14 +72,18 @@ export default function register(server: FastMCP) {
         for (const key of Object.keys(data)) {
           if (!validColumns.includes(key)) {
             throw new UserError(
-              `Invalid column '${key}' in data. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
+              `Invalid column '${key}' in data. Valid columns for '${table}': ${JSON.stringify(
+                validColumns
+              )}`
             );
           }
         }
         for (const key of Object.keys(where)) {
           if (!validColumns.includes(key)) {
             throw new UserError(
-              `Invalid column '${key}' in WHERE condition. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
+              `Invalid column '${key}' in WHERE condition. Valid columns for '${table}': ${JSON.stringify(
+                validColumns
+              )}`
             );
           }
         }

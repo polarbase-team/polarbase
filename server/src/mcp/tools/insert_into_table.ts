@@ -19,7 +19,7 @@ export default function register(server: FastMCP) {
           "Name of the table to insert into. Call 'findTables' to get valid table names."
         ),
       data: z
-        .array(z.record(z.any()))
+        .array(z.record(z.any(), z.any()))
         .min(1, 'At least one record is required')
         .describe(
           "Array of records to insert, each as a key-value object. Keys must be valid column names; call 'findColumns' to validate."
@@ -44,7 +44,9 @@ export default function register(server: FastMCP) {
         const tables = JSON.parse(tablesResource.text || '[]') as string[];
         if (!tables.includes(table)) {
           throw new UserError(
-            `Table '${table}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(tables)}`
+            `Table '${table}' does not exist. Fetch valid table names from 'db://tables': ${JSON.stringify(
+              tables
+            )}`
           );
         }
 
@@ -61,7 +63,9 @@ export default function register(server: FastMCP) {
           for (const key of Object.keys(record)) {
             if (!validColumns.includes(key)) {
               throw new UserError(
-                `Invalid column '${key}' in data. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
+                `Invalid column '${key}' in data. Valid columns for '${table}': ${JSON.stringify(
+                  validColumns
+                )}`
               );
             }
           }
@@ -89,7 +93,9 @@ export default function register(server: FastMCP) {
                   status: 'success',
                   table,
                   rowCount: result.length || result,
-                  message: `Inserted ${result.length || result} record(s) into '${table}'.`,
+                  message: `Inserted ${
+                    result.length || result
+                  } record(s) into '${table}'.`,
                 },
                 null,
                 2

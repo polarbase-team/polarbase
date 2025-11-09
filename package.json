@@ -6,7 +6,7 @@
   "license": "BUSL-1.1",
   "description": "Talk to your database, chill while AI handles the SQL",
   "scripts": {
-    "start": "concurrently \"npm run start --prefix server\" \"npm run start --prefix client\"",
+    "start": "concurrently \"npm run dev --prefix server\" \"npm run start --prefix client\"",
     "build": "npm run build --prefix client"
   },
   "devDependencies": {
