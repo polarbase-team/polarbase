@@ -1,7 +1,7 @@
 {
   "model": "gemini-2.5-flash",
   "mcpServers": {
-    "db-gazer-server": {
+    "chill-db-server": {
       "httpUrl": "http://localhost:8080/mcp"
     }
   },

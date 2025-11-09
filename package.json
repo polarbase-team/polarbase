@@ -1,5 +1,5 @@
 {
-  "name": "db-gazer",
+  "name": "chill-db",
   "version": "1.0.0",
   "main": "dist/index.js",
   "type": "module",
@@ -10,7 +10,7 @@
   },
   "keywords": [],
   "author": "Qui Nguyen",
-  "license": "ISC",
+  "license": "BUSL-1.1",
   "description": "",
   "dependencies": {
     "dotenv": "^17.2.3",
