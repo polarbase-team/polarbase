@@ -1,40 +1,38 @@
 import { FastMCP, UserError } from 'fastmcp';
 import { z } from 'zod';
-import db from '../../database/db.ts';
+import db from '../../database/db';
 
 export default function register(server: FastMCP) {
   server.addTool({
-    name: 'deleteFromTable',
+    name: 'insertIntoTable',
     description: `
-      Deletes records from a database table based on a WHERE condition.
+      Inserts one or more records into a database table.
       Steps for AI:
       - Call 'findTables' to validate the table name for the 'table' parameter.
-      - Call 'findColumns' with the table name to validate column names in the 'where' condition.
-      - Ensure WHERE condition matches the table's column types and constraints.
+      - Call 'findColumns' with the table name to validate column names in the 'data' parameter.
+      - Ensure data matches the table's column types and constraints.
     `,
     parameters: z.object({
       table: z
         .string()
         .describe(
-          "Name of the table to delete from. Call 'findTables' to get valid table names."
+          "Name of the table to insert into. Call 'findTables' to get valid table names."
         ),
-      where: z
-        .record(z.any())
-        .refine((obj) => Object.keys(obj).length >= 1, {
-          message: 'At least one WHERE condition is required',
-        })
+      data: z
+        .array(z.record(z.any()))
+        .min(1, 'At least one record is required')
         .describe(
-          "Key-value pairs for WHERE conditions, e.g., { id: 1 }. Keys must be valid column names; call 'findColumns' to validate."
+          "Array of records to insert, each as a key-value object. Keys must be valid column names; call 'findColumns' to validate."
         ),
     }),
     annotations: {
-      title: 'Delete Data from Table',
+      title: 'Insert Data into Table',
       readOnlyHint: false,
       destructiveHint: true,
     },
     async execute(args, { log }) {
       try {
-        const { table, where } = args;
+        const { table, data } = args;
 
         // Validate table name
         if (table.startsWith('db://')) {
@@ -50,7 +48,7 @@ export default function register(server: FastMCP) {
           );
         }
 
-        // Validate column names in WHERE condition
+        // Validate column names
         const columnsResource = await server.embedded(
           `db://table/${table}/columns`
         );
@@ -59,22 +57,27 @@ export default function register(server: FastMCP) {
           type: string;
         }[];
         const validColumns = columns.map((col) => col.name);
-        for (const key of Object.keys(where)) {
-          if (!validColumns.includes(key)) {
-            throw new UserError(
-              `Invalid column '${key}' in WHERE condition. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
-            );
+        for (const record of data) {
+          for (const key of Object.keys(record)) {
+            if (!validColumns.includes(key)) {
+              throw new UserError(
+                `Invalid column '${key}' in data. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
+              );
+            }
           }
         }
 
         // Build Knex query
-        const query = db(table).where(where).delete();
+        const query = db(table).insert(data);
 
         // Execute query
         const result = await query;
 
-        // Log delete completion
-        log.info('Delete completed', { table, rowCount: result });
+        // Log insert completion
+        log.info('Insert completed', {
+          table,
+          rowCount: result.length || result,
+        });
 
         // Return success response
         return {
@@ -85,8 +88,8 @@ export default function register(server: FastMCP) {
                 {
                   status: 'success',
                   table,
-                  rowCount: result,
-                  message: `Deleted ${result} record(s) from '${table}'.`,
+                  rowCount: result.length || result,
+                  message: `Inserted ${result.length || result} record(s) into '${table}'.`,
                 },
                 null,
                 2
@@ -96,8 +99,8 @@ export default function register(server: FastMCP) {
         };
       } catch (error) {
         const err = error as Error;
-        log.error('Delete error', { error: err.message });
-        throw new UserError(err.message || 'Failed to delete data');
+        log.error('Insert error', { error: err.message });
+        throw new UserError(err.message || 'Failed to insert data');
       }
     },
   });

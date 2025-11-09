@@ -3,7 +3,7 @@ import express, {
   type Request,
   type Response,
 } from 'express';
-import { mcpServer } from './mcp/server.ts';
+import { mcpServer } from './mcp/server';
 
 // Start the MCP server
 mcpServer

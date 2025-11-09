@@ -1,35 +1,15 @@
 {
   "name": "chill-db",
   "version": "1.0.0",
-  "main": "dist/index.js",
-  "type": "module",
-  "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon --watch src --exec node --import ./loader-registration.js src/index.ts",
-    "build": "tsc"
-  },
   "keywords": [],
   "author": "Qui Nguyen",
   "license": "BUSL-1.1",
-  "description": "",
-  "dependencies": {
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "fastmcp": "^3.22.0",
-    "knex": "^3.1.0",
-    "mysql": "^2.18.1",
-    "pg": "^8.16.3",
-    "sqlite3": "^5.1.7",
-    "zod": "^3.25.76"
+  "description": "Talk to your database, chill while AI handles the SQL",
+  "scripts": {
+    "start": "concurrently \"npm run start --prefix server\" \"npm run start --prefix client\"",
+    "build": "npm run build --prefix client"
   },
   "devDependencies": {
-    "@types/express": "^5.0.5",
-    "@types/node": "^24.10.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
-    "nodemon": "^3.1.10",
-    "prettier": "^3.6.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.3"
+    "concurrently": "^8.0.0"
   }
 }

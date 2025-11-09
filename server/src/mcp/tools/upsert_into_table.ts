@@ -1,38 +1,49 @@
 import { FastMCP, UserError } from 'fastmcp';
 import { z } from 'zod';
-import db from '../../database/db.ts';
+import db from '../../database/db';
 
 export default function register(server: FastMCP) {
   server.addTool({
-    name: 'insertIntoTable',
+    name: 'upsertIntoTable',
     description: `
-      Inserts one or more records into a database table.
+      Inserts or updates records in a database table based on a conflict condition (e.g., primary key).
       Steps for AI:
       - Call 'findTables' to validate the table name for the 'table' parameter.
-      - Call 'findColumns' with the table name to validate column names in the 'data' parameter.
-      - Ensure data matches the table's column types and constraints.
+      - Call 'findColumns' with the table name to validate column names in 'data', 'conflictTarget', and 'updateColumns'.
+      - Specify the conflict target (e.g., primary key column) and update columns.
     `,
     parameters: z.object({
       table: z
         .string()
         .describe(
-          "Name of the table to insert into. Call 'findTables' to get valid table names."
+          "Name of the table to upsert into. Call 'findTables' to get valid table names."
         ),
       data: z
         .array(z.record(z.any()))
         .min(1, 'At least one record is required')
         .describe(
-          "Array of records to insert, each as a key-value object. Keys must be valid column names; call 'findColumns' to validate."
+          "Array of records to upsert, each as a key-value object. Keys must be valid column names; call 'findColumns' to validate."
+        ),
+      conflictTarget: z
+        .string()
+        .describe(
+          "Column name(s) to check for conflicts (e.g., 'id'). Must be a valid column; call 'findColumns' to validate."
+        ),
+      updateColumns: z
+        .array(z.string())
+        .min(1, 'At least one column to update is required')
+        .describe(
+          "Columns to update on conflict. Must be valid columns; call 'findColumns' to validate."
         ),
     }),
     annotations: {
-      title: 'Insert Data into Table',
+      title: 'Upsert Data into Table',
       readOnlyHint: false,
       destructiveHint: true,
     },
     async execute(args, { log }) {
       try {
-        const { table, data } = args;
+        const { table, data, conflictTarget, updateColumns } = args;
 
         // Validate table name
         if (table.startsWith('db://')) {
@@ -66,15 +77,40 @@ export default function register(server: FastMCP) {
             }
           }
         }
+        if (!validColumns.includes(conflictTarget)) {
+          throw new UserError(
+            `Invalid conflict target '${conflictTarget}'. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
+          );
+        }
+        for (const col of updateColumns) {
+          if (!validColumns.includes(col)) {
+            throw new UserError(
+              `Invalid update column '${col}'. Valid columns for '${table}': ${JSON.stringify(validColumns)}`
+            );
+          }
+        }
 
         // Build Knex query
-        const query = db(table).insert(data);
+        let query = db(table).insert(data);
+        if (db.client.config.client === 'pg') {
+          query = query.onConflict(conflictTarget).merge(updateColumns);
+        } else if (db.client.config.client === 'mysql') {
+          const updateClause = updateColumns
+            .map((col) => `${col} = VALUES(${col})`)
+            .join(', ');
+          // @ts-ignore
+          query = db.raw(
+            `${query.toSQL().sql} ON DUPLICATE KEY UPDATE ${updateClause}`
+          );
+        } else if (db.client.config.client === 'sqlite3') {
+          query = query.onConflict(conflictTarget).merge(updateColumns);
+        }
 
         // Execute query
         const result = await query;
 
-        // Log insert completion
-        log.info('Insert completed', {
+        // Log upsert completion
+        log.info('Upsert completed', {
           table,
           rowCount: result.length || result,
         });
@@ -89,7 +125,7 @@ export default function register(server: FastMCP) {
                   status: 'success',
                   table,
                   rowCount: result.length || result,
-                  message: `Inserted ${result.length || result} record(s) into '${table}'.`,
+                  message: `Upserted ${result.length || result} record(s) into '${table}'.`,
                 },
                 null,
                 2
@@ -99,8 +135,8 @@ export default function register(server: FastMCP) {
         };
       } catch (error) {
         const err = error as Error;
-        log.error('Insert error', { error: err.message });
-        throw new UserError(err.message || 'Failed to insert data');
+        log.error('Upsert error', { error: err.message });
+        throw new UserError(err.message || 'Failed to upsert data');
       }
     },
   });

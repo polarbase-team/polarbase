@@ -1,5 +1,5 @@
 import { FastMCP, UserError } from 'fastmcp';
-import db from '../../database/db.ts';
+import db from '../../database/db';
 
 export default function register(server: FastMCP) {
   server.addResource({

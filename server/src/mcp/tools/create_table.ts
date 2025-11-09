@@ -1,7 +1,7 @@
 import { FastMCP, UserError } from 'fastmcp';
 import { z } from 'zod';
 import type { Knex } from 'knex';
-import db from '../../database/db.ts';
+import db from '../../database/db';
 
 export default function register(server: FastMCP) {
   server.addTool({
