@@ -13,9 +13,10 @@ export default function register(server: FastMCP) {
           - 'type': one of "integer", "double", "string", "text", "date", "timestamp", "boolean", "json", "enum", or "increment".
           - 'constraints': (optional) array of constraints such as 'primary key', 'not null', 'unique' for each column.
           - 'values': (required for 'enum' type) array of allowed string values.
+          - 'references': (optional for foreign keys) object specifying { table: "<referenced_table>", column: "<referenced_column>", onDelete?: "...", onUpdate?: "..." }.
       - For an auto-increment primary key, set the column's type to 'increment' and include 'primary key' in constraints.
       - Avoid duplicate column names. All column/type/constraint combinations must follow standard SQL/knex naming and structure conventions.
-      - Respond with a JSON object { tableName: string, columns: [ { name, type, constraints?, values? } ] }.
+      - Respond with a JSON object { tableName: string, columns: [ { name, type, constraints?, values?, references? } ] }.
       - Do not add example data or comments, only the structure definition.
       - See the documentation in 'createTable' for detailed requirements.
     `,
@@ -40,13 +41,25 @@ export default function register(server: FastMCP) {
              - Each must specify a supported type: "integer", "double", "string", "text", "date", "timestamp", "boolean", "json", "enum", or "increment".
              - Include a 'constraints' array per column as needed, e.g. [ "primary key", "not null", "unique" ].
              - For 'enum', add a required 'values' array of allowed strings.
+             - If the column is a foreign key, add a 'references' object specifying { table: "<referenced_table>", column: "<referenced_column>" }, and optionally 'onDelete' or 'onUpdate' with one of: "CASCADE", "SET NULL", "RESTRICT", "NO ACTION".
              - If an auto-increment primary key is needed, add a single column of type 'increment', constraints including 'primary key'.
           4. All names and types must match the requirements for the 'createTable' tool.
           5. Output only the JSON object in the following schema, no explanation or code comments:
           {
             "tableName": "<string>",
             "columns": [
-              { "name": "<string>", "type": "<string>", "constraints": ["primary key", ...], "values": ["value1", ...] }
+              { 
+                "name": "<string>", 
+                "type": "<string>", 
+                "constraints": ["primary key", ...], 
+                "values": ["value1", ...], 
+                "references": { 
+                  "table": "<referenced_table>", 
+                  "column": "<referenced_column>", 
+                  "onDelete": "<CASCADE|SET NULL|RESTRICT|NO ACTION>", 
+                  "onUpdate": "<CASCADE|SET NULL|RESTRICT|NO ACTION>" 
+                } 
+              }
               // Additional column objects...
             ]
           }
