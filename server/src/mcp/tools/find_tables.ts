@@ -27,7 +27,7 @@ export default function register(server: FastMCP) {
           tables = result.map((row) => row.table_name);
         } else if (db.client.config.client === 'mysql') {
           const result = await db.raw('SHOW TABLES');
-          tables = result[0].map((row) => Object.values(row)[0]);
+          tables = result[0].map((row: any) => Object.values(row)[0]);
         } else if (db.client.config.client === 'sqlite3') {
           const result = await db
             .select('name')

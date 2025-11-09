@@ -37,7 +37,7 @@ export default function register(server: FastMCP) {
           tables = result.map((row) => row.table_name);
         } else if (db.client.config.client === 'mysql') {
           const result = await db.raw('SHOW TABLES');
-          tables = result[0].map((row) => Object.values(row)[0]);
+          tables = result[0].map((row: any) => Object.values(row)[0]);
         } else if (db.client.config.client === 'sqlite3') {
           const result = await db
             .select('name')
@@ -47,7 +47,9 @@ export default function register(server: FastMCP) {
         }
         if (!tables.includes(table)) {
           throw new UserError(
-            `Table '${table}' does not exist. Use 'findTables' to get valid table names: ${JSON.stringify(tables)}`
+            `Table '${table}' does not exist. Use 'findTables' to get valid table names: ${JSON.stringify(
+              tables
+            )}`
           );
         }
 
@@ -60,13 +62,13 @@ export default function register(server: FastMCP) {
             .where({ table_schema: 'public', table_name: table });
         } else if (db.client.config.client === 'mysql') {
           const result = await db.raw(`SHOW COLUMNS FROM \`${table}\``);
-          columns = result[0].map((row) => ({
+          columns = result[0].map((row: any) => ({
             column_name: row.Field,
             data_type: row.Type,
           }));
         } else if (db.client.config.client === 'sqlite3') {
           const result = await db.raw(`PRAGMA table_info(${table})`);
-          columns = result.map((row) => ({
+          columns = result.map((row: any) => ({
             column_name: row.name,
             data_type: row.type,
           }));

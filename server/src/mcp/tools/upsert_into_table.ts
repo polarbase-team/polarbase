@@ -1,4 +1,5 @@
 import { FastMCP, UserError } from 'fastmcp';
+import { Knex } from 'knex';
 import { z } from 'zod';
 import db from '../../database/db';
 
@@ -99,14 +100,14 @@ export default function register(server: FastMCP) {
         }
 
         // Build Knex query
-        let query = db(table).insert(data);
+        let query: Knex.QueryBuilder<any, any> | Knex.Raw<any> =
+          db(table).insert(data);
         if (db.client.config.client === 'pg') {
           query = query.onConflict(conflictTarget).merge(updateColumns);
         } else if (db.client.config.client === 'mysql') {
           const updateClause = updateColumns
             .map((col) => `${col} = VALUES(${col})`)
             .join(', ');
-          // @ts-ignore
           query = db.raw(
             `${query.toSQL().sql} ON DUPLICATE KEY UPDATE ${updateClause}`
           );

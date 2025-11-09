@@ -102,7 +102,6 @@ export default function register(server: FastMCP) {
             const [column, direction = 'ASC'] = clause.trim().split(/\s+/);
             return { column, order: direction.toUpperCase() };
           });
-          // @ts-ignore
           query = query.orderBy(orderClauses);
         }
 
