@@ -12,6 +12,8 @@ export default function register(server: FastMCP) {
       - Call 'findTables' to ensure the table name is unique.
       - Use 'suggestTableStructure' to generate the JSON structure from the prompt.
       - Pass the prompt and structure to this tool.
+      Supports types: integer, double, string, text, date, timestamp, boolean, json, and enum.
+      To use 'enum', specify a 'values' array in the column definition.
     `,
     parameters: z.object({
       prompt: z
@@ -49,6 +51,8 @@ export default function register(server: FastMCP) {
                     'date',
                     'timestamp',
                     'boolean',
+                    'json',
+                    'enum'
                   ])
                   .describe('Column data type.'),
                 constraints: z
@@ -63,6 +67,10 @@ export default function register(server: FastMCP) {
                   .describe(
                     "Optional constraints like 'primary key', 'not null', or 'generated always as identity'."
                   ),
+                // For enum type, you must specify allowed values
+                values: z.array(z.string()).optional().describe(
+                  "For columns of type 'enum', specify an array of allowed string values."
+                ),
               })
             )
             .min(1, 'At least one column is required')
@@ -104,17 +112,49 @@ export default function register(server: FastMCP) {
           throw new UserError('Column names must be unique');
         }
 
+        // Validate 'enum' types have values
+        columns.forEach((col) => {
+          if (col.type === 'enum') {
+            if (!col.values || !Array.isArray(col.values) || col.values.length === 0) {
+              throw new UserError(
+                `Column '${col.name}' of type 'enum' must specify a non-empty 'values' array`
+              );
+            }
+          }
+        });
+
         // Create the table using Knex
         await db.schema.createTable(tableName, (table) => {
           columns.forEach((col) => {
-            // @ts-ignore
-            let column = table[col.type as keyof Knex.TableBuilder](col.name);
+            let column;
+
+            if (col.type === 'enum') {
+              // knex requires the native .enu method for enum types
+              // @ts-ignore
+              column = (table.enu as any)(col.name, col.values);
+            } else if (col.type === 'json') {
+              // Most dialects now support .json, fallback to .jsonb for PostgreSQL-like support
+              if (typeof table.json === 'function') {
+                column = table.json(col.name);
+              } else if (typeof table.jsonb === 'function') {
+                column = (table as any).jsonb(col.name);
+              } else {
+                // fallback to text if DB does not support json
+                column = table.text(col.name);
+              }
+            } else {
+              // @ts-ignore
+              column = table[col.type as keyof Knex.TableBuilder](col.name);
+            }
+
             if (col.constraints) {
               col.constraints.forEach((constraint) => {
                 if (constraint === 'primary key') {
                   column = column.primary();
                 } else if (constraint === 'generated always as identity') {
-                  column = column.generatedAlwaysAsIdentity();
+                  if (typeof column.generatedAlwaysAsIdentity === 'function') {
+                    column = column.generatedAlwaysAsIdentity();
+                  }
                 } else if (constraint === 'not null') {
                   column = column.notNullable();
                 }
@@ -139,6 +179,7 @@ export default function register(server: FastMCP) {
                     name: col.name,
                     type: col.type,
                     constraints: col.constraints || [],
+                    ...(col.type === 'enum' ? { values: col.values } : {}),
                   })),
                   message: `Table '${tableName}' created successfully. Check 'db://table/${tableName}/columns' for details.`,
                 },
