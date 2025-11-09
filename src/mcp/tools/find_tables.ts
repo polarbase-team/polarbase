@@ -6,10 +6,10 @@ export default function register(server: FastMCP) {
   server.addTool({
     name: 'findTables',
     description: `
-    Retrieves a list of all tables in the database.
-    Use this tool to get valid table names before calling other tools like 'selectFromTable', 'insertIntoTable', etc.
-    Returns a JSON array of table names.
-  `,
+      Retrieves a list of all tables in the database.
+      Use this tool to get valid table names before calling other tools like 'selectFromTable', 'insertIntoTable', etc.
+      Returns a JSON array of table names.
+    `,
     parameters: z.object({}),
     annotations: {
       title: 'Find Database Tables',

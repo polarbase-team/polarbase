@@ -10,8 +10,6 @@ export default function register(server: FastMCP) {
       Steps for AI:
       - Call 'findTables' to get a list of valid table names and use one in the 'from' parameter.
       - Call 'findColumns' with the chosen table name to validate column names for 'select', 'where', 'group', and 'order'.
-      - Set 'preview' to true to return the SQL query without executing.
-      - Set 'confirm' to true to execute when 'preview' is false.
     `,
     parameters: z.object({
       select: z
@@ -54,18 +52,6 @@ export default function register(server: FastMCP) {
         .nonnegative()
         .optional()
         .describe('Number of rows to skip.'),
-      preview: z
-        .boolean()
-        .default(false)
-        .describe(
-          'If true, returns the SQL query without executing. If false, executes the query.'
-        ),
-      confirm: z
-        .boolean()
-        .optional()
-        .describe(
-          "Required when 'preview' is false. Set to true to execute the query."
-        ),
     }),
     annotations: {
       title: 'Select Data from Table',
@@ -74,17 +60,7 @@ export default function register(server: FastMCP) {
     },
     async execute(args, { log }) {
       try {
-        const {
-          select,
-          from,
-          where,
-          group,
-          order,
-          limit,
-          offset,
-          preview,
-          confirm,
-        } = args;
+        const { select, from, where, group, order, limit, offset } = args;
 
         // Validate that 'from' is not a resource URI
         if (from.startsWith('db://')) {
@@ -134,27 +110,6 @@ export default function register(server: FastMCP) {
         }
         if (offset) {
           query = query.offset(offset);
-        }
-
-        // Preview mode
-        if (preview) {
-          const sql = query.toSQL().sql;
-          log.info('Returning SQL preview', { sql });
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify({ status: 'preview', sql }, null, 2),
-              },
-            ],
-          };
-        }
-
-        // Check confirmation
-        if (!confirm) {
-          throw new UserError(
-            "Confirmation required: set 'confirm' to true to execute the query."
-          );
         }
 
         // Execute query

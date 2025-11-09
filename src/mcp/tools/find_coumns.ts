@@ -6,11 +6,11 @@ export default function register(server: FastMCP) {
   server.addTool({
     name: 'findColumns',
     description: `
-    Retrieves the list of columns and their data types for a specific table.
-    Use this tool to validate column names before calling tools like 'selectFromTable', 'insertIntoTable', etc.
-    Returns a JSON array of objects with column names and types.
-    First, call 'findTables' to ensure the table name is valid.
-  `,
+      Retrieves the list of columns and their data types for a specific table.
+      Use this tool to validate column names before calling tools like 'selectFromTable', 'insertIntoTable', etc.
+      Returns a JSON array of objects with column names and types.
+      First, call 'findTables' to ensure the table name is valid.
+    `,
     parameters: z.object({
       table: z
         .string()

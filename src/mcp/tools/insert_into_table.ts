@@ -11,8 +11,6 @@ export default function register(server: FastMCP) {
       - Call 'findTables' to validate the table name for the 'table' parameter.
       - Call 'findColumns' with the table name to validate column names in the 'data' parameter.
       - Ensure data matches the table's column types and constraints.
-      - Set 'preview' to true to return the SQL query without executing.
-      - Set 'confirm' to true to execute when 'preview' is false.
     `,
     parameters: z.object({
       table: z
@@ -26,18 +24,6 @@ export default function register(server: FastMCP) {
         .describe(
           "Array of records to insert, each as a key-value object. Keys must be valid column names; call 'findColumns' to validate."
         ),
-      preview: z
-        .boolean()
-        .default(false)
-        .describe(
-          'If true, returns the SQL query without executing. If false, executes the query.'
-        ),
-      confirm: z
-        .boolean()
-        .optional()
-        .describe(
-          "Required when 'preview' is false. Set to true to execute the query."
-        ),
     }),
     annotations: {
       title: 'Insert Data into Table',
@@ -46,7 +32,7 @@ export default function register(server: FastMCP) {
     },
     async execute(args, { log }) {
       try {
-        const { table, data, preview, confirm } = args;
+        const { table, data } = args;
 
         // Validate table name
         if (table.startsWith('db://')) {
@@ -82,28 +68,7 @@ export default function register(server: FastMCP) {
         }
 
         // Build Knex query
-        let query = db(table).insert(data);
-
-        // Preview mode
-        if (preview) {
-          const sql = query.toSQL().sql;
-          log.info('Returning SQL preview', { sql });
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify({ status: 'preview', sql }, null, 2),
-              },
-            ],
-          };
-        }
-
-        // Check confirmation
-        if (!confirm) {
-          throw new UserError(
-            "Confirmation required: set 'confirm' to true to execute the query."
-          );
-        }
+        const query = db(table).insert(data);
 
         // Execute query
         const result = await query;

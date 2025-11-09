@@ -43,8 +43,8 @@ export default function register(server: FastMCP) {
                 type: z
                   .enum([
                     'integer',
-                    'numeric',
-                    'varchar',
+                    'double',
+                    'string',
                     'text',
                     'date',
                     'timestamp',
@@ -71,18 +71,6 @@ export default function register(server: FastMCP) {
             ),
         })
         .describe('The inferred table structure in JSON format.'),
-      preview: z
-        .boolean()
-        .default(false)
-        .describe(
-          'If true, returns the SQL query without executing. If false, executes the query.'
-        ),
-      confirm: z
-        .boolean()
-        .optional()
-        .describe(
-          "Required when 'preview' is false. Set to true to execute the query."
-        ),
     }),
     annotations: {
       title: 'Create Database Table',
@@ -91,7 +79,7 @@ export default function register(server: FastMCP) {
     },
     async execute(args, { log }) {
       try {
-        const { prompt, structure, preview, confirm } = args;
+        const { prompt, structure } = args;
         const { tableName, columns } = structure;
 
         // Log the start of table creation
@@ -99,7 +87,6 @@ export default function register(server: FastMCP) {
           prompt,
           tableName,
           columns,
-          preview,
         });
 
         // Check existing tables
@@ -115,40 +102,6 @@ export default function register(server: FastMCP) {
         const columnNames = columns.map((col) => col.name);
         if (new Set(columnNames).size !== columnNames.length) {
           throw new UserError('Column names must be unique');
-        }
-
-        // Build SQL query for preview
-        let sql = `CREATE TABLE ${tableName} (`;
-        const columnDefs = columns.map((col) => {
-          let def = `${col.name} ${col.type.toUpperCase()}`;
-          if (col.constraints) {
-            if (col.constraints.includes('primary key')) def += ' PRIMARY KEY';
-            if (col.constraints.includes('not null')) def += ' NOT NULL';
-            if (col.constraints.includes('generated always as identity'))
-              def += ' GENERATED ALWAYS AS IDENTITY';
-          }
-          return def;
-        });
-        sql += columnDefs.join(', ') + ');';
-
-        // Preview mode
-        if (preview) {
-          log.info('Returning SQL preview', { sql });
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify({ status: 'preview', sql }, null, 2),
-              },
-            ],
-          };
-        }
-
-        // Check confirmation
-        if (!confirm) {
-          throw new UserError(
-            "Confirmation required: set 'confirm' to true to execute the query."
-          );
         }
 
         // Create the table using Knex
