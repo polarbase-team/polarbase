@@ -2,14 +2,14 @@ import { TCheckboxData, ICheckboxField } from '../interfaces/checkbox-field.inte
 import { EDataType } from '../interfaces/field.interface';
 import { Field } from './field.object';
 
-export function parseCheckboxToString(data: TCheckboxData): string {
+export function parseCheckboxToString(data: TCheckboxData) {
   return data ? 'true' : 'false';
 }
 
 export class CheckboxField extends Field<TCheckboxData> implements ICheckboxField {
-  public static readonly dataType: EDataType = EDataType.Checkbox;
+  static readonly dataType = EDataType.Checkbox;
 
-  get dataType(): EDataType {
+  get dataType() {
     return CheckboxField.dataType;
   }
 }

@@ -10,10 +10,10 @@ import { EDataType } from '../interfaces/field.interface';
   standalone: true,
 })
 export class IsDateFieldPipe implements PipeTransform {
-  // @Memoize(function (field: Field | EDataType): EDataType {
+  // @Memoize(function (field: Field | EDataType) {
   //   return field instanceof Field ? field.dataType : field;
   // })
-  public transform(field: Field | EDataType): boolean {
+  transform(field: Field | EDataType) {
     return field instanceof Field ? field.dataType === EDataType.Date : field === EDataType.Date;
   }
 }

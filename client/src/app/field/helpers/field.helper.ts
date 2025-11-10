@@ -5,13 +5,13 @@ import { TField } from '../interfaces/field.interface';
 import { FIELD_TYPES } from '../resources';
 
 export class FieldHelper {
-  public static instance: FieldHelper;
+  static instance: FieldHelper;
 
-  public static getInstance(): FieldHelper {
+  static getInstance() {
     return (FieldHelper.instance ||= new FieldHelper());
   }
 
-  public createField(field: TField) {
+  createField(field: TField) {
     const fieldType: any = FIELD_TYPES.get(field.dataType);
 
     if (!fieldType) return;

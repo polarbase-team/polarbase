@@ -5,13 +5,13 @@ import { EDataType } from '../interfaces/field.interface';
 import { Field } from './field.object';
 
 export class TextField extends Field<TTextData> implements ITextField {
-  public static readonly dataType: EDataType = EDataType.Text;
+  static readonly dataType = EDataType.Text;
 
-  get dataType(): EDataType {
+  get dataType() {
     return TextField.dataType;
   }
 
-  public override convertTextToData(text: string) {
+  override convertTextToData(text: string) {
     if (this.validate(text) !== null) return;
 
     return text;

@@ -6,13 +6,13 @@ import { EDataType } from '../interfaces/field.interface';
 import { Field } from './field.object';
 
 export class DateField extends Field<TDateData> implements IDateField {
-  public static readonly dataType: EDataType = EDataType.Date;
+  static readonly dataType = EDataType.Date;
 
-  get dataType(): EDataType {
+  get dataType() {
     return DateField.dataType;
   }
 
-  public override compareData(source: TDateData, destination: TDateData = this.data!): boolean {
+  override compareData(source: TDateData, destination: TDateData = this.data!) {
     if (_.isEmpty(source) && _.isEmpty(destination)) {
       return super.compareData(source, destination);
     }
@@ -20,7 +20,7 @@ export class DateField extends Field<TDateData> implements IDateField {
     return dayjs(source).isSame(destination);
   }
 
-  public override toString(data: TDateData = this.data!): string {
+  override toString(data: TDateData = this.data!) {
     return dayjs(data).format();
   }
 }

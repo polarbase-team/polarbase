@@ -13,7 +13,7 @@ export class CalculateTypesPipe implements PipeTransform {
   // @Memoize(function (field: Field | EDataType) {
   //   return typeof field === 'number' ? field : field.dataType;
   // })
-  public transform(dataType: EDataType): ECalculateType[] {
+  transform(dataType: EDataType) {
     switch (dataType) {
       case EDataType.Checkbox:
         return [

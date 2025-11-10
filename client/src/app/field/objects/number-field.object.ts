@@ -6,11 +6,11 @@ import { EDataType } from '../interfaces/field.interface';
 import { Field, FieldValidationErrors, FieldValidationKey } from './field.object';
 
 export class NumberField extends Field<TNumberData> implements INumberField {
-  static readonly dataType: EDataType = EDataType.Number;
+  static readonly dataType = EDataType.Number;
 
   allowNegative: boolean | undefined;
 
-  get dataType(): EDataType {
+  get dataType() {
     return NumberField.dataType;
   }
 

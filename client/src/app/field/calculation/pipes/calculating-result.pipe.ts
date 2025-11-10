@@ -9,7 +9,7 @@ import { ECalculateType, checkValidDate } from '../helpers';
   standalone: true,
 })
 export class CalculatingResultPipe implements PipeTransform {
-  public transform(data: any, type: ECalculateType, field: Field): string {
+  transform(data: any, type: ECalculateType, field: Field) {
     if (data === Infinity) return '∞';
 
     if (_.isString(data) && data === '#N/A') return data;

@@ -7,11 +7,11 @@ import { EDataType } from '../interfaces/field.interface';
 import { Field } from './field.object';
 
 export class DropdownField extends Field<TDropdownData> implements IDropdownField {
-  static readonly dataType: EDataType = EDataType.Dropdown;
+  static readonly dataType = EDataType.Dropdown;
 
   options: TDropdownOption[] | undefined;
 
-  get dataType(): EDataType {
+  get dataType() {
     return DropdownField.dataType;
   }
 
