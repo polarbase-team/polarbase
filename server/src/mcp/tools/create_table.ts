@@ -1,7 +1,7 @@
 import { FastMCP, UserError } from 'fastmcp';
 import { z } from 'zod';
 import type { Knex } from 'knex';
-import db from '../../database/db';
+import db from '../../plugins/db';
 
 export default function register(server: FastMCP) {
   server.addTool({
@@ -127,7 +127,9 @@ export default function register(server: FastMCP) {
         const tables = JSON.parse(tablesResource.text || '[]') as string[];
         if (tables.includes(tableName)) {
           throw new UserError(
-            `Table '${tableName}' already exists. Check 'db://tables' for existing tables: ${JSON.stringify(tables)}`
+            `Table '${tableName}' already exists. Check 'db://tables' for existing tables: ${JSON.stringify(
+              tables
+            )}`
           );
         }
 

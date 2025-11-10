@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 import { z } from 'zod';
-import db from '../../database/db';
+import db from '../../plugins/db';
 
 export default function register(server: FastMCP) {
   server.addTool({
@@ -24,7 +24,7 @@ export default function register(server: FastMCP) {
             .select('table_name')
             .from('information_schema.tables')
             .where({ table_schema: 'public' });
-          tables = result.map((row) => row.table_name);
+          tables = result.map((row: any) => row.table_name);
         } else if (db.client.config.client === 'mysql') {
           const result = await db.raw('SHOW TABLES');
           tables = result[0].map((row: any) => Object.values(row)[0]);
@@ -33,7 +33,7 @@ export default function register(server: FastMCP) {
             .select('name')
             .from('sqlite_master')
             .where({ type: 'table' });
-          tables = result.map((row) => row.name);
+          tables = result.map((row: any) => row.name);
         }
         log.info('Fetched table list', { tables });
         return {
