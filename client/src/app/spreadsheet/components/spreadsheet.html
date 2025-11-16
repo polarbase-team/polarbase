@@ -62,15 +62,10 @@
           <ng-container *ngIf="column.field.required">
             <i class="pi pi-asterisk" style="font-size: 6px"></i>
           </ng-container>
-          <ng-container *ngIf="headerCell.clientWidth > 150">
-            <!-- Replace field data type icons with an appropriate primeng icon -->
-            <!-- <i
-              class="pi"
-              [ngClass]="column.field.dataType | fieldMetadata : 'primengIcon'"
-              style="font-size: 16px"
-            ></i> -->
-          </ng-container>
-          <div class="text-overflow-ellipsis flex-1" [attr.title]="column.field.name">
+          <div
+            class="text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis flex-1"
+            [attr.title]="column.field.name"
+          >
             {{ column.field.name }}
           </div>
           <div class="flex flex-row gap-2 align-items-start justify-content-center">
@@ -81,13 +76,10 @@
                 [pTooltip]="column.field.description"
               ></i>
             </ng-container>
-            <p-button
-              icon="pi pi-ellipsis-v"
-              size="small"
-              severity="secondary"
-              [rounded]="true"
-              [text]="true"
-            />
+            <i
+              class="pi pi-ellipsis-v cursor-pointer"
+              style="color: var(--p-surface-500); font-size: 12px"
+            ></i>
           </div>
         </div>
         <div
@@ -104,10 +96,10 @@
           <ng-container *ngIf="column.field.required">
             <i class="pi pi-asterisk" style="font-size: 6px"></i>
           </ng-container>
-          <ng-container *ngIf="headerCell.clientWidth > 150">
-            <i class="pi" style="font-size: 16px"></i>
-          </ng-container>
-          <div class="text-overflow-ellipsis flex-1" [attr.title]="column.field.name">
+          <div
+            class="text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis flex-1"
+            [attr.title]="column.field.name"
+          >
             {{ column.field.name }}
           </div>
           <div class="flex flex-row gap-2 align-items-start justify-content-center">
@@ -118,27 +110,15 @@
                 [pTooltip]="column.field.description"
               ></i>
             </ng-container>
-            <p-button
-              icon="pi pi-ellipsis-v"
-              size="small"
-              severity="secondary"
-              [rounded]="true"
-              [text]="true"
-            />
           </div>
         </div>
         <ng-container *ngIf="column.field.required">
           <i class="pi pi-asterisk" style="font-size: 6px"></i>
         </ng-container>
-        <ng-container *ngIf="headerCell.clientWidth > 150">
-          <!-- Replace field data type icons with an appropriate primeng icon -->
-          <!-- <i
-              class="pi"
-              [ngClass]="column.field.dataType | fieldMetadata : 'primengIcon'"
-              style="font-size: 16px"
-            ></i> -->
-        </ng-container>
-        <div class="text-overflow-ellipsis flex-1" [attr.title]="column.field.name">
+        <div
+          class="text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis flex-1"
+          [attr.title]="column.field.name"
+        >
           {{ column.field.name }}
         </div>
         <div class="flex flex-row gap-2 align-items-start justify-content-center">
@@ -149,13 +129,10 @@
               [pTooltip]="column.field.description"
             ></i>
           </ng-container>
-          <p-button
-            icon="pi pi-ellipsis-v"
-            size="small"
-            severity="secondary"
-            [rounded]="true"
-            [text]="true"
-          />
+          <i
+            class="pi pi-ellipsis-v cursor-pointer"
+            style="color: var(--p-surface-500); font-size: 12px"
+          ></i>
         </div>
         <ng-container *ngIf="config.column.resizable">
           <div
@@ -466,8 +443,8 @@
                     <ng-container *ngIf="config.row.expandable">
                       <div class="row__expand-handle">
                         <i
-                          class="pi pi-external-link"
-                          style="color: var(--p-button-text-secondary-color); font-size: 12px"
+                          class="pi pi-external-link cursor-pointer"
+                          style="color: var(--p-surface-500); font-size: 12px"
                           pTooltip="Xem chi tiết"
                           (click)="expandRow(row)"
                         ></i>
@@ -1064,14 +1041,19 @@
 <ng-template #calculationBlockTemplate let-column="column" let-calculatedResult="calculatedResult">
   <ng-container *ngIf="config.column.calculable">
     <div class="calculation-block" [class.calculation-block--active]="column.calculateType">
-      <i class="pi pi-chevron-down" style="font-size: 13px"></i>
+      <i class="pi pi-calculator text-sm"></i>
       <ng-container *ngIf="column.calculateType">
-        <div class="text-overflow-ellipsis" title="column.calculateType">
+        <div
+          class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
+          title="column.calculateType"
+        >
           {{ column.calculateType }}:
         </div>
         <b>
           <ng-container *ngIf="isDataStreaming">
-            <span class="text-overflow-ellipsis">Calculating...</span>
+            <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
+              >Calculating...</span
+            >
           </ng-container>
           <ng-container *ngIf="!isDataStreaming">
             {{ calculatedResult | calculatingResult : column.calculateType : column.field }}
@@ -1083,12 +1065,17 @@
   </ng-container>
   <ng-container *ngIf="!config.column.calculable && column.calculateType">
     <div class="calculation-block calculation-block--viewonly">
-      <div class="text-overflow-ellipsis" title="column.calculateType">
+      <div
+        class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
+        title="column.calculateType"
+      >
         {{ column.calculateType }}:
       </div>
       <b>
         <ng-container *ngIf="isDataStreaming">
-          <span class="text-overflow-ellipsis">Calculating...</span>
+          <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
+            >Calculating...</span
+          >
         </ng-container>
         <ng-container *ngIf="!isDataStreaming">
           {{ calculatedResult | calculatingResult : column.calculateType : column.field }}
