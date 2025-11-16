@@ -46,11 +46,11 @@ const splitTextIntoMatrix = _.memoize(function (text: string): ClipboardItem[][]
 });
 
 export class Clipboard<T = any> {
-  public readonly copy$: Subject<ClipboardEvent> = new Subject<ClipboardEvent>();
-  public readonly cut$: Subject<[ClipboardEvent, ClipboardData<T>]> = new Subject<
+  readonly copy$: Subject<ClipboardEvent> = new Subject<ClipboardEvent>();
+  readonly cut$: Subject<[ClipboardEvent, ClipboardData<T>]> = new Subject<
     [ClipboardEvent, ClipboardData<T>]
   >();
-  public readonly paste$: Subject<[ClipboardEvent, ClipboardData<T>]> = new Subject<
+  readonly paste$: Subject<[ClipboardEvent, ClipboardData<T>]> = new Subject<
     [ClipboardEvent, ClipboardData<T>]
   >();
 
@@ -133,15 +133,15 @@ export class Clipboard<T = any> {
       });
   }
 
-  public continue() {
+  continue() {
     this._isPaused = false;
   }
 
-  public pause() {
+  pause() {
     this._isPaused = true;
   }
 
-  public stop() {
+  stop() {
     this._copyEventSub.unsubscribe();
     this._cutEventSub.unsubscribe();
     this._pasteEventSub.unsubscribe();
@@ -153,7 +153,7 @@ export class Clipboard<T = any> {
     this._isPaused = this._copyEventSub = this._cutEventSub = this._pasteEventSub = undefined;
   }
 
-  public read(): ClipboardData<T> {
+  read(): ClipboardData<T> {
     const data: ClipboardData<T> = {
       matrix: null,
       rowCount: 0,
@@ -171,7 +171,7 @@ export class Clipboard<T = any> {
     return data;
   }
 
-  public write(matrix: ClipboardItem<T>[][]) {
+  write(matrix: ClipboardItem<T>[][]) {
     this._matrix = matrix;
 
     const t: string[] = [];

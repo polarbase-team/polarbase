@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import {
   TextField,
@@ -22,9 +22,7 @@ import _ from 'lodash';
   styleUrl: './app.scss',
 })
 export class App {
-  protected readonly title = signal('child-db-client');
-
-  public columns: Column[] = [
+  columns: Column[] = [
     {
       id: _.uniqueId(),
       field: new TextField('Text', undefined, undefined, true),
@@ -53,10 +51,10 @@ export class App {
       field: new DateField('Date'),
     },
   ];
-  public rows: Row[] = _.map(_.range(1, 100), (index: number) => {
+  rows: Row[] = _.map(_.range(1, 100), (index: number) => {
     return { id: _.uniqueId() } as Row;
   });
-  public config: Config = {
+  config: Config = {
     sideSpacing: 20,
     row: {
       size: 'S',

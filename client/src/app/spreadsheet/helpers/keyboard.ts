@@ -18,8 +18,8 @@ export type KeyboardConfig = {
 const IS_MACOS: boolean = /Mac/i.test(navigator.userAgent);
 
 export class Keyboard {
-  public readonly keydown$: Subject<KeyboardEvent> = new Subject<KeyboardEvent>();
-  public readonly keyup$: Subject<KeyboardEvent> = new Subject<KeyboardEvent>();
+  readonly keydown$: Subject<KeyboardEvent> = new Subject<KeyboardEvent>();
+  readonly keyup$: Subject<KeyboardEvent> = new Subject<KeyboardEvent>();
 
   private _isPaused: boolean;
   private _keydownEventSub: Subscription;
@@ -49,7 +49,7 @@ export class Keyboard {
       });
   }
 
-  public static parseKeyCombination(e: KeyboardEvent, detectOS: boolean = false): string {
+  static parseKeyCombination(e: KeyboardEvent, detectOS: boolean = false): string {
     const arr: string[] = [];
 
     if (e.ctrlKey) {
@@ -81,15 +81,15 @@ export class Keyboard {
     return arr.join('.');
   }
 
-  public continue() {
+  continue() {
     this._isPaused = false;
   }
 
-  public pause() {
+  pause() {
     this._isPaused = true;
   }
 
-  public stop() {
+  stop() {
     this._keydownEventSub.unsubscribe();
     this._keyupEventSub.unsubscribe();
 

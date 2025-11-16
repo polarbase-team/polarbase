@@ -9,7 +9,7 @@ type Config<T = any> = {
 };
 
 export class EmitEventController<K, T> {
-  public static DEFAULT_CONFIG: Partial<Config> = {
+  static DEFAULT_CONFIG: Partial<Config> = {
     autoEmit: true,
     throttleTime: 2000,
   };
@@ -27,28 +27,28 @@ export class EmitEventController<K, T> {
     }, this._config.throttleTime);
   }
 
-  public emit(keys?: K[], cb?: CallbackFn<T>) {
+  emit(keys?: K[], cb?: CallbackFn<T>) {
     this._emitThrottledFn(keys, cb);
   }
 
-  public flush() {
+  flush() {
     this._emitThrottledFn.cancel();
     this._emit();
   }
 
-  public getLength(): number {
+  getLength(): number {
     return this._eventStack.size;
   }
 
-  public getEvents(): T[] {
+  getEvents(): T[] {
     return [...this._eventStack.values()];
   }
 
-  public getEvent(key: K): T {
+  getEvent(key: K): T {
     return this._eventStack.get(key);
   }
 
-  public addEvent(key: K, event: T) {
+  addEvent(key: K, event: T) {
     this._eventStack.set(key, event);
 
     if (!this._config.autoEmit) return;
@@ -56,11 +56,11 @@ export class EmitEventController<K, T> {
     this._emitThrottledFn();
   }
 
-  public removeEvent(key: K) {
+  removeEvent(key: K) {
     this._eventStack.delete(key);
   }
 
-  public emitEvent(key: K, cb?: CallbackFn<T>) {
+  emitEvent(key: K, cb?: CallbackFn<T>) {
     const event: T = this._eventStack.get(key);
 
     if (!event) return;
