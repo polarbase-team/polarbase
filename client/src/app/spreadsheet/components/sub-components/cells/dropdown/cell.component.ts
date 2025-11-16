@@ -1,0 +1,38 @@
+import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
+import { MenuItem } from 'primeng/api';
+import { Menu } from 'primeng/menu';
+import { Chip } from 'primeng/chip';
+
+import { DropdownField } from '../../../../field/objects';
+import { TDropdownData } from '../../../../field/interfaces';
+import { CellTouchEvent } from '../field-cell-touchable';
+import { FieldCellEditable } from '../field-cell-editable';
+
+@Component({
+  selector: 'dropdown-field-cell',
+  templateUrl: './cell.html',
+  styleUrls: ['../field-cell.scss'],
+  host: { class: 'dropdown-field-cell' },
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Menu, Chip],
+})
+export class DropdownFieldCellComponent extends FieldCellEditable<TDropdownData> {
+  declare field: DropdownField;
+
+  @ViewChild('menu') menu: Menu;
+
+  items: MenuItem[] | undefined;
+
+  ngOnInit() {
+    this.items = this.field.options.map((option) => ({
+      label: option,
+      command: ({ item }) => this.save(item.label),
+    }));
+  }
+
+  protected override onTouch(e: CellTouchEvent) {
+    if (this.readonly) return;
+
+    this.menu.show(e);
+  }
+}

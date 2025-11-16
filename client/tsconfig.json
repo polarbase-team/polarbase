@@ -12,6 +12,9 @@
     "isolatedModules": true,
     "experimentalDecorators": true,
     "importHelpers": true,
+    "strictNullChecks": false,
+    "noImplicitThis": false,
+    "noImplicitAny": false,
     "target": "ES2022",
     "module": "preserve"
   },

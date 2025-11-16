@@ -1,0 +1,11 @@
+::ng-deep {
+  .field-cell-inputable {
+    $self: '.field-cell-inputable';
+
+    &#{ $self }--inputting {
+      > *:not(input-box) {
+        display: none !important;
+      }
+    }
+  }
+}

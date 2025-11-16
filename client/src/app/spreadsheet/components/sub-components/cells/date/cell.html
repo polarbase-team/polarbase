@@ -1,0 +1,12 @@
+@if (selecting) {
+<p-datepicker
+  #calendar
+  appendTo="body"
+  [ngModel]="data"
+  (ngModelChange)="onDatePicked($event)"
+></p-datepicker>
+} @if (data !== undefined && data !== null) {
+<div class="field-cell__text-content">
+  {{ data | date }}
+</div>
+}

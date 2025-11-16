@@ -1,0 +1,47 @@
+::ng-deep {
+  .field-cell {
+    $self: &;
+
+    display: flex;
+    column-gap: 6px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 20px;
+    overflow: hidden;
+
+    #{ $self }__text-content {
+      min-width: 0;
+      max-width: 100%;
+
+      white-space: pre-line;
+      word-wrap: break-word;
+    }
+
+    #{ $self }__center-content {
+      margin: 0 auto;
+    }
+
+    #{ $self }__block-content {
+      display: flex;
+      flex-wrap: wrap;
+      row-gap: 6px;
+      column-gap: 6px;
+      width: 100%;
+
+      &--error {
+        border: 1px solid var(--red-600, #dc2626);
+        padding: 1px 8px;
+      }
+    }
+
+    #{ $self }__btn-stick-on-content {
+      position: sticky;
+      top: 0;
+
+      margin-left: auto;
+    }
+  }
+}

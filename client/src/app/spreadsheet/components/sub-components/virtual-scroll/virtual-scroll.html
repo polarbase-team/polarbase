@@ -1,0 +1,34 @@
+<div class="virtual-scroll-overlay"></div>
+
+<div class="virtual-scroll-track-container">
+  <div
+    class="virtual-scroll-track virtual-scroll-horizontal-track"
+    [style.left.px]="layout.horizontal.track.offset.x"
+    [style.top.px]="layout.horizontal.track.offset.y"
+    [style.width.px]="layout.horizontal.track.size"
+    [class.hide]="!layout.horizontal.available"
+  >
+    <div
+      #horizontalThumb
+      class="virtual-scroll-thumb"
+      [style.width.px]="layout.horizontal.thumb.size"
+      [style.transform]="'translate3d(' + layout.horizontal.thumb.position + 'px, 0, 0)'"
+    ></div>
+  </div>
+  <div
+    class="virtual-scroll-track virtual-scroll-vertical-track"
+    [style.left.px]="layout.vertical.track.offset.x"
+    [style.top.px]="layout.vertical.track.offset.y"
+    [style.height.px]="layout.vertical.track.size"
+    [class.hide]="!layout.vertical.available"
+  >
+    <div
+      #verticalThumb
+      class="virtual-scroll-thumb"
+      [style.height.px]="layout.vertical.thumb.size"
+      [style.transform]="'translate3d(0, ' + layout.vertical.thumb.position + 'px, 0)'"
+    ></div>
+  </div>
+</div>
+
+<ng-content></ng-content>
