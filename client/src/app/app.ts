@@ -33,7 +33,7 @@ export class App {
     },
     {
       id: _.uniqueId(),
-      field: new CheckboxField('Checkbox'),
+      field: new CheckboxField('Checkbox', undefined, 'asdsad'),
     },
     {
       id: _.uniqueId(),
