@@ -126,7 +126,6 @@ import {
   VirtualScrollColumnRepeaterDirective,
 } from './sub-components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { VirtualScrollRowRepeaterDirective } from './sub-components/virtual-scroll/virtual-scroll-row-repeater.directive';
-import { NgVarDirective } from '../../core/directives';
 import {
   VirtualScrollLeftContentWrapperComponent,
   VirtualScrollRightContentWrapperComponent,
@@ -182,7 +181,6 @@ const stack: SpreadsheetComponent[] = [];
     VirtualScrollRightContentWrapperComponent,
     CalculatingResultPipe,
     Skeleton,
-    NgVarDirective,
     FieldCellFactoryDirective,
     Checkbox,
     Button,
@@ -221,6 +219,7 @@ export class SpreadsheetComponent
   // protected readonly groupActionMenu: MenuComponent;
   protected isMouseHolding = false;
   protected isMouseHiding = false;
+  protected isHideSummaryLabel = false;
 
   private _keyboard: Keyboard;
   private _clipboard: Clipboard<Cell>;
@@ -270,7 +269,7 @@ export class SpreadsheetComponent
           .pipe(
             map((e) => e !== null),
             distinctUntilChanged(),
-            takeUntilDestroyed(this.destroyRef)
+            takeUntilDestroyed(this.destroyRef),
           )
           .subscribe((isContinue) => {
             if (!isContinue) {
@@ -282,7 +281,7 @@ export class SpreadsheetComponent
             this._keyboard.continue();
             this._clipboard.continue();
           });
-      })
+      }),
     );
   }
 
@@ -498,7 +497,7 @@ export class SpreadsheetComponent
             rowIndex: Math.max(currSelection.start.rowIndex, primaryCellIdxInSelection.rowIndex),
             columnIndex: Math.min(
               currSelection.start.columnIndex,
-              primaryCellIdxInSelection.columnIndex
+              primaryCellIdxInSelection.columnIndex,
             ),
           };
         } else {
@@ -624,7 +623,7 @@ export class SpreadsheetComponent
             this.fillCells(
               [currSelection.start, currSelection.end],
               [cellFilling.start, cellFilling.end],
-              cellFilling.isReverse
+              cellFilling.isReverse,
             );
 
             this.layoutProperties.cell.filling = null;
@@ -674,7 +673,7 @@ export class SpreadsheetComponent
     this._keyboard.keydown$
       .pipe(
         filter((e) => !e.isComposing),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((e) => {
         const key = Keyboard.parseKeyCombination(e, true);
@@ -989,7 +988,7 @@ export class SpreadsheetComponent
         .pipe(
           throttleTime(200),
           mergeMap((rows) => of(rows)),
-          takeUntilDestroyed(this.destroyRef)
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe({
           next: (rows) => {
@@ -1051,7 +1050,7 @@ export class SpreadsheetComponent
       const data: [Row, Column][] = [];
 
       const searchColumns = _.filter(this.displayingColumns, (c) =>
-        _.includes([EDataType.Text, EDataType.Date, EDataType.Number], c.field.dataType)
+        _.includes([EDataType.Text, EDataType.Date, EDataType.Number], c.field.dataType),
       );
 
       for (const row of this.rows) {
@@ -1167,8 +1166,8 @@ export class SpreadsheetComponent
             _.map(this.rows, 'data'),
             column.calculateType,
             calculateFieldPredicate.bind(this, column.field),
-            column?.field
-          )
+            column?.field,
+          ),
         );
       }
     }
@@ -1208,7 +1207,7 @@ export class SpreadsheetComponent
       this.groupColumnPredicate.bind(this, columns),
       this.sortGroupPredicate.bind(this, columns),
       this.parseGroupMetadataPredicate.bind(this, columns),
-      this.groupDepth
+      this.groupDepth,
     );
 
     this.sort();
@@ -1257,7 +1256,7 @@ export class SpreadsheetComponent
       this.rows = sortBy(
         this.rawRows,
         this.sortColumnPredicate.bind(this, columns),
-        columns.length
+        columns.length,
       );
     }
 
@@ -1287,7 +1286,7 @@ export class SpreadsheetComponent
 
   protected updateFillHandlerPosition(
     index: CellIndex = this.layoutProperties.cell.selection.end,
-    shouldRetryOnMissingCell?: boolean
+    shouldRetryOnMissingCell?: boolean,
   ) {
     const ele = this.findCellElementByIndex(index);
 
@@ -1486,7 +1485,7 @@ export class SpreadsheetComponent
       this.columns,
       (column) =>
         !UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType) &&
-        (includeColumn === column || !this.groupingColumns.has(column.id))
+        (includeColumn === column || !this.groupingColumns.has(column.id)),
     );
   }
 
@@ -1495,7 +1494,7 @@ export class SpreadsheetComponent
       this.columns,
       (column) =>
         !UNSORTABLE_FIELD_DATA_TYPES.has(column.field.dataType) &&
-        (includeColumn === column || !this.sortingColumns.has(column.id))
+        (includeColumn === column || !this.sortingColumns.has(column.id)),
     );
   }
 
@@ -1554,7 +1553,7 @@ export class SpreadsheetComponent
     column: Column,
     groupingType: GroupingType = 'asc',
     replaceColumn?: Column,
-    isEmitOutput?: boolean
+    isEmitOutput?: boolean,
   ) {
     if (!column?.id || !groupingType || column.groupingType === groupingType) return;
     column.groupingType = groupingType;
@@ -1592,7 +1591,7 @@ export class SpreadsheetComponent
     column: Column,
     sortingType: SortingType = 'asc',
     replaceColumn?: Column,
-    isEmitOutput?: boolean
+    isEmitOutput?: boolean,
   ) {
     if (!column?.id || !sortingType || column.sortingType === sortingType) return;
     column.sortingType = sortingType;
@@ -1667,7 +1666,7 @@ export class SpreadsheetComponent
       this.displayingColumns,
       pointerOffsetX,
       this.virtualScroll.scrollLeft,
-      this.freezeIndex
+      this.freezeIndex,
     );
     const offset = _getColumnOffset(this.findColumnByIndex(index));
     if (offset / this.virtualScroll.viewport.width > this.MAX_FREEZE_VIEWPORT_RATIO) {
@@ -1705,7 +1704,7 @@ export class SpreadsheetComponent
             this.displayingColumns,
             pointerOffsetX,
             this.virtualScroll.scrollLeft,
-            this.freezeIndex
+            this.freezeIndex,
           );
     let offset = null;
     if (index !== null) {
@@ -1749,7 +1748,7 @@ export class SpreadsheetComponent
     moveItemInArray(
       this.columns,
       cIdx,
-      cIdx < indexColumnBefore ? indexColumnBefore : indexColumnBefore + 1
+      cIdx < indexColumnBefore ? indexColumnBefore : indexColumnBefore + 1,
     );
     this.markDisplayingColumnsAsChanged();
     this.columnMoved.emit({
@@ -1922,7 +1921,7 @@ export class SpreadsheetComponent
     sortingColumns: Column[],
     sortingColumnIndex: number,
     currentRow: Row,
-    rowCompared: Row
+    rowCompared: Row,
   ): SortingPredicateReturnType {
     const column = sortingColumns[sortingColumnIndex];
     if (!column) return null;
@@ -1986,7 +1985,7 @@ export class SpreadsheetComponent
         distinctUntilChanged(),
         pairwise(),
         debounceTime(0),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(([_oldRow, newRow]: [Row | null, Row | null]) => {
         flushEEC(this._addedEEC, newRow, (event: Row) => event.id);
@@ -1997,7 +1996,7 @@ export class SpreadsheetComponent
     merge(
       this.rowAdded,
       this.rowDuplicated.pipe(map((events: RowInsertedEvent[]) => _.map(events, 'row'))),
-      this.rowInserted.pipe(map((events: RowInsertedEvent[]) => _.map(events, 'row')))
+      this.rowInserted.pipe(map((events: RowInsertedEvent[]) => _.map(events, 'row'))),
     )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((rows: RowExtra[]) => {
@@ -2178,7 +2177,7 @@ export class SpreadsheetComponent
   protected async createRow(
     data?: any,
     position?: number,
-    onBeforeInsert?: (r: Row, p: number) => void
+    onBeforeInsert?: (r: Row, p: number) => void,
   ): Promise<Row> {
     const newRow = this._generateRow({ data });
     const { onBeforeCreate } = this.config.row;
@@ -2215,7 +2214,7 @@ export class SpreadsheetComponent
 
   protected async duplicateRow(
     sourceRow: Row,
-    onBeforeInsert?: (r: Row, p: number) => void
+    onBeforeInsert?: (r: Row, p: number) => void,
   ): Promise<Row> {
     const newRow = this._generateRow(sourceRow);
     const position = this.findRowIndex(sourceRow) + 1;
@@ -2507,7 +2506,7 @@ export class SpreadsheetComponent
     if (!this.layoutProperties.cell.selection) return;
 
     const fieldCell = this.findCellElementByIndex(
-      this.layoutProperties.cell.selection.primary
+      this.layoutProperties.cell.selection.primary,
     )?.firstElementChild;
 
     if (fieldCell) {
@@ -2688,7 +2687,7 @@ export class SpreadsheetComponent
         }
 
         this.layoutProperties.cell.invalid = invalid;
-      }
+      },
     );
   }
 
@@ -2717,7 +2716,7 @@ export class SpreadsheetComponent
     { rowIndex: startRowIdx, columnIndex: startColumnIdx }: CellIndex,
     { rowIndex: endRowIdx, columnIndex: endColumnIdx }: CellIndex,
     excludeDataTypes?: EDataType[],
-    excludeStates?: ExcludeCellState[]
+    excludeStates?: ExcludeCellState[],
   ): MatrixCell {
     const matrix = new MatrixCell();
 
@@ -2728,7 +2727,7 @@ export class SpreadsheetComponent
           this.findCellByIndex({
             rowIndex: i,
             columnIndex: j,
-          })
+          }),
         );
       }
     }
@@ -2742,7 +2741,7 @@ export class SpreadsheetComponent
     startIndex: CellIndex,
     endIndex: CellIndex = startIndex,
     scrollToLastCell = false,
-    extend = false
+    extend = false,
   ): MatrixCell {
     let { rowIndex: startRowIdx, columnIndex: startColumnIdx } = startIndex;
     let { rowIndex: endRowIdx, columnIndex: endColumnIdx } = endIndex;
@@ -2906,7 +2905,7 @@ export class SpreadsheetComponent
         { rowIndex: 0, columnIndex: startIdx },
         { rowIndex: this.getLastRowIndex(), columnIndex: endIdx },
         UNPASTEABLE_DATA_TYPES,
-        [ExcludeCellState.NonEditable]
+        [ExcludeCellState.NonEditable],
       );
     } else {
       const cellSelection = this.layoutProperties.cell.selection;
@@ -2928,7 +2927,7 @@ export class SpreadsheetComponent
         matrix = this._filterExcludeCells(
           this.selectCells(startIdx, endIdx),
           UNPASTEABLE_DATA_TYPES,
-          [ExcludeCellState.NonEditable]
+          [ExcludeCellState.NonEditable],
         );
       } else {
         matrix = this.getCells(cellSelection.start, cellSelection.end, UNPASTEABLE_DATA_TYPES, [
@@ -3038,7 +3037,7 @@ export class SpreadsheetComponent
   protected async fillCells(
     source: [CellIndex, CellIndex],
     target: [CellIndex, CellIndex],
-    isReverse: boolean
+    isReverse: boolean,
   ) {
     let targetMatrixCell = this.getCells(target[0], target[1]);
 
@@ -3194,7 +3193,7 @@ export class SpreadsheetComponent
               data = FORECAST(
                 fD.metadata.index + page * fD.metadata.range.length,
                 fD.metadata.data,
-                fD.metadata.range
+                fD.metadata.range,
               );
               data = parseFloat(data.toFixed(2));
             } else {
@@ -3362,7 +3361,7 @@ export class SpreadsheetComponent
 
   protected compareCellIndex(
     { rowIndex: sRIdx, columnIndex: sCIdx }: CellIndex,
-    { rowIndex: dRIdx, columnIndex: dCIdx }: CellIndex
+    { rowIndex: dRIdx, columnIndex: dCIdx }: CellIndex,
   ): -1 | 0 | 1 {
     if (sRIdx < dRIdx) {
       return -1;
@@ -3381,7 +3380,7 @@ export class SpreadsheetComponent
 
   protected getInteractiveCells(
     excludeDataTypes?: EDataType[],
-    excludeStates?: ExcludeCellState[]
+    excludeStates?: ExcludeCellState[],
   ): MatrixCell | null {
     let matrix: MatrixCell;
 
@@ -3405,7 +3404,7 @@ export class SpreadsheetComponent
     } else if (this.layoutProperties.cell.selection) {
       matrix = this.getCells(
         this.layoutProperties.cell.selection.start,
-        this.layoutProperties.cell.selection.end
+        this.layoutProperties.cell.selection.end,
       );
     }
 
@@ -3611,7 +3610,7 @@ export class SpreadsheetComponent
     row: Row,
     newData: RowCellData,
     rawData: RowCellData = newData,
-    type: CellDataEditType = CellDataEditType.Default
+    type: CellDataEditType = CellDataEditType.Default,
   ) {
     row.data = { ...row.data, ...rawData };
 
@@ -3723,7 +3722,7 @@ export class SpreadsheetComponent
   private _filterExcludeCells(
     matrix: MatrixCell,
     excludeDataTypes: EDataType[],
-    excludeStates: ExcludeCellState[]
+    excludeStates: ExcludeCellState[],
   ): MatrixCell {
     const excludeDataTypeSet = new Set<EDataType>(excludeDataTypes);
     const excludeRequired = _.includes(excludeStates, ExcludeCellState.Required);
@@ -3828,7 +3827,7 @@ export class SpreadsheetComponent
 
   protected async createRowInGroup(
     group = this.getSelectingGroup() || this.getFirstGroup(),
-    position?: number
+    position?: number,
   ): Promise<Row> {
     let newRow: Row;
     if (group !== this.rootGroup) {
@@ -3998,7 +3997,7 @@ export class SpreadsheetComponent
     let disableAddRowInGroup = true;
     if (this.groupingColumns.size) {
       disableAddRowInGroup = _.some([...this.groupingColumns.values()], (c) =>
-        FIELD_READONLY.has(c.field.dataType)
+        FIELD_READONLY.has(c.field.dataType),
       );
     }
     this.disableAddRowInGroup = disableAddRowInGroup;
@@ -4008,7 +4007,7 @@ export class SpreadsheetComponent
     groupingColumns: Column[],
     currentRow: Row,
     rowCompared: Row,
-    depth: number
+    depth: number,
   ) {
     const column = groupingColumns[groupingColumns.length - depth];
     if (!column) return null;
@@ -4022,7 +4021,7 @@ export class SpreadsheetComponent
       ],
       0,
       currentRow,
-      rowCompared
+      rowCompared,
     );
   }
 

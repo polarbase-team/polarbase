@@ -850,24 +850,20 @@
                 style="margin-bottom: 0"
               ></p-skeleton>
             } @else {
-              <div
-                class="summary-block"
-                *ngVar="{ hideLabel: false, rowCount: rows?.length || 0 }; let localVar"
-              >
+              <div class="summary-block">
                 <div class="summary-block__content">
-                  @if (localVar.hideLabel) {
-                    {{ localVar.rowCount }}
-                  } @else {
-                    {{ localVar.rowCount }} rows
+                  {{ rows?.length || 0 }}
+                  @if (!isHideSummaryLabel) {
+                    rows
                   }
                 </div>
                 <div
                   class="summary-block__btn-toggle"
-                  (click)="localVar.hideLabel = !localVar.hideLabel"
+                  (click)="isHideSummaryLabel = !isHideSummaryLabel"
                 >
                   <i
                     class="pi"
-                    [ngClass]="localVar.hideLabel ? 'pi-chevron-right' : 'pi-chevron-left'"
+                    [ngClass]="isHideSummaryLabel ? 'pi-chevron-right' : 'pi-chevron-left'"
                     style="font-size: 9px"
                   ></i>
                 </div>
@@ -907,70 +903,61 @@
 
   <!-- Freeze divider -->
   @if (config.column.freezable || state.freezeIndex !== null) {
-    <ng-container
-      *ngVar="
-        {
-          isHideHeadLine:
-            layoutProperties.freezeDivider.isHideHeadLine ||
-            $any(displayingColumns?.[state.freezeIndex])?._isResizing,
-          bodyLineHeight:
-            virtualScroll.viewport.height + virtualScroll.scrollTop >
-            virtualScroll.viewport.contentHeight
-              ? virtualScroll.viewport.contentHeight -
-                virtualScroll.scrollTop +
-                Dimension.BodyVerticalPadding
-              : virtualScroll.viewport.height,
-        };
-        let localVar
-      "
+    @let isHideHeadLine =
+      layoutProperties.freezeDivider.isHideHeadLine ||
+      $any(displayingColumns?.[state.freezeIndex])?._isResizing;
+    @let bodyLineHeight =
+      virtualScroll.viewport.height + virtualScroll.scrollTop > virtualScroll.viewport.contentHeight
+        ? virtualScroll.viewport.contentHeight -
+          virtualScroll.scrollTop +
+          Dimension.BodyVerticalPadding
+        : virtualScroll.viewport.height;
+    <div
+      class="freeze-divider"
+      cdkDrag
+      cdkDragLockAxis="x"
+      [style.left.px]="virtualScroll.scrollDivideOffset"
+      [class.freeze-divider--hover]="layoutProperties.freezeDivider.isHover"
+      [class.freeze-divider--dragging]="layoutProperties.freezeDivider.dragging"
+      [class.freeze-divider--disabled]="!config.column.freezable || isHideHeadLine"
+      [cdkDragDisabled]="!config.column.freezable"
+      (cdkDragStarted)="onFreezeDividerDragStarted()"
+      (cdkDragMoved)="onFreezeDividerDragMoved($event)"
+      (cdkDragEnded)="onFreezeDividerDragEnded($event)"
     >
       <div
-        class="freeze-divider"
-        cdkDrag
-        cdkDragLockAxis="x"
-        [style.left.px]="virtualScroll.scrollDivideOffset"
-        [class.freeze-divider--hover]="layoutProperties.freezeDivider.isHover"
-        [class.freeze-divider--dragging]="layoutProperties.freezeDivider.dragging"
-        [class.freeze-divider--disabled]="!config.column.freezable || localVar.isHideHeadLine"
-        [cdkDragDisabled]="!config.column.freezable"
-        (cdkDragStarted)="onFreezeDividerDragStarted()"
-        (cdkDragMoved)="onFreezeDividerDragMoved($event)"
-        (cdkDragEnded)="onFreezeDividerDragEnded($event)"
+        class="freeze-divider__line freeze-divider__head-line"
+        [class.hide]="isHideHeadLine"
+      ></div>
+      <div
+        class="freeze-divider__line freeze-divider__body-line"
+        cdkDragHandle
+        [style.height.px]="bodyLineHeight"
+        [class.hide]="!virtualScroll.viewport.contentHeight"
+        (mousemove)="onFreezeDividerMousemove($event)"
+        (mouseleave)="onFreezeDividerMouseleave()"
       >
-        <div
-          class="freeze-divider__line freeze-divider__head-line"
-          [class.hide]="localVar.isHideHeadLine"
-        ></div>
-        <div
-          class="freeze-divider__line freeze-divider__body-line"
-          cdkDragHandle
-          [style.height.px]="localVar.bodyLineHeight"
-          [class.hide]="!virtualScroll.viewport.contentHeight"
-          (mousemove)="onFreezeDividerMousemove($event)"
-          (mouseleave)="onFreezeDividerMouseleave()"
-        >
-          <span
-            class="freeze-divider__drag-handle"
-            [style.transform]="
-              'translate3d(0,' + layoutProperties.freezeDivider.dragHandleOffset + 'px, 0)'
-            "
-          ></span>
-        </div>
-        @if (config.column.calculable) {
-          <div class="freeze-divider__line freeze-divider__foot-line"></div>
-        }
-      </div>
-      @if (layoutProperties.freezeDivider.dragging) {
-        <div
-          class="freeze-divider-drag-placeholder"
-          [style.height.px]="localVar.bodyLineHeight + Dimension.HeaderHeight"
+        <span
+          class="freeze-divider__drag-handle"
           [style.transform]="
-            'translate3d(' + layoutProperties.freezeDivider.dragging.offset + 'px, 0, 0)'
+            'translate3d(0,' + layoutProperties.freezeDivider.dragHandleOffset + 'px, 0)'
           "
-        ></div>
-        <div class="freeze-divider-drag-overlay"></div>
+        ></span>
+      </div>
+      @if (config.column.calculable) {
+        <div class="freeze-divider__line freeze-divider__foot-line"></div>
       }
-    </ng-container>
+    </div>
+    @if (layoutProperties.freezeDivider.dragging) {
+      <div
+        class="freeze-divider-drag-placeholder"
+        [style.height.px]="bodyLineHeight + Dimension.HeaderHeight"
+        [style.transform]="
+          'translate3d(' + layoutProperties.freezeDivider.dragging.offset + 'px, 0, 0)'
+        "
+      ></div>
+      <div class="freeze-divider-drag-overlay"></div>
+    }
   }
 
   <!-- Fill handler -->
