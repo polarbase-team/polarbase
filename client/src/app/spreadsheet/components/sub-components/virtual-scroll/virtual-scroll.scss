@@ -7,7 +7,6 @@ $name: '.virtual-scroll';
   min-height: 0;
   overflow: hidden !important;
   touch-action: none !important;
-
   contain: layout style paint;
 
   &#{$name}--scrolling {
@@ -28,7 +27,6 @@ $name: '.virtual-scroll';
 
     &#{$name}-horizontal-track {
       bottom: 0;
-
       height: 10px;
 
       #{$name}-thumb {
@@ -38,7 +36,6 @@ $name: '.virtual-scroll';
 
     &#{$name}-vertical-track {
       right: 0;
-
       width: 10px;
 
       #{$name}-thumb {
@@ -53,21 +50,18 @@ $name: '.virtual-scroll';
 
     #{$name}-thumb {
       position: relative;
-
       width: 100%;
       min-width: 10px;
       height: 100%;
       min-height: 10px;
       box-shadow: rgb(255, 255, 255) 0 0 0 1px inset;
       border-radius: 7px;
-
-      background-color: rgba(0, 0, 0, 0.28);
-
+      background-color: var(--p-surface-400);
       will-change: transform;
 
       &:hover,
       &:active {
-        background-color: rgba(0, 0, 0, 0.4);
+        background-color: var(--p-surface-500);
       }
     }
   }
