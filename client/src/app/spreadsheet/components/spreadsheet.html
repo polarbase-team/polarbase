@@ -1,11 +1,12 @@
 <p-toast />
+<p-contextmenu #columnMenu [model]="columnMenuItems" appendTo="body" />
 
 <virtual-scroll
   [sideSpacing]="config.sideSpacing"
   [disable]="disableScroll"
   (scrolling)="onScrolling()"
 >
-  <!-- Header from header.partial.pug -->
+  <!-- Header -->
   <div
     class="spreadsheet__header"
     cdkDropList
@@ -50,6 +51,7 @@
         (resizing)="onColumnResizing($event, column, columnIndex)"
         (resizeEnd)="onColumnResized($event, column)"
         (click)="!column._isResizing && selectColumn($event, columnIndex)"
+        (contextmenu)="openColumnMenu($event, column, columnIndex)"
       >
         <div
           class="header-cell cell"
@@ -68,19 +70,13 @@
           >
             {{ column.field.name }}
           </div>
-          <div class="flex flex-row gap-2 align-items-start justify-content-center">
-            @if (column.field.description?.length) {
-              <i
-                class="pi pi-info-circle"
-                style="color: #6c757d; font-size: 16px"
-                [pTooltip]="column.field.description"
-              ></i>
-            }
+          @if (column.field.description?.length) {
             <i
-              class="pi pi-ellipsis-v cursor-pointer"
-              style="color: var(--p-surface-500); font-size: 12px"
+              class="pi pi-info-circle"
+              style="color: #6c757d; font-size: 16px"
+              [pTooltip]="column.field.description"
             ></i>
-          </div>
+          }
         </div>
         <div
           class="header-cell cell"
@@ -121,19 +117,13 @@
         >
           {{ column.field.name }}
         </div>
-        <div class="flex flex-row gap-2 align-items-start justify-content-center">
-          @if (column.field.description?.length) {
-            <i
-              class="pi pi-info-circle"
-              style="color: #6c757d; font-size: 16px"
-              [pTooltip]="column.field.description"
-            ></i>
-          }
+        @if (column.field.description?.length) {
           <i
-            class="pi pi-ellipsis-v cursor-pointer"
-            style="color: var(--p-surface-500); font-size: 12px"
+            class="pi pi-info-circle"
+            style="color: #6c757d; font-size: 16px"
+            [pTooltip]="column.field.description"
           ></i>
-        </div>
+        }
         @if (config.column.resizable) {
           <div
             class="header-cell__resize-handle"
@@ -200,7 +190,7 @@
     </div>
   </div>
 
-  <!-- Body from body.partial.pug -->
+  <!-- Body -->
   <div
     class="spreadsheet__body"
     virtualScrollViewport
@@ -225,7 +215,7 @@
             'box box-left box--radius': !state.isGrouping || state.isGroupingWithoutGroup,
           }"
         >
-          <!-- group-left from group.include.pug -->
+          <!-- group-left -->
           <ng-container
             *virtualScrollGroupRepeater="
               undefined;
@@ -349,7 +339,7 @@
               }
             </div>
           </ng-container>
-          <!-- row-left from row.include.pug -->
+          <!-- row-left -->
           <ng-container
             *virtualScrollRowRepeater="
               undefined;
@@ -594,7 +584,7 @@
             'box box-right box--radius': !state.isGrouping || state.isGroupingWithoutGroup,
           }"
         >
-          <!-- group-right from group.include.pug -->
+          <!-- group-right -->
           <ng-container
             *virtualScrollGroupRepeater="
               undefined;
@@ -659,7 +649,7 @@
               }
             </div>
           </ng-container>
-          <!-- row-right from row.include.pug -->
+          <!-- row-right -->
           <ng-container
             *virtualScrollRowRepeater="
               undefined;
@@ -807,7 +797,7 @@
     </div>
   </div>
 
-  <!-- Footer from footer.partial.pug -->
+  <!-- Footer -->
   @if (config.column.calculable) {
     <div class="spreadsheet__footer">
       <ng-template #footerCellTempTemplate let-column="column" let-columnIndex="columnIndex">
@@ -1014,7 +1004,7 @@
   <div class="row-drag-overlay"></div>
 }
 
-<!-- Calculation from calculation.include.pug -->
+<!-- Calculation -->
 <ng-template #calculationBlockTemplate let-column="column" let-calculatedResult="calculatedResult">
   @if (config.column.calculable) {
     <div class="calculation-block" [class.calculation-block--active]="column.calculateType">

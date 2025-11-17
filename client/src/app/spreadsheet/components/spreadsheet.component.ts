@@ -52,7 +52,7 @@ import {
   pairwise,
   debounceTime,
 } from 'rxjs';
-import { MessageService } from 'primeng/api';
+import { MenuItem, MessageService } from 'primeng/api';
 import { Chip } from 'primeng/chip';
 import { Toast } from 'primeng/toast';
 import { Tooltip } from 'primeng/tooltip';
@@ -151,6 +151,7 @@ import { FORECAST } from '@formulajs/formulajs';
 import { sortBy, SortingPredicateReturnType, SortingType } from '../helpers/sort';
 import dayjs, { isDayjs } from 'dayjs';
 import { FIELD_READONLY } from '../field/resources/field';
+import { ContextMenu } from 'primeng/contextmenu';
 
 export * from './sub-classes/cell';
 export * from './sub-classes/column';
@@ -186,6 +187,7 @@ const stack: SpreadsheetComponent[] = [];
     Button,
     Chip,
     Toast,
+    ContextMenu,
   ],
   providers: [MessageService, FieldCellService],
 })
@@ -211,8 +213,6 @@ export class SpreadsheetComponent
   protected readonly virtualScroll: VirtualScrollComponent;
   @ViewChild('fillHanlder')
   protected readonly fillHander: ElementRef<HTMLElement>;
-  // @ViewChild('columnActionMenu')
-  // protected readonly columnActionMenu: MenuComponent;
   // @ViewChild('rowActionMenu')
   // protected readonly rowActionMenu: MenuComponent;
   // @ViewChild('groupActionMenu')
@@ -1343,36 +1343,19 @@ export class SpreadsheetComponent
   @Output() columnUnhidden = new EventEmitter<Column>();
   @Output() columnUnsorted = new EventEmitter<Column>();
 
+  @ViewChild('columnMenu', { static: true }) protected readonly columnMenu: ContextMenu;
+
   protected readonly UNSORTABLE_FIELD_DATA_TYPES = UNSORTABLE_FIELD_DATA_TYPES;
   protected readonly UNGROUPABLE_FIELD_DATA_TYPES = UNGROUPABLE_FIELD_DATA_TYPES;
   protected readonly MAX_FREEZE_VIEWPORT_RATIO = 0.65;
   protected readonly DATA_TYPE = EDataType;
   protected readonly Operator = EOperator;
-  // protected readonly columnMenuItems = [
-  //   {
-  //     label: 'Freeze',
-  //     icon: 'pi pi-sign-in',
-  //     command: () => {
-  //       // @ts-ignore
-  //       console.log(this.selectedColumnIndex);
-  //       // this.freezeUpToColumnIndex(this.selectedColumnIndex),
-  //     },
-  //   },
-  //   { separator: true },
-  //   { label: 'Sort up', icon: 'pi pi-sort-amount-up' },
-  //   { label: 'Sort down', icon: 'pi pi-sort-amount-down' },
-  //   { separator: true },
-  //   { label: 'Group', icon: 'pi pi-list' },
-  //   { separator: true },
-  //   { label: 'Hide', icon: 'pi pi-eye-slash' },
-  //   { label: 'Delete', icon: 'pi pi-trash' },
-  // ];
-
   protected leftColumns: Column[];
   protected rightColumns: Column[];
   protected calculatingColumns = new Map<Column['id'], Column>();
   protected groupingColumns = new Map<Column['id'], Column>();
   protected sortingColumns = new Map<Column['id'], Column>();
+  protected columnMenuItems: MenuItem[] | undefined;
 
   private _displayingColumns: Column[];
   private _columnLookup: Map<Column['id'], Column>;
@@ -1645,6 +1628,78 @@ export class SpreadsheetComponent
     this.columnCleared.emit(column);
   }
 
+  protected openColumnMenu(e: Event, column: Column, columnIndex: number) {
+    if (this.layoutProperties.column.selection?.size > 1) {
+      this.columnMenuItems = [
+        { separator: true },
+        {
+          label: 'Hide selected columns',
+          icon: 'pi pi-eye-slash',
+          command: () => {
+            this.hideSelectedColumns();
+          },
+        },
+        {
+          label: 'Delete selected columns',
+          icon: 'pi pi-trash',
+          command: () => {
+            this.deleteSelectedColumns();
+          },
+        },
+      ];
+    } else {
+      this.columnMenuItems = [
+        {
+          label: 'Freeze',
+          icon: 'pi pi-sign-in',
+          command: () => {
+            this.freezeUpToColumnIndex(columnIndex);
+          },
+        },
+        { separator: true },
+        {
+          label: 'Sort up',
+          icon: 'pi pi-sort-amount-up',
+          command: () => {
+            this.sortByColumn(column, 'asc', null, true);
+          },
+        },
+        {
+          label: 'Sort down',
+          icon: 'pi pi-sort-amount-down',
+          command: () => {
+            this.sortByColumn(column, 'desc', null, true);
+          },
+        },
+        { separator: true },
+        {
+          label: 'Group',
+          icon: 'pi pi-list',
+          command: () => {
+            this.groupByColumn(column, 'asc', null, true);
+          },
+        },
+        { separator: true },
+        {
+          label: 'Hide',
+          icon: 'pi pi-eye-slash',
+          command: () => {
+            this.hideColumn(column, true);
+          },
+        },
+        {
+          label: 'Delete',
+          icon: 'pi pi-trash',
+          command: () => {
+            this.deleteColumn(column);
+          },
+        },
+      ];
+    }
+
+    this.columnMenu.show(e);
+  }
+
   protected onFreezeDividerMousemove(e: MouseEvent) {
     this.layoutProperties.freezeDivider.isHover = true;
     this.layoutProperties.freezeDivider.dragHandleOffset =
@@ -1819,7 +1874,7 @@ export class SpreadsheetComponent
   }
 
   protected deselectAllColumns() {
-    // this.columnActionMenu.close();
+    this.columnMenu.hide();
     if (!this.layoutProperties.column.selection) return;
     this.layoutProperties.column.selection = null;
     this.columnSelected.emit(null);
