@@ -60,7 +60,7 @@
           [style.maxWidth.px]="column.width"
         >
           @if (column.field.required) {
-          <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
+            <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
           }
           <div
             class="text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis flex-1"
@@ -70,11 +70,11 @@
           </div>
           <div class="flex flex-row gap-2 align-items-start justify-content-center">
             @if (column.field.description?.length) {
-            <i
-              class="pi pi-info-circle"
-              style="color: #6c757d; font-size: 16px"
-              [pTooltip]="column.field.description"
-            ></i>
+              <i
+                class="pi pi-info-circle"
+                style="color: #6c757d; font-size: 16px"
+                [pTooltip]="column.field.description"
+              ></i>
             }
             <i
               class="pi pi-ellipsis-v cursor-pointer"
@@ -94,7 +94,7 @@
           [style.maxHeight.px]="elementRef.nativeElement.clientHeight"
         >
           @if (column.field.required) {
-          <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
+            <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
           }
           <div
             class="text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis flex-1"
@@ -104,16 +104,16 @@
           </div>
           <div class="flex flex-row gap-2 align-items-start justify-content-center">
             @if (column.field.description?.length) {
-            <i
-              class="pi pi-info-circle"
-              style="color: #6c757d; font-size: 16px"
-              [pTooltip]="column.field.description"
-            ></i>
+              <i
+                class="pi pi-info-circle"
+                style="color: #6c757d; font-size: 16px"
+                [pTooltip]="column.field.description"
+              ></i>
             }
           </div>
         </div>
         @if (column.field.required) {
-        <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
+          <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
         }
         <div
           class="text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis flex-1"
@@ -123,11 +123,11 @@
         </div>
         <div class="flex flex-row gap-2 align-items-start justify-content-center">
           @if (column.field.description?.length) {
-          <i
-            class="pi pi-info-circle"
-            style="color: #6c757d; font-size: 16px"
-            [pTooltip]="column.field.description"
-          ></i>
+            <i
+              class="pi pi-info-circle"
+              style="color: #6c757d; font-size: 16px"
+              [pTooltip]="column.field.description"
+            ></i>
           }
           <i
             class="pi pi-ellipsis-v cursor-pointer"
@@ -135,17 +135,17 @@
           ></i>
         </div>
         @if (config.column.resizable) {
-        <div
-          class="header-cell__resize-handle"
-          mwlResizeHandle
-          [resizeEdges]="{ right: config.column.resizable }"
-          pTooltip="Resize column"
-          (mousedown)="$event.stopPropagation()"
-          (mouseenter)="
-            layoutProperties.freezeDivider.isHideHeadLine = columnIndex === state.freezeIndex
-          "
-          (mouseleave)="layoutProperties.freezeDivider.isHideHeadLine = false"
-        ></div>
+          <div
+            class="header-cell__resize-handle"
+            mwlResizeHandle
+            [resizeEdges]="{ right: config.column.resizable }"
+            pTooltip="Resize column"
+            (mousedown)="$event.stopPropagation()"
+            (mouseenter)="
+              layoutProperties.freezeDivider.isHideHeadLine = columnIndex === state.freezeIndex
+            "
+            (mouseleave)="layoutProperties.freezeDivider.isHideHeadLine = false"
+          ></div>
         }
       </div>
     </ng-template>
@@ -167,9 +167,9 @@
           </div>
         </div>
         @for (column of leftColumns; let columnIndex = $index; track column) {
-        <ng-container
-          *ngTemplateOutlet="headerCellTemplate; context: { column, columnIndex }"
-        ></ng-container>
+          <ng-container
+            *ngTemplateOutlet="headerCellTemplate; context: { column, columnIndex }"
+          ></ng-container>
         }
       </div>
     </div>
@@ -184,16 +184,17 @@
         [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
       >
         @for (column of rightColumns; let columnIndex = $index; track column) {
-        <ng-container
-          *ngTemplateOutlet="
-            headerCellTemplate;
-            context: { column, columnIndex: state.freezeIndex + columnIndex + 1 }
-          "
-        ></ng-container>
-        } @if (config.column.creatable) {
-        <div class="header-cell cell header-action-cell cursor">
-          <i class="pi pi-plus-circle"></i>
-        </div>
+          <ng-container
+            *ngTemplateOutlet="
+              headerCellTemplate;
+              context: { column, columnIndex: state.freezeIndex + columnIndex + 1 }
+            "
+          ></ng-container>
+        }
+        @if (config.column.creatable) {
+          <div class="header-cell cell header-action-cell cursor">
+            <i class="pi pi-plus-circle"></i>
+          </div>
         }
       </div>
     </div>
@@ -221,7 +222,7 @@
           virtualScrollLeftContentWrapper
           [style.height.px]="virtualScroll.viewport.contentHeight"
           [ngClass]="{
-            'box box-left box--radius': !state.isGrouping || state.isGroupingWithoutGroup
+            'box box-left box--radius': !state.isGrouping || state.isGroupingWithoutGroup,
           }"
         >
           <!-- group-left from group.include.pug -->
@@ -275,8 +276,9 @@
                       [style.maxWidth.px]="columnRect.width - config.column.minResizeWidth"
                     >
                       @if (group.metadata?.isEmpty) {
-                      <label>(Empty)</label>
-                      } @else { | {{ group.metadata.data }}
+                        <label>(Empty)</label>
+                      } @else {
+                        | {{ group.metadata.data }}
                       }
                     </div>
                     <div
@@ -290,15 +292,15 @@
                       [style.maxWidth.px]="config.column.minResizeWidth"
                     >
                       @if (!virtualScroll.isLongScrollingY) {
-                      <ng-container
-                        *ngTemplateOutlet="
-                          calculationBlockTemplate;
-                          context: {
-                            column,
-                            calculatedResult: group.metadata.calculatedResult?.get(column.id)
-                          }
-                        "
-                      ></ng-container>
+                        <ng-container
+                          *ngTemplateOutlet="
+                            calculationBlockTemplate;
+                            context: {
+                              column,
+                              calculatedResult: group.metadata.calculatedResult?.get(column.id),
+                            }
+                          "
+                        ></ng-container>
                       }
                     </div>
                   </ng-container>
@@ -312,38 +314,38 @@
                       [style.maxWidth.px]="columnRect.width"
                     >
                       @if (!virtualScroll.isLongScrollingY) {
-                      <ng-container
-                        *ngTemplateOutlet="
-                          calculationBlockTemplate;
-                          context: {
-                            column,
-                            calculatedResult: group.metadata.calculatedResult?.get(column.id)
-                          }
-                        "
-                      ></ng-container>
+                        <ng-container
+                          *ngTemplateOutlet="
+                            calculationBlockTemplate;
+                            context: {
+                              column,
+                              calculatedResult: group.metadata.calculatedResult?.get(column.id),
+                            }
+                          "
+                        ></ng-container>
                       }
                     </div>
                   </ng-template>
                 </ng-container>
               </div>
               @if (!group.children) {
-              <div class="group__body">
-                <div
-                  class="blank-row"
-                  [class.row--hover]="layoutProperties.row.blankRowHover === group.id"
-                  (pointerenter)="onBlankRowHover($event, group.id)"
-                >
+                <div class="group__body">
                   <div
-                    class="row-cell cell index-cell"
-                    cell-type="row"
-                    [attr.disabled]="isDataStreaming"
-                    (click)="addRow(group)"
+                    class="blank-row"
+                    [class.row--hover]="layoutProperties.row.blankRowHover === group.id"
+                    (pointerenter)="onBlankRowHover($event, group.id)"
                   >
-                    <i class="pi pi-plus-circle"></i>
+                    <div
+                      class="row-cell cell index-cell"
+                      cell-type="row"
+                      [attr.disabled]="isDataStreaming"
+                      (click)="addRow(group)"
+                    >
+                      <i class="pi pi-plus-circle"></i>
+                    </div>
+                    <div class="row-cell cell" cell-type="row"></div>
                   </div>
-                  <div class="row-cell cell" cell-type="row"></div>
                 </div>
-              </div>
               }
             </div>
           </ng-container>
@@ -380,66 +382,67 @@
               (cdkDragEnded)="onRowDragEnded($event)"
             >
               @if (virtualScroll.isLongScrollingY) {
-              <div class="row-cell cell index-cell" cell-type="row">
-                <div class="h-fit-content">
-                  <div class="index-block">
-                    <div class="row__index-handle">
-                      {{ rowIndex + config.row.startIndex + 1 }}
+                <div class="row-cell cell index-cell" cell-type="row">
+                  <div class="h-fit-content">
+                    <div class="index-block">
+                      <div class="row__index-handle">
+                        {{ rowIndex + config.row.startIndex + 1 }}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
               } @else {
-              <div
-                class="row-cell cell index-cell"
-                cell-type="row"
-                [class.cell--active]="
-                  row.selected ||
-                  (!layoutProperties.column.selection &&
-                    layoutProperties.cell.selection &&
-                    layoutProperties.cell.selection.count === 1 &&
-                    layoutProperties.cell.selection.primary.rowIndex === rowIndex)
-                "
-                (pointerenter)="onCellHover( $event, { rowIndex, columnIndex: -1 } )"
-              >
                 <div
-                  class="flex flex-row align-items-start justify-content-center h-fit-content"
-                  style="height: fit-content"
+                  class="row-cell cell index-cell"
+                  cell-type="row"
+                  [class.cell--active]="
+                    row.selected ||
+                    (!layoutProperties.column.selection &&
+                      layoutProperties.cell.selection &&
+                      layoutProperties.cell.selection.count === 1 &&
+                      layoutProperties.cell.selection.primary.rowIndex === rowIndex)
+                  "
+                  (pointerenter)="onCellHover($event, { rowIndex, columnIndex: -1 })"
                 >
-                  @if (config.row.arrangeable) {
-                  <div class="row__drag-handle" cdkDragHandle>
-                    <img src="/icons/drag-dots.svg" />
-                  </div>
-                  }
-                  <div class="index-block">
-                    @if (row === draftRow) {
-                    <a safe-area class="text-xs" (click)="cancelDraftRow()">Cancel</a>
-                    } @else {
-                    <div class="row__index-handle">
-                      {{ rowIndex + config.row.startIndex + 1 }}
+                  <div
+                    class="flex flex-row align-items-start justify-content-center h-fit-content"
+                    style="height: fit-content"
+                  >
+                    @if (config.row.arrangeable) {
+                      <div class="row__drag-handle" cdkDragHandle>
+                        <img src="/icons/drag-dots.svg" />
+                      </div>
+                    }
+                    <div class="index-block">
+                      @if (row === draftRow) {
+                        <a safe-area class="text-xs" (click)="cancelDraftRow()">Cancel</a>
+                      } @else {
+                        <div class="row__index-handle">
+                          {{ rowIndex + config.row.startIndex + 1 }}
+                        </div>
+                      }
+                      @if (config.row.selectable) {
+                        <div class="row__select-handle">
+                          <p-checkbox
+                            [binary]="true"
+                            [ngModel]="row.selected"
+                            (ngModelChange)="toggleRow(row)"
+                          ></p-checkbox>
+                        </div>
+                      }
                     </div>
-                    } @if (config.row.selectable) {
-                    <div class="row__select-handle">
-                      <p-checkbox
-                        [binary]="true"
-                        [ngModel]="row.selected"
-                        (ngModelChange)="toggleRow(row)"
-                      ></p-checkbox>
-                    </div>
+                    @if (config.row.expandable) {
+                      <div class="row__expand-handle">
+                        <i
+                          class="pi pi-external-link cursor-pointer"
+                          style="color: var(--p-surface-500); font-size: 12px"
+                          pTooltip="Xem chi tiết"
+                          (click)="expandRow(row)"
+                        ></i>
+                      </div>
                     }
                   </div>
-                  @if (config.row.expandable) {
-                  <div class="row__expand-handle">
-                    <i
-                      class="pi pi-external-link cursor-pointer"
-                      style="color: var(--p-surface-500); font-size: 12px"
-                      pTooltip="Xem chi tiết"
-                      (click)="expandRow(row)"
-                    ></i>
-                  </div>
-                  }
                 </div>
-              </div>
               }
               <ng-container
                 *virtualScrollColumnRepeater="
@@ -451,119 +454,123 @@
                 "
               >
                 @if (virtualScroll.isLongScrollingY) {
-                <div
-                  class="row-cell cell"
-                  safe-area
-                  virtualScrollAutoScrollHolder
-                  cell-type="row"
-                  [style.left.px]="columnRect.left"
-                  [style.width.px]="columnRect.width"
-                  [style.minWidth.px]="columnRect.width"
-                  [style.maxWidth.px]="columnRect.width"
-                ></div>
+                  <div
+                    class="row-cell cell"
+                    safe-area
+                    virtualScrollAutoScrollHolder
+                    cell-type="row"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="columnRect.width"
+                    [style.minWidth.px]="columnRect.width"
+                    [style.maxWidth.px]="columnRect.width"
+                  ></div>
                 } @else {
-                <div
-                  class="row-cell cell"
-                  safe-area
-                  virtualScrollAutoScrollHolder
-                  [attr.data-row-id]="row.id"
-                  [attr.data-column-id]="column.id"
-                  [attr.data-row-index]="rowIndex"
-                  [attr.data-column-index]="columnIndex"
-                  [class.cdk-drag-placeholder]="column._isDragging"
-                  [class.cell--active]="
-                    row.selected ||
-                    (!layoutProperties.column.selection &&
+                  <div
+                    class="row-cell cell"
+                    safe-area
+                    virtualScrollAutoScrollHolder
+                    [attr.data-row-id]="row.id"
+                    [attr.data-column-id]="column.id"
+                    [attr.data-row-index]="rowIndex"
+                    [attr.data-column-index]="columnIndex"
+                    [class.cdk-drag-placeholder]="column._isDragging"
+                    [class.cell--active]="
+                      row.selected ||
+                      (!layoutProperties.column.selection &&
+                        layoutProperties.cell.selection &&
+                        layoutProperties.cell.selection.count === 1 &&
+                        layoutProperties.cell.selection.primary.rowIndex === rowIndex) ||
+                      (layoutProperties.cell.selection &&
+                        layoutProperties.cell.selection.start.rowIndex <= rowIndex &&
+                        layoutProperties.cell.selection.start.columnIndex <= columnIndex &&
+                        layoutProperties.cell.selection.end.rowIndex >= rowIndex &&
+                        layoutProperties.cell.selection.end.columnIndex >= columnIndex) ||
+                      layoutProperties.column.selection?.has(columnIndex)
+                    "
+                    [class.cell--highlight]="
+                      column.highlight ||
+                      layoutProperties.cell.searching?.found?.get(row.id)?.has(column.id)
+                    "
+                    [class.cell--filling]="
+                      layoutProperties.cell.filling &&
+                      layoutProperties.cell.filling.start.rowIndex <= rowIndex &&
+                      layoutProperties.cell.filling.start.columnIndex <= columnIndex &&
+                      layoutProperties.cell.filling.end.rowIndex >= rowIndex &&
+                      layoutProperties.cell.filling.end.columnIndex >= columnIndex
+                    "
+                    [class.cell--focusing]="
+                      layoutProperties.cell.focusing &&
+                      layoutProperties.cell.focusing.rowIndex === rowIndex &&
+                      layoutProperties.cell.focusing.columnIndex === columnIndex
+                    "
+                    [class.cell--error]="row?.error?.[column.id]"
+                    [class.cell--invalid]="
+                      layoutProperties.cell.invalid &&
+                      layoutProperties.cell.invalid.rowIndex === rowIndex &&
+                      layoutProperties.cell.invalid.columnIndex === columnIndex
+                    "
+                    [class.row-cell--selecting]="
                       layoutProperties.cell.selection &&
-                      layoutProperties.cell.selection.count === 1 &&
-                      layoutProperties.cell.selection.primary.rowIndex === rowIndex) ||
-                    (layoutProperties.cell.selection &&
-                      layoutProperties.cell.selection.start.rowIndex <= rowIndex &&
-                      layoutProperties.cell.selection.start.columnIndex <= columnIndex &&
-                      layoutProperties.cell.selection.end.rowIndex >= rowIndex &&
-                      layoutProperties.cell.selection.end.columnIndex >= columnIndex) ||
-                    layoutProperties.column.selection?.has(columnIndex)
-                  "
-                  [class.cell--highlight]="
-                    column.highlight ||
-                    layoutProperties.cell.searching?.found?.get(row.id)?.has(column.id)
-                  "
-                  [class.cell--filling]="
-                    layoutProperties.cell.filling &&
-                    layoutProperties.cell.filling.start.rowIndex <= rowIndex &&
-                    layoutProperties.cell.filling.start.columnIndex <= columnIndex &&
-                    layoutProperties.cell.filling.end.rowIndex >= rowIndex &&
-                    layoutProperties.cell.filling.end.columnIndex >= columnIndex
-                  "
-                  [class.cell--focusing]="
-                    layoutProperties.cell.focusing &&
-                    layoutProperties.cell.focusing.rowIndex === rowIndex &&
-                    layoutProperties.cell.focusing.columnIndex === columnIndex
-                  "
-                  [class.cell--error]="row?.error?.[column.id]"
-                  [class.cell--invalid]="
-                    layoutProperties.cell.invalid &&
-                    layoutProperties.cell.invalid.rowIndex === rowIndex &&
-                    layoutProperties.cell.invalid.columnIndex === columnIndex
-                  "
-                  [class.row-cell--selecting]="
-                    layoutProperties.cell.selection &&
-                    layoutProperties.cell.selection.primary.rowIndex === rowIndex &&
-                    layoutProperties.cell.selection.primary.columnIndex === columnIndex
-                  "
-                  (pointerenter)="onCellHover($event, { rowIndex, columnIndex })"
-                  cell-type="row"
-                  [style.left.px]="columnRect.left"
-                  [style.width.px]="column.width"
-                  [style.minWidth.px]="column.width"
-                  [style.maxWidth.px]="column.width"
-                >
-                  <ng-template
-                    fieldCellFactory
-                    [row]="row"
-                    [column]="column"
-                    [field]="column.field"
-                    [data]="row.data?.[column.id] ?? null"
-                    [readonly]="
-                        row !== draftRow &&
-                          ((isDataStreaming && !$any(row)._isStreamed) ||
-                            (!column.editable && row.editable !== true && row.editable?.[column.id] !== true))
-                      "
-                    [selecting]="
-                      !!layoutProperties.cell.selection &&
                       layoutProperties.cell.selection.primary.rowIndex === rowIndex &&
                       layoutProperties.cell.selection.primary.columnIndex === columnIndex
                     "
-                  ></ng-template>
-                </div>
+                    (pointerenter)="onCellHover($event, { rowIndex, columnIndex })"
+                    cell-type="row"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="column.width"
+                    [style.minWidth.px]="column.width"
+                    [style.maxWidth.px]="column.width"
+                  >
+                    <ng-template
+                      fieldCellFactory
+                      [row]="row"
+                      [column]="column"
+                      [field]="column.field"
+                      [data]="row.data?.[column.id] ?? null"
+                      [readonly]="
+                        row !== draftRow &&
+                        ((isDataStreaming && !$any(row)._isStreamed) ||
+                          (!column.editable &&
+                            row.editable !== true &&
+                            row.editable?.[column.id] !== true))
+                      "
+                      [selecting]="
+                        !!layoutProperties.cell.selection &&
+                        layoutProperties.cell.selection.primary.rowIndex === rowIndex &&
+                        layoutProperties.cell.selection.primary.columnIndex === columnIndex
+                      "
+                    ></ng-template>
+                  </div>
                 }
               </ng-container>
             </div>
           </ng-container>
-          @if (!state.isGrouping || state.isGroupingWithoutGroup) { @if (state.canAddRow) {
-          <div
-            class="row blank-row"
-            [attr.disabled]="isDataStreaming || layoutProperties.cell.selection"
-            [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
-            (pointerenter)="onBlankRowHover($event)"
-          >
-            <div
-              class="row-cell cell index-cell"
-              cell-type="row"
-              [attr.disabled]="isDataStreaming"
-              (click)="addRow()"
-            >
-              <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
-            </div>
-            <div class="row-cell cell" cell-type="row"></div>
-          </div>
-          } @else {
-          <div
-            class="row blank-row"
-            [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
-            (pointerenter)="onBlankRowHover($event)"
-          ></div>
-          } }
+          @if (!state.isGrouping || state.isGroupingWithoutGroup) {
+            @if (state.canAddRow) {
+              <div
+                class="row blank-row"
+                [attr.disabled]="isDataStreaming || layoutProperties.cell.selection"
+                [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
+                (pointerenter)="onBlankRowHover($event)"
+              >
+                <div
+                  class="row-cell cell index-cell"
+                  cell-type="row"
+                  [attr.disabled]="isDataStreaming"
+                  (click)="addRow()"
+                >
+                  <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
+                </div>
+                <div class="row-cell cell" cell-type="row"></div>
+              </div>
+            } @else {
+              <div
+                class="row blank-row"
+                [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
+                (pointerenter)="onBlankRowHover($event)"
+              ></div>
+            }
+          }
         </div>
       </div>
     </div>
@@ -584,7 +591,7 @@
           virtualScrollRightContentWrapper
           [style.height.px]="virtualScroll.viewport.contentHeight"
           [ngClass]="{
-            'box box-right box--radius': !state.isGrouping || state.isGroupingWithoutGroup
+            'box box-right box--radius': !state.isGrouping || state.isGroupingWithoutGroup,
           }"
         >
           <!-- group-right from group.include.pug -->
@@ -626,29 +633,29 @@
                     [style.maxWidth.px]="columnRect.width"
                   >
                     @if (!virtualScroll.isLongScrollingY) {
-                    <ng-container
-                      *ngTemplateOutlet="
-                        calculationBlockTemplate;
-                        context: {
-                          column,
-                          calculatedResult: group.metadata.calculatedResult?.get(column.id)
-                        }
-                      "
-                    ></ng-container>
+                      <ng-container
+                        *ngTemplateOutlet="
+                          calculationBlockTemplate;
+                          context: {
+                            column,
+                            calculatedResult: group.metadata.calculatedResult?.get(column.id),
+                          }
+                        "
+                      ></ng-container>
                     }
                   </div>
                 </ng-container>
               </div>
               @if (!group.children) {
-              <div class="group__body">
-                <div
-                  class="blank-row"
-                  [class.row--hover]="layoutProperties.row.blankRowHover === group.id"
-                  (pointerenter)="onBlankRowHover($event, group.id)"
-                >
-                  <div class="row-cell cell" cell-type="row"></div>
+                <div class="group__body">
+                  <div
+                    class="blank-row"
+                    [class.row--hover]="layoutProperties.row.blankRowHover === group.id"
+                    (pointerenter)="onBlankRowHover($event, group.id)"
+                  >
+                    <div class="row-cell cell" cell-type="row"></div>
+                  </div>
                 </div>
-              </div>
               }
             </div>
           </ng-container>
@@ -686,111 +693,115 @@
                 "
               >
                 @if (virtualScroll.isLongScrollingY) {
-                <div
-                  class="row-cell cell"
-                  safe-area
-                  virtualScrollAutoScrollHolder
-                  cell-type="row"
-                  [style.left.px]="columnRect.left"
-                  [style.width.px]="columnRect.width"
-                  [style.minWidth.px]="columnRect.width"
-                  [style.maxWidth.px]="columnRect.width"
-                ></div>
+                  <div
+                    class="row-cell cell"
+                    safe-area
+                    virtualScrollAutoScrollHolder
+                    cell-type="row"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="columnRect.width"
+                    [style.minWidth.px]="columnRect.width"
+                    [style.maxWidth.px]="columnRect.width"
+                  ></div>
                 } @else {
-                <div
-                  class="row-cell cell"
-                  safe-area
-                  virtualScrollAutoScrollHolder
-                  [attr.data-row-id]="row.id"
-                  [attr.data-column-id]="column.id"
-                  [attr.data-row-index]="rowIndex"
-                  [attr.data-column-index]="columnIndex"
-                  [class.cdk-drag-placeholder]="column._isDragging"
-                  [class.cell--active]="
-                    row.selected ||
-                    (!layoutProperties.column.selection &&
+                  <div
+                    class="row-cell cell"
+                    safe-area
+                    virtualScrollAutoScrollHolder
+                    [attr.data-row-id]="row.id"
+                    [attr.data-column-id]="column.id"
+                    [attr.data-row-index]="rowIndex"
+                    [attr.data-column-index]="columnIndex"
+                    [class.cdk-drag-placeholder]="column._isDragging"
+                    [class.cell--active]="
+                      row.selected ||
+                      (!layoutProperties.column.selection &&
+                        layoutProperties.cell.selection &&
+                        layoutProperties.cell.selection.count === 1 &&
+                        layoutProperties.cell.selection.primary.rowIndex === rowIndex) ||
+                      (layoutProperties.cell.selection &&
+                        layoutProperties.cell.selection.start.rowIndex <= rowIndex &&
+                        layoutProperties.cell.selection.start.columnIndex <= columnIndex &&
+                        layoutProperties.cell.selection.end.rowIndex >= rowIndex &&
+                        layoutProperties.cell.selection.end.columnIndex >= columnIndex) ||
+                      layoutProperties.column.selection?.has(columnIndex)
+                    "
+                    [class.cell--highlight]="
+                      column.highlight ||
+                      layoutProperties.cell.searching?.found?.get(row.id)?.has(column.id)
+                    "
+                    [class.cell--filling]="
+                      layoutProperties.cell.filling &&
+                      layoutProperties.cell.filling.start.rowIndex <= rowIndex &&
+                      layoutProperties.cell.filling.start.columnIndex <= columnIndex &&
+                      layoutProperties.cell.filling.end.rowIndex >= rowIndex &&
+                      layoutProperties.cell.filling.end.columnIndex >= columnIndex
+                    "
+                    [class.cell--focusing]="
+                      layoutProperties.cell.focusing &&
+                      layoutProperties.cell.focusing.rowIndex === rowIndex &&
+                      layoutProperties.cell.focusing.columnIndex === columnIndex
+                    "
+                    [class.cell--error]="row?.error?.[column.id]"
+                    [class.cell--invalid]="
+                      layoutProperties.cell.invalid &&
+                      layoutProperties.cell.invalid.rowIndex === rowIndex &&
+                      layoutProperties.cell.invalid.columnIndex === columnIndex
+                    "
+                    [class.row-cell--selecting]="
                       layoutProperties.cell.selection &&
-                      layoutProperties.cell.selection.count === 1 &&
-                      layoutProperties.cell.selection.primary.rowIndex === rowIndex) ||
-                    (layoutProperties.cell.selection &&
-                      layoutProperties.cell.selection.start.rowIndex <= rowIndex &&
-                      layoutProperties.cell.selection.start.columnIndex <= columnIndex &&
-                      layoutProperties.cell.selection.end.rowIndex >= rowIndex &&
-                      layoutProperties.cell.selection.end.columnIndex >= columnIndex) ||
-                    layoutProperties.column.selection?.has(columnIndex)
-                  "
-                  [class.cell--highlight]="
-                    column.highlight ||
-                    layoutProperties.cell.searching?.found?.get(row.id)?.has(column.id)
-                  "
-                  [class.cell--filling]="
-                    layoutProperties.cell.filling &&
-                    layoutProperties.cell.filling.start.rowIndex <= rowIndex &&
-                    layoutProperties.cell.filling.start.columnIndex <= columnIndex &&
-                    layoutProperties.cell.filling.end.rowIndex >= rowIndex &&
-                    layoutProperties.cell.filling.end.columnIndex >= columnIndex
-                  "
-                  [class.cell--focusing]="
-                    layoutProperties.cell.focusing &&
-                    layoutProperties.cell.focusing.rowIndex === rowIndex &&
-                    layoutProperties.cell.focusing.columnIndex === columnIndex
-                  "
-                  [class.cell--error]="row?.error?.[column.id]"
-                  [class.cell--invalid]="
-                    layoutProperties.cell.invalid &&
-                    layoutProperties.cell.invalid.rowIndex === rowIndex &&
-                    layoutProperties.cell.invalid.columnIndex === columnIndex
-                  "
-                  [class.row-cell--selecting]="
-                    layoutProperties.cell.selection &&
-                    layoutProperties.cell.selection.primary.rowIndex === rowIndex &&
-                    layoutProperties.cell.selection.primary.columnIndex === columnIndex
-                  "
-                  (pointerenter)="onCellHover( $event, { rowIndex, columnIndex } )"
-                  cell-type="row"
-                  [style.left.px]="columnRect.left"
-                  [style.width.px]="column.width"
-                  [style.minWidth.px]="column.width"
-                  [style.maxWidth.px]="column.width"
-                >
-                  <ng-template
-                    fieldCellFactory
-                    [row]="row"
-                    [column]="column"
-                    [field]="column.field"
-                    [data]="row.data?.[column.id] ?? null"
-                    [readonly]="
-                        row !== draftRow &&
-                          ((isDataStreaming && !$any(row)._isStreamed) ||
-                            (!column.editable && row.editable !== true && row.editable?.[column.id] !== true))
-                      "
-                    [selecting]="
-                      !!layoutProperties.cell.selection &&
                       layoutProperties.cell.selection.primary.rowIndex === rowIndex &&
                       layoutProperties.cell.selection.primary.columnIndex === columnIndex
                     "
-                  ></ng-template>
-                </div>
+                    (pointerenter)="onCellHover($event, { rowIndex, columnIndex })"
+                    cell-type="row"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="column.width"
+                    [style.minWidth.px]="column.width"
+                    [style.maxWidth.px]="column.width"
+                  >
+                    <ng-template
+                      fieldCellFactory
+                      [row]="row"
+                      [column]="column"
+                      [field]="column.field"
+                      [data]="row.data?.[column.id] ?? null"
+                      [readonly]="
+                        row !== draftRow &&
+                        ((isDataStreaming && !$any(row)._isStreamed) ||
+                          (!column.editable &&
+                            row.editable !== true &&
+                            row.editable?.[column.id] !== true))
+                      "
+                      [selecting]="
+                        !!layoutProperties.cell.selection &&
+                        layoutProperties.cell.selection.primary.rowIndex === rowIndex &&
+                        layoutProperties.cell.selection.primary.columnIndex === columnIndex
+                      "
+                    ></ng-template>
+                  </div>
                 }
               </ng-container>
             </div>
           </ng-container>
-          @if (!state.isGrouping || state.isGroupingWithoutGroup) { @if (state.canAddRow) {
-          <div
-            class="row blank-row"
-            [attr.disabled]="isDataStreaming || layoutProperties.cell.selection"
-            [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
-            (pointerenter)="onBlankRowHover($event)"
-          >
-            <div class="row-cell cell" cell-type="row"></div>
-          </div>
-          } @else {
-          <div
-            class="row blank-row"
-            [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
-            (pointerenter)="onBlankRowHover($event)"
-          ></div>
-          } }
+          @if (!state.isGrouping || state.isGroupingWithoutGroup) {
+            @if (state.canAddRow) {
+              <div
+                class="row blank-row"
+                [attr.disabled]="isDataStreaming || layoutProperties.cell.selection"
+                [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
+                (pointerenter)="onBlankRowHover($event)"
+              >
+                <div class="row-cell cell" cell-type="row"></div>
+              </div>
+            } @else {
+              <div
+                class="row blank-row"
+                [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
+                (pointerenter)="onBlankRowHover($event)"
+              ></div>
+            }
+          }
         </div>
       </div>
     </div>
@@ -798,249 +809,267 @@
 
   <!-- Footer from footer.partial.pug -->
   @if (config.column.calculable) {
-  <div class="spreadsheet__footer">
-    <ng-template #footerCellTempTemplate let-column="column" let-columnIndex="columnIndex">
-      <div
-        class="footer-cell cell"
-        [attr.data-column-id]="column.id"
-        [attr.data-column-index]="columnIndex"
-        [style.width.px]="column.width"
-        [style.minWidth.px]="column.width"
-        [style.maxWidth.px]="column.width"
-      >
-        <ng-container
-          *ngTemplateOutlet="
-            calculationBlockTemplate;
-            context: {
-              column,
-              calculatedResult: (state.isGrouping
-                ? rootGroup.metadata.calculatedResult
-                : calculatedResult
-              )?.get(column.id)
+    <div class="spreadsheet__footer">
+      <ng-template #footerCellTempTemplate let-column="column" let-columnIndex="columnIndex">
+        <div
+          class="footer-cell cell"
+          [attr.data-column-id]="column.id"
+          [attr.data-column-index]="columnIndex"
+          [style.width.px]="column.width"
+          [style.minWidth.px]="column.width"
+          [style.maxWidth.px]="column.width"
+        >
+          <ng-container
+            *ngTemplateOutlet="
+              calculationBlockTemplate;
+              context: {
+                column,
+                calculatedResult: (state.isGrouping
+                  ? rootGroup.metadata.calculatedResult
+                  : calculatedResult
+                )?.get(column.id),
+              }
+            "
+          ></ng-container>
+        </div>
+      </ng-template>
+      <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset">
+        <div
+          class="pane-content flex flex-row full-height"
+          style="height: 100%"
+          [style.left.px]="config.sideSpacing"
+          [style.width.px]="virtualScroll.viewport.leftWidth"
+        >
+          <div class="footer-cell cell index-cell">
+            @if (isDataStreaming) {
+              <p-skeleton
+                height="24px"
+                width="100px"
+                styleClass="h-24"
+                borderRadius="8px"
+                style="margin-bottom: 0"
+              ></p-skeleton>
+            } @else {
+              <div
+                class="summary-block"
+                *ngVar="{ hideLabel: false, rowCount: rows?.length || 0 }; let localVar"
+              >
+                <div class="summary-block__content">
+                  @if (localVar.hideLabel) {
+                    {{ localVar.rowCount }}
+                  } @else {
+                    {{ localVar.rowCount }} rows
+                  }
+                </div>
+                <div
+                  class="summary-block__btn-toggle"
+                  (click)="localVar.hideLabel = !localVar.hideLabel"
+                >
+                  <i
+                    class="pi"
+                    [ngClass]="localVar.hideLabel ? 'pi-chevron-right' : 'pi-chevron-left'"
+                    style="font-size: 9px"
+                  ></i>
+                </div>
+              </div>
             }
-          "
-        ></ng-container>
-      </div>
-    </ng-template>
-    <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset">
-      <div
-        class="pane-content flex flex-row full-height"
-        style="height: 100%"
-        [style.left.px]="config.sideSpacing"
-        [style.width.px]="virtualScroll.viewport.leftWidth"
-      >
-        <div class="footer-cell cell index-cell">
-          @if (isDataStreaming) {
-          <p-skeleton
-            height="24px"
-            width="100px"
-            styleClass="h-24"
-            borderRadius="8px"
-            style="margin-bottom: 0"
-          ></p-skeleton>
-          } @else {
-          <div
-            class="summary-block"
-            *ngVar="{ hideLabel: false, rowCount: rows?.length || 0 }; let localVar"
-          >
-            <div class="summary-block__content">
-              @if (localVar.hideLabel) {
-              {{ localVar.rowCount }}
-              } @else {
-              {{ localVar.rowCount }} rows }
-            </div>
-            <div
-              class="summary-block__btn-toggle"
-              (click)="localVar.hideLabel = !localVar.hideLabel"
-            >
-              <i
-                class="pi"
-                [ngClass]="localVar.hideLabel ? 'pi-chevron-right' : 'pi-chevron-left'"
-                style="font-size: 9px"
-              ></i>
-            </div>
           </div>
+          @for (column of leftColumns; let columnIndex = $index; track column) {
+            <ng-container
+              *ngTemplateOutlet="footerCellTempTemplate; context: { column, columnIndex }"
+            ></ng-container>
           }
         </div>
-        @for (column of leftColumns; let columnIndex = $index; track column) {
-        <ng-container
-          *ngTemplateOutlet="footerCellTempTemplate; context: { column, columnIndex }"
-        ></ng-container>
-        }
       </div>
-    </div>
-    <div
-      class="pane pane-right"
-      [style.left.px]="virtualScroll.scrollDivideOffset"
-      [class.hide]="!virtualScroll.viewport.leftWidth"
-    >
       <div
-        class="pane-content flex flex-row full-height"
-        style="height: 100%"
-        [style.width.px]="virtualScroll.viewport.rightWidth"
-        [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
+        class="pane pane-right"
+        [style.left.px]="virtualScroll.scrollDivideOffset"
+        [class.hide]="!virtualScroll.viewport.leftWidth"
       >
-        @for (column of rightColumns; let columnIndex = $index; track column) {
-        <ng-container
-          *ngTemplateOutlet="
-            footerCellTempTemplate;
-            context: { column, columnIndex: state.freezeIndex + columnIndex + 1 }
-          "
-        ></ng-container>
-        }
+        <div
+          class="pane-content flex flex-row full-height"
+          style="height: 100%"
+          [style.width.px]="virtualScroll.viewport.rightWidth"
+          [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
+        >
+          @for (column of rightColumns; let columnIndex = $index; track column) {
+            <ng-container
+              *ngTemplateOutlet="
+                footerCellTempTemplate;
+                context: { column, columnIndex: state.freezeIndex + columnIndex + 1 }
+              "
+            ></ng-container>
+          }
+        </div>
       </div>
     </div>
-  </div>
   }
 
   <!-- Freeze divider -->
   @if (config.column.freezable || state.freezeIndex !== null) {
-  <ng-container
-    *ngVar="
+    <ng-container
+      *ngVar="
         {
-          isHideHeadLine: layoutProperties.freezeDivider.isHideHeadLine
-            || $any(displayingColumns?.[ state.freezeIndex ])?._isResizing,
-          bodyLineHeight: virtualScroll.viewport.height + virtualScroll.scrollTop > virtualScroll.viewport.contentHeight
-            ? virtualScroll.viewport.contentHeight - virtualScroll.scrollTop + Dimension.BodyVerticalPadding
-            : virtualScroll.viewport.height
-        }; let localVar;
+          isHideHeadLine:
+            layoutProperties.freezeDivider.isHideHeadLine ||
+            $any(displayingColumns?.[state.freezeIndex])?._isResizing,
+          bodyLineHeight:
+            virtualScroll.viewport.height + virtualScroll.scrollTop >
+            virtualScroll.viewport.contentHeight
+              ? virtualScroll.viewport.contentHeight -
+                virtualScroll.scrollTop +
+                Dimension.BodyVerticalPadding
+              : virtualScroll.viewport.height,
+        };
+        let localVar
       "
-  >
-    <div
-      class="freeze-divider"
-      cdkDrag
-      cdkDragLockAxis="x"
-      [style.left.px]="virtualScroll.scrollDivideOffset"
-      [class.freeze-divider--hover]="layoutProperties.freezeDivider.isHover"
-      [class.freeze-divider--dragging]="layoutProperties.freezeDivider.dragging"
-      [class.freeze-divider--disabled]="!config.column.freezable || localVar.isHideHeadLine"
-      [cdkDragDisabled]="!config.column.freezable"
-      (cdkDragStarted)="onFreezeDividerDragStarted()"
-      (cdkDragMoved)="onFreezeDividerDragMoved($event)"
-      (cdkDragEnded)="onFreezeDividerDragEnded($event)"
     >
       <div
-        class="freeze-divider__line freeze-divider__head-line"
-        [class.hide]="localVar.isHideHeadLine"
-      ></div>
-      <div
-        class="freeze-divider__line freeze-divider__body-line"
-        cdkDragHandle
-        [style.height.px]="localVar.bodyLineHeight"
-        [class.hide]="!virtualScroll.viewport.contentHeight"
-        (mousemove)="onFreezeDividerMousemove($event)"
-        (mouseleave)="onFreezeDividerMouseleave()"
+        class="freeze-divider"
+        cdkDrag
+        cdkDragLockAxis="x"
+        [style.left.px]="virtualScroll.scrollDivideOffset"
+        [class.freeze-divider--hover]="layoutProperties.freezeDivider.isHover"
+        [class.freeze-divider--dragging]="layoutProperties.freezeDivider.dragging"
+        [class.freeze-divider--disabled]="!config.column.freezable || localVar.isHideHeadLine"
+        [cdkDragDisabled]="!config.column.freezable"
+        (cdkDragStarted)="onFreezeDividerDragStarted()"
+        (cdkDragMoved)="onFreezeDividerDragMoved($event)"
+        (cdkDragEnded)="onFreezeDividerDragEnded($event)"
       >
-        <span
-          class="freeze-divider__drag-handle"
-          [style.transform]="
-            'translate3d(0,' + layoutProperties.freezeDivider.dragHandleOffset + 'px, 0)'
-          "
-        ></span>
+        <div
+          class="freeze-divider__line freeze-divider__head-line"
+          [class.hide]="localVar.isHideHeadLine"
+        ></div>
+        <div
+          class="freeze-divider__line freeze-divider__body-line"
+          cdkDragHandle
+          [style.height.px]="localVar.bodyLineHeight"
+          [class.hide]="!virtualScroll.viewport.contentHeight"
+          (mousemove)="onFreezeDividerMousemove($event)"
+          (mouseleave)="onFreezeDividerMouseleave()"
+        >
+          <span
+            class="freeze-divider__drag-handle"
+            [style.transform]="
+              'translate3d(0,' + layoutProperties.freezeDivider.dragHandleOffset + 'px, 0)'
+            "
+          ></span>
+        </div>
+        @if (config.column.calculable) {
+          <div class="freeze-divider__line freeze-divider__foot-line"></div>
+        }
       </div>
-      @if (config.column.calculable) {
-      <div class="freeze-divider__line freeze-divider__foot-line"></div>
+      @if (layoutProperties.freezeDivider.dragging) {
+        <div
+          class="freeze-divider-drag-placeholder"
+          [style.height.px]="localVar.bodyLineHeight + Dimension.HeaderHeight"
+          [style.transform]="
+            'translate3d(' + layoutProperties.freezeDivider.dragging.offset + 'px, 0, 0)'
+          "
+        ></div>
+        <div class="freeze-divider-drag-overlay"></div>
       }
-    </div>
-    @if (layoutProperties.freezeDivider.dragging) {
-    <div
-      class="freeze-divider-drag-placeholder"
-      [style.height.px]="localVar.bodyLineHeight + Dimension.HeaderHeight"
-      [style.transform]="
-        'translate3d(' + layoutProperties.freezeDivider.dragging.offset + 'px, 0, 0)'
-      "
-    ></div>
-    <div class="freeze-divider-drag-overlay"></div>
-    }
-  </ng-container>
+    </ng-container>
   }
 
   <!-- Fill handler -->
   @if (state.canFillCell) {
-  <div class="fill-handler-wrapper">
-    @if (layoutProperties.fillHandler?.offset) {
-    <div
-      class="fill-handler"
-      #fillHanlder
-      safe-area
-      virtualScrollAutoScrollHolder="vertical"
-      [style.left.px]="layoutProperties.fillHandler.offset.left"
-      [style.top.px]="layoutProperties.fillHandler.offset.top"
-      [class.hide]="layoutProperties.fillHandler.hidden || state.isFocusedInputInCellEditor"
-    ></div>
-    }
-  </div>
+    <div class="fill-handler-wrapper">
+      @if (layoutProperties.fillHandler?.offset) {
+        <div
+          class="fill-handler"
+          #fillHanlder
+          safe-area
+          virtualScrollAutoScrollHolder="vertical"
+          [style.left.px]="layoutProperties.fillHandler.offset.left"
+          [style.top.px]="layoutProperties.fillHandler.offset.top"
+          [class.hide]="layoutProperties.fillHandler.hidden || state.isFocusedInputInCellEditor"
+        ></div>
+      }
+    </div>
   }
 </virtual-scroll>
 
 <!-- Empty block -->
 @if (!rows?.length) {
-<div class="empty-block">
-  <ng-content select="[emptyBlock]"></ng-content>
-</div>
+  <div class="empty-block">
+    <ng-content select="[emptyBlock]"></ng-content>
+  </div>
 }
 
 <!-- Column drag placeholder -->
-@if ( layoutProperties.column.dragPlaceholderIndex !== undefined &&
-layoutProperties.column.dragPlaceholderIndex !== null ) {
-<div
-  class="column-drag-placeholder"
-  [style.transform]="'translate3d(' + layoutProperties.column.dragPlaceholderOffset + 'px, 0, 0)'"
-></div>
-<div class="column-drag-overlay"></div>
+@if (
+  layoutProperties.column.dragPlaceholderIndex !== undefined &&
+  layoutProperties.column.dragPlaceholderIndex !== null
+) {
+  <div
+    class="column-drag-placeholder"
+    [style.transform]="'translate3d(' + layoutProperties.column.dragPlaceholderOffset + 'px, 0, 0)'"
+  ></div>
+  <div class="column-drag-overlay"></div>
 }
 
 <!-- Row drag placeholder -->
-@if ( layoutProperties.row.dragPlaceholderIndex !== undefined &&
-layoutProperties.row.dragPlaceholderIndex !== null ) {
-<div
-  class="row-drag-placeholder"
-  [style.transform]="'translate3d(0, ' + layoutProperties.row.dragPlaceholderOffset + 'px, 0)'"
->
-  <p-chip
-    style="margin-top: -10px; margin-left: 10px"
-    [label]="(selectedRows.size || '1') + ' rows'"
-  />
-</div>
-<div class="row-drag-overlay"></div>
+@if (
+  layoutProperties.row.dragPlaceholderIndex !== undefined &&
+  layoutProperties.row.dragPlaceholderIndex !== null
+) {
+  <div
+    class="row-drag-placeholder"
+    [style.transform]="'translate3d(0, ' + layoutProperties.row.dragPlaceholderOffset + 'px, 0)'"
+  >
+    <p-chip
+      style="margin-top: -10px; margin-left: 10px"
+      [label]="(selectedRows.size || '1') + ' rows'"
+    />
+  </div>
+  <div class="row-drag-overlay"></div>
 }
 
 <!-- Calculation from calculation.include.pug -->
 <ng-template #calculationBlockTemplate let-column="column" let-calculatedResult="calculatedResult">
   @if (config.column.calculable) {
-  <div class="calculation-block" [class.calculation-block--active]="column.calculateType">
-    <i class="pi pi-calculator text-sm"></i>
-    @if (column.calculateType) {
-    <div
-      class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
-      title="column.calculateType"
-    >
-      {{ column.calculateType }}:
-    </div>
-    <b>
-      @if (isDataStreaming) {
-      <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis">Calculating...</span>
+    <div class="calculation-block" [class.calculation-block--active]="column.calculateType">
+      <i class="pi pi-calculator text-sm"></i>
+      @if (column.calculateType) {
+        <div
+          class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
+          title="column.calculateType"
+        >
+          {{ column.calculateType }}:
+        </div>
+        <b>
+          @if (isDataStreaming) {
+            <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
+              >Calculating...</span
+            >
+          } @else {
+            {{ calculatedResult | calculatingResult: column.calculateType : column.field }}
+          }
+        </b>
       } @else {
-      {{ calculatedResult | calculatingResult : column.calculateType : column.field }}
+        Calculate
       }
-    </b>
-    } @else {Calculate}
-  </div>
-  } @if (!config.column.calculable && column.calculateType) {
-  <div class="calculation-block calculation-block--viewonly">
-    <div
-      class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
-      title="column.calculateType"
-    >
-      {{ column.calculateType }}:
     </div>
-    <b>
-      @if (isDataStreaming) {
-      <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis">Calculating...</span>
-      } @else {
-      {{ calculatedResult | calculatingResult : column.calculateType : column.field }}
-      }
-    </b>
-  </div>
+  }
+  @if (!config.column.calculable && column.calculateType) {
+    <div class="calculation-block calculation-block--viewonly">
+      <div
+        class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
+        title="column.calculateType"
+      >
+        {{ column.calculateType }}:
+      </div>
+      <b>
+        @if (isDataStreaming) {
+          <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
+            >Calculating...</span
+          >
+        } @else {
+          {{ calculatedResult | calculatingResult: column.calculateType : column.field }}
+        }
+      </b>
+    </div>
   }
 </ng-template>

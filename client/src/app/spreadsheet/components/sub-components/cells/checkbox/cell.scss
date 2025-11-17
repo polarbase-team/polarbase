@@ -1,3 +1,9 @@
 :host {
   justify-content: center;
+
+  ::ng-deep {
+    .p-checkbox .p-checkbox-box {
+      transition: none;
+    }
+  }
 }

@@ -1,7 +1,8 @@
 @if (selecting) {
-<p-menu #menu [model]="items" appendTo="body" [popup]="true" />
-} @if (data !== undefined && data !== null) {
-<div class="field-cell__block-content">
-  <p-chip [label]="data" [title]="data"></p-chip>
-</div>
+  <p-menu #menu [model]="items" appendTo="body" [popup]="true" />
+}
+@if (data !== undefined && data !== null) {
+  <div class="field-cell__block-content">
+    <p-tag severity="secondary" [value]="data"></p-tag>
+  </div>
 }

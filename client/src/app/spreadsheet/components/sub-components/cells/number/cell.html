@@ -1,15 +1,16 @@
 @if (isInputting) {
-<input-box
-  [type]="field.allowNegative ? 'number' : 'positive-number'"
-  [content]="data"
-  (edited)="onInputBoxEdited($event)"
-  (input)="onInputBoxInput($event)"
-  (focus)="onInputBoxFocus($event)"
-  (blur)="onInputBoxBlur($event)"
-  (contentChange)="onInputBoxChange($event)"
-></input-box>
-} @if (data !== undefined && data !== null) {
-<div class="flex-1 text-right text-overflow-ellipsis">
-  {{ data }}
-</div>
+  <input-box
+    [type]="field.allowNegative ? 'number' : 'positive-number'"
+    [content]="data"
+    (edited)="onInputBoxEdited($event)"
+    (input)="onInputBoxInput($event)"
+    (focus)="onInputBoxFocus($event)"
+    (blur)="onInputBoxBlur($event)"
+    (contentChange)="onInputBoxChange($event)"
+  ></input-box>
+}
+@if (data !== undefined && data !== null) {
+  <div class="flex-1 text-right text-overflow-ellipsis">
+    {{ data }}
+  </div>
 }
