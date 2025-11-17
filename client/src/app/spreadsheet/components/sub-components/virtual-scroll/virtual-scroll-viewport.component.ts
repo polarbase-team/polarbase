@@ -284,7 +284,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
    */
   measureRangeSize(
     [scrollLeft, scrollingX]: [number, _Scrolling?],
-    [scrollTop, scrollingY]: [number, _Scrolling?]
+    [scrollTop, scrollingY]: [number, _Scrolling?],
   ) {
     if (scrollingX !== false) {
       const leftColumnRange: Column[] = this._leftColumnDs;
@@ -307,7 +307,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
         const [groupRange, rowRangeInGroup]: [Group[], Row[]] = _findGroupInsideViewport(
           this._groupDs,
           this._rowHeight,
-          [scrollTop, scrollTop + this.height]
+          [scrollTop, scrollTop + this.height],
         );
 
         // if ( scrollingY === 'to-start' ) {
@@ -336,7 +336,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
 
     if (this._leftColumnDsDiffer) {
       const columnLeftDsChanges: IterableChanges<Column> = this._leftColumnDsDiffer.diff(
-        this._leftColumnDs
+        this._leftColumnDs,
       );
 
       if (columnLeftDsChanges) {
@@ -348,7 +348,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
 
     if (this._rightColumnDsDiffer) {
       const columnRightDsChanges: IterableChanges<Column> = this._rightColumnDsDiffer.diff(
-        this._rightColumnDs
+        this._rightColumnDs,
       );
 
       if (columnRightDsChanges) {
@@ -403,7 +403,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       this._rawLeftWidth = _makeUpColumnViewProps(
         this._leftColumnDs,
         Dimension.IndexCellWidth,
-        totalGroupPadding
+        totalGroupPadding,
       );
       this._rawRightWidth =
         _makeUpColumnViewProps(this._rightColumnDs, 0, this._rawLeftWidth + totalGroupPadding) +
@@ -414,7 +414,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       this._contentHeight = _makeUpGroupViewProps(
         this._rootGroup,
         this._rowHeight,
-        Dimension.BlankRowHeight
+        Dimension.BlankRowHeight,
       );
     } else if (shouldMakeUpRowViewProps) {
       this._contentHeight =
@@ -435,7 +435,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
 
     this._onSizeUpdated(
       shouldMakeUpColumnViewProps,
-      shouldMakeUpRowViewProps || shouldMakeUpGroupViewProps
+      shouldMakeUpRowViewProps || shouldMakeUpGroupViewProps,
     );
   }
 

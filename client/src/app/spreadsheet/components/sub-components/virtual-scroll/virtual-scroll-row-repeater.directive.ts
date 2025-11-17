@@ -43,7 +43,7 @@ export function _makeUpRowViewProps(
   rows: Row[],
   itemSize: number,
   _startIndex: number = 0,
-  _group?: _GroupView
+  _group?: _GroupView,
 ): number {
   let left: number = 0;
   let top: number = 0;
@@ -79,7 +79,7 @@ export function _findRowInsideViewport(
   rows: Row[],
   rowHeight: number,
   range: [number, number],
-  nodePadding: number = 1
+  nodePadding: number = 1,
 ): Row[] {
   let startIdx: number = Math.floor(range[0] / rowHeight) - nodePadding;
 

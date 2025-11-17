@@ -40,7 +40,7 @@ export function _getColumnOffset(column: Column): number {
 export function _makeUpColumnViewProps(
   columns: Column[],
   startLeft: number = 0,
-  startOffset: number = 0
+  startOffset: number = 0,
 ): number {
   let left: number = startLeft;
 
@@ -68,7 +68,7 @@ export function _findColumnInsideViewport(
   viewportRange: [number, number],
   memo: Column[] = [],
   start: number = 0,
-  end: number = columns.length - 1
+  end: number = columns.length - 1,
 ): Column[] {
   if (start <= end) {
     const mid: number = Math.floor((start + end) / 2);

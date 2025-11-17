@@ -39,7 +39,7 @@ type ViewContextResolver<R, C = ViewContext<R>> = (record: IterableChangeRecord<
 type ViewChanged<R, C = ViewContext<R>> = (
   view: EmbeddedViewRef<C>,
   record: IterableChangeRecord<R>,
-  operation: _ViewRepeaterOperation
+  operation: _ViewRepeaterOperation,
 ) => void;
 
 type ViewUpdated<R, C = ViewContext<R>> = (view: EmbeddedViewRef<C>) => void;
@@ -82,7 +82,7 @@ export class _RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
   applyChanges(
     changes: IterableChanges<R>,
     contextResolver?: ViewContextResolver<R, C>,
-    onViewChanged?: ViewChanged<R, C>
+    onViewChanged?: ViewChanged<R, C>,
   ) {
     changes.forEachOperation(
       (record: IterableChangeRecord<R>, adjustedPreviousIndex: number, currentIndex: number) => {
@@ -104,7 +104,7 @@ export class _RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
         }
 
         onViewChanged?.(view, record, operation);
-      }
+      },
     );
   }
 
@@ -142,7 +142,7 @@ export class _RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
   private _moveView(
     adjustedPreviousIndex: number,
     currentIndex: number,
-    context: C
+    context: C,
   ): EmbeddedViewRef<C> {
     const view: EmbeddedViewRef<C> = this._vcRef.get(adjustedPreviousIndex) as EmbeddedViewRef<C>;
 

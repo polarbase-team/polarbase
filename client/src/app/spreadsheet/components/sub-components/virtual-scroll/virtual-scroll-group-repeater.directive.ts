@@ -42,7 +42,7 @@ export function _makeUpGroupViewProps(
   itemSize: number,
   extraSize: number = 0,
   _index: number = 0,
-  _startItemIndex: number = 0
+  _startItemIndex: number = 0,
 ): number {
   const groupView: GroupView = group as GroupView;
   const isRootGroup: boolean = group.depth === 0;
@@ -114,7 +114,7 @@ export function _findGroupInsideViewport(
   range: [number, number],
   memo: [Group[], Row[]] = [[], []],
   start: number = 0,
-  end: number = groups.length - 1
+  end: number = groups.length - 1,
 ): [Group[], Row[]] {
   if (start <= end) {
     const mid: number = Math.floor((start + end) / 2);

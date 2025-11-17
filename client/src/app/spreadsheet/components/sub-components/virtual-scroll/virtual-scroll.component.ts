@@ -190,7 +190,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         fromEvent<WheelEvent>(this._elementRef.nativeElement, 'wheel')
           .pipe(
             filter((): boolean => !this.disable?.()),
-            takeUntilDestroyed(this._destroyRef)
+            takeUntilDestroyed(this._destroyRef),
           )
           .subscribe((e) => {
             e.stopPropagation();
@@ -212,21 +212,21 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         fromEvent<PointerEvent>(this._elementRef.nativeElement, 'pointerdown')
           .pipe(
             filter((): boolean => !this.disable?.()),
-            takeUntilDestroyed(this._destroyRef)
+            takeUntilDestroyed(this._destroyRef),
           )
           .subscribe(this._onPointerDown.bind(this));
 
         fromEvent<PointerEvent>(this.horizontalThumb.nativeElement, 'pointerdown')
           .pipe(
             filter((): boolean => !this.disable?.()),
-            takeUntilDestroyed(this._destroyRef)
+            takeUntilDestroyed(this._destroyRef),
           )
           .subscribe(this._onThumbPointerdown.bind(this, 'horizontal'));
 
         fromEvent<PointerEvent>(this.verticalThumb.nativeElement, 'pointerdown')
           .pipe(
             filter((): boolean => !this.disable?.()),
-            takeUntilDestroyed(this._destroyRef)
+            takeUntilDestroyed(this._destroyRef),
           )
           .subscribe(this._onThumbPointerdown.bind(this, 'vertical'));
 
@@ -248,7 +248,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
                 this.markForCheck();
               });
             }),
-            takeUntilDestroyed(this._destroyRef)
+            takeUntilDestroyed(this._destroyRef),
           )
           .subscribe();
 
@@ -256,17 +256,17 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
           .pipe(
             startWith<ViewportSizeUpdatedEvent>({} as ViewportSizeUpdatedEvent),
             audit(() => animationFrames()),
-            takeUntilDestroyed(this._destroyRef)
+            takeUntilDestroyed(this._destroyRef),
           )
           .subscribe((e) => {
             this._updateLayout();
 
             this.viewport.measureRangeSize(
               [this._scrollLeft, e.updateOnWidth],
-              [this._scrollTop, e.updateOnHeight]
+              [this._scrollTop, e.updateOnHeight],
             );
           });
-      })
+      }),
     );
   }
 
@@ -426,7 +426,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
             .pipe(
               takeUntil(stopScrollTimers),
               takeUntil(this._stopSubEvent$),
-              takeUntilDestroyed(this._destroyRef)
+              takeUntilDestroyed(this._destroyRef),
             )
             .subscribe(() => {
               if (this._isScrollCompleted) {
@@ -638,13 +638,13 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
     this.viewport.measureRangeSize(
       [this._scrollLeft, this._scrollingX],
-      [this._scrollTop, this._scrollingY]
+      [this._scrollTop, this._scrollingY],
     );
   }
 
   private _updateScroll(
     scrollLeft: number = this._scrollLeft,
-    scrollTop: number = this._scrollTop
+    scrollTop: number = this._scrollTop,
   ) {
     scrollLeft = this.layout.horizontal.available
       ? Math.min(Math.max(scrollLeft, 0), this.layout.horizontal.max)

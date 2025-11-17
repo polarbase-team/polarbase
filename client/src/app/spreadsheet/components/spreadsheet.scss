@@ -230,7 +230,9 @@ $blank-row-height: 32px;
           visibility: hidden;
           opacity: 0;
           background-image: linear-gradient(90deg, #00000014 0, #fff0);
-          transition: opacity 0.1s ease-out, visibility 0.1s ease-out;
+          transition:
+            opacity 0.1s ease-out,
+            visibility 0.1s ease-out;
         }
 
         &.freeze-divider__head-line {

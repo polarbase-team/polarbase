@@ -21,7 +21,7 @@ function detectChange(): boolean {
 
 function flush(
   callback?: (data?: any) => void,
-  errorCallback?: (errors: FieldValidationErrors | null) => void
+  errorCallback?: (errors: FieldValidationErrors | null) => void,
 ) {
   if (!this.detectChange()) {
     callback?.();
@@ -74,7 +74,7 @@ export type FieldCellSelectingState = {
   detectChange(): boolean;
   flush(
     callback?: (data: any) => void,
-    errorCallback?: (errors: FieldValidationErrors | null) => void
+    errorCallback?: (errors: FieldValidationErrors | null) => void,
   ): void;
   reset(): void;
 };

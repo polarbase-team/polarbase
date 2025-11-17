@@ -24,7 +24,7 @@ const POSITIVE_INTEGER_REPLACER: RegExp = /^e|^([0-9]+)(e)e*([0-9]*)e*|[^0-9e\n]
 function omitNonNumericChars(
   text: string,
   allowNegative: boolean = true,
-  isInteger: boolean = false
+  isInteger: boolean = false,
 ): string {
   return allowNegative
     ? text.replace(isInteger ? INTEGER_REPLACER : NUMBER_REPLACER, `$1$2$3$4`)
