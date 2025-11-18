@@ -43,45 +43,38 @@ export type Config = Partial<{
   grouping: [Column | Column['id'], GroupingType][];
   sorting: [Column | Column['id'], SortingType][];
   column: {
-    freezeIndex?: number | null;
-    minResizeWidth?: number;
+    frozenIndex?: number | null;
+    maxFrozenRatio?: number;
+    defaultWidth?: number;
+    minWidth?: number;
+    maxWidth?: number;
     arrangeable?: boolean;
     calculable?: boolean;
     creatable?: boolean;
+    deletable?: boolean;
     freezable?: boolean;
     groupable?: boolean;
     hideable?: boolean;
-    manageable?: boolean;
     resizable?: boolean;
     sortable?: boolean;
-    default?: Partial<Column>;
-    onBeforeDelete?: (columns: Column[]) => Promise<boolean | Column[]>;
   };
   row: {
-    startIndex?: number;
     // actions: Action[] | null;
     size?: RowSize;
     selectable?: boolean;
     arrangeable?: boolean;
-    creatable?: boolean;
     expandable?: boolean;
-    default?: Partial<Row>;
-    onBeforeToggle?: (row: Row | undefined, selected: boolean) => Promise<boolean>;
-    onBeforeCreate?: (row: Row, position?: number) => Promise<boolean>;
-    onBeforeDuplicate?: (row: Row, sourceRow: Row, position?: number) => Promise<boolean>;
-    onBeforeDelete?: (rows: Row[]) => Promise<boolean | Row[]>;
+    creatable?: boolean;
+    insertable?: boolean;
+    deletable?: boolean;
   };
   cell: {
     fillable?: boolean;
-    onBeforeCut?: (clipboardData: ClipboardData<Cell>) => Promise<boolean>;
-    onBeforePaste?: (clipboardData: ClipboardData<Cell>) => Promise<boolean>;
-    onBeforeClear?: (matrixCell: MatrixCell) => Promise<boolean>;
-    onBeforeFill?: (matrixCell: MatrixCell) => Promise<boolean>;
   };
 }>;
 
 export type LayoutProperties = Partial<{
-  freezeDivider: {
+  frozenDivider: {
     isHover?: boolean;
     isHideHeadLine?: boolean;
     dragHandleOffset?: number;
@@ -130,38 +123,32 @@ export type LayoutProperties = Partial<{
 // type ExportExtension = 'csv' | 'xlsx';
 
 export const DEFAULT_CONFIG: Config = {
-  sideSpacing: 0,
   streamData: false,
+  sideSpacing: 0,
   column: {
-    freezeIndex: 0,
-    minResizeWidth: 100,
+    frozenIndex: 0,
+    maxFrozenRatio: 0.65,
+    defaultWidth: 180,
+    minWidth: 100,
+    maxWidth: 500,
     arrangeable: true,
     calculable: true,
     creatable: true,
+    deletable: true,
     freezable: true,
     groupable: true,
     hideable: true,
-    manageable: true,
     resizable: true,
     sortable: true,
-    default: {
-      width: 180,
-      deletable: true,
-      hidden: false,
-    },
   },
   row: {
-    startIndex: 0,
     size: 'M',
     selectable: true,
     arrangeable: true,
-    creatable: true,
     expandable: true,
-    default: {
-      editable: true,
-      deletable: true,
-      selected: false,
-    },
+    creatable: true,
+    insertable: true,
+    deletable: true,
   },
   cell: {
     fillable: false,

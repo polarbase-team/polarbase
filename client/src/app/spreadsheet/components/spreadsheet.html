@@ -1,5 +1,6 @@
 <p-toast />
-<p-contextmenu #columnMenu [model]="columnMenuItems" appendTo="body" />
+<p-contextmenu #columnActionMenu [model]="columnActionItems" appendTo="body" />
+<p-contextmenu #rowActionMenu [model]="rowActionItems" appendTo="body" />
 
 <virtual-scroll
   [sideSpacing]="config.sideSpacing"
@@ -27,6 +28,7 @@
         #headerCell
         safe-area
         virtualScrollAutoScrollHolder="horizontal"
+        cell-type="column"
         [attr.data-column-id]="column.id"
         [attr.data-column-index]="columnIndex"
         [style.width.px]="column.width"
@@ -51,7 +53,6 @@
         (resizing)="onColumnResizing($event, column, columnIndex)"
         (resizeEnd)="onColumnResized($event, column)"
         (click)="!column._isResizing && selectColumn($event, columnIndex)"
-        (contextmenu)="openColumnMenu($event, column, columnIndex)"
       >
         <div
           class="header-cell cell"
@@ -135,9 +136,9 @@
             pTooltip="Resize column"
             (mousedown)="$event.stopPropagation()"
             (mouseenter)="
-              layoutProperties.freezeDivider.isHideHeadLine = columnIndex === state.freezeIndex
+              layoutProperties.frozenDivider.isHideHeadLine = columnIndex === state.frozenIndex
             "
-            (mouseleave)="layoutProperties.freezeDivider.isHideHeadLine = false"
+            (mouseleave)="layoutProperties.frozenDivider.isHideHeadLine = false"
           ></div>
         }
       </div>
@@ -180,7 +181,7 @@
           <ng-container
             *ngTemplateOutlet="
               headerCellTemplate;
-              context: { column, columnIndex: state.freezeIndex + columnIndex + 1 }
+              context: { column, columnIndex: state.frozenIndex + columnIndex + 1 }
             "
           ></ng-container>
         }
@@ -258,15 +259,15 @@
                   "
                 >
                   <ng-container
-                    *ngIf="columnIndex === 0 && state.freezeIndex >= 0; else notFreezeLeftGroupCell"
+                    *ngIf="columnIndex === 0 && state.frozenIndex >= 0; else notFreezeLeftGroupCell"
                   >
                     <div
                       class="group-cell cell"
                       cell-type="group"
                       [style.left.px]="columnRect.left"
-                      [style.width.px]="columnRect.width - config.column.minResizeWidth"
-                      [style.minWidth.px]="columnRect.width - config.column.minResizeWidth"
-                      [style.maxWidth.px]="columnRect.width - config.column.minResizeWidth"
+                      [style.width.px]="columnRect.width - config.column.minWidth"
+                      [style.minWidth.px]="columnRect.width - config.column.minWidth"
+                      [style.maxWidth.px]="columnRect.width - config.column.minWidth"
                     >
                       @if (group.metadata?.isEmpty) {
                         <label>(Empty)</label>
@@ -277,12 +278,10 @@
                     <div
                       class="group-cell cell"
                       cell-type="group"
-                      [style.left.px]="
-                        columnRect.left + columnRect.width - config.column.minResizeWidth
-                      "
-                      [style.width.px]="config.column.minResizeWidth"
-                      [style.minWidth.px]="config.column.minResizeWidth"
-                      [style.maxWidth.px]="config.column.minResizeWidth"
+                      [style.left.px]="columnRect.left + columnRect.width - config.column.minWidth"
+                      [style.width.px]="config.column.minWidth"
+                      [style.minWidth.px]="config.column.minWidth"
+                      [style.maxWidth.px]="config.column.minWidth"
                     >
                       @if (!virtualScroll.isLongScrollingY) {
                         <ng-container
@@ -379,7 +378,7 @@
                   <div class="h-fit-content">
                     <div class="index-block">
                       <div class="row__index-handle">
-                        {{ rowIndex + config.row.startIndex + 1 }}
+                        {{ rowIndex + 1 }}
                       </div>
                     </div>
                   </div>
@@ -411,7 +410,7 @@
                         <a safe-area class="text-xs" (click)="cancelDraftRow()">Cancel</a>
                       } @else {
                         <div class="row__index-handle">
-                          {{ rowIndex + config.row.startIndex + 1 }}
+                          {{ rowIndex + 1 }}
                         </div>
                       }
                       @if (config.row.selectable) {
@@ -424,16 +423,6 @@
                         </div>
                       }
                     </div>
-                    @if (config.row.expandable) {
-                      <div class="row__expand-handle">
-                        <i
-                          class="pi pi-external-link cursor-pointer"
-                          style="color: var(--p-surface-500); font-size: 12px"
-                          pTooltip="Xem chi tiết"
-                          (click)="expandRow(row)"
-                        ></i>
-                      </div>
-                    }
                   </div>
                 </div>
               }
@@ -462,6 +451,11 @@
                     class="row-cell cell"
                     safe-area
                     virtualScrollAutoScrollHolder
+                    cell-type="row"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="column.width"
+                    [style.minWidth.px]="column.width"
+                    [style.maxWidth.px]="column.width"
                     [attr.data-row-id]="row.id"
                     [attr.data-column-id]="column.id"
                     [attr.data-row-index]="rowIndex"
@@ -508,11 +502,6 @@
                       layoutProperties.cell.selection.primary.columnIndex === columnIndex
                     "
                     (pointerenter)="onCellHover($event, { rowIndex, columnIndex })"
-                    cell-type="row"
-                    [style.left.px]="columnRect.left"
-                    [style.width.px]="column.width"
-                    [style.minWidth.px]="column.width"
-                    [style.maxWidth.px]="column.width"
                   >
                     <ng-template
                       fieldCellFactory
@@ -679,7 +668,7 @@
               <ng-container
                 *virtualScrollColumnRepeater="
                   virtualScroll.viewport.rightWrapper.columns;
-                  startIndex: state.freezeIndex + 1;
+                  startIndex: state.frozenIndex + 1;
                   let column;
                   let columnIndex = index;
                   let columnRect = rect
@@ -701,6 +690,11 @@
                     class="row-cell cell"
                     safe-area
                     virtualScrollAutoScrollHolder
+                    cell-type="row"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="column.width"
+                    [style.minWidth.px]="column.width"
+                    [style.maxWidth.px]="column.width"
                     [attr.data-row-id]="row.id"
                     [attr.data-column-id]="column.id"
                     [attr.data-row-index]="rowIndex"
@@ -747,11 +741,6 @@
                       layoutProperties.cell.selection.primary.columnIndex === columnIndex
                     "
                     (pointerenter)="onCellHover($event, { rowIndex, columnIndex })"
-                    cell-type="row"
-                    [style.left.px]="columnRect.left"
-                    [style.width.px]="column.width"
-                    [style.minWidth.px]="column.width"
-                    [style.maxWidth.px]="column.width"
                   >
                     <ng-template
                       fieldCellFactory
@@ -885,7 +874,7 @@
             <ng-container
               *ngTemplateOutlet="
                 footerCellTempTemplate;
-                context: { column, columnIndex: state.freezeIndex + columnIndex + 1 }
+                context: { column, columnIndex: state.frozenIndex + columnIndex + 1 }
               "
             ></ng-container>
           }
@@ -894,11 +883,11 @@
     </div>
   }
 
-  <!-- Freeze divider -->
-  @if (config.column.freezable || state.freezeIndex !== null) {
+  <!-- Frozen divider -->
+  @if (config.column.freezable || state.frozenIndex !== null) {
     @let isHideHeadLine =
-      layoutProperties.freezeDivider.isHideHeadLine ||
-      $any(displayingColumns?.[state.freezeIndex])?._isResizing;
+      layoutProperties.frozenDivider.isHideHeadLine ||
+      $any(displayingColumns?.[state.frozenIndex])?._isResizing;
     @let bodyLineHeight =
       virtualScroll.viewport.height + virtualScroll.scrollTop > virtualScroll.viewport.contentHeight
         ? virtualScroll.viewport.contentHeight -
@@ -906,24 +895,24 @@
           Dimension.BodyVerticalPadding
         : virtualScroll.viewport.height;
     <div
-      class="freeze-divider"
+      class="frozen-divider"
       cdkDrag
       cdkDragLockAxis="x"
       [style.left.px]="virtualScroll.scrollDivideOffset"
-      [class.freeze-divider--hover]="layoutProperties.freezeDivider.isHover"
-      [class.freeze-divider--dragging]="layoutProperties.freezeDivider.dragging"
-      [class.freeze-divider--disabled]="!config.column.freezable || isHideHeadLine"
+      [class.frozen-divider--hover]="layoutProperties.frozenDivider.isHover"
+      [class.frozen-divider--dragging]="layoutProperties.frozenDivider.dragging"
+      [class.frozen-divider--disabled]="!config.column.freezable || isHideHeadLine"
       [cdkDragDisabled]="!config.column.freezable"
       (cdkDragStarted)="onFreezeDividerDragStarted()"
       (cdkDragMoved)="onFreezeDividerDragMoved($event)"
       (cdkDragEnded)="onFreezeDividerDragEnded($event)"
     >
       <div
-        class="freeze-divider__line freeze-divider__head-line"
+        class="frozen-divider__line frozen-divider__head-line"
         [class.hide]="isHideHeadLine"
       ></div>
       <div
-        class="freeze-divider__line freeze-divider__body-line"
+        class="frozen-divider__line frozen-divider__body-line"
         cdkDragHandle
         [style.height.px]="bodyLineHeight"
         [class.hide]="!virtualScroll.viewport.contentHeight"
@@ -931,25 +920,25 @@
         (mouseleave)="onFreezeDividerMouseleave()"
       >
         <span
-          class="freeze-divider__drag-handle"
+          class="frozen-divider__drag-handle"
           [style.transform]="
-            'translate3d(0,' + layoutProperties.freezeDivider.dragHandleOffset + 'px, 0)'
+            'translate3d(0,' + layoutProperties.frozenDivider.dragHandleOffset + 'px, 0)'
           "
         ></span>
       </div>
       @if (config.column.calculable) {
-        <div class="freeze-divider__line freeze-divider__foot-line"></div>
+        <div class="frozen-divider__line frozen-divider__foot-line"></div>
       }
     </div>
-    @if (layoutProperties.freezeDivider.dragging) {
+    @if (layoutProperties.frozenDivider.dragging) {
       <div
-        class="freeze-divider-drag-placeholder"
+        class="frozen-divider-drag-placeholder"
         [style.height.px]="bodyLineHeight + Dimension.HeaderHeight"
         [style.transform]="
-          'translate3d(' + layoutProperties.freezeDivider.dragging.offset + 'px, 0, 0)'
+          'translate3d(' + layoutProperties.frozenDivider.dragging.offset + 'px, 0, 0)'
         "
       ></div>
-      <div class="freeze-divider-drag-overlay"></div>
+      <div class="frozen-divider-drag-overlay"></div>
     }
   }
 

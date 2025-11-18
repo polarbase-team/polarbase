@@ -25,7 +25,7 @@ $border-warning-color: $color-yellow-500;
 $border-invalid-color: $color-red-500;
 $border-error-color: $color-red-600;
 $border: $border-width solid $border-color;
-$freeze-divider-drag-handle-height: 40px;
+$frozen-divider-drag-handle-height: 40px;
 $header-height: 36px;
 $header-action-cell-width: 56px;
 $body-vertical-padding: 12px;
@@ -97,8 +97,8 @@ $blank-row-height: 32px;
   // Structure
   @at-root {
     &.spreadsheet--right-scrolled {
-      .freeze-divider {
-        .freeze-divider__line {
+      .frozen-divider {
+        .frozen-divider__line {
           &::after {
             visibility: visible;
             opacity: 1;
@@ -149,7 +149,7 @@ $blank-row-height: 32px;
 
   // Layout
   @at-root {
-    .freeze-divider {
+    .frozen-divider {
       position: absolute;
       top: 0;
       bottom: 0;
@@ -159,27 +159,27 @@ $blank-row-height: 32px;
       margin-left: -3px;
       will-change: transform;
 
-      &.freeze-divider--hover,
-      &.freeze-divider--dragging {
-        .freeze-divider__line {
+      &.frozen-divider--hover,
+      &.frozen-divider--dragging {
+        .frozen-divider__line {
           &::before {
             background-color: $border-active-color;
           }
         }
-        .freeze-divider__drag-handle {
+        .frozen-divider__drag-handle {
           display: block;
         }
       }
 
-      &.freeze-divider--disabled {
+      &.frozen-divider--disabled {
         pointer-events: none;
       }
 
-      &:has(.freeze-divider__head-line) {
+      &:has(.frozen-divider__head-line) {
         top: $header-height;
       }
 
-      &:has(.freeze-divider__foot-line) {
+      &:has(.frozen-divider__foot-line) {
         bottom: $footer-height;
       }
 
@@ -204,7 +204,7 @@ $blank-row-height: 32px;
         z-index: 1;
       }
 
-      .freeze-divider__line {
+      .frozen-divider__line {
         position: absolute;
         display: flex;
         justify-content: center;
@@ -235,7 +235,7 @@ $blank-row-height: 32px;
             visibility 0.1s ease-out;
         }
 
-        &.freeze-divider__head-line {
+        &.frozen-divider__head-line {
           top: -$header-height;
           height: $header-height;
           min-height: $header-height;
@@ -243,12 +243,12 @@ $blank-row-height: 32px;
           pointer-events: none;
         }
 
-        &.freeze-divider__body-line {
+        &.frozen-divider__body-line {
           top: 0;
           bottom: 0;
         }
 
-        &.freeze-divider__foot-line {
+        &.frozen-divider__foot-line {
           bottom: -$footer-height;
           height: $footer-height;
           min-height: $footer-height;
@@ -259,14 +259,14 @@ $blank-row-height: 32px;
         }
       }
 
-      .freeze-divider__drag-handle {
+      .frozen-divider__drag-handle {
         position: absolute;
         display: none;
         width: 100%;
         min-width: 100%;
-        height: $freeze-divider-drag-handle-height;
-        min-height: $freeze-divider-drag-handle-height;
-        max-height: $freeze-divider-drag-handle-height;
+        height: $frozen-divider-drag-handle-height;
+        min-height: $frozen-divider-drag-handle-height;
+        max-height: $frozen-divider-drag-handle-height;
         border-radius: 4px;
         background-color: $border-active-color;
         pointer-events: none;
@@ -602,8 +602,7 @@ $blank-row-height: 32px;
       &.row--hover {
         &:not(.row--drafting) {
           .row__select-handle,
-          .row__drag-handle,
-          .row__expand-handle {
+          .row__drag-handle {
             visibility: visible;
             opacity: 1;
           }
@@ -697,8 +696,7 @@ $blank-row-height: 32px;
         }
       }
       .row__select-handle,
-      .row__drag-handle,
-      .row__expand-handle {
+      .row__drag-handle {
         visibility: hidden;
         opacity: 0;
       }
@@ -716,11 +714,6 @@ $blank-row-height: 32px;
         left: 2px;
         top: 8px;
         z-index: 2;
-      }
-      .row__expand-handle {
-        position: absolute;
-        right: 8px;
-        top: 8px;
       }
     }
 

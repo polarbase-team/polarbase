@@ -213,10 +213,6 @@ export class SpreadsheetComponent
   protected readonly virtualScroll: VirtualScrollComponent;
   @ViewChild('fillHanlder')
   protected readonly fillHander: ElementRef<HTMLElement>;
-  // @ViewChild('rowActionMenu')
-  // protected readonly rowActionMenu: MenuComponent;
-  // @ViewChild('groupActionMenu')
-  // protected readonly groupActionMenu: MenuComponent;
   protected isMouseHolding = false;
   protected isMouseHiding = false;
   protected isHideSummaryLabel = false;
@@ -387,30 +383,30 @@ export class SpreadsheetComponent
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((e1) => {
         const isRightClick = e1.button === 2;
-        // const shouldPause: boolean =
-        //   !(isRightClick && (this.rowActionMenu.isOpened || this.groupActionMenu.isOpened)) &&
-        //   this._shouldPauseEvent(e1);
-        const shouldPause = isRightClick || this._shouldPauseEvent(e1);
-
+        const shouldPause: boolean =
+          !(isRightClick && (this.columnActionMenu.visible() || this.rowActionMenu.visible())) &&
+          this._shouldPauseEvent(e1);
         if (shouldPause) return;
 
         const target = e1.target as HTMLElement;
 
-        // this._closeRowActionMenu();
+        this._closeColumnActionMenu();
+        this._closeRowActionMenu();
         // this._closeGroupActionMenu();
 
         if (isRightClick) {
           this.ngZone.run(() => {
             this.deselectAllCells();
-
             this.detectChanges();
 
             const el = target.closest('[cell-type]');
             const type = el?.getAttribute('cell-type');
-
             switch (type) {
+              case 'column':
+                this._openColumnActionMenu(e1);
+                break;
               case 'row':
-                // this._openRowActionMenu(e1);
+                this._openRowActionMenu(e1);
                 break;
               case 'group':
                 // this._openGroupActionMenu(e1);
@@ -437,53 +433,6 @@ export class SpreadsheetComponent
         }
 
         let startCellIdx: CellIndex;
-
-        if (isRightClick) {
-          startCellIdx = this.findCellByElement(target);
-
-          if (!startCellIdx) return;
-
-          const { rowIndex } = startCellIdx;
-          const row = this.findRowByIndex(rowIndex);
-
-          if (row && !row.selected) {
-            this._selectCellInZone(startCellIdx);
-          }
-
-          if (this.isMouseHolding || this.checkRowIsDraft(row)) {
-            return;
-          }
-
-          let group: Group;
-          let rowGroupIndex: number;
-
-          if (this.isGrouping) {
-            group = this.findGroupByRowIndex(rowIndex);
-            rowGroupIndex = this.findRowGroupIndex(group, row);
-          }
-
-          // this.ngZone.run(() => {
-          //   this.menuService.open(
-          //     e1.target as HTMLElement,
-          //     this.rowActionMenu,
-          //     {
-          //       group,
-          //       row,
-          //       rowIndex,
-          //       rowGroupIndex,
-          //       isMultiple:
-          //         this.selectedRows.size > 1 || this.layoutProperties.cell.selection?.rowCount > 1,
-          //     },
-          //     {
-          //       type: MenuType.ContextMenu,
-          //       offsetX: e1.pageX,
-          //       offsetY: e1.pageY,
-          //       viewContainerRef: this.vcRef,
-          //     }
-          //   );
-          // });
-        }
-
         let endCellIdx: CellIndex;
         let isTouchEvent: boolean;
         let delayEditCellFn: ReturnType<typeof setTimeout>;
@@ -501,7 +450,7 @@ export class SpreadsheetComponent
             ),
           };
         } else {
-          startCellIdx = this.findCellByElement(target);
+          startCellIdx = this.findCellByElement(target, 'row');
 
           if (!startCellIdx) return;
 
@@ -554,7 +503,7 @@ export class SpreadsheetComponent
               return;
             }
 
-            endCellIdx = this.findCellByElement(e2.target as HTMLElement);
+            endCellIdx = this.findCellByElement(e2.target as HTMLElement, 'row');
 
             if (!endCellIdx || _.isNaN(endCellIdx.rowIndex)) {
               return;
@@ -849,63 +798,57 @@ export class SpreadsheetComponent
     return isOverlaped;
   }
 
-  // private _openRowActionMenu(e: MouseEvent) {
-  //   if (this.rowActionMenu.isOpened) return;
-  //
-  //   const index: CellIndex = this.findCellByElement(e.target as HTMLElement);
-  //
-  //   if (!index) return;
-  //
-  //   const { rowIndex }: CellIndex = index;
-  //   const row: Row = this.findRowByIndex(rowIndex);
-  //
-  //   if (row && !row.selected) {
-  //     this._selectCellInZone(index);
-  //   }
-  //
-  //   if (
-  //     this.isMouseHolding ||
-  //     this.isPickerMode ||
-  //     this.isViewerMode ||
-  //     this.checkRowIsDraft(row)
-  //   ) {
-  //     return;
-  //   }
-  //
-  //   let group: Group;
-  //   let rowGroupIndex: number;
-  //
-  //   if (this.isGrouping) {
-  //     group = this.findGroupByRowIndex(rowIndex);
-  //     rowGroupIndex = this.findRowGroupIndex(group, row);
-  //   }
-  //
-  //   // this.menuService.open(
-  //   //   e.target as HTMLElement,
-  //   //   this.rowActionMenu,
-  //   //   {
-  //   //     group,
-  //   //     row,
-  //   //     rowIndex,
-  //   //     rowGroupIndex,
-  //   //     isMultiple:
-  //   //       this.selectedRows.size > 1 || this.layoutProperties.cell.selection?.rowCount > 1,
-  //   //   },
-  //   //   {
-  //   //     type: MenuType.ContextMenu,
-  //   //     offsetX: e.pageX,
-  //   //     offsetY: e.pageY,
-  //   //     viewContainerRef: this.vcRef,
-  //   //   }
-  //   // );
-  // }
-  //
-  // private _closeRowActionMenu() {
-  //   if (!this.rowActionMenu.isOpened) return;
-  //
-  //   this.rowActionMenu.close();
-  // }
-  //
+  private _openColumnActionMenu(e: MouseEvent) {
+    if (this.columnActionMenu.visible()) return;
+
+    const index = this.findCellByElement(e.target as HTMLElement);
+    if (!index) return;
+
+    const { columnIndex } = index;
+    const column = this.findColumnByIndex(columnIndex);
+    this.openColumnActionMenu(e, column, columnIndex);
+  }
+
+  private _closeColumnActionMenu() {
+    if (!this.columnActionMenu.visible()) return;
+
+    this.columnActionMenu.hide();
+  }
+
+  private _openRowActionMenu(e: MouseEvent) {
+    if (this.rowActionMenu.visible()) return;
+
+    const index = this.findCellByElement(e.target as HTMLElement);
+    if (!index) return;
+
+    const { rowIndex } = index;
+    const row = this.findRowByIndex(rowIndex);
+
+    if (row && !row.selected) {
+      this._selectCellInZone(index);
+    }
+
+    if (this.isMouseHolding || this.checkRowIsDraft(row)) {
+      return;
+    }
+
+    let group: Group;
+    let rowGroupIndex: number;
+
+    if (this.isGrouping) {
+      group = this.findGroupByRowIndex(rowIndex);
+      rowGroupIndex = this.findRowGroupIndex(group, row);
+    }
+
+    this.openRowActionMenu(e, row, rowIndex);
+  }
+
+  private _closeRowActionMenu() {
+    if (!this.rowActionMenu.visible()) return;
+
+    this.rowActionMenu.hide();
+  }
+
   // private _openGroupActionMenu(e: MouseEvent) {
   //   if (this.groupActionMenu.isOpened) return;
   //
@@ -933,7 +876,7 @@ export class SpreadsheetComponent
   protected readonly Dimension = Dimension;
   protected readonly state: any = {};
   protected readonly layoutProperties: LayoutProperties = {
-    freezeDivider: {},
+    frozenDivider: {},
     fillHandler: {},
     column: {},
     row: {},
@@ -977,7 +920,6 @@ export class SpreadsheetComponent
       this.isDataStreaming ??= this.config.streamData;
     }
   }
-
   MainClassOnInit() {
     if (!this.isDataStreaming) return;
 
@@ -1006,7 +948,6 @@ export class SpreadsheetComponent
         });
     });
   }
-
   MainClassAfterContentInit() {}
   MainClassAfterContentChecked() {}
   MainClassAfterViewInit() {}
@@ -1343,29 +1284,24 @@ export class SpreadsheetComponent
   @Output() columnUnhidden = new EventEmitter<Column>();
   @Output() columnUnsorted = new EventEmitter<Column>();
 
-  @ViewChild('columnMenu', { static: true }) protected readonly columnMenu: ContextMenu;
-
-  protected readonly UNSORTABLE_FIELD_DATA_TYPES = UNSORTABLE_FIELD_DATA_TYPES;
-  protected readonly UNGROUPABLE_FIELD_DATA_TYPES = UNGROUPABLE_FIELD_DATA_TYPES;
-  protected readonly MAX_FREEZE_VIEWPORT_RATIO = 0.65;
-  protected readonly DATA_TYPE = EDataType;
-  protected readonly Operator = EOperator;
+  @ViewChild('columnActionMenu', { static: true })
+  protected readonly columnActionMenu: ContextMenu;
+  protected columnActionItems: MenuItem[] | undefined;
   protected leftColumns: Column[];
   protected rightColumns: Column[];
   protected calculatingColumns = new Map<Column['id'], Column>();
   protected groupingColumns = new Map<Column['id'], Column>();
   protected sortingColumns = new Map<Column['id'], Column>();
-  protected columnMenuItems: MenuItem[] | undefined;
 
   private _displayingColumns: Column[];
   private _columnLookup: Map<Column['id'], Column>;
 
-  get freezeIndex(): number {
-    let freezeIndex = this.config.column.freezeIndex;
-    if (this.displayingColumns && freezeIndex > this.displayingColumns.length - 1) {
-      freezeIndex = this.displayingColumns.length - 1;
+  get frozenIndex(): number {
+    let frozenIndex = this.config.column.frozenIndex;
+    if (this.displayingColumns && frozenIndex > this.displayingColumns.length - 1) {
+      frozenIndex = this.displayingColumns.length - 1;
     }
-    return freezeIndex;
+    return frozenIndex;
   }
 
   get displayingColumns(): Column[] {
@@ -1373,8 +1309,8 @@ export class SpreadsheetComponent
   }
   set displayingColumns(columns: Column[]) {
     this._displayingColumns = columns;
-    this.leftColumns = columns.slice(0, this.freezeIndex + 1);
-    this.rightColumns = columns.slice(this.freezeIndex + 1);
+    this.leftColumns = columns.slice(0, this.frozenIndex + 1);
+    this.rightColumns = columns.slice(this.frozenIndex + 1);
   }
 
   get canHideSelectedColumns(): boolean {
@@ -1424,7 +1360,7 @@ export class SpreadsheetComponent
   ColumnClassOnDestroy() {}
 
   updateColumnStates() {
-    this.state.freezeIndex = this.freezeIndex;
+    this.state.frozenIndex = this.frozenIndex;
     this.state.displayingColumns = this.displayingColumns;
     this.state.canHideSelectedColumns = this.canHideSelectedColumns;
     this.state.canDeleteSelectedColumns = this.canDeleteSelectedColumns;
@@ -1450,7 +1386,7 @@ export class SpreadsheetComponent
     for (const column of columns) {
       if (!this._columnLookup.has(column.id)) {
         column.id ||= _.uniqueId();
-        _.defaultsDeep(column, this.config.column.default);
+        column.width ||= this.config.column.defaultWidth;
         this._columnLookup.set(column.id, column);
       }
       const isColumnDisplaying = displayingColumns.has(column);
@@ -1628,10 +1564,11 @@ export class SpreadsheetComponent
     this.columnCleared.emit(column);
   }
 
-  protected openColumnMenu(e: Event, column: Column, columnIndex: number) {
+  protected openColumnActionMenu(e: Event, column: Column, columnIndex: number) {
+    const items: MenuItem[] = [];
+
     if (this.layoutProperties.column.selection?.size > 1) {
-      this.columnMenuItems = [
-        { separator: true },
+      items.push(
         {
           label: 'Hide selected columns',
           icon: 'pi pi-eye-slash',
@@ -1646,73 +1583,94 @@ export class SpreadsheetComponent
             this.deleteSelectedColumns();
           },
         },
-      ];
+      );
     } else {
-      this.columnMenuItems = [
-        {
+      if (this.config.column.freezable) {
+        items.push({
           label: 'Freeze',
           icon: 'pi pi-sign-in',
           command: () => {
             this.freezeUpToColumnIndex(columnIndex);
           },
-        },
-        { separator: true },
-        {
-          label: 'Sort up',
-          icon: 'pi pi-sort-amount-up',
-          command: () => {
-            this.sortByColumn(column, 'asc', null, true);
+        });
+      }
+      if (this.config.column.sortable) {
+        items.push(
+          { separator: true },
+          {
+            label: 'Sort up',
+            icon: 'pi pi-sort-amount-up',
+            disabled: UNSORTABLE_FIELD_DATA_TYPES.has(column.field.dataType),
+            command: () => {
+              this.sortByColumn(column, 'asc', null, true);
+            },
           },
-        },
-        {
-          label: 'Sort down',
-          icon: 'pi pi-sort-amount-down',
-          command: () => {
-            this.sortByColumn(column, 'desc', null, true);
+          {
+            label: 'Sort down',
+            icon: 'pi pi-sort-amount-down',
+            disabled: UNSORTABLE_FIELD_DATA_TYPES.has(column.field.dataType),
+            command: () => {
+              this.sortByColumn(column, 'desc', null, true);
+            },
           },
-        },
-        { separator: true },
-        {
-          label: 'Group',
-          icon: 'pi pi-list',
-          command: () => {
-            this.groupByColumn(column, 'asc', null, true);
+        );
+      }
+      if (this.config.column.groupable) {
+        items.push(
+          { separator: true },
+          {
+            label: 'Group',
+            icon: 'pi pi-list',
+            disabled: UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType),
+            command: () => {
+              this.groupByColumn(column, 'asc', null, true);
+            },
           },
-        },
-        { separator: true },
-        {
-          label: 'Hide',
-          icon: 'pi pi-eye-slash',
-          command: () => {
-            this.hideColumn(column, true);
+        );
+      }
+      if (this.config.column.hideable) {
+        items.push(
+          { separator: true },
+          {
+            label: 'Hide',
+            icon: 'pi pi-eye-slash',
+            command: () => {
+              this.hideColumn(column, true);
+            },
           },
-        },
-        {
-          label: 'Delete',
-          icon: 'pi pi-trash',
-          command: () => {
-            this.deleteColumn(column);
+        );
+      }
+      if (this.config.column.deletable) {
+        items.push(
+          { separator: true },
+          {
+            label: 'Delete',
+            icon: 'pi pi-trash',
+            command: () => {
+              this.deleteColumn(column);
+            },
           },
-        },
-      ];
+        );
+      }
     }
 
-    this.columnMenu.show(e);
+    this.columnActionItems = items;
+    this.columnActionMenu.show(e);
   }
 
   protected onFreezeDividerMousemove(e: MouseEvent) {
-    this.layoutProperties.freezeDivider.isHover = true;
-    this.layoutProperties.freezeDivider.dragHandleOffset =
+    this.layoutProperties.frozenDivider.isHover = true;
+    this.layoutProperties.frozenDivider.dragHandleOffset =
       e.offsetY - Dimension.FreezeDividerDragHandleHeight / 2;
   }
 
   protected onFreezeDividerMouseleave() {
-    this.layoutProperties.freezeDivider.isHover = false;
+    this.layoutProperties.frozenDivider.isHover = false;
   }
 
   protected onFreezeDividerDragStarted() {
     this.virtualScroll.scrollToLeft();
-    this.layoutProperties.freezeDivider.dragging = {} as any;
+    this.layoutProperties.frozenDivider.dragging = {} as any;
   }
 
   protected onFreezeDividerDragMoved(e: CdkDragMove) {
@@ -1721,21 +1679,21 @@ export class SpreadsheetComponent
       this.displayingColumns,
       pointerOffsetX,
       this.virtualScroll.scrollLeft,
-      this.freezeIndex,
+      this.frozenIndex,
     );
     const offset = _getColumnOffset(this.findColumnByIndex(index));
-    if (offset / this.virtualScroll.viewport.width > this.MAX_FREEZE_VIEWPORT_RATIO) {
+    if (offset / this.virtualScroll.viewport.width > this.config.column.maxFrozenRatio) {
       return;
     }
-    this.layoutProperties.freezeDivider.dragging.index = index;
-    this.layoutProperties.freezeDivider.dragging.offset = offset + this.config.sideSpacing;
+    this.layoutProperties.frozenDivider.dragging.index = index;
+    this.layoutProperties.frozenDivider.dragging.offset = offset + this.config.sideSpacing;
   }
 
   protected onFreezeDividerDragEnded(e: CdkDragEnd) {
-    const { index } = this.layoutProperties.freezeDivider.dragging;
+    const { index } = this.layoutProperties.frozenDivider.dragging;
     if (index === null) return;
     this.freezeUpToColumnIndex(index - 1);
-    this.layoutProperties.freezeDivider.dragging = null;
+    this.layoutProperties.frozenDivider.dragging = null;
     e.source._dragRef.reset();
     this.updateStates();
   }
@@ -1759,7 +1717,7 @@ export class SpreadsheetComponent
             this.displayingColumns,
             pointerOffsetX,
             this.virtualScroll.scrollLeft,
-            this.freezeIndex,
+            this.frozenIndex,
           );
     let offset = null;
     if (index !== null) {
@@ -1776,7 +1734,7 @@ export class SpreadsheetComponent
         if (isOutRange) {
           offset += column.width;
         }
-        if (index - 1 > this.freezeIndex) {
+        if (index - 1 > this.frozenIndex) {
           offset -= this.virtualScroll.scrollLeft;
         }
       } else {
@@ -1813,36 +1771,52 @@ export class SpreadsheetComponent
   }
 
   protected onColumnResizing(event: ResizeEvent, column: ColumnExtra, _idx: number) {
-    const minResizeWidth = this.config.column.minResizeWidth;
     let newWidth = event.rectangle.width;
-    if (newWidth < minResizeWidth) {
-      newWidth = minResizeWidth;
+
+    const minWidth = this.config.column.minWidth;
+    if (newWidth < minWidth) {
+      newWidth = minWidth;
     }
+
+    const maxWidth = this.config.column.maxWidth;
+    if (newWidth > maxWidth) {
+      newWidth = maxWidth;
+    }
+
     if (!column._bkWidth) {
       column._bkWidth = column.width;
     }
+
     column.width = newWidth;
     column._isResizing = true;
     this.markDisplayingColumnsAsChanged();
+
     if (this.layoutProperties.fillHandler.index && !this.layoutProperties.fillHandler.hidden) {
       this.updateFillHandlerPosition();
     }
   }
 
   protected onColumnResized(event: ResizeEvent, column: ColumnExtra) {
-    const minResizeWidth = this.config.column.minResizeWidth;
     let newWidth = event.rectangle.width;
-    if (newWidth < minResizeWidth) {
-      newWidth = minResizeWidth;
+
+    const minWidth = this.config.column.minWidth;
+    if (newWidth < minWidth) {
+      newWidth = minWidth;
     }
+
+    const maxWidth = this.config.column.maxWidth;
+    if (newWidth > maxWidth) {
+      newWidth = maxWidth;
+    }
+
     column._bkWidth = undefined;
     setTimeout(() => (column._isResizing = false));
     this.columnResized.emit(column);
   }
 
   protected freezeUpToColumnIndex(columnIndex: number) {
-    if (columnIndex === this.freezeIndex) return;
-    this.config.column.freezeIndex = columnIndex;
+    if (columnIndex === this.frozenIndex) return;
+    this.config.column.frozenIndex = columnIndex;
     this.markDisplayingColumnsAsChanged();
     this.columnFreezed.emit(columnIndex);
   }
@@ -1874,16 +1848,13 @@ export class SpreadsheetComponent
   }
 
   protected deselectAllColumns() {
-    this.columnMenu.hide();
+    this.columnActionMenu.hide();
     if (!this.layoutProperties.column.selection) return;
     this.layoutProperties.column.selection = null;
     this.columnSelected.emit(null);
   }
 
   protected async deleteColumn(column: Column) {
-    const { onBeforeDelete } = this.config.column;
-    const isContinue = (await onBeforeDelete?.([column])) ?? true;
-    if (isContinue === false) return;
     _.remove(this.columns, column);
     this.markDisplayingColumnsAsChanged(_.without(this.displayingColumns, column));
     this.deselectAllCells();
@@ -1894,12 +1865,6 @@ export class SpreadsheetComponent
   protected async deleteSelectedColumns() {
     let canDeleteColumns = this.getSelectedColumns();
     if (!canDeleteColumns.length) return;
-    const { onBeforeDelete } = this.config.column;
-    const isContinue = (await onBeforeDelete?.(canDeleteColumns)) ?? true;
-    if (isContinue === false) return;
-    if (isContinue instanceof Array) {
-      canDeleteColumns = isContinue;
-    }
     _.pull(this.columns, ...canDeleteColumns);
     this.markDisplayingColumnsAsChanged(_.without(this.displayingColumns, ...canDeleteColumns));
     this.deselectAllCells();
@@ -2002,8 +1967,9 @@ export class SpreadsheetComponent
   @Output() rowMoved = new EventEmitter<RowMovedEvent>();
   @Output() rowSelected = new EventEmitter<Row[] | null>();
 
-  // protected readonly rowActionMenu: MenuComponent;
-
+  @ViewChild('rowActionMenu', { static: true })
+  protected readonly rowActionMenu: ContextMenu;
+  protected rowActionItems: MenuItem[] | undefined;
   protected draftRow: Row;
   protected bkRows: Row[];
   protected selectedRows = new Set<Row>();
@@ -2032,7 +1998,6 @@ export class SpreadsheetComponent
       this.initRows(this.rows);
     }
   }
-
   RowClassOnInit() {
     this.cellSelected
       .pipe(
@@ -2065,12 +2030,10 @@ export class SpreadsheetComponent
         this.handleDataUpdate();
       });
   }
-
   RowClassAfterContentInit() {}
   RowClassAfterContentChecked() {}
   RowClassAfterViewInit() {}
   RowClassAfterViewChecked() {}
-
   RowClassOnDestroy() {
     this._addedEEC?.flush();
     this._duplicatedEEC?.flush();
@@ -2091,7 +2054,6 @@ export class SpreadsheetComponent
       if (!('_isInit' in row && (row as any)._isInit)) {
         (row as any)._isInit = true;
         row.id ||= _.uniqueId();
-        _.defaultsDeep(row, this.config.row.default);
       }
       if (row.selected) this.selectedRows.add(row);
       this._rowLookup.set(row.id, row);
@@ -2109,7 +2071,6 @@ export class SpreadsheetComponent
       if (!('_isInit' in row && (row as any)._isInit)) {
         (row as any)._isInit = true;
         row.id ||= _.uniqueId();
-        _.defaultsDeep(row, this.config.row.default);
       }
       if (row.selected) this.selectedRows.add(row);
       this._rowLookup.set(row.id, row);
@@ -2148,8 +2109,58 @@ export class SpreadsheetComponent
     this._addedEEC?.flush();
   }
 
-  protected onRowBeforeToggle(selected: boolean, row: Row | undefined): Promise<boolean> {
-    return this.config.row.onBeforeToggle(row, selected);
+  protected openRowActionMenu(e: Event, row: Row, rowIndex: number) {
+    const items: MenuItem[] = [];
+
+    if (this.selectedRows?.size > 1) {
+      items.push({
+        label: 'Delete selected rows',
+        icon: 'pi pi-trash',
+        command: () => {
+          this.deleteSelectedRows();
+        },
+      });
+    } else {
+      if (this.config.row.expandable) {
+        items.push({
+          label: 'Expand',
+          icon: 'pi pi-external-link',
+          command: () => {
+            this.expandRow(row);
+          },
+        });
+        items.push({ separator: true });
+      }
+      if (this.config.row.insertable) {
+        items.push({
+          label: 'Insert row above',
+          icon: 'pi pi-arrow-up',
+          command: () => {
+            this.createRow(null, rowIndex);
+          },
+        });
+        items.push({
+          label: 'Insert row below',
+          icon: 'pi pi-arrow-down',
+          command: () => {
+            this.createRow(null, rowIndex + 1);
+          },
+        });
+        items.push({ separator: true });
+      }
+      if (this.config.row.deletable) {
+        items.push({
+          label: 'Delete',
+          icon: 'pi pi-trash',
+          command: () => {
+            this.deleteRow(row);
+          },
+        });
+      }
+    }
+
+    this.rowActionItems = items;
+    this.rowActionMenu.show(e);
   }
 
   protected onBlankRowHover(e: Event, key: string = 'default') {
@@ -2235,12 +2246,6 @@ export class SpreadsheetComponent
     onBeforeInsert?: (r: Row, p: number) => void,
   ): Promise<Row> {
     const newRow = this._generateRow({ data });
-    const { onBeforeCreate } = this.config.row;
-    const isContinue = (await onBeforeCreate?.(newRow, position)) ?? true;
-
-    if (isContinue === false) return null;
-
-    onBeforeInsert?.(newRow, position);
 
     this._insertRow(newRow, position, true);
 
@@ -2273,13 +2278,6 @@ export class SpreadsheetComponent
   ): Promise<Row> {
     const newRow = this._generateRow(sourceRow);
     const position = this.findRowIndex(sourceRow) + 1;
-    const { onBeforeDuplicate } = this.config.row;
-    const isContinue = (await onBeforeDuplicate?.(newRow, sourceRow, position)) ?? true;
-
-    if (isContinue === false) return null;
-
-    onBeforeInsert?.(newRow, position);
-
     this._insertRow(newRow, position);
 
     this._duplicatedEEC ||= new EmitEventController({
@@ -2288,7 +2286,6 @@ export class SpreadsheetComponent
         this.rowDuplicated.emit(events);
       },
     });
-
     this._duplicatedEEC.addEvent(newRow.id, { row: newRow, sourceRow, position });
 
     return newRow;
@@ -2296,17 +2293,7 @@ export class SpreadsheetComponent
 
   protected async deleteSelectedRows() {
     let canDeleteRows = this.getSelectedRows();
-
     if (!canDeleteRows.length) return;
-
-    const { onBeforeDelete } = this.config.row;
-    const isContinue = (await onBeforeDelete?.(canDeleteRows)) ?? true;
-
-    if (isContinue === false) return;
-
-    if (Array.isArray(isContinue)) {
-      canDeleteRows = isContinue;
-    }
 
     if (this.selectedRows.size) {
       this.selectedRows = new Set(_.pull([...this.selectedRows], ...canDeleteRows));
@@ -2315,25 +2302,15 @@ export class SpreadsheetComponent
     }
 
     this._removeRows(canDeleteRows);
-
-    this.calculate();
-
     this.rowDeleted.emit(canDeleteRows);
+    this.calculate();
   }
 
   protected async deleteRow(row: Row) {
-    const { onBeforeDelete } = this.config.row;
-    const isContinue = (await onBeforeDelete?.([row])) ?? true;
-
-    if (isContinue === false) return;
-
     this.deselectAllCells();
-
     this._removeRows([row]);
-
-    this.calculate();
-
     this.rowDeleted.emit([row]);
+    this.calculate();
   }
 
   protected toggleRow(row: Row) {
@@ -2390,7 +2367,7 @@ export class SpreadsheetComponent
   }
 
   protected deselectAllRows() {
-    // this.rowActionMenu.close();
+    this.rowActionMenu.hide();
 
     if (!this.selectedRows.size) return;
 
@@ -2516,7 +2493,6 @@ export class SpreadsheetComponent
 
   private _generateRow(extra?: Partial<Row>): Row {
     return _.cloneDeep({
-      ...this.config.row.default,
       ...extra,
       id: _.uniqueId(),
       selected: false,
@@ -2891,20 +2867,6 @@ export class SpreadsheetComponent
   }
 
   protected async cutCells(clipboardData: ClipboardData<Cell>) {
-    const onBeforeCut = this.config.cell.onBeforeCut;
-
-    let isContinue: boolean | Promise<boolean> = true;
-
-    if (onBeforeCut) {
-      isContinue = onBeforeCut(clipboardData);
-
-      if (isContinue instanceof Promise) {
-        isContinue = await isContinue;
-      }
-    }
-
-    if (isContinue !== true) return;
-
     const matrixCell = new MatrixCell();
 
     for (const items of clipboardData.matrix) {
@@ -2994,20 +2956,6 @@ export class SpreadsheetComponent
     if (!matrix) return;
 
     const values = matrix.values();
-    const onBeforePaste = this.config.cell.onBeforePaste;
-
-    let isContinue: boolean | Promise<boolean> = true;
-
-    if (onBeforePaste) {
-      isContinue = onBeforePaste({ ...clipboardData, rowCount: matrix.rowCount });
-
-      if (isContinue instanceof Promise) {
-        isContinue = await isContinue;
-      }
-    }
-
-    if (isContinue !== true) return;
-
     let count = 0;
     let total = 0;
 
@@ -3065,22 +3013,7 @@ export class SpreadsheetComponent
   }
 
   protected async clearCells(matrixCell: MatrixCell) {
-    const onBeforeClear = this.config.cell.onBeforeClear;
-
-    let isContinue: boolean | Promise<boolean> = true;
-
-    if (onBeforeClear) {
-      isContinue = onBeforeClear(matrixCell);
-
-      if (isContinue instanceof Promise) {
-        isContinue = await isContinue;
-      }
-    }
-
-    if (isContinue !== true) return;
-
     const [count, total] = this._clearCells(matrixCell);
-
     this.toastService.add({
       severity: 'info',
       summary: 'Clear complete',
@@ -3094,28 +3027,12 @@ export class SpreadsheetComponent
     target: [CellIndex, CellIndex],
     isReverse: boolean,
   ) {
-    let targetMatrixCell = this.getCells(target[0], target[1]);
-
-    const onBeforeFill = this.config.cell.onBeforeFill;
-
-    let isContinue: boolean | Promise<boolean> = true;
-
-    if (onBeforeFill) {
-      isContinue = onBeforeFill(targetMatrixCell);
-
-      if (isContinue instanceof Promise) {
-        isContinue = await isContinue;
-      }
-    }
-
-    if (isContinue !== true) return;
-
+    const targetMatrixCell = this._filterExcludeCells(
+      this.getCells(target[0], target[1]),
+      undefined,
+      [ExcludeCellState.NonEditable],
+    );
     const sourceMatrixCell = this.getCells(source[0], source[1]);
-
-    targetMatrixCell = this._filterExcludeCells(targetMatrixCell, undefined, [
-      ExcludeCellState.NonEditable,
-    ]);
-
     const sourceValues = sourceMatrixCell.values();
     const targetValues = targetMatrixCell.values();
 
@@ -3124,7 +3041,7 @@ export class SpreadsheetComponent
       targetValues.reverse();
     }
 
-    const sourceData: any = {};
+    const sourceData = {};
 
     for (let i = 0; i < sourceMatrixCell.rowCount; i++) {
       const cells = sourceValues[i];
@@ -3177,7 +3094,7 @@ export class SpreadsheetComponent
             case DateField.dataType: {
               const prev = sourceData[i - 1]?.[j];
 
-              let metadata;
+              let metadata: any;
 
               if (!isDayjs(data)) {
                 data = dayjs(data);
@@ -3399,14 +3316,11 @@ export class SpreadsheetComponent
     return this.elementRef.nativeElement.querySelector(`${rowIdxAttr}${columnIdxAttr}`);
   }
 
-  protected findCellByElement(element: HTMLElement): CellIndex {
-    const cell = element.closest('[cell-type="row"]');
-
+  protected findCellByElement(element: HTMLElement, cellType?: string): CellIndex {
+    const cell = element.closest(cellType ? `[cell-type="${cellType}"]` : '[cell-type]');
     if (!cell) return null;
-
     const rowIndex = parseFloat(cell.getAttribute('data-row-index'));
     const columnIndex = parseFloat(cell.getAttribute('data-column-index'));
-
     return { rowIndex, columnIndex };
   }
 

@@ -28,7 +28,6 @@ export interface ColumnExtra extends Column {
   _isResizing?: boolean;
 }
 
-export const minResizeWidthPrimary = 160;
 export const UNGROUPABLE_FIELD_DATA_TYPES: ReadonlySet<EDataType> = new Set();
 export const UNSORTABLE_FIELD_DATA_TYPES: ReadonlySet<EDataType> = new Set();
 
@@ -36,7 +35,7 @@ export function calculateColumnDragPlaceholderIndex(
   columns: Column[],
   offsetX: number,
   scrollLeft: number,
-  freezeIndex: number
+  frozenIndex: number,
 ): number {
   let dragPlaceholderIndex = 0;
   const length = columns.length;
@@ -52,7 +51,7 @@ export function calculateColumnDragPlaceholderIndex(
     let a = _getColumnOffset(curr);
     let b = _getColumnOffset(next) || (curr ? a + curr.width : a);
 
-    if (i <= freezeIndex) {
+    if (i <= frozenIndex) {
       a += scrollLeft;
       b += scrollLeft;
     }
@@ -81,7 +80,7 @@ export function calculateFreezeDividerDragPlaceholderIndex(
   columns: Column[],
   offsetX: number,
   scrollLeft: number,
-  freezeIndex: number
+  frozenIndex: number,
 ): number {
   let dragPlaceholderIndex = 0;
 
@@ -89,7 +88,7 @@ export function calculateFreezeDividerDragPlaceholderIndex(
     let a = _getColumnOffset(columns[i]);
     let b = _getColumnOffset(columns[i + 1]) || a;
 
-    if (i <= freezeIndex) {
+    if (i <= frozenIndex) {
       a += scrollLeft;
       b += scrollLeft;
     }
