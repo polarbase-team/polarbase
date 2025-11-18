@@ -243,10 +243,14 @@
               <div class="group__header">
                 <div class="group-cell cell index-cell" cell-type="group">
                   <div class="index-block">
-                    <p-button
-                      [icon]="group.metadata.isCollapsed ? 'chevron-right' : 'chevron-down'"
+                    <i
+                      class="pi cursor-pointer"
+                      style="color: var(--p-surface-500); font-size: 12px"
+                      [ngClass]="
+                        group.metadata.isCollapsed ? 'pi-chevron-right' : 'pi-chevron-down'
+                      "
                       (click)="toggleGroup(group)"
-                    />
+                    ></i>
                   </div>
                 </div>
                 <ng-container
@@ -323,7 +327,7 @@
               @if (!group.children) {
                 <div class="group__body">
                   <div
-                    class="blank-row"
+                    class="row blank-row"
                     [class.row--hover]="layoutProperties.row.blankRowHover === group.id"
                     (pointerenter)="onBlankRowHover($event, group.id)"
                   >
@@ -333,7 +337,7 @@
                       [attr.disabled]="isDataStreaming"
                       (click)="addRow(group)"
                     >
-                      <i class="pi pi-plus-circle"></i>
+                      <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
                     </div>
                     <div class="row-cell cell" cell-type="row"></div>
                   </div>
@@ -512,7 +516,8 @@
                       [readonly]="
                         row !== draftRow &&
                         ((isDataStreaming && !$any(row)._isStreamed) ||
-                          (!column.editable &&
+                          (!config.column.editable &&
+                            !column.editable &&
                             row.editable !== true &&
                             row.editable?.[column.id] !== true))
                       "
@@ -631,7 +636,7 @@
               @if (!group.children) {
                 <div class="group__body">
                   <div
-                    class="blank-row"
+                    class="row blank-row"
                     [class.row--hover]="layoutProperties.row.blankRowHover === group.id"
                     (pointerenter)="onBlankRowHover($event, group.id)"
                   >
@@ -751,7 +756,8 @@
                       [readonly]="
                         row !== draftRow &&
                         ((isDataStreaming && !$any(row)._isStreamed) ||
-                          (!column.editable &&
+                          (!config.column.editable &&
+                            !column.editable &&
                             row.editable !== true &&
                             row.editable?.[column.id] !== true))
                       "

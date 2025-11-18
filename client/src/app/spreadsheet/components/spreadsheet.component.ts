@@ -52,13 +52,15 @@ import {
   pairwise,
   debounceTime,
 } from 'rxjs';
+import dayjs, { isDayjs } from 'dayjs';
+import { FORECAST } from '@formulajs/formulajs';
 import { MenuItem, MessageService } from 'primeng/api';
 import { Chip } from 'primeng/chip';
 import { Toast } from 'primeng/toast';
 import { Tooltip } from 'primeng/tooltip';
 import { Skeleton } from 'primeng/skeleton';
 import { Checkbox } from 'primeng/checkbox';
-import { Button } from 'primeng/button';
+import { ContextMenu } from 'primeng/contextmenu';
 import _ from 'lodash';
 import { Clipboard, ClipboardData } from '../helpers/clipboard';
 import { Keyboard } from '../helpers/keyboard';
@@ -132,7 +134,7 @@ import {
 } from './sub-components/virtual-scroll/virtual-scroll-content-wrapper.component';
 import { FieldCellFactoryDirective } from './sub-components/cells/field-cell-factory.directive';
 import { searchBy } from '../helpers/search';
-import { EDataType, EOperator } from '../field/interfaces/field.interface';
+import { EDataType } from '../field/interfaces/field.interface';
 import {
   calculateBy,
   calculateFieldPredicate,
@@ -147,11 +149,8 @@ import {
   FieldValidationKey,
   NumberField,
 } from '../field/objects';
-import { FORECAST } from '@formulajs/formulajs';
 import { sortBy, SortingPredicateReturnType, SortingType } from '../helpers/sort';
-import dayjs, { isDayjs } from 'dayjs';
 import { FIELD_READONLY } from '../field/resources/field';
-import { ContextMenu } from 'primeng/contextmenu';
 
 export * from './sub-classes/cell';
 export * from './sub-classes/column';
@@ -173,6 +172,11 @@ const stack: SpreadsheetComponent[] = [];
     ScrollingModule,
     ResizableModule,
     Tooltip,
+    Skeleton,
+    Checkbox,
+    Chip,
+    Toast,
+    ContextMenu,
     VirtualScrollComponent,
     VirtualScrollViewportComponent,
     VirtualScrollGroupRepeaterDirective,
@@ -180,14 +184,8 @@ const stack: SpreadsheetComponent[] = [];
     VirtualScrollRowRepeaterDirective,
     VirtualScrollLeftContentWrapperComponent,
     VirtualScrollRightContentWrapperComponent,
-    CalculatingResultPipe,
-    Skeleton,
     FieldCellFactoryDirective,
-    Checkbox,
-    Button,
-    Chip,
-    Toast,
-    ContextMenu,
+    CalculatingResultPipe,
   ],
   providers: [MessageService, FieldCellService],
 })

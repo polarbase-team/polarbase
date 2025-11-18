@@ -9,6 +9,7 @@ export type Column = {
   id: string | number;
   field: Field;
   width?: number;
+  editable?: boolean;
   deletable?: boolean;
   hidden?: boolean;
   highlight?: boolean;

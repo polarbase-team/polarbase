@@ -51,6 +51,7 @@ export type Config = Partial<{
     arrangeable?: boolean;
     calculable?: boolean;
     creatable?: boolean;
+    editable?: boolean;
     deletable?: boolean;
     freezable?: boolean;
     groupable?: boolean;
@@ -134,6 +135,7 @@ export const DEFAULT_CONFIG: Config = {
     arrangeable: true,
     calculable: true,
     creatable: true,
+    editable: true,
     deletable: true,
     freezable: true,
     groupable: true,
