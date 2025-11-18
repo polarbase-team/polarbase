@@ -12,7 +12,7 @@ export enum RowSizeEnum {
 export function flushEEC(
   controller: EmitEventController<any, any>,
   row: Row,
-  predicate: (event: any) => Row['id']
+  predicate: (event: any) => Row['id'],
 ) {
   if (!controller?.getLength()) return;
 
@@ -33,31 +33,23 @@ export function flushEEC(
 
 export const ROW_SIZES = ['S', 'M', 'L', 'XL'] as const;
 
-export type RowSize = typeof ROW_SIZES[number];
+export type RowSize = (typeof ROW_SIZES)[number];
 
 export type Row = {
   id: string | number;
   name: string;
   data: RowCellData;
-  error?: RowCellError;
   editable?: boolean | Record<Column['id'], boolean>;
   deletable?: boolean;
   selected?: boolean;
 };
 
 export type RowCellData = Record<Column['id'], any>;
-export type RowCellError = Record<Column['id'], boolean | string>;
 
 export type FoundRow = {
   rowIndex: number;
   rowOffset: number;
   group?: Group;
-};
-
-export type RowDuplicatedEvent = {
-  row: Row;
-  sourceRow: Row;
-  position: number;
 };
 
 export type RowInsertedEvent = {

@@ -23,7 +23,6 @@ $border-color: $color-border;
 $border-active-color: $color-primary;
 $border-warning-color: $color-yellow-500;
 $border-invalid-color: $color-red-500;
-$border-error-color: $color-red-600;
 $border: $border-width solid $border-color;
 $frozen-divider-drag-handle-height: 40px;
 $header-height: 36px;
@@ -400,9 +399,6 @@ $blank-row-height: 32px;
       }
       &.cell--invalid {
         @include set-outline($border-invalid-color);
-      }
-      &.cell--error {
-        @include set-outline($border-error-color);
       }
       &.index-cell {
         width: $index-cell-width;

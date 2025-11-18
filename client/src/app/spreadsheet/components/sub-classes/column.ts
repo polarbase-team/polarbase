@@ -12,7 +12,6 @@ export type Column = {
   editable?: boolean;
   deletable?: boolean;
   hidden?: boolean;
-  highlight?: boolean;
   calculateType?: ECalculateType;
   groupingType?: GroupingType;
   sortingType?: SortingType;

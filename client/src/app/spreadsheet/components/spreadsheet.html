@@ -37,7 +37,6 @@
         [style.zIndex]="state.displayingColumns?.length - columnIndex"
         [class.cdk-drag-placeholder]="column._isDragging"
         [class.cell--active]="layoutProperties.column.selection?.has(columnIndex)"
-        [class.cell--highlight]="column.highlight"
         [class.header-cell--grouping]="!isDataStreaming && column.groupingType"
         [class.header-cell--sorting]="!isDataStreaming && column.sortingType"
         [class.header-cell--resizing]="column._isResizing"
@@ -479,7 +478,6 @@
                       layoutProperties.column.selection?.has(columnIndex)
                     "
                     [class.cell--highlight]="
-                      column.highlight ||
                       layoutProperties.cell.searching?.found?.get(row.id)?.has(column.id)
                     "
                     [class.cell--filling]="
@@ -494,7 +492,6 @@
                       layoutProperties.cell.focusing.rowIndex === rowIndex &&
                       layoutProperties.cell.focusing.columnIndex === columnIndex
                     "
-                    [class.cell--error]="row?.error?.[column.id]"
                     [class.cell--invalid]="
                       layoutProperties.cell.invalid &&
                       layoutProperties.cell.invalid.rowIndex === rowIndex &&
@@ -719,7 +716,6 @@
                       layoutProperties.column.selection?.has(columnIndex)
                     "
                     [class.cell--highlight]="
-                      column.highlight ||
                       layoutProperties.cell.searching?.found?.get(row.id)?.has(column.id)
                     "
                     [class.cell--filling]="
@@ -734,7 +730,6 @@
                       layoutProperties.cell.focusing.rowIndex === rowIndex &&
                       layoutProperties.cell.focusing.columnIndex === columnIndex
                     "
-                    [class.cell--error]="row?.error?.[column.id]"
                     [class.cell--invalid]="
                       layoutProperties.cell.invalid &&
                       layoutProperties.cell.invalid.rowIndex === rowIndex &&

@@ -104,7 +104,6 @@ import {
   FoundRow,
   Row,
   RowCellData,
-  RowDuplicatedEvent,
   RowExtra,
   RowInsertedEvent,
   RowMovedEvent,
@@ -1958,7 +1957,6 @@ export class SpreadsheetComponent
 
   @Output() rowsChange = new EventEmitter<Row[]>();
   @Output() rowAdded = new EventEmitter<Row[]>();
-  @Output() rowDuplicated = new EventEmitter<RowDuplicatedEvent[]>();
   @Output() rowDeleted = new EventEmitter<Row[]>();
   @Output() rowExpanded = new EventEmitter<Row>();
   @Output() rowInserted = new EventEmitter<RowInsertedEvent[]>();
@@ -1975,7 +1973,6 @@ export class SpreadsheetComponent
 
   private _rowLookup = new Map<Row['id'], Row>();
   private _addedEEC: EmitEventController<Row['id'], Row>;
-  private _duplicatedEEC: EmitEventController<Row['id'], RowDuplicatedEvent>;
   private _insertedEEC: EmitEventController<Row['id'], RowInsertedEvent>;
 
   get rowHeight(): number {
@@ -2007,13 +2004,11 @@ export class SpreadsheetComponent
       )
       .subscribe(([_oldRow, newRow]: [Row | null, Row | null]) => {
         flushEEC(this._addedEEC, newRow, (event: Row) => event.id);
-        flushEEC(this._duplicatedEEC, newRow, (event: RowDuplicatedEvent) => event.row.id);
         flushEEC(this._insertedEEC, newRow, (event: RowInsertedEvent) => event.row.id);
       });
 
     merge(
       this.rowAdded,
-      this.rowDuplicated.pipe(map((events: RowInsertedEvent[]) => _.map(events, 'row'))),
       this.rowInserted.pipe(map((events: RowInsertedEvent[]) => _.map(events, 'row'))),
     )
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -2034,7 +2029,6 @@ export class SpreadsheetComponent
   RowClassAfterViewChecked() {}
   RowClassOnDestroy() {
     this._addedEEC?.flush();
-    this._duplicatedEEC?.flush();
     this._insertedEEC?.flush();
   }
 
@@ -2270,25 +2264,6 @@ export class SpreadsheetComponent
     return newRow;
   }
 
-  protected async duplicateRow(
-    sourceRow: Row,
-    onBeforeInsert?: (r: Row, p: number) => void,
-  ): Promise<Row> {
-    const newRow = this._generateRow(sourceRow);
-    const position = this.findRowIndex(sourceRow) + 1;
-    this._insertRow(newRow, position);
-
-    this._duplicatedEEC ||= new EmitEventController({
-      autoEmit: true,
-      onEmitted: (events: RowDuplicatedEvent[]) => {
-        this.rowDuplicated.emit(events);
-      },
-    });
-    this._duplicatedEEC.addEvent(newRow.id, { row: newRow, sourceRow, position });
-
-    return newRow;
-  }
-
   protected async deleteSelectedRows() {
     let canDeleteRows = this.getSelectedRows();
     if (!canDeleteRows.length) return;
@@ -2330,7 +2305,6 @@ export class SpreadsheetComponent
 
     this._addedEEC?.emitEvent(this.draftRow.id);
     this._insertedEEC?.emitEvent(this.draftRow.id);
-    this._duplicatedEEC?.emitEvent(this.draftRow.id);
 
     this.draftRow = null;
   }
@@ -2344,7 +2318,6 @@ export class SpreadsheetComponent
 
     this._addedEEC?.removeEvent(this.draftRow.id);
     this._insertedEEC?.removeEvent(this.draftRow.id);
-    this._duplicatedEEC?.removeEvent(this.draftRow.id);
 
     this.draftRow = null;
   }
@@ -3821,20 +3794,6 @@ export class SpreadsheetComponent
         g = g.parent;
       } while (g);
     }
-    return newRow;
-  }
-
-  protected async duplicateRowInGroup(group: Group, sourceRow: Row): Promise<Row> {
-    let g = group;
-    do {
-      g = g.parent;
-      if (g.depth === 0) break;
-    } while (g);
-
-    const newRow = await this.duplicateRow(sourceRow, (row: Row) => {
-      group.addItems([row], this.findRowGroupIndex(group, sourceRow) + 1);
-      this.markGroupAsChanged();
-    });
     return newRow;
   }
 

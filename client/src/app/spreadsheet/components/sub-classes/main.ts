@@ -26,16 +26,6 @@ export type SearchInfo = {
   current: number;
 };
 
-// export type Action = {
-//   icon: string;
-//   label: { title: string; translate?: boolean };
-//   color?: string;
-//   disabled?: boolean;
-//   hidden?: boolean;
-//   support?: 'single-only' | 'multiple-only';
-//   doAction?: (e: Event, rows: Row[]) => void;
-// };
-
 export type Config = Partial<{
   sideSpacing?: number;
   streamData: boolean;
@@ -60,7 +50,6 @@ export type Config = Partial<{
     sortable?: boolean;
   };
   row: {
-    // actions: Action[] | null;
     size?: RowSize;
     selectable?: boolean;
     arrangeable?: boolean;
@@ -120,8 +109,6 @@ export type LayoutProperties = Partial<{
     invalid?: CellIndex;
   };
 }>;
-
-// type ExportExtension = 'csv' | 'xlsx';
 
 export const DEFAULT_CONFIG: Config = {
   streamData: false,
