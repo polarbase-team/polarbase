@@ -30,7 +30,7 @@ export abstract class Field<T = any> implements IField<T> {
     description?: string,
     required?: boolean,
     initialData?: T,
-    params?: any
+    params?: any,
   ) {
     this.name = name;
     this.data = data;
@@ -41,7 +41,7 @@ export abstract class Field<T = any> implements IField<T> {
   }
 
   validate(data: T = this.data!, isAllowEmpty?: boolean): FieldValidationErrors | null {
-    if (!isAllowEmpty && this.required && _.isEmpty(data)) {
+    if (!isAllowEmpty && this.required && (data === undefined || data === null)) {
       return { [FieldValidationKey.Required]: true };
     }
 

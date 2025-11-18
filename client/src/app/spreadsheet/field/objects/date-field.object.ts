@@ -13,7 +13,10 @@ export class DateField extends Field<TDateData> implements IDateField {
   }
 
   override compareData(source: TDateData, destination: TDateData = this.data!) {
-    if (_.isEmpty(source) && _.isEmpty(destination)) {
+    if (
+      (source === undefined || source === null) &&
+      (destination === undefined || destination === null)
+    ) {
       return super.compareData(source, destination);
     }
 

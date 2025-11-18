@@ -15,15 +15,16 @@ export type Group = HierarchyGroup & {
 export type GroupMetadata = {
   column: Column;
   data: any;
-  isEmpty: boolean;
-  isCollapsed: boolean;
+  parsed: string;
+  empty: boolean;
+  collapsed: boolean;
   calculatedResult?: Map<Column['id'], any>;
 };
 
 export function calculateInGroup(
   group: Group,
   columns: Column[],
-  calculatePredicate?: (...args: any) => any
+  calculatePredicate?: (...args: any) => any,
 ) {
   if (group.metadata.calculatedResult) {
     group.metadata.calculatedResult.clear();
@@ -38,8 +39,8 @@ export function calculateInGroup(
         _.map(group.items, 'data'),
         column.calculateType,
         calculatePredicate?.bind(this, column.field),
-        column?.field
-      )
+        column?.field,
+      ),
     );
   }
 

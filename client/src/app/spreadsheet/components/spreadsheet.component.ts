@@ -3745,7 +3745,7 @@ export class SpreadsheetComponent
   }
 
   protected toggleGroup(group: Group) {
-    this._toggleGroup(group, !group.metadata.isCollapsed);
+    this._toggleGroup(group, !group.metadata.collapsed);
     this.markGroupAsChanged();
   }
 
@@ -3787,7 +3787,7 @@ export class SpreadsheetComponent
       this.group();
     }
 
-    if (group.metadata.isCollapsed) {
+    if (group.metadata.collapsed) {
       let g = group;
       do {
         this._toggleGroup(g, false);
@@ -3954,30 +3954,32 @@ export class SpreadsheetComponent
   protected parseGroupMetadataPredicate(groupingColumns: Column[], group: Group) {
     const idx = groupingColumns.length - (group.totalChildrenDepth + 1);
     const column = groupingColumns[idx];
-    let data;
-
+    let data: any;
+    let parsed: string = '';
     if (column) {
       data = group.items[0]?.data?.[column.id] ?? null;
+      parsed = column.field.toString(data);
     }
 
     return {
       column,
       data,
-      isEmpty: _.isEmpty(data),
-      isCollapsed: this.collapsedGroupState.get(group.id) ?? false,
+      parsed,
+      collapsed: this.collapsedGroupState.get(group.id) ?? false,
+      empty: data === undefined || data === null,
     };
   }
 
-  private _toggleGroup(group: Group, isCollapse: boolean) {
-    group.metadata.isCollapsed = isCollapse;
-    this.collapsedGroupState.set(group.id, group.metadata.isCollapsed);
+  private _toggleGroup(group: Group, collapsed: boolean) {
+    group.metadata.collapsed = collapsed;
+    this.collapsedGroupState.set(group.id, group.metadata.collapsed);
   }
 
-  private _toggleGroupRecursive(group: Group, isCollapse: boolean) {
-    this._toggleGroup(group, isCollapse);
+  private _toggleGroupRecursive(group: Group, collapsed: boolean) {
+    this._toggleGroup(group, collapsed);
     if (group.children?.length) {
       for (const child of group.children) {
-        this._toggleGroupRecursive(child, isCollapse);
+        this._toggleGroupRecursive(child, collapsed);
       }
     }
   }
