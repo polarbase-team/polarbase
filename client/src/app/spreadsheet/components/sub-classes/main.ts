@@ -84,7 +84,6 @@ export type LayoutProperties = Partial<{
     dragOverGroup?: Group;
     dragPlaceholderIndex?: number;
     dragPlaceholderOffset?: number;
-    blankRowHover?: string;
   };
   cell: {
     focusing?: CellIndex;

@@ -320,11 +320,7 @@
               </div>
               @if (!group.children) {
                 <div class="group__body">
-                  <div
-                    class="row blank-row"
-                    [class.row--hover]="layoutProperties.row.blankRowHover === group.id"
-                    (pointerenter)="onBlankRowHover($event, group.id)"
-                  >
+                  <div class="row blank-row">
                     <div
                       class="row-cell cell index-cell"
                       cell-type="row"
@@ -526,12 +522,7 @@
           </ng-container>
           @if (!state.isGrouping || state.isGroupingWithoutGroup) {
             @if (state.canAddRow) {
-              <div
-                class="row blank-row"
-                [attr.disabled]="isDataStreaming || layoutProperties.cell.selection"
-                [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
-                (pointerenter)="onBlankRowHover($event)"
-              >
+              <div class="row blank-row">
                 <div
                   class="row-cell cell index-cell"
                   cell-type="row"
@@ -543,11 +534,7 @@
                 <div class="row-cell cell" cell-type="row"></div>
               </div>
             } @else {
-              <div
-                class="row blank-row"
-                [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
-                (pointerenter)="onBlankRowHover($event)"
-              ></div>
+              <div class="row blank-row"></div>
             }
           }
         </div>
@@ -627,11 +614,7 @@
               </div>
               @if (!group.children) {
                 <div class="group__body">
-                  <div
-                    class="row blank-row"
-                    [class.row--hover]="layoutProperties.row.blankRowHover === group.id"
-                    (pointerenter)="onBlankRowHover($event, group.id)"
-                  >
+                  <div class="row blank-row">
                     <div class="row-cell cell" cell-type="row"></div>
                   </div>
                 </div>
@@ -764,20 +747,11 @@
           </ng-container>
           @if (!state.isGrouping || state.isGroupingWithoutGroup) {
             @if (state.canAddRow) {
-              <div
-                class="row blank-row"
-                [attr.disabled]="isDataStreaming || layoutProperties.cell.selection"
-                [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
-                (pointerenter)="onBlankRowHover($event)"
-              >
+              <div class="row blank-row">
                 <div class="row-cell cell" cell-type="row"></div>
               </div>
             } @else {
-              <div
-                class="row blank-row"
-                [class.row--hover]="layoutProperties.row.blankRowHover === 'default'"
-                (pointerenter)="onBlankRowHover($event)"
-              ></div>
+              <div class="row blank-row"></div>
             }
           }
         </div>

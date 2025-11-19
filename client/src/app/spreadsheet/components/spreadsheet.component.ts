@@ -2155,21 +2155,6 @@ export class SpreadsheetComponent
     this.rowActionMenu.show(e);
   }
 
-  protected onBlankRowHover(e: Event, key: string = 'default') {
-    this.ngZone.run(() => {
-      this.layoutProperties.row.blankRowHover = key;
-      this.detectChanges();
-    });
-
-    const unlisten = this.renderer.listen(e.target, 'pointerleave', () => {
-      unlisten();
-      this.ngZone.run(() => {
-        this.layoutProperties.row.blankRowHover = null;
-        this.detectChanges();
-      });
-    });
-  }
-
   protected onRowDragStarted(e: CdkDragStart<Row>) {
     this.deselectAllCells();
     const draggingRow = e.source.data;
