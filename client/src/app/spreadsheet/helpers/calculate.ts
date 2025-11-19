@@ -61,21 +61,8 @@ export function calculateFieldPredicate(field: Field, calculateType: ECalculateT
   return data;
 }
 
-export function parseGroupFieldData(field: Field, data?: any) {
-  data = data !== undefined ? data : field.data;
-
-  if (data) {
-    switch (field.dataType) {
-      case EDataType.Checkbox:
-        data = !!data;
-        break;
-      case EDataType.Dropdown:
-        data = _.sortBy(data.value);
-        break;
-    }
-  }
-
-  return !_.isNaN(data) && !_.isError(data) && !_.isEmpty(data) ? data : EMPTY_GROUP_VALUE;
+export function parseGroupFieldData(field: Field, data: any = field.data) {
+  return data ?? EMPTY_GROUP_VALUE;
 }
 
 _.mixin({
@@ -93,7 +80,7 @@ _.mixin({
 function countEmpty(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Empty
+  forwardType: ECalculateType = ECalculateType.Empty,
 ): number {
   return _.reduce(
     data,
@@ -110,14 +97,14 @@ function countEmpty(
 
       return memo;
     },
-    0
+    0,
   );
 }
 
 function countFilled(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Filled
+  forwardType: ECalculateType = ECalculateType.Filled,
 ): number {
   return _.reduce(
     data,
@@ -134,14 +121,14 @@ function countFilled(
 
       return memo;
     },
-    0
+    0,
   );
 }
 
 function countUnique(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Unique
+  forwardType: ECalculateType = ECalculateType.Unique,
 ): number {
   const cellsData: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -152,7 +139,7 @@ function countUnique(
 function countPercentEmpty(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.PercentEmpty
+  forwardType: ECalculateType = ECalculateType.PercentEmpty,
 ): number {
   const length: number = data?.length;
 
@@ -163,7 +150,7 @@ function countPercentEmpty(
 
 function countPercentFilledLookupToCheckbox(
   data: any[],
-  predicate?: (...args: any) => any
+  predicate?: (...args: any) => any,
 ): number {
   const emptyCheckbox: number = countEmpty(data, predicate, ECalculateType.Empty);
 
@@ -183,7 +170,7 @@ function countPercentEmptyLookupToCheckbox(data: any[], predicate?: (...args: an
 function countPercentFilled(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.PercentFilled
+  forwardType: ECalculateType = ECalculateType.PercentFilled,
 ): number {
   const length: number = data?.length;
 
@@ -195,7 +182,7 @@ function countPercentFilled(
 function countPercentUnique(
   data: any[],
   predicate?: (...args: any) => any,
-  _forwardType?: ECalculateType
+  _forwardType?: ECalculateType,
 ): number {
   const uniqueValue: number = countUnique(data, predicate, ECalculateType.Unique);
 
@@ -207,7 +194,7 @@ function countPercentUnique(
 function sumFormula(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Sum
+  forwardType: ECalculateType = ECalculateType.Sum,
 ): number | string {
   const values: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -217,7 +204,7 @@ function sumFormula(
 function averageFormula(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Average
+  forwardType: ECalculateType = ECalculateType.Average,
 ): number | string {
   const cellsData: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -227,7 +214,7 @@ function averageFormula(
 function medianFormula(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Median
+  forwardType: ECalculateType = ECalculateType.Median,
 ): number | string {
   const cellsData: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -237,7 +224,7 @@ function medianFormula(
 function min(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Min
+  forwardType: ECalculateType = ECalculateType.Min,
 ): any {
   const cellsData: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -251,7 +238,7 @@ function min(
 function max(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Max
+  forwardType: ECalculateType = ECalculateType.Max,
 ): any {
   const cellsData: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -265,7 +252,7 @@ function max(
 function range(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Range
+  forwardType: ECalculateType = ECalculateType.Range,
 ): number | string {
   let minNum: number | undefined;
   let maxNum: number | undefined;
@@ -307,7 +294,7 @@ function range(
 function dayRange(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.DayRange
+  forwardType: ECalculateType = ECalculateType.DayRange,
 ): number {
   const r: number = +range(data, predicate, forwardType);
 
@@ -317,7 +304,7 @@ function dayRange(
 function monthRange(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.MonthRange
+  forwardType: ECalculateType = ECalculateType.MonthRange,
 ): number {
   const r: number = dayRange(data, predicate, forwardType);
 
@@ -328,7 +315,7 @@ export function calculateBy(
   data: any[],
   type: ECalculateType,
   predicate?: (...args: any) => any,
-  field?: Field
+  field?: Field,
 ): any {
   let fn: Function;
 
@@ -393,7 +380,7 @@ export function calculateBy(
 function calculateNumber(
   array: any[],
   calculatorFn?: (array: any) => any,
-  defaultValue: number = 0
+  defaultValue: number = 0,
 ): number | string {
   const condition: boolean = checkNumberArray(array);
 
@@ -409,7 +396,7 @@ export function checkValidDate(dateString: string): boolean {
 function mapCellsData(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType?: ECalculateType
+  forwardType?: ECalculateType,
 ): any[] {
   const cellsData: any[] = _.chain(data)
     .reduce((memo: number[], d: any) => {
@@ -426,6 +413,6 @@ function mapCellsData(
 
 function checkNumberArray(cellsData: any[]): boolean {
   return (_.flattenDeep(cellsData) || []).every(
-    (item: any) => _.isNumber(item) || checkValidDate(item)
+    (item: any) => _.isNumber(item) || checkValidDate(item),
   );
 }
