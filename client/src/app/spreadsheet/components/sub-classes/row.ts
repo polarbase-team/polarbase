@@ -2,13 +2,6 @@ import { EmitEventController } from '../../helpers/emit-event-controller';
 import type { Column } from './column';
 import type { Group } from './group';
 
-export enum RowSizeEnum {
-  S = 32,
-  M = 56,
-  L = 92,
-  XL = 128,
-}
-
 export function flushEEC(
   controller: EmitEventController<any, any>,
   row: Row,
@@ -31,9 +24,13 @@ export function flushEEC(
   }
 }
 
-export const ROW_SIZES = ['S', 'M', 'L', 'XL'] as const;
-
-export type RowSize = (typeof ROW_SIZES)[number];
+export const RowSize = {
+  S: 32,
+  M: 56,
+  L: 92,
+  XL: 128,
+} as const;
+export type RowSize = keyof typeof RowSize;
 
 export type Row = {
   id: string | number;
@@ -52,17 +49,37 @@ export type FoundRow = {
   group?: Group;
 };
 
-export type RowInsertedEvent = {
-  row: Row;
-  position: number;
-};
-
-export type RowMovedEvent = {
-  rows: Row[];
-  position: number;
-};
-
 export interface RowExtra extends Row {
   _isInit?: boolean;
   _isStreamed?: boolean;
+}
+
+export interface TableRowAddedEvent {
+  row: Row;
+  insertedIndex: number;
+}
+export interface TableRowMovedEvent {
+  row: Row;
+  movedIndex: number;
+}
+
+export const TableRowActionType = {
+  Added: 'added',
+  Deleted: 'deleted',
+  Expanded: 'expanded',
+  Moved: 'moved',
+  Selected: 'selected',
+} as const;
+export type TableRowActionType = (typeof TableRowActionType)[keyof typeof TableRowActionType];
+
+export interface TableRowActionPayload {
+  [TableRowActionType.Added]: TableRowAddedEvent[];
+  [TableRowActionType.Deleted]: Row[];
+  [TableRowActionType.Expanded]: Row;
+  [TableRowActionType.Moved]: TableRowMovedEvent[];
+  [TableRowActionType.Selected]: Row[] | null;
+}
+export interface TableRowAction<T extends TableRowActionType = TableRowActionType> {
+  type: T;
+  payload: TableRowActionPayload[T];
 }

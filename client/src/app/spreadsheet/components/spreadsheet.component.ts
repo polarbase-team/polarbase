@@ -104,11 +104,10 @@ import {
   FoundRow,
   Row,
   RowCellData,
-  RowExtra,
-  RowInsertedEvent,
-  RowMovedEvent,
   RowSize,
-  RowSizeEnum,
+  TableRowAction,
+  TableRowActionType,
+  TableRowAddedEvent,
 } from './sub-classes/row';
 import {
   calculateInGroup,
@@ -258,7 +257,18 @@ export class SpreadsheetComponent
         this._handleKeyboardEvents();
         this._handleClipboardEvents();
 
-        merge(this.cellSelected, this.columnSelected, this.rowSelected)
+        merge(
+          this.cellSelected,
+          this.columnSelected,
+          this.rowAction.pipe(
+            filter(
+              (
+                event,
+              ): event is Extract<TableRowAction, { type: typeof TableRowActionType.Selected }> =>
+                event.type === TableRowActionType.Selected,
+            ),
+          ),
+        )
           .pipe(
             map((e) => e !== null),
             distinctUntilChanged(),
@@ -1956,12 +1966,7 @@ export class SpreadsheetComponent
   rows: Row[];
 
   @Output() rowsChange = new EventEmitter<Row[]>();
-  @Output() rowAdded = new EventEmitter<Row[]>();
-  @Output() rowDeleted = new EventEmitter<Row[]>();
-  @Output() rowExpanded = new EventEmitter<Row>();
-  @Output() rowInserted = new EventEmitter<RowInsertedEvent[]>();
-  @Output() rowMoved = new EventEmitter<RowMovedEvent>();
-  @Output() rowSelected = new EventEmitter<Row[] | null>();
+  @Output() rowAction = new EventEmitter<TableRowAction>();
 
   @ViewChild('rowActionMenu', { static: true })
   protected readonly rowActionMenu: ContextMenu;
@@ -1972,11 +1977,15 @@ export class SpreadsheetComponent
   protected draggingRows = new Set<Row>();
 
   private _rowLookup = new Map<Row['id'], Row>();
-  private _addedEEC: EmitEventController<Row['id'], Row>;
-  private _insertedEEC: EmitEventController<Row['id'], RowInsertedEvent>;
+  private _addedEEC: EmitEventController<Row['id'], TableRowAddedEvent> = new EmitEventController({
+    autoEmit: false,
+    onEmitted: (events) => {
+      this.rowAction.emit({ type: TableRowActionType.Added, payload: events });
+    },
+  });
 
   get rowHeight(): number {
-    return RowSizeEnum[this.config.row.size];
+    return RowSize[this.config.row.size];
   }
 
   get canAddRow(): boolean {
@@ -2002,17 +2011,22 @@ export class SpreadsheetComponent
         debounceTime(0),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(([_oldRow, newRow]: [Row | null, Row | null]) => {
-        flushEEC(this._addedEEC, newRow, (event: Row) => event.id);
-        flushEEC(this._insertedEEC, newRow, (event: RowInsertedEvent) => event.row.id);
+      .subscribe(([_oldRow, newRow]) => {
+        flushEEC(this._addedEEC, newRow, ({ row }) => row.id);
       });
 
-    merge(
-      this.rowAdded,
-      this.rowInserted.pipe(map((events: RowInsertedEvent[]) => _.map(events, 'row'))),
-    )
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((rows: RowExtra[]) => {
+    this.rowAction
+      .pipe(
+        filter(
+          (event): event is Extract<TableRowAction, { type: typeof TableRowActionType.Added }> =>
+            event.type === TableRowActionType.Added,
+        ),
+        map(({ payload }) => {
+          return (payload as { row: Row }[]).map((e) => e.row);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((rows) => {
         for (const row of rows) {
           if (this.checkRowIsDraft(row)) {
             this.draftRow = null;
@@ -2029,7 +2043,6 @@ export class SpreadsheetComponent
   RowClassAfterViewChecked() {}
   RowClassOnDestroy() {
     this._addedEEC?.flush();
-    this._insertedEEC?.flush();
   }
 
   updateRowStates() {
@@ -2208,7 +2221,7 @@ export class SpreadsheetComponent
   }
 
   protected expandRow(row: Row) {
-    this.rowExpanded.emit(row);
+    this.rowAction.emit({ type: TableRowActionType.Expanded, payload: row });
   }
 
   protected expandSelectingRow() {
@@ -2223,29 +2236,10 @@ export class SpreadsheetComponent
     onBeforeInsert?: (r: Row, p: number) => void,
   ): Promise<Row> {
     const newRow = this._generateRow({ data });
+    onBeforeInsert?.(newRow, position);
 
     this._insertRow(newRow, position, true);
-
-    if (_.isFinite(position)) {
-      this._insertedEEC ||= new EmitEventController({
-        autoEmit: false,
-        onEmitted: (events: RowInsertedEvent[]) => {
-          this.rowInserted.emit(events);
-        },
-      });
-
-      this._insertedEEC.addEvent(newRow.id, { row: newRow, position });
-    } else {
-      this._addedEEC ||= new EmitEventController({
-        autoEmit: false,
-        onEmitted: (events: Row[]) => {
-          this.rowAdded.emit(events);
-        },
-      });
-
-      this._addedEEC.addEvent(newRow.id, newRow);
-    }
-
+    this._addedEEC.addEvent(newRow.id, { row: newRow, insertedIndex: position });
     return newRow;
   }
 
@@ -2260,14 +2254,14 @@ export class SpreadsheetComponent
     }
 
     this._removeRows(canDeleteRows);
-    this.rowDeleted.emit(canDeleteRows);
+    this.rowAction.emit({ type: TableRowActionType.Deleted, payload: canDeleteRows });
     this.calculate();
   }
 
   protected async deleteRow(row: Row) {
     this.deselectAllCells();
     this._removeRows([row]);
-    this.rowDeleted.emit([row]);
+    this.rowAction.emit({ type: TableRowActionType.Deleted, payload: [row] });
     this.calculate();
   }
 
@@ -2280,7 +2274,7 @@ export class SpreadsheetComponent
     this.selectedRows.has(row) ? this.selectedRows.delete(row) : this.selectedRows.add(row);
 
     this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
-    this.rowSelected.emit([...this.selectedRows]);
+    this.rowAction.emit({ type: TableRowActionType.Selected, payload: [...this.selectedRows] });
   }
 
   protected flushDraftRow() {
@@ -2289,7 +2283,6 @@ export class SpreadsheetComponent
     this.deselectAllCells();
 
     this._addedEEC?.emitEvent(this.draftRow.id);
-    this._insertedEEC?.emitEvent(this.draftRow.id);
 
     this.draftRow = null;
   }
@@ -2302,7 +2295,6 @@ export class SpreadsheetComponent
     this._removeRows([this.draftRow], true);
 
     this._addedEEC?.removeEvent(this.draftRow.id);
-    this._insertedEEC?.removeEvent(this.draftRow.id);
 
     this.draftRow = null;
   }
@@ -2319,7 +2311,7 @@ export class SpreadsheetComponent
     }
 
     this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
-    this.rowSelected.emit([...this.selectedRows]);
+    this.rowAction.emit({ type: TableRowActionType.Selected, payload: [...this.selectedRows] });
   }
 
   protected deselectAllRows() {
@@ -2334,7 +2326,7 @@ export class SpreadsheetComponent
     this.selectedRows.clear();
 
     this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
-    this.rowSelected.emit(null);
+    this.rowAction.emit({ type: TableRowActionType.Selected, payload: null });
   }
 
   protected moveRows(movedRows: Row[], movedIndex: number) {
@@ -2352,9 +2344,9 @@ export class SpreadsheetComponent
 
     this.markRowsAsChanged();
 
-    this.rowMoved.emit({
-      rows: movedRows,
-      position: newMovedIndex,
+    this.rowAction.emit({
+      type: TableRowActionType.Moved,
+      payload: movedRows.map((movedRow) => ({ row: movedRow, movedIndex })),
     });
   }
 

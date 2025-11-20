@@ -1,2 +1,7 @@
-<spreadsheet [config]="config" [columns]="columns" [rows]="rows"></spreadsheet>
+<spreadsheet
+  [config]="config"
+  [columns]="columns"
+  [rows]="rows"
+  (rowAction)="console.log($event)"
+></spreadsheet>
 <router-outlet></router-outlet>

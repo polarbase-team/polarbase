@@ -22,6 +22,7 @@ import _ from 'lodash';
   styleUrl: './app.scss',
 })
 export class App {
+  console = console;
   columns: Column[] = [
     {
       id: _.uniqueId(),
