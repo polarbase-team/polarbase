@@ -90,6 +90,8 @@ import {
   Column,
   ColumnExtra,
   ColumnMovedEvent,
+  TableColumnAction,
+  TableColumnActionType,
   UNGROUPABLE_FIELD_DATA_TYPES,
   UNSORTABLE_FIELD_DATA_TYPES,
 } from './sub-classes/column';
@@ -267,7 +269,16 @@ export class SpreadsheetComponent
                 event.type === TableCellActionType.Select,
             ),
           ),
-          this.columnSelected,
+          this.columnAction.pipe(
+            filter(
+              (
+                event,
+              ): event is Extract<
+                TableColumnAction,
+                { type: typeof TableColumnActionType.Select }
+              > => event.type === TableColumnActionType.Select,
+            ),
+          ),
           this.rowAction.pipe(
             filter(
               (
@@ -1019,8 +1030,8 @@ export class SpreadsheetComponent
 
       if (searchResult.length) {
         const found = new Map();
-        let focusingRowIndex;
-        let focusingColumnIndex;
+        let focusingRowIndex: number;
+        let focusingColumnIndex: number;
 
         for (let i = 0; i < searchResult.length; i++) {
           const [row, column] = searchResult[i];
@@ -1283,21 +1294,7 @@ export class SpreadsheetComponent
   /* COLUMN CLASS */
   @Input() columns: Column[];
 
-  @Output() columnsChange = new EventEmitter<Column[]>();
-  @Output() columnCalculated = new EventEmitter<Column>();
-  @Output() columnCleared = new EventEmitter<Column>();
-  @Output() columnDeleted = new EventEmitter<Column[]>();
-  @Output() columnFreezed = new EventEmitter<number>();
-  @Output() columnGrouped = new EventEmitter<Column>();
-  @Output() columnHidden = new EventEmitter<Column[]>();
-  @Output() columnMoved = new EventEmitter<ColumnMovedEvent>();
-  @Output() columnResized = new EventEmitter<Column>();
-  @Output() columnSelected = new EventEmitter<Column[] | null>();
-  @Output() columnSorted = new EventEmitter<Column>();
-  @Output() columnUncalculated = new EventEmitter<Column>();
-  @Output() columnUngrouped = new EventEmitter<Column>();
-  @Output() columnUnhidden = new EventEmitter<Column>();
-  @Output() columnUnsorted = new EventEmitter<Column>();
+  @Output() columnAction = new EventEmitter<TableColumnAction>();
 
   @ViewChild('columnActionMenu', { static: true })
   protected readonly columnActionMenu: ContextMenu;
@@ -1381,20 +1378,9 @@ export class SpreadsheetComponent
     this.state.canDeleteSelectedColumns = this.canDeleteSelectedColumns;
   }
 
-  pushColumns(columns: Column[]) {
-    const newColumns = _.filter(columns, (column) => this.findColumnIndex(column) === -1);
-    if (!newColumns.length) return;
-    if (!this.columns) {
-      this.columnsChange.emit((this.columns = []));
-    }
-    for (const newColumn of newColumns) {
-      this.columns.push(newColumn);
-    }
-    this.updateColumns(columns);
-  }
-
   updateColumns(columns: Column[]) {
     if (!columns) return;
+
     const displayingColumns = new Set(this.displayingColumns);
     let shouldUpdateDisplayingColumns: boolean;
     this._columnLookup ||= new Map();
@@ -1446,50 +1432,58 @@ export class SpreadsheetComponent
     this.markForCheck();
   }
 
-  hideColumn(column: Column, isEmitOutput?: boolean) {
+  hideColumn(column: Column) {
     if (!column) return;
+
     column.hidden = true;
     this.markDisplayingColumnsAsChanged(_.without(this.displayingColumns, column));
     this.markForCheck();
-    if (!isEmitOutput) return;
-    this.columnHidden.emit([column]);
+    this.columnAction.emit({
+      type: TableColumnActionType.Hide,
+      payload: [column],
+    });
   }
 
-  unhideColumn(column: Column, isEmitOutput?: boolean) {
+  unhideColumn(column: Column) {
     if (!column) return;
+
     column.hidden = false;
     this.markDisplayingColumnsAsChanged(_.filter(this.columns, (c) => !c.hidden));
     this.markForCheck();
-    if (!isEmitOutput) return;
-    this.columnUnhidden.emit(column);
+    this.columnAction.emit({
+      type: TableColumnActionType.Unhide,
+      payload: [column],
+    });
   }
 
-  calculateByColumn(column: Column, calculateType: ECalculateType, isEmitOutput?: boolean) {
+  calculateByColumn(column: Column, calculateType: ECalculateType) {
     if (!column || !calculateType || column.calculateType === calculateType) return;
+
     column.calculateType = calculateType;
     this.calculatingColumns.set(column.id, column);
     this.calculate();
     this.markForCheck();
-    if (!isEmitOutput) return;
-    this.columnCalculated.emit(column);
+    this.columnAction.emit({
+      type: TableColumnActionType.Calculate,
+      payload: column,
+    });
   }
 
-  uncalculateByColumn(column: Column, isEmitOutput?: boolean) {
+  uncalculateByColumn(column: Column) {
     if (!column || !this.calculatingColumns.has(column.id)) return;
+
     delete column.calculateType;
     this.calculatingColumns.delete(column.id);
     this.markForCheck();
-    if (!isEmitOutput) return;
-    this.columnUncalculated.emit(column);
+    this.columnAction.emit({
+      type: TableColumnActionType.Uncalculate,
+      payload: column,
+    });
   }
 
-  groupByColumn(
-    column: Column,
-    groupingType: GroupingType = 'asc',
-    replaceColumn?: Column,
-    isEmitOutput?: boolean,
-  ) {
+  groupByColumn(column: Column, groupingType: GroupingType = 'asc', replaceColumn?: Column) {
     if (!column?.id || !groupingType || column.groupingType === groupingType) return;
+
     column.groupingType = groupingType;
     if (replaceColumn) {
       delete replaceColumn.groupingType;
@@ -1507,27 +1501,28 @@ export class SpreadsheetComponent
     }
     this.group();
     this.markForCheck();
-    if (!isEmitOutput) return;
-    this.columnGrouped.emit(column);
+    this.columnAction.emit({
+      type: TableColumnActionType.Group,
+      payload: column,
+    });
   }
 
-  ungroupByColumn(column: Column, isEmitOutput?: boolean) {
+  ungroupByColumn(column: Column) {
     if (!column?.id || !this.groupingColumns.has(column.id)) return;
+
     delete column.groupingType;
     this.groupingColumns.delete(column.id);
     this.groupingColumns.size ? this.group() : this.ungroup();
     this.markForCheck();
-    if (!isEmitOutput) return;
-    this.columnUngrouped.emit(column);
+    this.columnAction.emit({
+      type: TableColumnActionType.Ungroup,
+      payload: column,
+    });
   }
 
-  sortByColumn(
-    column: Column,
-    sortingType: SortingType = 'asc',
-    replaceColumn?: Column,
-    isEmitOutput?: boolean,
-  ) {
+  sortByColumn(column: Column, sortingType: SortingType = 'asc', replaceColumn?: Column) {
     if (!column?.id || !sortingType || column.sortingType === sortingType) return;
+
     column.sortingType = sortingType;
     if (replaceColumn) {
       delete replaceColumn.sortingType;
@@ -1545,18 +1540,23 @@ export class SpreadsheetComponent
     }
     this.sort();
     this.markForCheck();
-    if (!isEmitOutput) return;
-    this.columnSorted.emit(column);
+    this.columnAction.emit({
+      type: TableColumnActionType.Sort,
+      payload: column,
+    });
   }
 
-  unsortByColumn(column: Column, isEmitOutput?: boolean) {
+  unsortByColumn(column: Column) {
     if (!column?.id || !this.sortingColumns.has(column.id)) return;
+
     delete column.sortingType;
     this.sortingColumns.delete(column.id);
     this.markForCheck();
     this.sortingColumns.size ? this.sort() : this.unsort();
-    if (!isEmitOutput) return;
-    this.columnUnsorted.emit(column);
+    this.columnAction.emit({
+      type: TableColumnActionType.Unsort,
+      payload: column,
+    });
   }
 
   clearColumn(column: Column) {
@@ -1576,7 +1576,10 @@ export class SpreadsheetComponent
         this.sort();
       }
     }
-    this.columnCleared.emit(column);
+    this.columnAction.emit({
+      type: TableColumnActionType.Clear,
+      payload: column,
+    });
   }
 
   protected openColumnActionMenu(e: Event, column: Column, columnIndex: number) {
@@ -1617,7 +1620,7 @@ export class SpreadsheetComponent
             icon: 'pi pi-sort-amount-up',
             disabled: UNSORTABLE_FIELD_DATA_TYPES.has(column.field.dataType),
             command: () => {
-              this.sortByColumn(column, 'asc', null, true);
+              this.sortByColumn(column, 'asc');
             },
           },
           {
@@ -1625,7 +1628,7 @@ export class SpreadsheetComponent
             icon: 'pi pi-sort-amount-down',
             disabled: UNSORTABLE_FIELD_DATA_TYPES.has(column.field.dataType),
             command: () => {
-              this.sortByColumn(column, 'desc', null, true);
+              this.sortByColumn(column, 'desc');
             },
           },
         );
@@ -1638,7 +1641,7 @@ export class SpreadsheetComponent
             icon: 'pi pi-list',
             disabled: UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType),
             command: () => {
-              this.groupByColumn(column, 'asc', null, true);
+              this.groupByColumn(column, 'asc');
             },
           },
         );
@@ -1650,7 +1653,7 @@ export class SpreadsheetComponent
             label: 'Hide',
             icon: 'pi pi-eye-slash',
             command: () => {
-              this.hideColumn(column, true);
+              this.hideColumn(column);
             },
           },
         );
@@ -1779,9 +1782,12 @@ export class SpreadsheetComponent
       cIdx < indexColumnBefore ? indexColumnBefore : indexColumnBefore + 1,
     );
     this.markDisplayingColumnsAsChanged();
-    this.columnMoved.emit({
-      column,
-      position: currentIndex,
+    this.columnAction.emit({
+      type: TableColumnActionType.Move,
+      payload: {
+        column,
+        position: currentIndex,
+      },
     });
   }
 
@@ -1826,14 +1832,20 @@ export class SpreadsheetComponent
 
     column._bkWidth = undefined;
     setTimeout(() => (column._isResizing = false));
-    this.columnResized.emit(column);
+    this.columnAction.emit({
+      type: TableColumnActionType.Resize,
+      payload: column,
+    });
   }
 
   protected freezeUpToColumnIndex(columnIndex: number) {
     if (columnIndex === this.frozenIndex) return;
     this.config.column.frozenIndex = columnIndex;
     this.markDisplayingColumnsAsChanged();
-    this.columnFreezed.emit(columnIndex);
+    this.columnAction.emit({
+      type: TableColumnActionType.Freeze,
+      payload: columnIndex,
+    });
   }
 
   protected selectColumn(e: MouseEvent, columnIndex: number) {
@@ -1859,14 +1871,20 @@ export class SpreadsheetComponent
       selection.add(columnIndex);
     }
     this.layoutProperties.column.selection = selection;
-    this.columnSelected.emit(this.getSelectedColumns());
+    this.columnAction.emit({
+      type: TableColumnActionType.Select,
+      payload: this.getSelectedColumns(),
+    });
   }
 
   protected deselectAllColumns() {
     this.columnActionMenu.hide();
     if (!this.layoutProperties.column.selection) return;
     this.layoutProperties.column.selection = null;
-    this.columnSelected.emit(null);
+    this.columnAction.emit({
+      type: TableColumnActionType.Select,
+      payload: [],
+    });
   }
 
   protected async deleteColumn(column: Column) {
@@ -1874,7 +1892,10 @@ export class SpreadsheetComponent
     this.markDisplayingColumnsAsChanged(_.without(this.displayingColumns, column));
     this.deselectAllCells();
     this.deselectAllColumns();
-    this.columnDeleted.emit([column]);
+    this.columnAction.emit({
+      type: TableColumnActionType.Delete,
+      payload: [column],
+    });
   }
 
   protected async deleteSelectedColumns() {
@@ -1884,7 +1905,10 @@ export class SpreadsheetComponent
     this.markDisplayingColumnsAsChanged(_.without(this.displayingColumns, ...canDeleteColumns));
     this.deselectAllCells();
     this.deselectAllColumns();
-    this.columnDeleted.emit(canDeleteColumns);
+    this.columnAction.emit({
+      type: TableColumnActionType.Delete,
+      payload: canDeleteColumns,
+    });
   }
 
   protected hideSelectedColumns() {
@@ -1893,7 +1917,10 @@ export class SpreadsheetComponent
       c.hidden = true;
     }
     this.markDisplayingColumnsAsChanged(_.without(this.displayingColumns, ...columns));
-    this.columnHidden.emit(columns);
+    this.columnAction.emit({
+      type: TableColumnActionType.Hide,
+      payload: columns,
+    });
   }
 
   protected getLastColumnIndex(): number {
@@ -1973,7 +2000,6 @@ export class SpreadsheetComponent
   @Input('rows') rawRows: Row[];
   rows: Row[];
 
-  @Output() rowsChange = new EventEmitter<Row[]>();
   @Output() rowAction = new EventEmitter<TableRowAction>();
 
   @ViewChild('rowActionMenu', { static: true })
@@ -2437,8 +2463,6 @@ export class SpreadsheetComponent
     } else {
       rows = this.rows;
     }
-
-    this.rowsChange.emit(rows);
   }
 
   protected markRowsAsStreamed(rows: Row[]) {

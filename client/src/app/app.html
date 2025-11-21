@@ -2,6 +2,8 @@
   [config]="config"
   [columns]="columns"
   [rows]="rows"
+  (columnAction)="console.log($event)"
   (rowAction)="console.log($event)"
+  (cellAction)="console.log($event)"
 ></spreadsheet>
 <router-outlet></router-outlet>

@@ -112,3 +112,44 @@ export function calculateFreezeDividerDragPlaceholderIndex(
 
   return dragPlaceholderIndex;
 }
+
+export const TableColumnActionType = {
+  Calculate: 'calculate',
+  Clear: 'clear',
+  Delete: 'delete',
+  Freeze: 'freeze',
+  Group: 'group',
+  Hide: 'hide',
+  Move: 'move',
+  Resize: 'resize',
+  Select: 'select',
+  Sort: 'sort',
+  Uncalculate: 'uncalculate',
+  Ungroup: 'ungroup',
+  Unhide: 'unhide',
+  Unsort: 'unsort',
+} as const;
+export type TableColumnActionType =
+  (typeof TableColumnActionType)[keyof typeof TableColumnActionType];
+
+export interface TableColumnActionPayload {
+  [TableColumnActionType.Clear]: Column;
+  [TableColumnActionType.Delete]: Column[];
+  [TableColumnActionType.Move]: ColumnMovedEvent;
+  [TableColumnActionType.Resize]: Column;
+  [TableColumnActionType.Freeze]: number;
+  [TableColumnActionType.Calculate]: Column;
+  [TableColumnActionType.Uncalculate]: Column;
+  [TableColumnActionType.Group]: Column;
+  [TableColumnActionType.Ungroup]: Column;
+  [TableColumnActionType.Sort]: Column;
+  [TableColumnActionType.Unsort]: Column;
+  [TableColumnActionType.Hide]: Column[];
+  [TableColumnActionType.Unhide]: Column[];
+  [TableColumnActionType.Select]: Column[] | null;
+}
+
+export interface TableColumnAction<T extends TableColumnActionType = TableColumnActionType> {
+  type: T;
+  payload: TableColumnActionPayload[T];
+}

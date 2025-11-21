@@ -79,6 +79,7 @@ export interface TableRowActionPayload {
   [TableRowActionType.Move]: TableRowMovedEvent[];
   [TableRowActionType.Select]: Row[] | null;
 }
+
 export interface TableRowAction<T extends TableRowActionType = TableRowActionType> {
   type: T;
   payload: TableRowActionPayload[T];
