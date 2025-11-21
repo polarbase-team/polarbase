@@ -5,13 +5,6 @@ import { parseClipboardExternal, parseClipboardInternal } from '../../helpers/pa
 import type { Column } from './column';
 import type { Row, RowCellData } from './row';
 
-export enum CellDataEditType {
-  Default = 'default',
-  Clear = 'clear',
-  Paste = 'paste',
-  Fill = 'fill',
-}
-
 export interface Cell {
   row: Row;
   column: Column;
@@ -30,7 +23,6 @@ export interface CellOffset {
 export interface CellDataEditedEvent {
   row: Row;
   newData: RowCellData;
-  type: CellDataEditType;
 }
 
 export enum ExcludeCellState {
@@ -99,4 +91,30 @@ export class MatrixCell {
   removeRow(idx: number) {
     this._values.splice(idx, 1);
   }
+}
+
+export interface CellDataEditedEvent {
+  row: Row;
+  newData: RowCellData;
+}
+
+export const TableCellActionType = {
+  Edit: 'edit',
+  Paste: 'paste',
+  Clear: 'clear',
+  Fill: 'fill',
+  Select: 'select',
+} as const;
+
+export type TableCellActionType = (typeof TableCellActionType)[keyof typeof TableCellActionType];
+export interface TableCellActionPayload {
+  [TableCellActionType.Edit]: CellDataEditedEvent[];
+  [TableCellActionType.Paste]: CellDataEditedEvent[];
+  [TableCellActionType.Clear]: CellDataEditedEvent[];
+  [TableCellActionType.Fill]: CellDataEditedEvent[];
+  [TableCellActionType.Select]: Cell[] | null;
+}
+export interface TableCellAction<T extends TableCellActionType = TableCellActionType> {
+  type: T;
+  payload: TableCellActionPayload[T];
 }

@@ -72,13 +72,14 @@ import { FieldCellService } from './sub-components/cells/field-cell.service';
 import {
   Cell,
   CellDataEditedEvent,
-  CellDataEditType,
   CellIndex,
   CellOffset,
   Direction,
   ExcludeCellState,
   MatrixCell,
   parseClipboardItemToData,
+  TableCellAction,
+  TableCellActionType,
   UNCLEARABLE_DATA_TYPES,
   UNCUTABLE_DATA_TYPES,
   UNPASTEABLE_DATA_TYPES,
@@ -258,7 +259,14 @@ export class SpreadsheetComponent
         this._handleClipboardEvents();
 
         merge(
-          this.cellSelected,
+          this.cellAction.pipe(
+            filter(
+              (
+                event,
+              ): event is Extract<TableCellAction, { type: typeof TableCellActionType.Select }> =>
+                event.type === TableCellActionType.Select,
+            ),
+          ),
           this.columnSelected,
           this.rowAction.pipe(
             filter(
@@ -2003,9 +2011,13 @@ export class SpreadsheetComponent
     }
   }
   RowClassOnInit() {
-    this.cellSelected
+    this.cellAction
       .pipe(
-        map((cell: Cell[] | null) => cell?.[0].row || null),
+        filter(
+          (event): event is Extract<TableCellAction, { type: typeof TableCellActionType.Select }> =>
+            event.type === TableCellActionType.Select,
+        ),
+        map(({ payload }: { payload: Row[] }) => payload?.[0] || null),
         distinctUntilChanged(),
         pairwise(),
         debounceTime(0),
@@ -2042,7 +2054,7 @@ export class SpreadsheetComponent
   RowClassAfterViewInit() {}
   RowClassAfterViewChecked() {}
   RowClassOnDestroy() {
-    this._addedEEC?.flush();
+    this._addedEEC.flush();
   }
 
   updateRowStates() {
@@ -2111,7 +2123,7 @@ export class SpreadsheetComponent
   }
 
   flushAddedEEC() {
-    this._addedEEC?.flush();
+    this._addedEEC.flush();
   }
 
   protected openRowActionMenu(e: Event, row: Row, rowIndex: number) {
@@ -2282,7 +2294,7 @@ export class SpreadsheetComponent
 
     this.deselectAllCells();
 
-    this._addedEEC?.emitEvent(this.draftRow.id);
+    this._addedEEC.emitEvent(this.draftRow.id);
 
     this.draftRow = null;
   }
@@ -2294,7 +2306,7 @@ export class SpreadsheetComponent
 
     this._removeRows([this.draftRow], true);
 
-    this._addedEEC?.removeEvent(this.draftRow.id);
+    this._addedEEC.removeEvent(this.draftRow.id);
 
     this.draftRow = null;
   }
@@ -2502,13 +2514,99 @@ export class SpreadsheetComponent
   /* ROW CLASS */
 
   /* CELL CLASS */
-  @Output() cellDataEdited = new EventEmitter<CellDataEditedEvent[]>();
-  @Output() cellDataPasted = new EventEmitter<CellDataEditedEvent[]>();
-  @Output() cellDataCleared = new EventEmitter<CellDataEditedEvent[]>();
-  @Output() cellDataFilled = new EventEmitter<CellDataEditedEvent[]>();
-  @Output() cellSelected = new EventEmitter<Cell[] | null>();
+  @Output() cellAction = new EventEmitter<TableCellAction>();
 
-  private _dataEditedEEC: EmitEventController<Row['id'], CellDataEditedEvent>;
+  private _dataEditedEEC: EmitEventController<
+    Row['id'],
+    { type: TableCellActionType; payload: CellDataEditedEvent }
+  > = new EmitEventController({
+    autoEmit: false,
+    onEmitted: (events) => {
+      const editPayload: CellDataEditedEvent[] = [];
+      const pastePayload: CellDataEditedEvent[] = [];
+      const clearPayload: CellDataEditedEvent[] = [];
+      const fillPayload: CellDataEditedEvent[] = [];
+
+      for (const { type, payload } of events) {
+        switch (type) {
+          case TableCellActionType.Edit:
+            editPayload.push(payload);
+            break;
+          case TableCellActionType.Paste:
+            pastePayload.push(payload);
+            break;
+          case TableCellActionType.Clear:
+            clearPayload.push(payload);
+            break;
+          case TableCellActionType.Fill:
+            fillPayload.push(payload);
+            break;
+        }
+      }
+
+      if (editPayload.length) {
+        this.cellAction.emit({
+          type: TableCellActionType.Edit,
+          payload: editPayload,
+        });
+      }
+
+      if (pastePayload.length) {
+        this.cellAction.emit({
+          type: TableCellActionType.Paste,
+          payload: editPayload,
+        });
+      }
+
+      if (clearPayload.length) {
+        this.cellAction.emit({
+          type: TableCellActionType.Clear,
+          payload: editPayload,
+        });
+      }
+
+      if (fillPayload.length) {
+        this.cellAction.emit({
+          type: TableCellActionType.Fill,
+          payload: editPayload,
+        });
+      }
+
+      if (this._interactedColumns?.size) {
+        let shouldReCalculate: boolean;
+        let shouldReGroup: boolean;
+        let shouldReSort: boolean;
+
+        for (const column of this._interactedColumns) {
+          if (column.calculateType) {
+            shouldReCalculate = true;
+          }
+
+          if (column.groupingType) {
+            shouldReGroup = true;
+          }
+
+          if (column.sortingType) {
+            shouldReSort = true;
+          }
+        }
+
+        if (shouldReCalculate) {
+          this.calculate();
+        }
+
+        if (shouldReGroup) {
+          this.group();
+        }
+
+        if (shouldReSort) {
+          this.sort();
+        }
+
+        this._interactedColumns.clear();
+      }
+    },
+  });
   private _interactedColumns: Set<Column>;
 
   get canFillCell() {
@@ -2527,7 +2625,7 @@ export class SpreadsheetComponent
   CellClassAfterViewChecked() {}
   CellClassOnDestroy() {
     this.fieldCellService.clear();
-    this._dataEditedEEC?.flush();
+    this._dataEditedEEC.flush();
   }
 
   updateCellStates() {
@@ -2581,7 +2679,7 @@ export class SpreadsheetComponent
   }
 
   flushEditedEEC() {
-    this._dataEditedEEC?.flush();
+    this._dataEditedEEC.flush();
   }
 
   protected flushSelectingCellState(callback?: () => void) {
@@ -2810,7 +2908,10 @@ export class SpreadsheetComponent
       this.layoutProperties.fillHandler.index = null;
       this.layoutProperties.fillHandler.hidden = true;
 
-      this.cellSelected.emit(null);
+      this.cellAction.emit({
+        type: TableCellActionType.Select,
+        payload: null,
+      });
     });
   }
 
@@ -2944,7 +3045,7 @@ export class SpreadsheetComponent
       }
 
       if (row) {
-        this._markCellDataAsEdited(row, newData, rawData, CellDataEditType.Paste);
+        this._markCellDataAsEdited(row, newData, rawData, TableCellActionType.Paste);
       }
     }
 
@@ -3135,7 +3236,7 @@ export class SpreadsheetComponent
       }
 
       if (row) {
-        this._markCellDataAsEdited(row, newData, undefined, CellDataEditType.Fill);
+        this._markCellDataAsEdited(row, newData, undefined, TableCellActionType.Fill);
       }
     }
 
@@ -3439,7 +3540,7 @@ export class SpreadsheetComponent
       }
 
       if (row) {
-        this._markCellDataAsEdited(row, newData, undefined, CellDataEditType.Clear);
+        this._markCellDataAsEdited(row, newData, undefined, TableCellActionType.Clear);
       }
     }
 
@@ -3527,7 +3628,7 @@ export class SpreadsheetComponent
     row: Row,
     newData: RowCellData,
     rawData: RowCellData = newData,
-    type: CellDataEditType = CellDataEditType.Default,
+    type: TableCellActionType = TableCellActionType.Edit,
   ) {
     row.data = { ...row.data, ...rawData };
 
@@ -3536,104 +3637,26 @@ export class SpreadsheetComponent
       return;
     }
 
-    this._dataEditedEEC ||= new EmitEventController({
-      autoEmit: false,
-      onEmitted: (events: CellDataEditedEvent[]) => {
-        let editEvents: CellDataEditedEvent[];
-        let pasteEvents: CellDataEditedEvent[];
-        let clearEvents: CellDataEditedEvent[];
-        let fillEvents: CellDataEditedEvent[];
-
-        for (const event of events) {
-          switch (event.type) {
-            case CellDataEditType.Default:
-              editEvents ||= [];
-              editEvents.push(event);
-              break;
-            case CellDataEditType.Paste:
-              pasteEvents ||= [];
-              pasteEvents.push(event);
-              break;
-            case CellDataEditType.Clear:
-              clearEvents ||= [];
-              clearEvents.push(event);
-              break;
-            case CellDataEditType.Fill:
-              fillEvents ||= [];
-              fillEvents.push(event);
-              break;
-          }
-        }
-
-        if (editEvents?.length) {
-          this.cellDataEdited.emit(events);
-        }
-
-        if (pasteEvents?.length) {
-          this.cellDataPasted.emit(events);
-        }
-
-        if (clearEvents?.length) {
-          this.cellDataCleared.emit(events);
-        }
-
-        if (fillEvents?.length) {
-          this.cellDataFilled.emit(events);
-        }
-
-        if (this._interactedColumns?.size) {
-          let shouldReCalculate: boolean;
-          let shouldReGroup: boolean;
-          let shouldReSort: boolean;
-
-          for (const column of this._interactedColumns) {
-            if (column.calculateType) {
-              shouldReCalculate = true;
-            }
-
-            if (column.groupingType) {
-              shouldReGroup = true;
-            }
-
-            if (column.sortingType) {
-              shouldReSort = true;
-            }
-          }
-
-          if (shouldReCalculate) {
-            this.calculate();
-          }
-
-          if (shouldReGroup) {
-            this.group();
-          }
-
-          if (shouldReSort) {
-            this.sort();
-          }
-
-          this._interactedColumns.clear();
-        }
-      },
-    });
-
     let event = this._dataEditedEEC.getEvent(row.id);
 
     if (event) {
-      event.newData = { ...event.newData, ...newData };
+      event.payload.newData = { ...event.payload.newData, ...newData };
     } else {
-      event = { row, newData, type };
+      event = { type, payload: { row, newData } };
     }
 
     this._dataEditedEEC.addEvent(row.id, event);
   }
 
   private _emitCellDataAsEdited() {
-    this._dataEditedEEC?.emit();
+    this._dataEditedEEC.emit();
   }
 
   private _emitCellAsSelected = _.debounce((selectedCells: Cell[]) => {
-    this.cellSelected.emit(selectedCells);
+    this.cellAction.emit({
+      type: TableCellActionType.Select,
+      payload: selectedCells,
+    });
   }, 200);
 
   private _filterExcludeCells(
