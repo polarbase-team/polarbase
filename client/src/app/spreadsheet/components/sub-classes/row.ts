@@ -64,20 +64,20 @@ export interface TableRowMovedEvent {
 }
 
 export const TableRowActionType = {
-  Added: 'added',
-  Deleted: 'deleted',
-  Expanded: 'expanded',
-  Moved: 'moved',
-  Selected: 'selected',
+  Add: 'add',
+  Delete: 'delete',
+  Expand: 'expand',
+  Move: 'move',
+  Select: 'select',
 } as const;
 export type TableRowActionType = (typeof TableRowActionType)[keyof typeof TableRowActionType];
 
 export interface TableRowActionPayload {
-  [TableRowActionType.Added]: TableRowAddedEvent[];
-  [TableRowActionType.Deleted]: Row[];
-  [TableRowActionType.Expanded]: Row;
-  [TableRowActionType.Moved]: TableRowMovedEvent[];
-  [TableRowActionType.Selected]: Row[] | null;
+  [TableRowActionType.Add]: TableRowAddedEvent[];
+  [TableRowActionType.Delete]: Row[];
+  [TableRowActionType.Expand]: Row;
+  [TableRowActionType.Move]: TableRowMovedEvent[];
+  [TableRowActionType.Select]: Row[] | null;
 }
 export interface TableRowAction<T extends TableRowActionType = TableRowActionType> {
   type: T;

@@ -264,8 +264,8 @@ export class SpreadsheetComponent
             filter(
               (
                 event,
-              ): event is Extract<TableRowAction, { type: typeof TableRowActionType.Selected }> =>
-                event.type === TableRowActionType.Selected,
+              ): event is Extract<TableRowAction, { type: typeof TableRowActionType.Select }> =>
+                event.type === TableRowActionType.Select,
             ),
           ),
         )
@@ -1980,7 +1980,7 @@ export class SpreadsheetComponent
   private _addedEEC: EmitEventController<Row['id'], TableRowAddedEvent> = new EmitEventController({
     autoEmit: false,
     onEmitted: (events) => {
-      this.rowAction.emit({ type: TableRowActionType.Added, payload: events });
+      this.rowAction.emit({ type: TableRowActionType.Add, payload: events });
     },
   });
 
@@ -2018,8 +2018,8 @@ export class SpreadsheetComponent
     this.rowAction
       .pipe(
         filter(
-          (event): event is Extract<TableRowAction, { type: typeof TableRowActionType.Added }> =>
-            event.type === TableRowActionType.Added,
+          (event): event is Extract<TableRowAction, { type: typeof TableRowActionType.Add }> =>
+            event.type === TableRowActionType.Add,
         ),
         map(({ payload }) => {
           return (payload as { row: Row }[]).map((e) => e.row);
@@ -2221,7 +2221,7 @@ export class SpreadsheetComponent
   }
 
   protected expandRow(row: Row) {
-    this.rowAction.emit({ type: TableRowActionType.Expanded, payload: row });
+    this.rowAction.emit({ type: TableRowActionType.Expand, payload: row });
   }
 
   protected expandSelectingRow() {
@@ -2254,14 +2254,14 @@ export class SpreadsheetComponent
     }
 
     this._removeRows(canDeleteRows);
-    this.rowAction.emit({ type: TableRowActionType.Deleted, payload: canDeleteRows });
+    this.rowAction.emit({ type: TableRowActionType.Delete, payload: canDeleteRows });
     this.calculate();
   }
 
   protected async deleteRow(row: Row) {
     this.deselectAllCells();
     this._removeRows([row]);
-    this.rowAction.emit({ type: TableRowActionType.Deleted, payload: [row] });
+    this.rowAction.emit({ type: TableRowActionType.Delete, payload: [row] });
     this.calculate();
   }
 
@@ -2274,7 +2274,7 @@ export class SpreadsheetComponent
     this.selectedRows.has(row) ? this.selectedRows.delete(row) : this.selectedRows.add(row);
 
     this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
-    this.rowAction.emit({ type: TableRowActionType.Selected, payload: [...this.selectedRows] });
+    this.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
   }
 
   protected flushDraftRow() {
@@ -2311,7 +2311,7 @@ export class SpreadsheetComponent
     }
 
     this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
-    this.rowAction.emit({ type: TableRowActionType.Selected, payload: [...this.selectedRows] });
+    this.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
   }
 
   protected deselectAllRows() {
@@ -2326,7 +2326,7 @@ export class SpreadsheetComponent
     this.selectedRows.clear();
 
     this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
-    this.rowAction.emit({ type: TableRowActionType.Selected, payload: null });
+    this.rowAction.emit({ type: TableRowActionType.Select, payload: null });
   }
 
   protected moveRows(movedRows: Row[], movedIndex: number) {
@@ -2345,7 +2345,7 @@ export class SpreadsheetComponent
     this.markRowsAsChanged();
 
     this.rowAction.emit({
-      type: TableRowActionType.Moved,
+      type: TableRowActionType.Move,
       payload: movedRows.map((movedRow) => ({ row: movedRow, movedIndex })),
     });
   }
