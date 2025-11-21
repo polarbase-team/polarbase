@@ -114,20 +114,20 @@ export function calculateFreezeDividerDragPlaceholderIndex(
 }
 
 export const TableColumnActionType = {
-  Calculate: 'calculate',
   Clear: 'clear',
   Delete: 'delete',
-  Freeze: 'freeze',
-  Group: 'group',
-  Hide: 'hide',
   Move: 'move',
   Resize: 'resize',
-  Select: 'select',
-  Sort: 'sort',
-  Uncalculate: 'uncalculate',
-  Ungroup: 'ungroup',
+  Freeze: 'freeze',
+  Hide: 'hide',
   Unhide: 'unhide',
+  Calculate: 'calculate',
+  Uncalculate: 'uncalculate',
+  Group: 'group',
+  Ungroup: 'ungroup',
+  Sort: 'sort',
   Unsort: 'unsort',
+  Select: 'select',
 } as const;
 export type TableColumnActionType =
   (typeof TableColumnActionType)[keyof typeof TableColumnActionType];
@@ -138,14 +138,14 @@ export interface TableColumnActionPayload {
   [TableColumnActionType.Move]: ColumnMovedEvent;
   [TableColumnActionType.Resize]: Column;
   [TableColumnActionType.Freeze]: number;
+  [TableColumnActionType.Hide]: Column[];
+  [TableColumnActionType.Unhide]: Column[];
   [TableColumnActionType.Calculate]: Column;
   [TableColumnActionType.Uncalculate]: Column;
   [TableColumnActionType.Group]: Column;
   [TableColumnActionType.Ungroup]: Column;
   [TableColumnActionType.Sort]: Column;
   [TableColumnActionType.Unsort]: Column;
-  [TableColumnActionType.Hide]: Column[];
-  [TableColumnActionType.Unhide]: Column[];
   [TableColumnActionType.Select]: Column[] | null;
 }
 
