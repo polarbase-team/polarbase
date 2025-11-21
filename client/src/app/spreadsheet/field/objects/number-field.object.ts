@@ -1,12 +1,11 @@
 import _ from 'lodash';
 
-import { INumberField, TNumberData } from '../interfaces/number-field.interface';
-import { EDataType } from '../interfaces/field.interface';
+import { NumberData, NumberFieldConfig } from '../interfaces/number-field.interface';
+import { DataType } from '../interfaces/field.interface';
+import { Field, FieldValidationKey } from './field.object';
 
-import { Field, FieldValidationErrors, FieldValidationKey } from './field.object';
-
-export class NumberField extends Field<TNumberData> implements INumberField {
-  static readonly dataType = EDataType.Number;
+export class NumberField extends Field<NumberData> {
+  static readonly dataType = DataType.Number;
 
   allowNegative: boolean | undefined;
 
@@ -14,21 +13,13 @@ export class NumberField extends Field<TNumberData> implements INumberField {
     return NumberField.dataType;
   }
 
-  constructor(
-    name: string,
-    data?: TNumberData,
-    allowNegative?: boolean,
-    description?: string,
-    required?: boolean,
-    initialData?: TNumberData,
-    params?: any
-  ) {
-    super(name, data, description, required, initialData, params);
+  constructor(config: NumberFieldConfig) {
+    super(config);
 
-    this.allowNegative = allowNegative;
+    this.allowNegative = config.allowNegative;
   }
 
-  override validate(data: TNumberData = this.data!) {
+  override validate(data: NumberData = this.data!) {
     let errors = super.validate(data);
 
     if (!this.allowNegative && _.isFinite(data) && data < 0) {
@@ -46,7 +37,7 @@ export class NumberField extends Field<TNumberData> implements INumberField {
   }
 
   override convertTextToData(text: string) {
-    const data: TNumberData = Number(text);
+    const data: NumberData = Number(text);
 
     if (!_.isFinite(data) || (!this.allowNegative && data < 0) || this.validate(data) !== null) {
       return null;
@@ -62,7 +53,7 @@ export class NumberField extends Field<TNumberData> implements INumberField {
       params: JSON.parse(
         JSON.stringify({
           allowNegative: this.allowNegative,
-        })
+        }),
       ),
     };
   }

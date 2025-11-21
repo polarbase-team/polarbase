@@ -1,32 +1,24 @@
 import {
-  TDropdownData,
-  TDropdownOption,
-  IDropdownField,
+  DropdownData,
+  DropdownFieldConfig,
+  DropdownOption,
 } from '../interfaces/dropdown-field.interface';
-import { EDataType } from '../interfaces/field.interface';
+import { DataType } from '../interfaces/field.interface';
 import { Field } from './field.object';
 
-export class DropdownField extends Field<TDropdownData> implements IDropdownField {
-  static readonly dataType = EDataType.Dropdown;
+export class DropdownField extends Field<DropdownData> {
+  static readonly dataType = DataType.Dropdown;
 
-  options: TDropdownOption[] | undefined;
+  options: DropdownOption[] | undefined;
 
   get dataType() {
     return DropdownField.dataType;
   }
 
-  constructor(
-    name: string,
-    data?: TDropdownData,
-    options?: TDropdownOption[],
-    description?: string,
-    required?: boolean,
-    initialData?: TDropdownData,
-    params?: any
-  ) {
-    super(name, data, description, required, initialData, params);
+  constructor(config: DropdownFieldConfig) {
+    super(config);
 
-    this.options = options;
+    this.options = config.options;
   }
 
   override toJson() {

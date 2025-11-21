@@ -4,7 +4,7 @@ import { Menu } from 'primeng/menu';
 import { Tag } from 'primeng/tag';
 
 import { DropdownField } from '../../../../field/objects';
-import { TDropdownData } from '../../../../field/interfaces';
+import { DropdownData } from '../../../../field/interfaces';
 import { CellTouchEvent } from '../field-cell-touchable';
 import { FieldCellEditable } from '../field-cell-editable';
 
@@ -16,7 +16,7 @@ import { FieldCellEditable } from '../field-cell-editable';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Menu, Tag],
 })
-export class DropdownFieldCellComponent extends FieldCellEditable<TDropdownData> {
+export class DropdownFieldCellComponent extends FieldCellEditable<DropdownData> {
   declare field: DropdownField;
 
   @ViewChild('menu') menu: Menu;

@@ -26,30 +26,26 @@ export class App {
   columns: Column[] = [
     {
       id: _.uniqueId(),
-      field: new TextField('Text', undefined, undefined, true),
+      field: new TextField({ name: 'Text', required: true }),
     },
     {
       id: _.uniqueId(),
-      field: new NumberField('Number'),
+      field: new NumberField({ name: 'Number' }),
     },
     {
       id: _.uniqueId(),
-      field: new CheckboxField('Checkbox', undefined, 'asdsad'),
+      field: new CheckboxField({ name: 'Checkbox', description: 'Description' }),
     },
     {
       id: _.uniqueId(),
-      field: new DropdownField('Dropdown', undefined, [
-        'Option 1',
-        'Option 2',
-        'Option 3',
-        'Option 4',
-        'Option 5',
-        'Option 6',
-      ]),
+      field: new DropdownField({
+        name: 'Dropdown',
+        options: ['Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5', 'Option 6'],
+      }),
     },
     {
       id: _.uniqueId(),
-      field: new DateField('Date'),
+      field: new DateField({ name: 'Date' }),
     },
   ];
   rows: Row[] = _.map(_.range(1, 100), (index: number) => {

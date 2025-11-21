@@ -1,18 +1,17 @@
 import dayjs from 'dayjs';
-import _ from 'lodash';
 
-import { TDateData, IDateField } from '../interfaces/date-field.interface';
-import { EDataType } from '../interfaces/field.interface';
+import { DateData } from '../interfaces/date-field.interface';
+import { DataType } from '../interfaces/field.interface';
 import { Field } from './field.object';
 
-export class DateField extends Field<TDateData> implements IDateField {
-  static readonly dataType = EDataType.Date;
+export class DateField extends Field<DateData> {
+  static readonly dataType = DataType.Date;
 
   get dataType() {
     return DateField.dataType;
   }
 
-  override compareData(source: TDateData, destination: TDateData = this.data!) {
+  override compareData(source: DateData, destination: DateData = this.data!) {
     if (
       (source === undefined || source === null) &&
       (destination === undefined || destination === null)
@@ -23,7 +22,7 @@ export class DateField extends Field<TDateData> implements IDateField {
     return dayjs(source).isSame(destination);
   }
 
-  override toString(data: TDateData = this.data!) {
+  override toString(data: DateData = this.data!) {
     return dayjs(data).format();
   }
 }

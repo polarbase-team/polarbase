@@ -31,13 +31,14 @@ function omitNonNumericChars(
     : text.replace(isInteger ? POSITIVE_INTEGER_REPLACER : POSITIVE_NUMBER_REPLACER, `$1$2$3`);
 }
 
-export enum InputBoxType {
-  Text = 'text',
-  Number = 'number',
-  Integer = 'integer',
-  PositiveNumber = 'positive-number',
-  PositiveInteger = 'positive-integer',
-}
+export const InputBoxType = {
+  Text: 'text',
+  Number: 'number',
+  Integer: 'integer',
+  PositiveNumber: 'positive-number',
+  PositiveInteger: 'positive-integer',
+} as const;
+export type InputBoxType = (typeof InputBoxType)[keyof typeof InputBoxType];
 
 export type InputBoxContent = string | number;
 

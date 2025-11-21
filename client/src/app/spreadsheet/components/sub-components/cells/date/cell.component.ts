@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePicker } from 'primeng/datepicker';
 import dayjs from 'dayjs';
 
-import { TDateData } from '../../../../field/interfaces';
+import { DateData } from '../../../../field/interfaces';
 import { DateField } from '../../../../field/objects';
 import { CellTouchEvent } from '../field-cell-touchable';
 import { FieldCellEditable } from '../field-cell-editable';
@@ -17,7 +17,7 @@ import { DatePipe } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, DatePicker, DatePipe],
 })
-export class DateFieldCellComponent extends FieldCellEditable<TDateData> {
+export class DateFieldCellComponent extends FieldCellEditable<DateData> {
   declare field: DateField;
 
   @ViewChild('calendar') calendar: DatePicker;

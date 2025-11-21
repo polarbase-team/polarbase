@@ -1,7 +1,4 @@
-import { IField } from './field.interface';
+import { FieldConfig } from './field.interface';
 
-export type TTextData = string;
-
-export interface ITextField extends IField<TTextData> {
-  notAllowDuplicate?: boolean;
-}
+export type TextData = string;
+export interface TextFieldConfig extends FieldConfig<TextData> {}

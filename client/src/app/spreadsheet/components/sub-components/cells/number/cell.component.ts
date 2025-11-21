@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { TNumberData } from '../../../../field/interfaces';
+import { NumberData } from '../../../../field/interfaces';
 import { NumberField } from '../../../../field/objects';
 import { FieldCellInputable } from '../field-cell-inputable';
 import { InputBoxComponent } from '../input-box.component';
@@ -13,6 +13,6 @@ import { InputBoxComponent } from '../input-box.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [InputBoxComponent],
 })
-export class NumberFieldCellComponent extends FieldCellInputable<TNumberData> {
+export class NumberFieldCellComponent extends FieldCellInputable<NumberData> {
   declare field: NumberField;
 }

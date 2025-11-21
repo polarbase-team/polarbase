@@ -1,13 +1,14 @@
 import { fromEvent, Subject, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
-enum CombinationKey {
-  Alt = 'Alt',
-  Command = 'Cmd',
-  Ctrl = 'Ctrl',
-  Meta = 'Meta',
-  Shift = 'Shift',
-}
+export const CombinationKey = {
+  Alt: 'Alt',
+  Command: 'Cmd',
+  Ctrl: 'Ctrl',
+  Meta: 'Meta',
+  Shift: 'Shift',
+} as const;
+export type CombinationKey = (typeof CombinationKey)[keyof typeof CombinationKey];
 
 export type KeyboardConfig = {
   target: HTMLElement;

@@ -16,10 +16,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import _ from 'lodash';
 
-import { EDataType } from '../../../field/interfaces';
+import { DataType } from '../../../field/interfaces';
 import { Field } from '../../../field/objects';
 import { Cell, Column, Row } from '../../spreadsheet.component';
-import { FieldCell, IFieldCell } from './field-cell';
+import { FieldCell } from './field-cell';
 import { FieldCellEditable } from './field-cell-editable';
 import { CheckboxFieldCellComponent } from './checkbox/cell.component';
 import { DateFieldCellComponent } from './date/cell.component';
@@ -28,19 +28,19 @@ import { TextFieldCellComponent } from './text/cell.component';
 import { DropdownFieldCellComponent } from './dropdown/cell.component';
 import { FieldCellSelectingState, FieldCellService } from './field-cell.service';
 
-const FIELD_CELL_CMP_MAP = new Map<EDataType, Type<FieldCell>>([
-  [EDataType.Checkbox, CheckboxFieldCellComponent],
-  [EDataType.Date, DateFieldCellComponent],
-  [EDataType.Number, NumberFieldCellComponent],
-  [EDataType.Text, TextFieldCellComponent],
-  [EDataType.Dropdown, DropdownFieldCellComponent],
-]) as ReadonlyMap<EDataType, Type<FieldCell>>;
+const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
+  [DataType.Checkbox, CheckboxFieldCellComponent],
+  [DataType.Date, DateFieldCellComponent],
+  [DataType.Number, NumberFieldCellComponent],
+  [DataType.Text, TextFieldCellComponent],
+  [DataType.Dropdown, DropdownFieldCellComponent],
+]) as ReadonlyMap<DataType, Type<FieldCell>>;
 
 @Directive({
   selector: '[fieldCellFactory]',
   exportAs: 'fieldCellFactory',
 })
-export class FieldCellFactoryDirective implements IFieldCell, OnChanges, OnDestroy {
+export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
   @Input() row: Row;
   @Input() column: Column;
   @Input() field: Field;

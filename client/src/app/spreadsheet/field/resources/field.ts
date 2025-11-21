@@ -1,3 +1,3 @@
-import { EDataType } from '../interfaces/field.interface';
+import { DataType } from '../interfaces/field.interface';
 
-export const FIELD_READONLY: ReadonlySet<EDataType> = new Set([]);
+export const FIELD_READONLY: ReadonlySet<DataType> = new Set([]);

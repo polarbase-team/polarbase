@@ -1,9 +1,6 @@
-import { IField } from './field.interface';
+import { FieldConfig } from './field.interface';
 
-export type TNumberData = number;
-
-export interface INumberParams {
+export type NumberData = number;
+export interface NumberFieldConfig extends FieldConfig<NumberData> {
   allowNegative?: boolean;
 }
-
-export interface INumberField extends IField<TNumberData>, INumberParams {}

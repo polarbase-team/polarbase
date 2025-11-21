@@ -2,7 +2,7 @@ import { ComponentRef, Injectable } from '@angular/core';
 import { startWith, Subject, takeUntil } from 'rxjs';
 import _ from 'lodash';
 
-import { EDataType } from '../../../field/interfaces';
+import { DataType } from '../../../field/interfaces';
 import { FieldValidationErrors } from '../../../field/objects';
 import { Cell } from '../../spreadsheet.component';
 import { FieldCell } from './field-cell';
@@ -85,8 +85,8 @@ export class FieldCellService {
   cacheSize: number = 40;
 
   // A private map to store cached component references categorized by DataType.
-  private readonly _cacheStore: Map<EDataType, ComponentRef<FieldCell>[]> = new Map<
-    EDataType,
+  private readonly _cacheStore: Map<DataType, ComponentRef<FieldCell>[]> = new Map<
+    DataType,
     ComponentRef<FieldCell>[]
   >();
 
@@ -112,7 +112,7 @@ export class FieldCellService {
    * @param dataType The data type key to categorize the component reference in the cache.
    * @param cmpRef The component reference to cache.
    */
-  set(dataType: EDataType, cmpRef: ComponentRef<FieldCell>) {
+  set(dataType: DataType, cmpRef: ComponentRef<FieldCell>) {
     // Get or initialize an array for the given dataType in the cache store.
     let arr = this._cacheStore.get(dataType);
     if (!arr) {
@@ -136,7 +136,7 @@ export class FieldCellService {
    * @param dataType The data type key to locate the component reference in the cache.
    * @returns The last component reference added to the cache for the given data type, or undefined if none exist.
    */
-  get(dataType: EDataType): ComponentRef<FieldCell> | null {
+  get(dataType: DataType): ComponentRef<FieldCell> | null {
     const arr = this._cacheStore.get(dataType);
     const cmpRef: ComponentRef<FieldCell> | undefined = arr?.pop();
 

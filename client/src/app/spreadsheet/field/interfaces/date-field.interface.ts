@@ -1,5 +1,4 @@
-import { IField } from './field.interface';
+import { FieldConfig } from './field.interface';
 
-export type TDateData = string;
-
-export interface IDateField extends IField<TDateData> {}
+export type DateData = string;
+export interface DateFieldConfig extends FieldConfig<DateData> {}

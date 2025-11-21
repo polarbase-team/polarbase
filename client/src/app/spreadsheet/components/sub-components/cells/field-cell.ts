@@ -13,18 +13,13 @@ import {
 import { Field } from '../../../field/objects';
 import { Row } from '../../services/table-row.service';
 
-export interface IFieldCell<T = any> {
-  field: Field;
-  data: T;
-}
-
-export type InputContext = {
+export interface InputContext {
   row: Row;
   other: any;
-};
+}
 
 @Directive()
-export class FieldCell<T = any> implements IFieldCell<T> {
+export class FieldCell<T = any> {
   @Input() field: Field;
   @Input() data: T;
 

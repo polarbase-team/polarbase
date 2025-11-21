@@ -1,69 +1,64 @@
-import { EDataType, EOperator } from '../interfaces';
+import { DataType, Operator } from '../interfaces';
 
 export const OPERATORS_TRANSLATE = {
-  [EOperator.NotApply]: 'NOT_APPLY',
-  [EOperator.CountAll]: 'COUNT_ALL',
-  [EOperator.CountEmpty]: 'COUNT_EMPTY',
-  [EOperator.CountNotEmpty]: 'COUNT_NOT_EMPTY',
-  [EOperator.CountUnique]: 'COUNT_UNIQUE',
-  [EOperator.CountValues]: 'COUNT_VALUES',
-  [EOperator.Sum]: 'SUM',
-  [EOperator.Average]: 'AVERAGE',
-  [EOperator.Max]: 'MAX',
-  [EOperator.Min]: 'MIN',
-  [EOperator.Med]: 'MED',
-  [EOperator.Range]: 'RANGE',
-  [EOperator.CountChecked]: 'COUNT_CHECKED',
-  [EOperator.CountUnchecked]: 'COUNT_UN_CHECKED',
-  [EOperator.DayRange]: 'DAY_RANGE',
-  [EOperator.MonthRange]: 'MONTH_RANGE',
-  [EOperator.EarliestDate]: 'EARLIEST_DATE',
-  [EOperator.LatestDate]: 'LATEST_DATE',
+  [Operator.NotApply]: 'NOT_APPLY',
+  [Operator.CountAll]: 'COUNT_ALL',
+  [Operator.CountEmpty]: 'COUNT_EMPTY',
+  [Operator.CountNotEmpty]: 'COUNT_NOT_EMPTY',
+  [Operator.CountUnique]: 'COUNT_UNIQUE',
+  [Operator.CountValues]: 'COUNT_VALUES',
+  [Operator.Sum]: 'SUM',
+  [Operator.Average]: 'AVERAGE',
+  [Operator.Max]: 'MAX',
+  [Operator.Min]: 'MIN',
+  [Operator.Med]: 'MED',
+  [Operator.Range]: 'RANGE',
+  [Operator.CountChecked]: 'COUNT_CHECKED',
+  [Operator.CountUnchecked]: 'COUNT_UN_CHECKED',
+  [Operator.DayRange]: 'DAY_RANGE',
+  [Operator.MonthRange]: 'MONTH_RANGE',
+  [Operator.EarliestDate]: 'EARLIEST_DATE',
+  [Operator.LatestDate]: 'LATEST_DATE',
 };
 
-export const COMMON_OPERATORS: EOperator[] = [EOperator.CountAll, EOperator.NotApply];
+export const COMMON_OPERATORS: Operator[] = [Operator.CountAll, Operator.NotApply];
 
-export const DATA_TYPE_OPERATORS: Record<string, EOperator[]> = {
-  text: [
-    EOperator.CountValues,
-    EOperator.CountUnique,
-    EOperator.CountEmpty,
-    EOperator.CountNotEmpty,
-  ],
+export const DATA_TYPE_OPERATORS: Record<string, Operator[]> = {
+  text: [Operator.CountValues, Operator.CountUnique, Operator.CountEmpty, Operator.CountNotEmpty],
   number: [
-    EOperator.CountValues,
-    EOperator.CountUnique,
-    EOperator.CountEmpty,
-    EOperator.CountNotEmpty,
-    EOperator.Sum,
-    EOperator.Average,
-    EOperator.Min,
-    EOperator.Max,
-    EOperator.Med,
-    EOperator.Range,
+    Operator.CountValues,
+    Operator.CountUnique,
+    Operator.CountEmpty,
+    Operator.CountNotEmpty,
+    Operator.Sum,
+    Operator.Average,
+    Operator.Min,
+    Operator.Max,
+    Operator.Med,
+    Operator.Range,
   ],
   date: [
-    EOperator.CountValues,
-    EOperator.CountUnique,
-    EOperator.CountEmpty,
-    EOperator.CountNotEmpty,
-    EOperator.DayRange,
-    EOperator.MonthRange,
-    EOperator.EarliestDate,
-    EOperator.LatestDate,
+    Operator.CountValues,
+    Operator.CountUnique,
+    Operator.CountEmpty,
+    Operator.CountNotEmpty,
+    Operator.DayRange,
+    Operator.MonthRange,
+    Operator.EarliestDate,
+    Operator.LatestDate,
   ],
-  checkbox: [EOperator.CountChecked, EOperator.CountUnchecked],
+  checkbox: [Operator.CountChecked, Operator.CountUnchecked],
 };
 
-export const DATA_TYPE_GROUPS: Partial<Record<EDataType, string>> = {
-  [EDataType.Text]: 'text',
-  [EDataType.Dropdown]: 'text',
-  [EDataType.Number]: 'number',
-  [EDataType.Date]: 'date',
-  [EDataType.Checkbox]: 'checkbox',
+export const DATA_TYPE_GROUPS: Partial<Record<DataType, string>> = {
+  [DataType.Text]: 'text',
+  [DataType.Dropdown]: 'text',
+  [DataType.Number]: 'number',
+  [DataType.Date]: 'date',
+  [DataType.Checkbox]: 'checkbox',
 };
 
-export const operatorOfDate: ReadonlySet<EOperator> = new Set([
-  EOperator.EarliestDate,
-  EOperator.LatestDate,
+export const operatorOfDate: ReadonlySet<Operator> = new Set([
+  Operator.EarliestDate,
+  Operator.LatestDate,
 ]);

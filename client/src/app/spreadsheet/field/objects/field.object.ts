@@ -1,20 +1,21 @@
 import _ from 'lodash';
 
-import { EDataType, IField } from '../interfaces/field.interface';
+import { DataType, FieldConfig } from '../interfaces/field.interface';
 
-export enum FieldValidationKey {
-  Required = 'required',
-  Pattern = 'pattern',
-  Min = 'min',
-  Max = 'max',
-  Other = 'other',
-}
+export const FieldValidationKey = {
+  Required: 'required',
+  Pattern: 'pattern',
+  Min: 'min',
+  Max: 'max',
+  Other: 'other',
+} as const;
+export type FieldValidationKey = (typeof FieldValidationKey)[keyof typeof FieldValidationKey];
 
 export type FieldValidationErrors = {
   [key in FieldValidationKey]?: any;
 };
 
-export abstract class Field<T = any> implements IField<T> {
+export abstract class Field<T = any> {
   name: string;
   data: T | undefined;
   description: string | undefined;
@@ -22,22 +23,15 @@ export abstract class Field<T = any> implements IField<T> {
   initialData: T | undefined;
   params: any;
 
-  abstract get dataType(): EDataType;
+  abstract get dataType(): DataType;
 
-  constructor(
-    name: string,
-    data?: T,
-    description?: string,
-    required?: boolean,
-    initialData?: T,
-    params?: any,
-  ) {
-    this.name = name;
-    this.data = data;
-    this.description = description;
-    this.required = required;
-    this.initialData = initialData;
-    this.params = params;
+  constructor(config: FieldConfig<T>) {
+    this.name = config.name;
+    this.data = config.data;
+    this.description = config.description;
+    this.required = config.required;
+    this.initialData = config.initialData;
+    this.params = config.params;
   }
 
   validate(data: T = this.data!, isAllowEmpty?: boolean): FieldValidationErrors | null {

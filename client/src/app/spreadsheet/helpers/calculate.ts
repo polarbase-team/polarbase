@@ -4,53 +4,54 @@ import dayjs from 'dayjs';
 import _ from 'lodash';
 
 import { Field } from '../field/objects/field.object';
-import { EDataType } from '../field/interfaces/field.interface';
+import { DataType } from '../field/interfaces/field.interface';
 
 export const EMPTY_GROUP_VALUE: any = Infinity;
 
-export enum ECalculateType {
-  Empty = 'Empty',
-  Filled = 'Filled',
-  Unique = 'Unique',
-  PercentEmpty = 'PercentEmpty',
-  PercentFilled = 'PercentFilled',
-  PercentUnique = 'PercentUnique',
-  Sum = 'Sum',
-  Average = 'Average',
-  Median = 'Median',
-  Min = 'Min',
-  Max = 'Max',
-  EarliestDate = 'EarliestDate',
-  LatestDate = 'LatestDate',
-  Range = 'Range',
-  DayRange = 'DayRange',
-  MonthRange = 'MonthRange',
-  EmptyCheckBox = 'EmptyCheckBox',
-  FilledCheckBox = 'FilledCheckBox',
-  PercentEmptyCheckBox = 'PercentEmptyCheckBox',
-  PercentFilledCheckBox = 'PercentFilledCheckBox',
-}
+export const CalculateType = {
+  Empty: 'Empty',
+  Filled: 'Filled',
+  Unique: 'Unique',
+  PercentEmpty: 'PercentEmpty',
+  PercentFilled: 'PercentFilled',
+  PercentUnique: 'PercentUnique',
+  Sum: 'Sum',
+  Average: 'Average',
+  Median: 'Median',
+  Min: 'Min',
+  Max: 'Max',
+  EarliestDate: 'EarliestDate',
+  LatestDate: 'LatestDate',
+  Range: 'Range',
+  DayRange: 'DayRange',
+  MonthRange: 'MonthRange',
+  EmptyCheckBox: 'EmptyCheckBox',
+  FilledCheckBox: 'FilledCheckBox',
+  PercentEmptyCheckBox: 'PercentEmptyCheckBox',
+  PercentFilledCheckBox: 'PercentFilledCheckBox',
+} as const;
+export type CalculateType = (typeof CalculateType)[keyof typeof CalculateType];
 
-export function calculateFieldPredicate(field: Field, calculateType: ECalculateType) {
+export function calculateFieldPredicate(field: Field, calculateType: CalculateType) {
   let data = field.data;
 
   if (_.isNil(data)) {
     data = null;
   } else {
     switch (field.dataType) {
-      case EDataType.Checkbox:
+      case DataType.Checkbox:
         data ||= null;
         break;
-      case EDataType.Date:
+      case DataType.Date:
         switch (calculateType) {
-          case ECalculateType.DayRange:
+          case CalculateType.DayRange:
             data = dayjs(data).startOf('day');
             break;
-          case ECalculateType.MonthRange:
+          case CalculateType.MonthRange:
             data = dayjs(data).startOf('month');
             break;
-          case ECalculateType.Unique:
-          case ECalculateType.PercentUnique:
+          case CalculateType.Unique:
+          case CalculateType.PercentUnique:
             data = dayjs(data).format();
             break;
         }
@@ -80,7 +81,7 @@ _.mixin({
 function countEmpty(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Empty,
+  forwardType: CalculateType = CalculateType.Empty,
 ): number {
   return _.reduce(
     data,
@@ -104,7 +105,7 @@ function countEmpty(
 function countFilled(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Filled,
+  forwardType: CalculateType = CalculateType.Filled,
 ): number {
   return _.reduce(
     data,
@@ -128,7 +129,7 @@ function countFilled(
 function countUnique(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Unique,
+  forwardType: CalculateType = CalculateType.Unique,
 ): number {
   const cellsData: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -139,7 +140,7 @@ function countUnique(
 function countPercentEmpty(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.PercentEmpty,
+  forwardType: CalculateType = CalculateType.PercentEmpty,
 ): number {
   const length: number = data?.length;
 
@@ -152,17 +153,17 @@ function countPercentFilledLookupToCheckbox(
   data: any[],
   predicate?: (...args: any) => any,
 ): number {
-  const emptyCheckbox: number = countEmpty(data, predicate, ECalculateType.Empty);
+  const emptyCheckbox: number = countEmpty(data, predicate, CalculateType.Empty);
 
-  const filledCheckbox: number = countFilled(data, predicate, ECalculateType.Filled);
+  const filledCheckbox: number = countFilled(data, predicate, CalculateType.Filled);
 
   return (filledCheckbox / (emptyCheckbox + filledCheckbox)) * 100;
 }
 
 function countPercentEmptyLookupToCheckbox(data: any[], predicate?: (...args: any) => any): number {
-  const emptyCheckbox: number = countEmpty(data, predicate, ECalculateType.Empty);
+  const emptyCheckbox: number = countEmpty(data, predicate, CalculateType.Empty);
 
-  const filledCheckbox: number = countFilled(data, predicate, ECalculateType.Filled);
+  const filledCheckbox: number = countFilled(data, predicate, CalculateType.Filled);
 
   return (emptyCheckbox / (emptyCheckbox + filledCheckbox)) * 100;
 }
@@ -170,7 +171,7 @@ function countPercentEmptyLookupToCheckbox(data: any[], predicate?: (...args: an
 function countPercentFilled(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.PercentFilled,
+  forwardType: CalculateType = CalculateType.PercentFilled,
 ): number {
   const length: number = data?.length;
 
@@ -182,11 +183,11 @@ function countPercentFilled(
 function countPercentUnique(
   data: any[],
   predicate?: (...args: any) => any,
-  _forwardType?: ECalculateType,
+  _forwardType?: CalculateType,
 ): number {
-  const uniqueValue: number = countUnique(data, predicate, ECalculateType.Unique);
+  const uniqueValue: number = countUnique(data, predicate, CalculateType.Unique);
 
-  const notEmpty: number = countFilled(data, predicate, ECalculateType.Filled);
+  const notEmpty: number = countFilled(data, predicate, CalculateType.Filled);
 
   return (uniqueValue / notEmpty) * 100 || 0;
 }
@@ -194,7 +195,7 @@ function countPercentUnique(
 function sumFormula(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Sum,
+  forwardType: CalculateType = CalculateType.Sum,
 ): number | string {
   const values: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -204,7 +205,7 @@ function sumFormula(
 function averageFormula(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Average,
+  forwardType: CalculateType = CalculateType.Average,
 ): number | string {
   const cellsData: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -214,7 +215,7 @@ function averageFormula(
 function medianFormula(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Median,
+  forwardType: CalculateType = CalculateType.Median,
 ): number | string {
   const cellsData: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -224,7 +225,7 @@ function medianFormula(
 function min(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Min,
+  forwardType: CalculateType = CalculateType.Min,
 ): any {
   const cellsData: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -238,7 +239,7 @@ function min(
 function max(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Max,
+  forwardType: CalculateType = CalculateType.Max,
 ): any {
   const cellsData: any[] = mapCellsData(data, predicate, forwardType);
 
@@ -252,7 +253,7 @@ function max(
 function range(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.Range,
+  forwardType: CalculateType = CalculateType.Range,
 ): number | string {
   let minNum: number | undefined;
   let maxNum: number | undefined;
@@ -294,7 +295,7 @@ function range(
 function dayRange(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.DayRange,
+  forwardType: CalculateType = CalculateType.DayRange,
 ): number {
   const r: number = +range(data, predicate, forwardType);
 
@@ -304,7 +305,7 @@ function dayRange(
 function monthRange(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType: ECalculateType = ECalculateType.MonthRange,
+  forwardType: CalculateType = CalculateType.MonthRange,
 ): number {
   const r: number = dayRange(data, predicate, forwardType);
 
@@ -313,63 +314,63 @@ function monthRange(
 
 export function calculateBy(
   data: any[],
-  type: ECalculateType,
+  type: CalculateType,
   predicate?: (...args: any) => any,
   field?: Field,
 ): any {
   let fn: Function;
 
   switch (type) {
-    case ECalculateType.Empty:
-    case ECalculateType.EmptyCheckBox:
+    case CalculateType.Empty:
+    case CalculateType.EmptyCheckBox:
       fn = countEmpty;
       break;
-    case ECalculateType.Filled:
-    case ECalculateType.FilledCheckBox:
+    case CalculateType.Filled:
+    case CalculateType.FilledCheckBox:
       fn = countFilled;
       break;
-    case ECalculateType.Unique:
+    case CalculateType.Unique:
       fn = countUnique;
       break;
-    case ECalculateType.PercentEmpty:
+    case CalculateType.PercentEmpty:
       fn = countPercentEmpty;
       break;
-    case ECalculateType.PercentEmptyCheckBox:
+    case CalculateType.PercentEmptyCheckBox:
       fn = countPercentEmptyLookupToCheckbox;
       break;
-    case ECalculateType.PercentFilled:
+    case CalculateType.PercentFilled:
       fn = countPercentFilled;
       break;
-    case ECalculateType.PercentFilledCheckBox:
+    case CalculateType.PercentFilledCheckBox:
       fn = countPercentFilledLookupToCheckbox;
       break;
-    case ECalculateType.PercentUnique:
+    case CalculateType.PercentUnique:
       fn = countPercentUnique;
       break;
-    case ECalculateType.Sum:
+    case CalculateType.Sum:
       fn = sumFormula;
       break;
-    case ECalculateType.Average:
+    case CalculateType.Average:
       fn = averageFormula;
       break;
-    case ECalculateType.Median:
+    case CalculateType.Median:
       fn = medianFormula;
       break;
-    case ECalculateType.Min:
-    case ECalculateType.EarliestDate:
+    case CalculateType.Min:
+    case CalculateType.EarliestDate:
       fn = min;
       break;
-    case ECalculateType.Max:
-    case ECalculateType.LatestDate:
+    case CalculateType.Max:
+    case CalculateType.LatestDate:
       fn = max;
       break;
-    case ECalculateType.Range:
+    case CalculateType.Range:
       fn = range;
       break;
-    case ECalculateType.DayRange:
+    case CalculateType.DayRange:
       fn = dayRange;
       break;
-    case ECalculateType.MonthRange:
+    case CalculateType.MonthRange:
       fn = monthRange;
       break;
   }
@@ -396,7 +397,7 @@ export function checkValidDate(dateString: string): boolean {
 function mapCellsData(
   data: any[],
   predicate?: (...args: any) => any,
-  forwardType?: ECalculateType,
+  forwardType?: CalculateType,
 ): any[] {
   const cellsData: any[] = _.chain(data)
     .reduce((memo: number[], d: any) => {

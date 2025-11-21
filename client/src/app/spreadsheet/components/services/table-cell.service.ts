@@ -10,7 +10,7 @@ import {
 
 import { Clipboard, ClipboardData } from '../../helpers/clipboard';
 import { EmitEventController } from '../../helpers/emit-event-controller';
-import { EDataType } from '../../field/interfaces';
+import { DataType } from '../../field/interfaces';
 import { ClipboardItem } from '../../helpers/clipboard';
 import { parseClipboardExternal, parseClipboardInternal } from '../../helpers/paste';
 import { type Column } from './table-column.service';
@@ -45,14 +45,19 @@ export const ExcludeCellState = {
   Empty: 1,
   NonEditable: 2,
 } as const;
-
 export type ExcludeCellState = (typeof ExcludeCellState)[keyof typeof ExcludeCellState];
 
-type Direction = 'above' | 'below' | 'before' | 'after';
+export const Direction = {
+  Above: 'above',
+  Below: 'below',
+  Before: 'before',
+  After: 'after',
+} as const;
+export type Direction = (typeof Direction)[keyof typeof Direction];
 
-const UNPASTEABLE_DATA_TYPES: EDataType[] = [];
-const UNCLEARABLE_DATA_TYPES: EDataType[] = [];
-const UNCUTABLE_DATA_TYPES: EDataType[] = [];
+const UNPASTEABLE_DATA_TYPES: DataType[] = [];
+const UNCLEARABLE_DATA_TYPES: DataType[] = [];
+const UNCUTABLE_DATA_TYPES: DataType[] = [];
 
 function parseClipboardItemToData(column: Column, item: ClipboardItem<Cell>) {
   const { text, data, metadata } = item;
@@ -410,7 +415,7 @@ export class TableCellService extends TableBaseService {
   protected getCells(
     { rowIndex: startRowIdx, columnIndex: startColumnIdx }: CellIndex,
     { rowIndex: endRowIdx, columnIndex: endColumnIdx }: CellIndex,
-    excludeDataTypes?: EDataType[],
+    excludeDataTypes?: DataType[],
     excludeStates?: ExcludeCellState[],
   ): MatrixCell {
     const matrix = new MatrixCell();
@@ -1015,7 +1020,7 @@ export class TableCellService extends TableBaseService {
   }
 
   protected getInteractiveCells(
-    excludeDataTypes?: EDataType[],
+    excludeDataTypes?: DataType[],
     excludeStates?: ExcludeCellState[],
   ): MatrixCell | null {
     let matrix: MatrixCell;
@@ -1145,7 +1150,7 @@ export class TableCellService extends TableBaseService {
         let data = null;
 
         switch (column.field.dataType) {
-          case EDataType.Checkbox:
+          case DataType.Checkbox:
             data ||= false;
             break;
         }
@@ -1279,10 +1284,10 @@ export class TableCellService extends TableBaseService {
 
   private _filterExcludeCells(
     matrix: MatrixCell,
-    excludeDataTypes: EDataType[],
+    excludeDataTypes: DataType[],
     excludeStates: ExcludeCellState[],
   ): MatrixCell {
-    const excludeDataTypeSet = new Set<EDataType>(excludeDataTypes);
+    const excludeDataTypeSet = new Set<DataType>(excludeDataTypes);
     const excludeRequired = _.includes(excludeStates, ExcludeCellState.Required);
     const excludeEmpty = _.includes(excludeStates, ExcludeCellState.Empty);
     const excludeNonEditable = _.includes(excludeStates, ExcludeCellState.NonEditable);
@@ -1295,7 +1300,7 @@ export class TableCellService extends TableBaseService {
           (!excludeDataTypeSet.size || !excludeDataTypeSet.has(column.field.dataType)) &&
           (!excludeRequired || !column.field.required) &&
           (!excludeEmpty ||
-            (column.field.dataType === EDataType.Checkbox
+            (column.field.dataType === DataType.Checkbox
               ? row.data?.[column.id] === true
               : !_.isEmpty(row.data?.[column.id]))) &&
           (!excludeNonEditable || row.editable === true || row.editable?.[column.id] === true)

@@ -9,7 +9,7 @@ import {
   NgZone,
   SimpleChanges,
 } from '@angular/core';
-import { calculateBy, calculateFieldPredicate, ECalculateType } from '../../helpers/calculate';
+import { calculateBy, calculateFieldPredicate, CalculateType } from '../../helpers/calculate';
 import { groupBy, GroupingType } from '../../helpers/group';
 import { sortBy, SortingType } from '../../helpers/sort';
 import type { Cell, CellIndex, CellOffset } from './table-cell.service';
@@ -18,7 +18,7 @@ import type { Group } from './table-group.service';
 import type { Row, RowSize } from './table-row.service';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EDataType } from '../../field/interfaces';
+import { DataType } from '../../field/interfaces';
 import { searchBy } from '../../helpers/search';
 import { TableBaseService } from './table-base.service';
 import { FieldCellService } from '../sub-components/cells/field-cell.service';
@@ -45,7 +45,7 @@ export type SearchInfo = {
 export type Config = Partial<{
   sideSpacing?: number;
   streamData: boolean;
-  calculating: [Column | Column['id'], ECalculateType][];
+  calculating: [Column | Column['id'], CalculateType][];
   grouping: [Column | Column['id'], GroupingType][];
   sorting: [Column | Column['id'], SortingType][];
   column: {
@@ -280,7 +280,7 @@ export class TableService extends TableBaseService {
       const data: [Row, Column][] = [];
 
       const searchColumns = _.filter(this.tableColumnService.displayingColumns, (c) =>
-        _.includes([EDataType.Text, EDataType.Date, EDataType.Number], c.field.dataType),
+        _.includes([DataType.Text, DataType.Date, DataType.Number], c.field.dataType),
       );
 
       for (const row of this.host.rows) {

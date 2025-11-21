@@ -8,9 +8,9 @@ import {
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
 
-import { EDataType } from '../../field/interfaces';
+import { DataType } from '../../field/interfaces';
 import { Field } from '../../field/objects';
-import { ECalculateType, parseGroupFieldData } from '../../helpers/calculate';
+import { CalculateType, parseGroupFieldData } from '../../helpers/calculate';
 import { SortingPredicateReturnType, SortingType } from '../../helpers/sort';
 import { GroupingType } from '../../helpers/group';
 import { _getColumnOffset } from '../sub-components/virtual-scroll/virtual-scroll-column-repeater.directive';
@@ -27,7 +27,7 @@ export type Column = {
   editable?: boolean;
   deletable?: boolean;
   hidden?: boolean;
-  calculateType?: ECalculateType;
+  calculateType?: CalculateType;
   groupingType?: GroupingType;
   sortingType?: SortingType;
 };
@@ -43,8 +43,8 @@ interface ColumnExtra extends Column {
   _isResizing?: boolean;
 }
 
-const UNGROUPABLE_FIELD_DATA_TYPES: ReadonlySet<EDataType> = new Set();
-const UNSORTABLE_FIELD_DATA_TYPES: ReadonlySet<EDataType> = new Set();
+const UNGROUPABLE_FIELD_DATA_TYPES: ReadonlySet<DataType> = new Set();
+const UNSORTABLE_FIELD_DATA_TYPES: ReadonlySet<DataType> = new Set();
 
 function calculateColumnDragPlaceholderIndex(
   columns: Column[],
@@ -324,7 +324,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  calculateByColumn(column: Column, calculateType: ECalculateType) {
+  calculateByColumn(column: Column, calculateType: CalculateType) {
     if (!column || !calculateType || column.calculateType === calculateType) return;
 
     column.calculateType = calculateType;

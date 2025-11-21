@@ -1,5 +1,4 @@
-import { IField } from './field.interface';
+import { FieldConfig } from './field.interface';
 
-export type TCheckboxData = boolean;
-
-export interface ICheckboxField extends IField<TCheckboxData> {}
+export type CheckboxData = boolean;
+export interface CheckboxFieldConfig extends FieldConfig<CheckboxData> {}

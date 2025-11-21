@@ -51,15 +51,15 @@ export type _ViewContextResolver<R, C> = ViewContextResolver<R, C>;
 export type _ViewChanged<R, C> = ViewChanged<R, C>;
 export type _ViewUpdated<R, C> = ViewUpdated<R, C>;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export enum _ViewRepeaterOperation {
-  Inserted = 1,
-  Replaced,
-  Removed,
-  Moved,
-}
+export const _ViewRepeaterOperation = {
+  Inserted: 1,
+  Replaced: 2,
+  Removed: 3,
+  Moved: 4,
+} as const;
+export type _ViewRepeaterOperation =
+  (typeof _ViewRepeaterOperation)[keyof typeof _ViewRepeaterOperation];
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export class _RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
   private _vcRef: ViewContainerRef;
   private _templateRef: TemplateRef<any>;

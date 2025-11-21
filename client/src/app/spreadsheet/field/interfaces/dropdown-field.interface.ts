@@ -1,8 +1,7 @@
-import { IField } from './field.interface';
+import { FieldConfig } from './field.interface';
 
-export type TDropdownData = string;
-export type TDropdownOption = string;
-
-export interface IDropdownField extends IField<TDropdownData> {
-  options?: TDropdownOption[];
+export type DropdownData = string;
+export type DropdownOption = string;
+export interface DropdownFieldConfig extends FieldConfig<DropdownData> {
+  options?: DropdownOption[];
 }

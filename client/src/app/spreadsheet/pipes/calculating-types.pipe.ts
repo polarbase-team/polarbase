@@ -1,58 +1,58 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { EDataType } from '../field/interfaces';
-import { ECalculateType } from '../helpers/calculate';
+import { DataType } from '../field/interfaces';
+import { CalculateType } from '../helpers/calculate';
 
 @Pipe({
   name: 'calculateTypes',
   standalone: true,
 })
 export class CalculateTypesPipe implements PipeTransform {
-  transform(dataType: EDataType) {
+  transform(dataType: DataType) {
     switch (dataType) {
-      case EDataType.Checkbox:
+      case DataType.Checkbox:
         return [
-          ECalculateType.EmptyCheckBox,
-          ECalculateType.FilledCheckBox,
-          ECalculateType.PercentEmptyCheckBox,
-          ECalculateType.PercentFilledCheckBox,
+          CalculateType.EmptyCheckBox,
+          CalculateType.FilledCheckBox,
+          CalculateType.PercentEmptyCheckBox,
+          CalculateType.PercentFilledCheckBox,
         ];
-      case EDataType.Date:
+      case DataType.Date:
         return [
-          ECalculateType.Empty,
-          ECalculateType.Filled,
-          ECalculateType.Unique,
-          ECalculateType.PercentEmpty,
-          ECalculateType.PercentFilled,
-          ECalculateType.PercentUnique,
-          ECalculateType.DayRange,
-          ECalculateType.MonthRange,
-          ECalculateType.Min,
-          ECalculateType.Max,
+          CalculateType.Empty,
+          CalculateType.Filled,
+          CalculateType.Unique,
+          CalculateType.PercentEmpty,
+          CalculateType.PercentFilled,
+          CalculateType.PercentUnique,
+          CalculateType.DayRange,
+          CalculateType.MonthRange,
+          CalculateType.Min,
+          CalculateType.Max,
         ];
-      case EDataType.Number:
+      case DataType.Number:
         return [
-          ECalculateType.Empty,
-          ECalculateType.Filled,
-          ECalculateType.Unique,
-          ECalculateType.PercentEmpty,
-          ECalculateType.PercentFilled,
-          ECalculateType.PercentUnique,
-          ECalculateType.Sum,
-          ECalculateType.Average,
-          ECalculateType.Median,
-          ECalculateType.Min,
-          ECalculateType.Max,
-          ECalculateType.Range,
+          CalculateType.Empty,
+          CalculateType.Filled,
+          CalculateType.Unique,
+          CalculateType.PercentEmpty,
+          CalculateType.PercentFilled,
+          CalculateType.PercentUnique,
+          CalculateType.Sum,
+          CalculateType.Average,
+          CalculateType.Median,
+          CalculateType.Min,
+          CalculateType.Max,
+          CalculateType.Range,
         ];
       default:
         return [
-          ECalculateType.Empty,
-          ECalculateType.Filled,
-          ECalculateType.Unique,
-          ECalculateType.PercentEmpty,
-          ECalculateType.PercentFilled,
-          ECalculateType.PercentUnique,
+          CalculateType.Empty,
+          CalculateType.Filled,
+          CalculateType.Unique,
+          CalculateType.PercentEmpty,
+          CalculateType.PercentFilled,
+          CalculateType.PercentUnique,
         ];
     }
   }
