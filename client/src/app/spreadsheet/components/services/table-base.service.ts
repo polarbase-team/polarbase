@@ -15,26 +15,36 @@ export class TableBaseService {
   get tableService(): TableService {
     return this.host.tableService;
   }
+
   get tableColumnService(): TableColumnService {
     return this.host.tableColumnService;
   }
+
   get tableRowService(): TableRowService {
     return this.host.tableRowService;
   }
+
   get tableCellService(): TableCellService {
     return this.host.tableCellService;
   }
+
   get tableGroupService(): TableGroupService {
     return this.host.tableGroupService;
   }
 
-  OnChanges(changes: SimpleChanges) {}
-  OnInit() {}
-  AfterContentInit() {}
-  AfterContentChecked() {}
-  AfterViewInit() {}
-  AfterViewChecked() {}
-  OnDestroy() {}
+  onChanges(changes: SimpleChanges): void {}
 
-  updateStates() {}
+  onInit(): void {}
+
+  afterContentInit(): void {}
+
+  afterContentChecked(): void {}
+
+  afterViewInit(): void {}
+
+  afterViewChecked(): void {}
+
+  onDestroy(): void {}
+
+  updateStates(): void {}
 }

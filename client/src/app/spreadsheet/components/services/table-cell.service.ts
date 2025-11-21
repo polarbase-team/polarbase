@@ -243,7 +243,7 @@ export class TableCellService extends TableBaseService {
     return document.activeElement.tagName === 'INPUT-BOX';
   }
 
-  override OnDestroy() {
+  override onDestroy() {
     this._fieldCellService.clear();
     this._dataEditedEEC.flush();
   }

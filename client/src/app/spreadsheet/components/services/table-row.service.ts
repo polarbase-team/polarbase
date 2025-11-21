@@ -122,14 +122,14 @@ export class TableRowService extends TableBaseService {
     return !Array.from(this.selectedRows).find((row) => !!row.deletable === false);
   }
 
-  override OnChanges(changes: SimpleChanges) {
+  override onChanges(changes: SimpleChanges) {
     if ('rawRows' in changes) {
       this.host.rows = this.host.rawRows ? [...this.host.rawRows] : [];
       this.initRows(this.host.rows);
     }
   }
 
-  override OnInit() {
+  override onInit() {
     this.host.cellAction
       .pipe(
         filter(
@@ -169,7 +169,7 @@ export class TableRowService extends TableBaseService {
       });
   }
 
-  override OnDestroy() {
+  override onDestroy() {
     this._addedEEC.flush();
   }
 

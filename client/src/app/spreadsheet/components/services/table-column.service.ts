@@ -207,7 +207,7 @@ export class TableColumnService extends TableBaseService {
     return !_.find(this.getSelectedColumns(), (column) => !column.deletable);
   }
 
-  override OnChanges(changes: SimpleChanges) {
+  override onChanges(changes: SimpleChanges) {
     if ('config' in changes && changes['config'].isFirstChange) {
       if (this.host.config.calculating) {
         for (const [c, t] of this.host.config.calculating) {

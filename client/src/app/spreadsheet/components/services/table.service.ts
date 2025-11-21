@@ -207,14 +207,14 @@ export class TableService extends TableBaseService {
     return [...this.tableRowService.selectedRows];
   }
 
-  override OnChanges(changes: SimpleChanges) {
+  override onChanges(changes: SimpleChanges) {
     if ('config' in changes) {
       this.host.config = _.defaultsDeep(this.host.config, DEFAULT_CONFIG);
       this.isDataStreaming ??= this.host.config.streamData;
     }
   }
 
-  override OnInit() {
+  override onInit() {
     if (!this.isDataStreaming) return;
 
     this.streamData$ = new Subject();

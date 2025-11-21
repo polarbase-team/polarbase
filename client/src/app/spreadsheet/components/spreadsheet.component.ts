@@ -196,22 +196,20 @@ export class SpreadsheetComponent
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    this.tableService.OnChanges(changes);
-    this.tableCellService.OnChanges(changes);
-    this.tableColumnService.OnChanges(changes);
-    this.tableRowService.OnChanges(changes);
-    this.tableGroupService.OnChanges(changes);
-
+    this.tableService.onChanges(changes);
+    this.tableCellService.onChanges(changes);
+    this.tableColumnService.onChanges(changes);
+    this.tableRowService.onChanges(changes);
+    this.tableGroupService.onChanges(changes);
     this.updateStates();
   }
 
   ngOnInit() {
-    this.tableService.OnInit();
-    this.tableCellService.OnInit();
-    this.tableColumnService.OnInit();
-    this.tableRowService.OnInit();
-    this.tableGroupService.OnInit();
-
+    this.tableService.onInit();
+    this.tableCellService.onInit();
+    this.tableColumnService.onInit();
+    this.tableRowService.onInit();
+    this.tableGroupService.onInit();
     this.updateStates();
 
     this.ngZone.runOutsideAngular(() =>
@@ -268,46 +266,44 @@ export class SpreadsheetComponent
   }
 
   ngAfterContentInit() {
-    this.tableService.AfterContentInit();
-    this.tableCellService.AfterContentInit();
-    this.tableColumnService.AfterContentInit();
-    this.tableRowService.AfterContentInit();
-    this.tableGroupService.AfterContentInit();
+    this.tableService.afterContentInit();
+    this.tableCellService.afterContentInit();
+    this.tableColumnService.afterContentInit();
+    this.tableRowService.afterContentInit();
+    this.tableGroupService.afterContentInit();
   }
 
   ngAfterContentChecked() {
-    this.tableService.AfterContentChecked();
-    this.tableCellService.AfterContentChecked();
-    this.tableColumnService.AfterContentChecked();
-    this.tableRowService.AfterContentChecked();
-    this.tableGroupService.AfterContentChecked();
+    this.tableService.afterContentChecked();
+    this.tableCellService.afterContentChecked();
+    this.tableColumnService.afterContentChecked();
+    this.tableRowService.afterContentChecked();
+    this.tableGroupService.afterContentChecked();
   }
 
   ngAfterViewInit() {
-    this.tableService.AfterViewInit();
-    this.tableCellService.AfterViewInit();
-    this.tableColumnService.AfterViewInit();
-    this.tableRowService.AfterViewInit();
-    this.tableGroupService.AfterViewInit();
+    this.tableService.afterViewInit();
+    this.tableCellService.afterViewInit();
+    this.tableColumnService.afterViewInit();
+    this.tableRowService.afterViewInit();
+    this.tableGroupService.afterViewInit();
   }
 
   ngAfterViewChecked() {
-    this.tableService.AfterViewChecked();
-    this.tableCellService.AfterViewChecked();
-    this.tableColumnService.AfterViewChecked();
-    this.tableRowService.AfterViewChecked();
-    this.tableGroupService.AfterViewChecked();
+    this.tableService.afterViewChecked();
+    this.tableCellService.afterViewChecked();
+    this.tableColumnService.afterViewChecked();
+    this.tableRowService.afterViewChecked();
+    this.tableGroupService.afterViewChecked();
   }
 
   ngOnDestroy() {
-    this.tableService.OnDestroy();
-    this.tableCellService.OnDestroy();
-    this.tableColumnService.OnDestroy();
-    this.tableRowService.OnDestroy();
-    this.tableGroupService.OnDestroy();
-
+    this.tableService.onDestroy();
+    this.tableCellService.onDestroy();
+    this.tableColumnService.onDestroy();
+    this.tableRowService.onDestroy();
+    this.tableGroupService.onDestroy();
     this.fieldCellService.destroy();
-
     this._keyboard.stop();
     this._clipboard.stop();
   }
