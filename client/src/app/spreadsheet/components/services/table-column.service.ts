@@ -32,21 +32,21 @@ export type Column = {
   sortingType?: SortingType;
 };
 
-export type ColumnMovedEvent = {
+type ColumnMovedEvent = {
   column: Column;
   position: number;
 };
 
-export interface ColumnExtra extends Column {
+interface ColumnExtra extends Column {
   _bkWidth?: number;
   _isDragging?: boolean;
   _isResizing?: boolean;
 }
 
-export const UNGROUPABLE_FIELD_DATA_TYPES: ReadonlySet<EDataType> = new Set();
-export const UNSORTABLE_FIELD_DATA_TYPES: ReadonlySet<EDataType> = new Set();
+const UNGROUPABLE_FIELD_DATA_TYPES: ReadonlySet<EDataType> = new Set();
+const UNSORTABLE_FIELD_DATA_TYPES: ReadonlySet<EDataType> = new Set();
 
-export function calculateColumnDragPlaceholderIndex(
+function calculateColumnDragPlaceholderIndex(
   columns: Column[],
   offsetX: number,
   scrollLeft: number,
@@ -91,7 +91,7 @@ export function calculateColumnDragPlaceholderIndex(
   return dragPlaceholderIndex;
 }
 
-export function calculateFreezeDividerDragPlaceholderIndex(
+function calculateFreezeDividerDragPlaceholderIndex(
   columns: Column[],
   offsetX: number,
   scrollLeft: number,

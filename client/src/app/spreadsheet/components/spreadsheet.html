@@ -37,8 +37,8 @@
         [style.zIndex]="tableColumnService.state.displayingColumns?.length - columnIndex"
         [class.cdk-drag-placeholder]="column._isDragging"
         [class.cell--active]="tableService.layoutProps.column.selection?.has(columnIndex)"
-        [class.header-cell--grouping]="!this.tableService.isDataStreaming && column.groupingType"
-        [class.header-cell--sorting]="!this.tableService.isDataStreaming && column.sortingType"
+        [class.header-cell--grouping]="!tableService.isDataStreaming && column.groupingType"
+        [class.header-cell--sorting]="!tableService.isDataStreaming && column.sortingType"
         [class.header-cell--resizing]="column._isResizing"
         cdkDrag
         cdkDragLockAxis="x"
@@ -333,7 +333,7 @@
                     <div
                       class="row-cell cell index-cell"
                       cell-type="row"
-                      [attr.disabled]="this.tableService.isDataStreaming"
+                      [attr.disabled]="tableService.isDataStreaming"
                       (click)="tableRowService.addRow(group)"
                     >
                       <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
@@ -516,7 +516,7 @@
                       [data]="row.data?.[column.id] ?? null"
                       [readonly]="
                         row !== tableRowService.draftRow &&
-                        ((this.tableService.isDataStreaming && !$any(row)._isStreamed) ||
+                        ((tableService.isDataStreaming && !$any(row)._isStreamed) ||
                           (!config.column.editable &&
                             !column.editable &&
                             row.editable !== true &&
@@ -541,7 +541,7 @@
                 <div
                   class="row-cell cell index-cell"
                   cell-type="row"
-                  [attr.disabled]="this.tableService.isDataStreaming"
+                  [attr.disabled]="tableService.isDataStreaming"
                   (click)="tableRowService.addRow()"
                 >
                   <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
@@ -744,7 +744,7 @@
                       [data]="row.data?.[column.id] ?? null"
                       [readonly]="
                         row !== tableRowService.draftRow &&
-                        ((this.tableService.isDataStreaming && !$any(row)._isStreamed) ||
+                        ((tableService.isDataStreaming && !$any(row)._isStreamed) ||
                           (!config.column.editable &&
                             !column.editable &&
                             row.editable !== true &&
@@ -811,7 +811,7 @@
           [style.width.px]="virtualScroll.viewport.leftWidth"
         >
           <div class="footer-cell cell index-cell">
-            @if (this.tableService.isDataStreaming) {
+            @if (tableService.isDataStreaming) {
               <p-skeleton
                 height="24px"
                 width="100px"
@@ -1008,7 +1008,7 @@
           {{ column.calculateType }}:
         </div>
         <b>
-          @if (this.tableService.isDataStreaming) {
+          @if (tableService.isDataStreaming) {
             <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
               >Calculating...</span
             >
@@ -1030,7 +1030,7 @@
         {{ column.calculateType }}:
       </div>
       <b>
-        @if (this.tableService.isDataStreaming) {
+        @if (tableService.isDataStreaming) {
           <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
             >Calculating...</span
           >

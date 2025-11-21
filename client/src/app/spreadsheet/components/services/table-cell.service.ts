@@ -40,24 +40,19 @@ export interface CellOffset {
   top: number;
 }
 
-export interface CellDataEditedEvent {
-  row: Row;
-  newData: RowCellData;
-}
-
-export enum ExcludeCellState {
+enum ExcludeCellState {
   Required,
   Empty,
   NonEditable,
 }
 
-export type Direction = 'above' | 'below' | 'before' | 'after';
+type Direction = 'above' | 'below' | 'before' | 'after';
 
-export const UNPASTEABLE_DATA_TYPES: EDataType[] = [];
-export const UNCLEARABLE_DATA_TYPES: EDataType[] = [];
-export const UNCUTABLE_DATA_TYPES: EDataType[] = [];
+const UNPASTEABLE_DATA_TYPES: EDataType[] = [];
+const UNCLEARABLE_DATA_TYPES: EDataType[] = [];
+const UNCUTABLE_DATA_TYPES: EDataType[] = [];
 
-export function parseClipboardItemToData(column: Column, item: ClipboardItem<Cell>) {
+function parseClipboardItemToData(column: Column, item: ClipboardItem<Cell>) {
   const { text, data, metadata } = item;
 
   if (data !== undefined && metadata !== undefined) {
@@ -113,7 +108,7 @@ export class MatrixCell {
   }
 }
 
-export interface CellDataEditedEvent {
+interface CellDataEditedEvent {
   row: Row;
   newData: RowCellData;
 }

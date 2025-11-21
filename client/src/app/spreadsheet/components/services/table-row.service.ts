@@ -11,7 +11,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CdkDragEnd, CdkDragMove, CdkDragStart, Point } from '@angular/cdk/drag-drop';
 import { TableBaseService } from './table-base.service';
 
-export function flushEEC(
+function flushEEC(
   controller: EmitEventController<any, any>,
   row: Row,
   predicate: (event: any) => Row['id'],
@@ -49,25 +49,19 @@ export type Row = {
   deletable?: boolean;
   selected?: boolean;
 };
-
 export type RowCellData = Record<Column['id'], any>;
 
-export type FoundRow = {
+type FoundRow = {
   rowIndex: number;
   rowOffset: number;
   group?: Group;
 };
 
-export interface RowExtra extends Row {
-  _isInit?: boolean;
-  _isStreamed?: boolean;
-}
-
-export interface TableRowAddedEvent {
+interface TableRowAddedEvent {
   row: Row;
   insertedIndex: number;
 }
-export interface TableRowMovedEvent {
+interface TableRowMovedEvent {
   row: Row;
   movedIndex: number;
 }

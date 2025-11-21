@@ -17,19 +17,17 @@ import { TableBaseService } from './table-base.service';
 export type Group = HierarchyGroup & {
   items?: Row[];
   children?: Group[];
-  metadata?: GroupMetadata;
+  metadata?: {
+    column: Column;
+    data: any;
+    parsed: string;
+    empty: boolean;
+    collapsed: boolean;
+    calculatedResult?: Map<Column['id'], any>;
+  };
 };
 
-export type GroupMetadata = {
-  column: Column;
-  data: any;
-  parsed: string;
-  empty: boolean;
-  collapsed: boolean;
-  calculatedResult?: Map<Column['id'], any>;
-};
-
-export function calculateInGroup(
+function calculateInGroup(
   group: Group,
   columns: Column[],
   calculatePredicate?: (...args: any) => any,
@@ -59,7 +57,7 @@ export function calculateInGroup(
   }
 }
 
-export function findGroupAtPointerOffset(group: Group, pointerOffsetY: number): Group {
+function findGroupAtPointerOffset(group: Group, pointerOffsetY: number): Group {
   if (group.children) {
     let start = 0;
     let end = group.children.length - 1;
@@ -88,7 +86,7 @@ export function findGroupAtPointerOffset(group: Group, pointerOffsetY: number): 
   return group;
 }
 
-export function findGroupByItemIndex(itemIndex: number, group?: Group): HierarchyGroup {
+function findGroupByItemIndex(itemIndex: number, group?: Group): HierarchyGroup {
   if (group?.children) {
     let start = 0;
     let end = group.children.length - 1;

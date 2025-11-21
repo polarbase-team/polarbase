@@ -125,7 +125,7 @@ export type LayoutProps = Partial<{
   };
 }>;
 
-export const DEFAULT_CONFIG: Config = {
+const DEFAULT_CONFIG: Config = {
   streamData: false,
   sideSpacing: 0,
   column: {
