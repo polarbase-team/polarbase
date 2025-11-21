@@ -40,11 +40,13 @@ export interface CellOffset {
   top: number;
 }
 
-enum ExcludeCellState {
-  Required,
-  Empty,
-  NonEditable,
-}
+export const ExcludeCellState = {
+  Required: 0,
+  Empty: 1,
+  NonEditable: 2,
+} as const;
+
+export type ExcludeCellState = (typeof ExcludeCellState)[keyof typeof ExcludeCellState];
 
 type Direction = 'above' | 'below' | 'before' | 'after';
 
