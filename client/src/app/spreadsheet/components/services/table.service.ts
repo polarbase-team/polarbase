@@ -1,14 +1,21 @@
 import _ from 'lodash';
 
-import { inject, Injectable, NgZone, SimpleChanges } from '@angular/core';
-import { SpreadsheetComponent } from '../spreadsheet.component';
+import {
+  ChangeDetectorRef,
+  DestroyRef,
+  ElementRef,
+  inject,
+  Injectable,
+  NgZone,
+  SimpleChanges,
+} from '@angular/core';
 import { calculateBy, calculateFieldPredicate, ECalculateType } from '../../helpers/calculate';
 import { groupBy, GroupingType } from '../../helpers/group';
 import { sortBy, SortingType } from '../../helpers/sort';
-import { Cell, CellIndex, CellOffset, TableCellService } from './table-cell.service';
-import { Column, TableColumnService } from './table-column.service';
-import { Group, TableGroupService } from './table-group.service';
-import { Row, RowSize, TableRowService } from './table-row.service';
+import type { Cell, CellIndex, CellOffset } from './table-cell.service';
+import type { Column } from './table-column.service';
+import type { Group } from './table-group.service';
+import type { Row, RowSize } from './table-row.service';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EDataType } from '../../field/interfaces';
@@ -154,11 +161,6 @@ export const DEFAULT_CONFIG: Config = {
 
 @Injectable()
 export class TableService extends TableBaseService {
-  streamData$: Subject<Row[]>;
-
-  protected readonly ngZone = inject(NgZone);
-  protected readonly fieldCellService = inject(FieldCellService);
-
   readonly layoutProps: LayoutProps = {
     frozenDivider: {},
     fillHandler: {},
@@ -166,9 +168,16 @@ export class TableService extends TableBaseService {
     row: {},
     cell: {},
   };
+  streamData$: Subject<Row[]>;
   isDataStreaming: boolean;
   searchResult: [Row, Column][];
   calculatedResult: Map<Column['id'], any>;
+
+  private readonly _ngZone = inject(NgZone);
+  private readonly _destroyRef = inject(DestroyRef);
+  private readonly _cdRef = inject(ChangeDetectorRef);
+  private readonly _elementRef = inject(ElementRef);
+  private readonly _fieldCellService = inject(FieldCellService);
 
   get shouldCalculate() {
     return !!this.host.config.calculating || this.tableColumnService.calculatingColumns.size > 0;
@@ -210,17 +219,17 @@ export class TableService extends TableBaseService {
 
     this.streamData$ = new Subject();
 
-    this.ngZone.runOutsideAngular(() => {
+    this._ngZone.runOutsideAngular(() => {
       this.streamData$
         .pipe(
           throttleTime(200),
           mergeMap((rows) => of(rows)),
-          takeUntilDestroyed(this.host.destroyRef),
+          takeUntilDestroyed(this._destroyRef),
         )
         .subscribe({
           next: (rows) => {
             this.tableRowService.markRowsAsStreamed(rows);
-            this.host.detectChanges();
+            this._cdRef.detectChanges();
           },
           error: () => {
             throw new Error('Stream error');
@@ -228,7 +237,7 @@ export class TableService extends TableBaseService {
           complete: () => {
             this.isDataStreaming = false;
             this.handleDataUpdate();
-            this.host.detectChanges();
+            this._cdRef.detectChanges();
           },
         });
     });
@@ -253,7 +262,7 @@ export class TableService extends TableBaseService {
     const currSelection = this.layoutProps.cell.selection;
     if (!currSelection?.primary) return;
 
-    const state = this.fieldCellService.getSelectingState();
+    const state = this._fieldCellService.getSelectingState();
     if (!state?.detectChange()) return;
 
     const cell = this.tableCellService.findCellByIndex(currSelection.primary);
@@ -324,7 +333,7 @@ export class TableService extends TableBaseService {
       this.tableCellService.scrollToFocusingCell();
     }
 
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   searchPrevious(previousIndex: number) {
@@ -340,7 +349,7 @@ export class TableService extends TableBaseService {
     };
 
     this.tableCellService.scrollToFocusingCell();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   searchNext(nextIndex: number) {
@@ -356,7 +365,7 @@ export class TableService extends TableBaseService {
     };
 
     this.tableCellService.scrollToFocusingCell();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   calculate(columns?: Column[]) {
@@ -397,7 +406,7 @@ export class TableService extends TableBaseService {
       }
     }
 
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   uncalculate() {
@@ -408,7 +417,7 @@ export class TableService extends TableBaseService {
     this.tableColumnService.calculatingColumns.clear();
     this.calculatedResult.clear();
 
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   group(columns?: Column[]) {
@@ -440,7 +449,7 @@ export class TableService extends TableBaseService {
 
     this.tableGroupService.checkCanAddRowInGroup();
     this.host.updateStates();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   ungroup() {
@@ -456,7 +465,7 @@ export class TableService extends TableBaseService {
     this.tableGroupService.disableAddRowInGroup = false;
 
     this.host.updateStates();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   sort(columns?: Column[]) {
@@ -486,7 +495,7 @@ export class TableService extends TableBaseService {
     }
 
     this.host.updateStates();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   unsort() {
@@ -506,7 +515,7 @@ export class TableService extends TableBaseService {
       this.tableRowService.bkRows = null;
     }
 
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   updateFillHandlerPosition(
@@ -530,7 +539,7 @@ export class TableService extends TableBaseService {
     }
 
     const eleDOMRect = ele.getBoundingClientRect();
-    const containerDOMRect = this.host.elementRef.nativeElement.getBoundingClientRect();
+    const containerDOMRect = this._elementRef.nativeElement.getBoundingClientRect();
     const offset: CellOffset = {
       left: eleDOMRect.width + eleDOMRect.left - containerDOMRect.left,
       top:
@@ -545,6 +554,6 @@ export class TableService extends TableBaseService {
     this.layoutProps.fillHandler.offset = offset;
     this.layoutProps.fillHandler.hidden = false;
 
-    this.host.detectChanges();
+    this._cdRef.detectChanges();
   }
 }

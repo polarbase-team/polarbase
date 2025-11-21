@@ -1,16 +1,15 @@
-import { inject, Injectable, Injector, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
 import { Point } from '@angular/cdk/drag-drop';
-import { SpreadsheetComponent } from '../spreadsheet.component';
 
 import _ from 'lodash';
 
 import { calculateBy, calculateFieldPredicate } from '../../helpers/calculate';
 import type { HierarchyGroup } from '../../helpers/group';
 import type { _GroupView } from '../sub-components/virtual-scroll/virtual-scroll-group-repeater.directive';
-import { TableColumnService, type Column } from './table-column.service';
-import { RowCellData, TableRowService, type Row } from './table-row.service';
-import { Dimension, TableService } from './table.service';
-import { CellIndex, TableCellService } from './table-cell.service';
+import { Dimension } from './table.service';
+import type { Column } from './table-column.service';
+import type { RowCellData, Row } from './table-row.service';
+import type { CellIndex } from './table-cell.service';
 import { _getColumnOffset } from '../sub-components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { FIELD_READONLY } from '../../field/resources/field';
 import { TableBaseService } from './table-base.service';
@@ -122,6 +121,8 @@ export class TableGroupService extends TableBaseService {
   rootGroup: Group;
   disableAddRowInGroup: boolean;
 
+  private readonly _cdRef = inject(ChangeDetectorRef);
+
   get groupDepth() {
     return this.tableColumnService.groupingColumns?.size;
   }
@@ -143,7 +144,7 @@ export class TableGroupService extends TableBaseService {
   protected toggleAllGroup(isCollapse: boolean, group = this.rootGroup) {
     this._toggleGroupRecursive(group, isCollapse);
     this.markGroupAsChanged();
-    this.host.detectChanges();
+    this._cdRef.detectChanges();
   }
 
   toggleGroup(group: Group) {

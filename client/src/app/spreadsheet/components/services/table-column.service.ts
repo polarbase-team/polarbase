@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { inject, Injectable, Injector, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, inject, Injectable, SimpleChanges } from '@angular/core';
 import {
   CdkDragDrop,
   CdkDragEnd,
@@ -7,7 +7,6 @@ import {
   CdkDragStart,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
-import type { SpreadsheetComponent } from '../spreadsheet.component';
 
 import { EDataType } from '../../field/interfaces';
 import { Field } from '../../field/objects';
@@ -15,10 +14,8 @@ import { ECalculateType, parseGroupFieldData } from '../../helpers/calculate';
 import { SortingPredicateReturnType, SortingType } from '../../helpers/sort';
 import { GroupingType } from '../../helpers/group';
 import { _getColumnOffset } from '../sub-components/virtual-scroll/virtual-scroll-column-repeater.directive';
-import { Dimension, TableService } from './table.service';
-import { Row, TableRowService } from './table-row.service';
-import { TableCellService } from './table-cell.service';
-import { TableGroupService } from './table-group.service';
+import { Dimension } from './table.service';
+import { type Row } from './table-row.service';
 import { MenuItem } from 'primeng/api';
 import { ResizeEvent } from 'angular-resizable-element';
 import { TableBaseService } from './table-base.service';
@@ -181,6 +178,7 @@ export class TableColumnService extends TableBaseService {
   groupingColumns = new Map<Column['id'], Column>();
   sortingColumns = new Map<Column['id'], Column>();
 
+  private readonly _cdRef = inject(ChangeDetectorRef);
   private _displayingColumns: Column[];
   private _columnLookup: Map<Column['id'], Column>;
 
@@ -267,7 +265,7 @@ export class TableColumnService extends TableBaseService {
     if (shouldUpdateDisplayingColumns) {
       this.markDisplayingColumnsAsChanged(_.filter(this.host.columns, (c) => !c.hidden));
     }
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   getGroupableColumns(includeColumn?: Column): Column[] {
@@ -291,7 +289,7 @@ export class TableColumnService extends TableBaseService {
   setColumnWidth(column: Column, width: number) {
     if (!column) return;
     column.width = width;
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   moveColumn(column: Column, newIndex: number) {
@@ -299,7 +297,7 @@ export class TableColumnService extends TableBaseService {
     moveItemInArray(this.host.columns, currentIndex, newIndex);
     if (column.hidden) return;
     this.markDisplayingColumnsAsChanged(_.filter(this.host.columns, (c) => !c.hidden));
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   hideColumn(column: Column) {
@@ -307,7 +305,7 @@ export class TableColumnService extends TableBaseService {
 
     column.hidden = true;
     this.markDisplayingColumnsAsChanged(_.without(this.displayingColumns, column));
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Hide,
       payload: [column],
@@ -319,7 +317,7 @@ export class TableColumnService extends TableBaseService {
 
     column.hidden = false;
     this.markDisplayingColumnsAsChanged(_.filter(this.host.columns, (c) => !c.hidden));
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Unhide,
       payload: [column],
@@ -332,7 +330,7 @@ export class TableColumnService extends TableBaseService {
     column.calculateType = calculateType;
     this.calculatingColumns.set(column.id, column);
     this.tableService.calculate();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Calculate,
       payload: column,
@@ -344,7 +342,7 @@ export class TableColumnService extends TableBaseService {
 
     delete column.calculateType;
     this.calculatingColumns.delete(column.id);
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Uncalculate,
       payload: column,
@@ -370,7 +368,7 @@ export class TableColumnService extends TableBaseService {
       this.groupingColumns.set(column.id, column);
     }
     this.tableService.group();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Group,
       payload: column,
@@ -383,7 +381,7 @@ export class TableColumnService extends TableBaseService {
     delete column.groupingType;
     this.groupingColumns.delete(column.id);
     this.groupingColumns.size ? this.tableService.group() : this.tableService.ungroup();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Ungroup,
       payload: column,
@@ -409,7 +407,7 @@ export class TableColumnService extends TableBaseService {
       this.sortingColumns.set(column.id, column);
     }
     this.tableService.sort();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Sort,
       payload: column,
@@ -421,7 +419,7 @@ export class TableColumnService extends TableBaseService {
 
     delete column.sortingType;
     this.sortingColumns.delete(column.id);
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
     this.sortingColumns.size ? this.tableService.sort() : this.tableService.unsort();
     this.host.columnAction.emit({
       type: TableColumnActionType.Unsort,

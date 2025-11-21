@@ -1,16 +1,21 @@
 import _ from 'lodash';
-import { inject, Injectable, NgZone, Renderer2, SimpleChanges } from '@angular/core';
-import type { SpreadsheetComponent } from '../spreadsheet.component';
+import {
+  ChangeDetectorRef,
+  ElementRef,
+  inject,
+  Injectable,
+  NgZone,
+  Renderer2,
+} from '@angular/core';
+
 import { Clipboard, ClipboardData } from '../../helpers/clipboard';
 import { EmitEventController } from '../../helpers/emit-event-controller';
 import { EDataType } from '../../field/interfaces';
 import { ClipboardItem } from '../../helpers/clipboard';
 import { parseClipboardExternal, parseClipboardInternal } from '../../helpers/paste';
-
-import { TableColumnService, type Column } from './table-column.service';
-import { TableRowService, type Row, type RowCellData } from './table-row.service';
-import { TableGroupService } from './table-group.service';
-import { Dimension, TableService } from './table.service';
+import { type Column } from './table-column.service';
+import { type Row, type RowCellData } from './table-row.service';
+import { Dimension } from './table.service';
 import { FieldCellService } from '../sub-components/cells/field-cell.service';
 import { FieldValidationErrors, FieldValidationKey } from '../../field/objects/field.object';
 import { MessageService } from 'primeng/api';
@@ -136,13 +141,13 @@ export interface TableCellAction<T extends TableCellActionType = TableCellAction
 
 @Injectable()
 export class TableCellService extends TableBaseService {
-  fieldCellService = inject(FieldCellService);
-
-  protected readonly ngZone = inject(NgZone);
-  protected readonly renderer = inject(Renderer2);
-  protected readonly toastService = inject(MessageService);
-
-  private _dataEditedEEC: EmitEventController<
+  private readonly _ngZone = inject(NgZone);
+  private readonly _renderer = inject(Renderer2);
+  private readonly _cdRef = inject(ChangeDetectorRef);
+  private readonly _elementRef = inject(ElementRef);
+  private readonly _toastService = inject(MessageService);
+  private readonly _fieldCellService = inject(FieldCellService);
+  private readonly _dataEditedEEC: EmitEventController<
     Row['id'],
     { type: TableCellActionType; payload: CellDataEditedEvent }
   > = new EmitEventController({
@@ -244,7 +249,7 @@ export class TableCellService extends TableBaseService {
   }
 
   override OnDestroy() {
-    this.fieldCellService.clear();
+    this._fieldCellService.clear();
     this._dataEditedEEC.flush();
   }
 
@@ -273,23 +278,23 @@ export class TableCellService extends TableBaseService {
         this.host.isMouseHiding ||
         !!this.tableService.layoutProps.cell.invalid ||
         !this.host.virtualScroll.isScrollCompleted ||
-        this.fieldCellService.getSelectingState()?.isEditing) &&
+        this._fieldCellService.getSelectingState()?.isEditing) &&
       (e as PointerEvent).pointerType !== 'touch'
     ) {
       e.preventDefault();
       return;
     }
 
-    this.ngZone.run(() => {
+    this._ngZone.run(() => {
       this.tableService.layoutProps.cell.hovering = index;
-      this.host.detectChanges();
+      this._cdRef.detectChanges();
     });
 
-    const unlisten = this.renderer.listen(e.target, 'pointerleave', () => {
+    const unlisten = this._renderer.listen(e.target, 'pointerleave', () => {
       unlisten();
-      this.ngZone.run(() => {
+      this._ngZone.run(() => {
         this.tableService.layoutProps.cell.hovering = null;
-        this.host.detectChanges();
+        this._cdRef.detectChanges();
       });
     });
   }
@@ -300,7 +305,7 @@ export class TableCellService extends TableBaseService {
 
   flushSelectingCellState(callback?: () => void) {
     const _callback = () => {
-      this.fieldCellService.clearSelectingState();
+      this._fieldCellService.clearSelectingState();
       callback?.();
     };
 
@@ -309,7 +314,7 @@ export class TableCellService extends TableBaseService {
       return;
     }
 
-    const state = this.fieldCellService.getSelectingState();
+    const state = this._fieldCellService.getSelectingState();
 
     if (!state) {
       _callback();
@@ -387,7 +392,7 @@ export class TableCellService extends TableBaseService {
   revertSelectingCellState() {
     if (!this.tableService.layoutProps.cell.selection) return;
 
-    const state = this.fieldCellService.getSelectingState();
+    const state = this._fieldCellService.getSelectingState();
     if (!state) return;
 
     const selectingCell = this.findCellByIndex(this.tableService.layoutProps.cell.selection.start);
@@ -504,7 +509,7 @@ export class TableCellService extends TableBaseService {
       }
 
       if (this.canFillCell) {
-        this.host.detectChanges();
+        this._cdRef.detectChanges();
         this.tableService.updateFillHandlerPosition(end);
       }
     });
@@ -540,7 +545,7 @@ export class TableCellService extends TableBaseService {
 
     const [count, total] = this._clearCells(matrixCell);
 
-    this.toastService.add({
+    this._toastService.add({
       severity: 'info',
       summary: 'Cut complete',
       detail: `Cut complete ${count}/${total} cells`,
@@ -570,7 +575,7 @@ export class TableCellService extends TableBaseService {
       }
 
       if (!isSequence) {
-        this.toastService.add({
+        this._toastService.add({
           severity: 'info',
           summary: 'Paste failed',
           detail: `Not support non-sequence column paste`,
@@ -669,7 +674,7 @@ export class TableCellService extends TableBaseService {
 
     this._emitCellDataAsEdited();
 
-    this.toastService.add({
+    this._toastService.add({
       severity: 'info',
       summary: 'Paste complete',
       detail: `Paste complete ${count}/${total} cells`,
@@ -679,7 +684,7 @@ export class TableCellService extends TableBaseService {
 
   protected async clearCells(matrixCell: MatrixCell) {
     const [count, total] = this._clearCells(matrixCell);
-    this.toastService.add({
+    this._toastService.add({
       severity: 'info',
       summary: 'Clear complete',
       detail: `Clear complete ${count}/${total} cells`,
@@ -858,7 +863,7 @@ export class TableCellService extends TableBaseService {
 
     this._emitCellDataAsEdited();
 
-    this.toastService.add({
+    this._toastService.add({
       severity: 'info',
       summary: 'Fill complete',
       life: 3000,
@@ -978,7 +983,7 @@ export class TableCellService extends TableBaseService {
     const rowIdxAttr = `[data-row-index="${index.rowIndex}"]`;
     const columnIdxAttr = `[data-column-index="${index.columnIndex}"]`;
 
-    return this.host.elementRef.nativeElement.querySelector(`${rowIdxAttr}${columnIdxAttr}`);
+    return this._elementRef.nativeElement.querySelector(`${rowIdxAttr}${columnIdxAttr}`);
   }
 
   findCellByElement(element: HTMLElement, cellType?: string): CellIndex {
@@ -1087,7 +1092,7 @@ export class TableCellService extends TableBaseService {
 
     clipboard.write(matrix as any);
 
-    this.toastService.add({
+    this._toastService.add({
       severity: 'success',
       summary: clipboard.isCutAction ? 'Cut Success' : 'Copy Success',
       detail: `Copied ${count} of ${matrixCell.count} cells`,

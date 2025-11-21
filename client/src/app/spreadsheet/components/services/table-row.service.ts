@@ -1,19 +1,11 @@
 import _ from 'lodash';
 import { MenuItem } from 'primeng/api';
-import { SpreadsheetComponent } from '../spreadsheet.component';
-import { inject, Injectable, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, DestroyRef, inject, Injectable, SimpleChanges } from '@angular/core';
 import { EmitEventController } from '../../helpers/emit-event-controller';
+import { Dimension } from './table.service';
 import type { Column } from './table-column.service';
 import type { Group } from './table-group.service';
-import { TableColumnService } from './table-column.service';
-import { Dimension, TableService } from './table.service';
-import { TableGroupService } from './table-group.service';
-import {
-  CellIndex,
-  TableCellAction,
-  TableCellActionType,
-  TableCellService,
-} from './table-cell.service';
+import { type CellIndex, type TableCellAction, TableCellActionType } from './table-cell.service';
 import { debounceTime, distinctUntilChanged, filter, map, pairwise } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CdkDragEnd, CdkDragMove, CdkDragStart, Point } from '@angular/cdk/drag-drop';
@@ -104,6 +96,9 @@ export interface TableRowAction<T extends TableRowActionType = TableRowActionTyp
 
 @Injectable()
 export class TableRowService extends TableBaseService {
+  private readonly _destroyRef = inject(DestroyRef);
+  private readonly _cdRef = inject(ChangeDetectorRef);
+
   rowActionItems: MenuItem[] | undefined;
   draftRow: Row;
   bkRows: Row[];
@@ -151,7 +146,7 @@ export class TableRowService extends TableBaseService {
         distinctUntilChanged(),
         pairwise(),
         debounceTime(0),
-        takeUntilDestroyed(this.host.destroyRef),
+        takeUntilDestroyed(this._destroyRef),
       )
       .subscribe(([_oldRow, newRow]) => {
         flushEEC(this._addedEEC, newRow, ({ row }) => row.id);
@@ -166,7 +161,7 @@ export class TableRowService extends TableBaseService {
         map(({ payload }) => {
           return (payload as { row: Row }[]).map((e) => e.row);
         }),
-        takeUntilDestroyed(this.host.destroyRef),
+        takeUntilDestroyed(this._destroyRef),
       )
       .subscribe((rows) => {
         for (const row of rows) {
@@ -204,7 +199,7 @@ export class TableRowService extends TableBaseService {
     }
 
     this.tableService.handleDataUpdate();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   pushRows(rows: Row[]) {
@@ -221,7 +216,7 @@ export class TableRowService extends TableBaseService {
     }
 
     this.tableService.handleDataUpdate();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   updateRows(rows: Row[], shouldCheckSelectedState?: boolean) {
@@ -231,7 +226,7 @@ export class TableRowService extends TableBaseService {
       }
     }
     this.tableService.handleDataUpdate();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   setRowSize(size: RowSize) {
@@ -240,7 +235,7 @@ export class TableRowService extends TableBaseService {
       this.tableGroupService.markGroupAsChanged();
     }
     this.host.updateStates();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   addRow(group?: Group) {
@@ -248,7 +243,7 @@ export class TableRowService extends TableBaseService {
     this.tableGroupService.isGrouping
       ? this.tableGroupService.createRowInGroup(group)
       : this.createRow();
-    this.host.markForCheck();
+    this._cdRef.markForCheck();
   }
 
   flushAddedEEC() {
@@ -609,7 +604,7 @@ export class TableRowService extends TableBaseService {
 
       this.tableCellService.selectCells(cellIndex, cellIndex, true);
 
-      this.host.detectChanges();
+      this._cdRef.detectChanges();
 
       setTimeout(() => {
         this._focusToFieldCellTouchable(true);

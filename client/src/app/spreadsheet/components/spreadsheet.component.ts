@@ -133,28 +133,41 @@ export class SpreadsheetComponent
     AfterViewChecked,
     OnDestroy
 {
-  tableService = inject(TableService);
-  tableColumnService = inject(TableColumnService);
-  tableRowService = inject(TableRowService);
-  tableCellService = inject(TableCellService);
-  tableGroupService = inject(TableGroupService);
+  @Input() config: Config;
+  @Input() columns: Column[];
+  @Input('rows') rawRows: Row[];
+  rows: Row[];
 
-  readonly destroyRef = inject(DestroyRef);
+  @Output() searching = new EventEmitter<SearchInfo>();
+  @Output() columnAction = new EventEmitter<TableColumnAction>();
+  @Output() rowAction = new EventEmitter<TableRowAction>();
+  @Output() cellAction = new EventEmitter<TableCellAction>();
+
+  @ViewChild('columnActionMenu', { static: true })
+  readonly columnActionMenu: ContextMenu;
+  @ViewChild('rowActionMenu', { static: true })
+  readonly rowActionMenu: ContextMenu;
+
+  readonly tableService = inject(TableService);
+  readonly tableColumnService = inject(TableColumnService);
+  readonly tableRowService = inject(TableRowService);
+  readonly tableCellService = inject(TableCellService);
+  readonly tableGroupService = inject(TableGroupService);
+
+  protected readonly destroyRef = inject(DestroyRef);
   protected readonly cdRef = inject(ChangeDetectorRef);
-  protected readonly vcRef = inject(ViewContainerRef);
-  readonly elementRef = inject(ElementRef);
+  protected readonly elementRef = inject(ElementRef);
   protected readonly renderer = inject(Renderer2);
   protected readonly ngZone = inject(NgZone);
-  protected readonly toastService = inject(MessageService);
   protected readonly fieldCellService = inject(FieldCellService);
   @ViewChild(VirtualScrollComponent, { static: true })
   readonly virtualScroll: VirtualScrollComponent;
   @ViewChild('fillHanlder')
   protected readonly fillHander: ElementRef<HTMLElement>;
+  protected readonly Dimension = Dimension;
   protected isHideSummaryLabel = false;
   isMouseHolding = false;
   isMouseHiding = false;
-  readonly Dimension = Dimension;
 
   private _keyboard: Keyboard;
   private _clipboard: Clipboard<Cell>;
@@ -849,28 +862,4 @@ export class SpreadsheetComponent
   //
   //   this.groupActionMenu.close();
   // }
-
-  @Input() config: Config;
-  @Input() context: any;
-  streamData$: Subject<Row[]>;
-
-  @Output() searching = new EventEmitter<SearchInfo>();
-
-  @Input() columns: Column[];
-
-  @Output() columnAction = new EventEmitter<TableColumnAction>();
-
-  @ViewChild('columnActionMenu', { static: true })
-  readonly columnActionMenu: ContextMenu;
-
-  @Input('rows') rawRows: Row[];
-  rows: Row[];
-
-  @Output() rowAction = new EventEmitter<TableRowAction>();
-
-  @ViewChild('rowActionMenu', { static: true })
-  readonly rowActionMenu: ContextMenu;
-
-  /* CELL CLASS */
-  @Output() cellAction = new EventEmitter<TableCellAction>();
 }
