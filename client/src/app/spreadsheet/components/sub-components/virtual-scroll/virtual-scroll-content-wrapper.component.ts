@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, ContentChild, Directive } from '@angular/core';
 
-import { Column } from '../../sub-classes/column';
+import { Column } from '../../services/table-column.service';
 
 import { VirtualScrollGroupRepeaterDirective } from './virtual-scroll-group-repeater.directive';
 import { VirtualScrollRowRepeaterDirective } from './virtual-scroll-row-repeater.directive';

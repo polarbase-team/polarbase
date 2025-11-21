@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import _ from 'lodash';
 
 import { DateField } from '../field/objects';
-import { Column } from '../components/sub-classes/column';
+import { Column } from '../components/services/table-column.service';
 
 function search(str: string, match: string): boolean {
   if (!_.isString(str)) return false;
@@ -17,7 +17,7 @@ function search(str: string, match: string): boolean {
 export function searchBy(
   data: any[],
   searchQuery: string,
-  searchingPredicate?: (...args: any) => string
+  searchingPredicate?: (...args: any) => string,
 ): any[] {
   return _.filter(data, (i: any) => search(searchingPredicate.apply(null, i), searchQuery));
 }

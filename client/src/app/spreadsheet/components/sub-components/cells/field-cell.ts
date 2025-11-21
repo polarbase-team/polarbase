@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 
 import { Field } from '../../../field/objects';
-import { Row } from '../../sub-classes/row';
+import { Row } from '../../services/table-row.service';
 
 export interface IFieldCell<T = any> {
   field: Field;

@@ -1,0 +1,1324 @@
+import _ from 'lodash';
+import { inject, Injectable, NgZone, Renderer2, SimpleChanges } from '@angular/core';
+import type { SpreadsheetComponent } from '../spreadsheet.component';
+import { Clipboard, ClipboardData } from '../../helpers/clipboard';
+import { EmitEventController } from '../../helpers/emit-event-controller';
+import { EDataType } from '../../field/interfaces';
+import { ClipboardItem } from '../../helpers/clipboard';
+import { parseClipboardExternal, parseClipboardInternal } from '../../helpers/paste';
+
+import { TableColumnService, type Column } from './table-column.service';
+import { TableRowService, type Row, type RowCellData } from './table-row.service';
+import { TableGroupService } from './table-group.service';
+import { Dimension, TableService } from './table.service';
+import { FieldCellService } from '../sub-components/cells/field-cell.service';
+import { FieldValidationErrors, FieldValidationKey } from '../../field/objects/field.object';
+import { MessageService } from 'primeng/api';
+import { DateField, NumberField } from '../../field/objects';
+import dayjs, { isDayjs } from 'dayjs';
+import { FORECAST } from '@formulajs/formulajs';
+import { _getColumnOffset } from '../sub-components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { TableBaseService } from './table-base.service';
+
+export interface Cell {
+  row: Row;
+  column: Column;
+}
+
+export interface CellIndex {
+  rowIndex: number;
+  columnIndex: number;
+}
+
+export interface CellOffset {
+  left: number;
+  top: number;
+}
+
+export interface CellDataEditedEvent {
+  row: Row;
+  newData: RowCellData;
+}
+
+export enum ExcludeCellState {
+  Required,
+  Empty,
+  NonEditable,
+}
+
+export type Direction = 'above' | 'below' | 'before' | 'after';
+
+export const UNPASTEABLE_DATA_TYPES: EDataType[] = [];
+export const UNCLEARABLE_DATA_TYPES: EDataType[] = [];
+export const UNCUTABLE_DATA_TYPES: EDataType[] = [];
+
+export function parseClipboardItemToData(column: Column, item: ClipboardItem<Cell>) {
+  const { text, data, metadata } = item;
+
+  if (data !== undefined && metadata !== undefined) {
+    return parseClipboardInternal(column, { text, data, metadata });
+  }
+  if (text?.length) {
+    return parseClipboardExternal(column.field, text);
+  }
+  return null;
+}
+
+export class MatrixCell {
+  private _values: Cell[][] = [];
+
+  get rowCount() {
+    return this._values.length;
+  }
+
+  get columnCount() {
+    return this._values.length ? this._values[0].length : 0;
+  }
+
+  get count() {
+    return this.rowCount * this.columnCount;
+  }
+
+  constructor(cells?: Cell[]) {
+    if (cells) {
+      const map = new Map<Row['id'], Cell[]>();
+      for (const cell of cells) {
+        const rowId = cell.row.id;
+        if (!map.has(rowId)) {
+          map.set(rowId, []);
+        }
+        map.get(rowId)!.push(cell);
+      }
+      this._values = Array.from(map.values());
+    }
+  }
+
+  values() {
+    return this._values;
+  }
+
+  addRow(columns?: Cell[]) {
+    const cells = columns || [];
+    this._values.push(cells);
+    return cells;
+  }
+
+  removeRow(idx: number) {
+    this._values.splice(idx, 1);
+  }
+}
+
+export interface CellDataEditedEvent {
+  row: Row;
+  newData: RowCellData;
+}
+
+export const TableCellActionType = {
+  Edit: 'edit',
+  Paste: 'paste',
+  Clear: 'clear',
+  Fill: 'fill',
+  Select: 'select',
+} as const;
+
+export type TableCellActionType = (typeof TableCellActionType)[keyof typeof TableCellActionType];
+export interface TableCellActionPayload {
+  [TableCellActionType.Edit]: CellDataEditedEvent[];
+  [TableCellActionType.Paste]: CellDataEditedEvent[];
+  [TableCellActionType.Clear]: CellDataEditedEvent[];
+  [TableCellActionType.Fill]: CellDataEditedEvent[];
+  [TableCellActionType.Select]: Cell[] | null;
+}
+export interface TableCellAction<T extends TableCellActionType = TableCellActionType> {
+  type: T;
+  payload: TableCellActionPayload[T];
+}
+
+@Injectable()
+export class TableCellService extends TableBaseService {
+  fieldCellService = inject(FieldCellService);
+
+  protected readonly ngZone = inject(NgZone);
+  protected readonly renderer = inject(Renderer2);
+  protected readonly toastService = inject(MessageService);
+
+  private _dataEditedEEC: EmitEventController<
+    Row['id'],
+    { type: TableCellActionType; payload: CellDataEditedEvent }
+  > = new EmitEventController({
+    autoEmit: false,
+    onEmitted: (events) => {
+      const editPayload: CellDataEditedEvent[] = [];
+      const pastePayload: CellDataEditedEvent[] = [];
+      const clearPayload: CellDataEditedEvent[] = [];
+      const fillPayload: CellDataEditedEvent[] = [];
+
+      for (const { type, payload } of events) {
+        switch (type) {
+          case TableCellActionType.Edit:
+            editPayload.push(payload);
+            break;
+          case TableCellActionType.Paste:
+            pastePayload.push(payload);
+            break;
+          case TableCellActionType.Clear:
+            clearPayload.push(payload);
+            break;
+          case TableCellActionType.Fill:
+            fillPayload.push(payload);
+            break;
+        }
+      }
+
+      if (editPayload.length) {
+        this.host.cellAction.emit({
+          type: TableCellActionType.Edit,
+          payload: editPayload,
+        });
+      }
+
+      if (pastePayload.length) {
+        this.host.cellAction.emit({
+          type: TableCellActionType.Paste,
+          payload: editPayload,
+        });
+      }
+
+      if (clearPayload.length) {
+        this.host.cellAction.emit({
+          type: TableCellActionType.Clear,
+          payload: editPayload,
+        });
+      }
+
+      if (fillPayload.length) {
+        this.host.cellAction.emit({
+          type: TableCellActionType.Fill,
+          payload: editPayload,
+        });
+      }
+
+      if (this._interactedColumns?.size) {
+        let shouldReCalculate: boolean;
+        let shouldReGroup: boolean;
+        let shouldReSort: boolean;
+
+        for (const column of this._interactedColumns) {
+          if (column.calculateType) {
+            shouldReCalculate = true;
+          }
+
+          if (column.groupingType) {
+            shouldReGroup = true;
+          }
+
+          if (column.sortingType) {
+            shouldReSort = true;
+          }
+        }
+
+        if (shouldReCalculate) {
+          this.tableService.calculate();
+        }
+
+        if (shouldReGroup) {
+          this.tableService.group();
+        }
+
+        if (shouldReSort) {
+          this.tableService.sort();
+        }
+
+        this._interactedColumns.clear();
+      }
+    },
+  });
+  private _interactedColumns: Set<Column>;
+
+  get canFillCell() {
+    return this.host.config.cell.fillable;
+  }
+
+  get isFocusedInputInCellEditor() {
+    return document.activeElement.tagName === 'INPUT-BOX';
+  }
+
+  override OnDestroy() {
+    this.fieldCellService.clear();
+    this._dataEditedEEC.flush();
+  }
+
+  override updateStates() {
+    this.state.canFillCell = this.canFillCell;
+    this.state.isFocusedInputInCellEditor = this.isFocusedInputInCellEditor;
+  }
+
+  scrollToCell({ row, column }: Partial<Cell>) {
+    const idx: CellIndex = { rowIndex: 0, columnIndex: 0 };
+
+    if (row) {
+      idx.rowIndex = this.tableRowService.findRowIndex(row);
+    }
+
+    if (column) {
+      idx.columnIndex = this.tableColumnService.findColumnIndex(column);
+    }
+
+    this._scrollToCell(idx);
+  }
+
+  onCellHover(e: Event, index: CellIndex) {
+    if (
+      (this.host.isMouseHolding ||
+        this.host.isMouseHiding ||
+        !!this.tableService.layoutProps.cell.invalid ||
+        !this.host.virtualScroll.isScrollCompleted ||
+        this.fieldCellService.getSelectingState()?.isEditing) &&
+      (e as PointerEvent).pointerType !== 'touch'
+    ) {
+      e.preventDefault();
+      return;
+    }
+
+    this.ngZone.run(() => {
+      this.tableService.layoutProps.cell.hovering = index;
+      this.host.detectChanges();
+    });
+
+    const unlisten = this.renderer.listen(e.target, 'pointerleave', () => {
+      unlisten();
+      this.ngZone.run(() => {
+        this.tableService.layoutProps.cell.hovering = null;
+        this.host.detectChanges();
+      });
+    });
+  }
+
+  flushEditedEEC() {
+    this._dataEditedEEC.flush();
+  }
+
+  flushSelectingCellState(callback?: () => void) {
+    const _callback = () => {
+      this.fieldCellService.clearSelectingState();
+      callback?.();
+    };
+
+    if (!this.tableService.layoutProps.cell.selection) {
+      _callback();
+      return;
+    }
+
+    const state = this.fieldCellService.getSelectingState();
+
+    if (!state) {
+      _callback();
+      return;
+    }
+
+    state.flush(
+      (data: any) => {
+        if (data !== undefined) {
+          const { row, column } = state.cell;
+          const newData: RowCellData = { [column.id]: data };
+          let rawData: RowCellData;
+
+          this._markColumnAsInteracted(column);
+          this._markCellDataAsEdited(row, newData, rawData);
+          this._emitCellDataAsEdited();
+        }
+
+        _callback();
+      },
+      (errors: FieldValidationErrors | null) => {
+        const cellIndex = this.findCellIndex(state.cell);
+
+        if (!cellIndex) {
+          state.reset();
+          _callback();
+          return;
+        }
+
+        const cellElement = this.findCellElementByIndex(cellIndex);
+
+        if (!cellElement) {
+          state.reset();
+          _callback();
+          return;
+        }
+
+        let invalid = null;
+
+        if (errors !== null) {
+          invalid = this.findCellIndex(state.cell);
+
+          for (const key in errors) {
+            if (!errors.hasOwnProperty(key)) {
+              continue;
+            }
+
+            switch (key) {
+              case FieldValidationKey.Required:
+                this._openErrorTooltip(cellElement, 'REQUIRED');
+                break;
+              case FieldValidationKey.Pattern:
+                this._openErrorTooltip(cellElement, 'PATTERN');
+                break;
+              case FieldValidationKey.Min:
+                this._openErrorTooltip(cellElement, 'CANNOT_LESS_THAN_MINIMUM');
+                break;
+              case FieldValidationKey.Max:
+                this._openErrorTooltip(cellElement, 'CANNOT_GREATER_MAXIMUM');
+                break;
+            }
+          }
+
+          this.tableService.layoutProps.fillHandler.hidden = true;
+        } else {
+          this._closeErrorTooltip();
+          this.tableService.layoutProps.fillHandler.hidden = false;
+        }
+
+        this.tableService.layoutProps.cell.invalid = invalid;
+      },
+    );
+  }
+
+  revertSelectingCellState() {
+    if (!this.tableService.layoutProps.cell.selection) return;
+
+    const state = this.fieldCellService.getSelectingState();
+    if (!state) return;
+
+    const selectingCell = this.findCellByIndex(this.tableService.layoutProps.cell.selection.start);
+
+    state.reset();
+
+    if (this.tableRowService.checkRowIsDraft(selectingCell.row)) {
+      this.tableRowService.cancelDraftRow();
+      this.deselectAllCells();
+    }
+  }
+
+  scrollToFocusingCell() {
+    const { rowIndex, columnIndex } = this.tableService.layoutProps.cell.focusing;
+    this._scrollToCell({ rowIndex, columnIndex });
+  }
+
+  protected getCells(
+    { rowIndex: startRowIdx, columnIndex: startColumnIdx }: CellIndex,
+    { rowIndex: endRowIdx, columnIndex: endColumnIdx }: CellIndex,
+    excludeDataTypes?: EDataType[],
+    excludeStates?: ExcludeCellState[],
+  ): MatrixCell {
+    const matrix = new MatrixCell();
+
+    for (let i = startRowIdx; i <= endRowIdx; i++) {
+      const cells = matrix.addRow();
+      for (let j = startColumnIdx; j <= endColumnIdx; j++) {
+        cells.push(
+          this.findCellByIndex({
+            rowIndex: i,
+            columnIndex: j,
+          }),
+        );
+      }
+    }
+
+    return excludeDataTypes?.length || excludeStates?.length
+      ? this._filterExcludeCells(matrix, excludeDataTypes, excludeStates)
+      : matrix;
+  }
+
+  selectCells(
+    startIndex: CellIndex,
+    endIndex: CellIndex = startIndex,
+    scrollToLastCell = false,
+    extend = false,
+  ): MatrixCell {
+    let { rowIndex: startRowIdx, columnIndex: startColumnIdx } = startIndex;
+    let { rowIndex: endRowIdx, columnIndex: endColumnIdx } = endIndex;
+
+    if (startRowIdx > endRowIdx) {
+      const idx = startRowIdx;
+      startRowIdx = endRowIdx;
+      endRowIdx = idx;
+    }
+
+    if (startColumnIdx > endColumnIdx) {
+      const idx = startColumnIdx;
+      startColumnIdx = endColumnIdx;
+      endColumnIdx = idx;
+    }
+
+    const selectedCells: Cell[] = [];
+
+    for (let i = startRowIdx; i <= endRowIdx; i++) {
+      const rowIndex = Math.abs(i);
+      const row = this.tableRowService.findRowByIndex(rowIndex);
+
+      for (let j = startColumnIdx; j <= endColumnIdx; j++) {
+        const columnIndex = Math.abs(j);
+        const column = this.tableColumnService.findColumnByIndex(columnIndex);
+
+        selectedCells.push({ row, column });
+      }
+    }
+
+    const start = {
+      rowIndex: startRowIdx,
+      columnIndex: startColumnIdx,
+    };
+    const end = {
+      rowIndex: endRowIdx,
+      columnIndex: endColumnIdx,
+    };
+
+    this.flushSelectingCellState(() => {
+      this.tableColumnService.deselectAllColumns();
+      this.tableRowService.deselectAllRows();
+
+      const rowCount = endRowIdx - startRowIdx + 1;
+      const columnCount = endColumnIdx - startColumnIdx + 1;
+      const primary =
+        extend && this.tableService.layoutProps.cell.selection
+          ? this.tableService.layoutProps.cell.selection.primary
+          : start;
+
+      this.tableService.layoutProps.cell.selection = {
+        primary,
+        start,
+        end,
+        rowCount,
+        columnCount,
+        count: rowCount * columnCount,
+      };
+      this.tableService.layoutProps.cell.focusing = primary;
+
+      this._emitCellAsSelected(selectedCells);
+
+      if (scrollToLastCell) {
+        try {
+          this._scrollToCell(end);
+        } catch {}
+      }
+
+      if (this.canFillCell) {
+        this.host.detectChanges();
+        this.tableService.updateFillHandlerPosition(end);
+      }
+    });
+
+    return this.getCells(start, end);
+  }
+
+  deselectAllCells() {
+    if (!this.tableService.layoutProps.cell.selection) return;
+
+    this.flushSelectingCellState(() => {
+      this.tableService.layoutProps.cell.selection =
+        this.tableService.layoutProps.cell.focusing =
+        this.tableService.layoutProps.cell.filling =
+          null;
+
+      this.tableService.layoutProps.fillHandler.index = null;
+      this.tableService.layoutProps.fillHandler.hidden = true;
+
+      this.host.cellAction.emit({
+        type: TableCellActionType.Select,
+        payload: null,
+      });
+    });
+  }
+
+  cutCells(clipboardData: ClipboardData<Cell>) {
+    const matrixCell = new MatrixCell();
+
+    for (const items of clipboardData.matrix) {
+      matrixCell.addRow(_.map(items, 'metadata'));
+    }
+
+    const [count, total] = this._clearCells(matrixCell);
+
+    this.toastService.add({
+      severity: 'info',
+      summary: 'Cut complete',
+      detail: `Cut complete ${count}/${total} cells`,
+      life: 3000,
+    });
+  }
+
+  pasteCells(clipboardData: ClipboardData<Cell>) {
+    let matrix: MatrixCell;
+
+    if (this.tableService.layoutProps.column.selection) {
+      const columnSelection = this.tableService.layoutProps.column.selection;
+
+      const itr = columnSelection.values();
+      let currIdx = itr.next().value;
+      let nextIdx = itr.next().value;
+      let isSequence = true;
+
+      while (nextIdx) {
+        if (currIdx !== nextIdx - 1) {
+          isSequence = false;
+          break;
+        }
+
+        currIdx = itr.next().value;
+        nextIdx = itr.next().value;
+      }
+
+      if (!isSequence) {
+        this.toastService.add({
+          severity: 'info',
+          summary: 'Paste failed',
+          detail: `Not support non-sequence column paste`,
+          life: 3000,
+        });
+        return;
+      }
+
+      const arr = [...columnSelection];
+      const startIdx = arr[0];
+      const endIdx = arr[arr.length - 1];
+
+      matrix = this.getCells(
+        { rowIndex: 0, columnIndex: startIdx },
+        { rowIndex: this.tableRowService.getLastRowIndex(), columnIndex: endIdx },
+        UNPASTEABLE_DATA_TYPES,
+        [ExcludeCellState.NonEditable],
+      );
+    } else {
+      const cellSelection = this.tableService.layoutProps.cell.selection;
+
+      if (!cellSelection) return;
+
+      if (
+        cellSelection.rowCount !== clipboardData.rowCount ||
+        cellSelection.columnCount !== clipboardData.columnCount
+      ) {
+        const rowCount = Math.max(cellSelection.rowCount, clipboardData.rowCount);
+        const columnCount = Math.max(cellSelection.columnCount, clipboardData.columnCount);
+        const startIdx = { ...cellSelection.start };
+        const endIdx = {
+          rowIndex: startIdx.rowIndex + rowCount - 1,
+          columnIndex: startIdx.columnIndex + columnCount - 1,
+        };
+
+        matrix = this._filterExcludeCells(
+          this.selectCells(startIdx, endIdx),
+          UNPASTEABLE_DATA_TYPES,
+          [ExcludeCellState.NonEditable],
+        );
+      } else {
+        matrix = this.getCells(cellSelection.start, cellSelection.end, UNPASTEABLE_DATA_TYPES, [
+          ExcludeCellState.NonEditable,
+        ]);
+      }
+    }
+
+    if (!matrix) return;
+
+    const values = matrix.values();
+    let count = 0;
+    let total = 0;
+
+    for (let i = 0; i < matrix.rowCount; i++) {
+      const cells = values[i];
+      const clipboardItems = clipboardData.matrix[i % clipboardData.rowCount];
+      const newData: any = {};
+
+      let rawData: any;
+      let row: Row;
+
+      for (let j = 0; j < matrix.columnCount; j++) {
+        const cell = cells[j];
+
+        if (!cell) continue;
+
+        const column = cell.column;
+        const clipboardItem = clipboardItems[j % clipboardData.columnCount];
+
+        if (!clipboardItem || (!clipboardItem?.text && column.field.required)) {
+          continue;
+        }
+
+        const data = parseClipboardItemToData(column, clipboardItem);
+
+        if (data === undefined) {
+          rawData ||= {};
+          rawData[column.id] = cell.row.data[column.id];
+        }
+
+        row = cell.row;
+
+        newData[column.id] = data;
+
+        count++;
+
+        this._markColumnAsInteracted(column);
+      }
+
+      if (row) {
+        this._markCellDataAsEdited(row, newData, rawData, TableCellActionType.Paste);
+      }
+    }
+
+    total = matrix.count;
+
+    this._emitCellDataAsEdited();
+
+    this.toastService.add({
+      severity: 'info',
+      summary: 'Paste complete',
+      detail: `Paste complete ${count}/${total} cells`,
+      life: 3000,
+    });
+  }
+
+  protected async clearCells(matrixCell: MatrixCell) {
+    const [count, total] = this._clearCells(matrixCell);
+    this.toastService.add({
+      severity: 'info',
+      summary: 'Clear complete',
+      detail: `Clear complete ${count}/${total} cells`,
+      life: 3000,
+    });
+  }
+
+  async fillCells(
+    source: [CellIndex, CellIndex],
+    target: [CellIndex, CellIndex],
+    isReverse: boolean,
+  ) {
+    const targetMatrixCell = this._filterExcludeCells(
+      this.getCells(target[0], target[1]),
+      undefined,
+      [ExcludeCellState.NonEditable],
+    );
+    const sourceMatrixCell = this.getCells(source[0], source[1]);
+    const sourceValues = sourceMatrixCell.values();
+    const targetValues = targetMatrixCell.values();
+
+    if (isReverse) {
+      sourceValues.reverse();
+      targetValues.reverse();
+    }
+
+    const sourceData = {};
+
+    for (let i = 0; i < sourceMatrixCell.rowCount; i++) {
+      const cells = sourceValues[i];
+
+      sourceData[i] ||= {};
+
+      for (let j = 0; j < sourceMatrixCell.columnCount; j++) {
+        const { row, column } = cells[j];
+
+        let data = row.data[column.id];
+
+        try {
+          if (_.isEmpty(data)) {
+            data = null;
+            throw new Error();
+          }
+
+          const dataType = column.field.dataType;
+
+          switch (dataType) {
+            case NumberField.dataType: {
+              const prev = sourceData[i - 1]?.[j];
+
+              let metadata = prev?.metadata;
+
+              if (metadata) {
+                metadata = { ...metadata };
+                metadata.index += 1;
+                metadata.data.push(data);
+                metadata.range.push(metadata.index);
+              } else {
+                let step = isReverse ? -1 : 1;
+
+                metadata = {
+                  index: 0,
+                  data: [data],
+                  range: [0],
+                  step,
+                };
+              }
+
+              sourceData[i][j] = {
+                data,
+                metadata,
+                isNumber: true,
+              };
+
+              break;
+            }
+            case DateField.dataType: {
+              const prev = sourceData[i - 1]?.[j];
+
+              let metadata: any;
+
+              if (!isDayjs(data)) {
+                data = dayjs(data);
+              }
+
+              if (prev) {
+                metadata = prev.metadata;
+
+                if (metadata) {
+                  const prevStep = metadata.step;
+
+                  if (prevStep !== undefined) {
+                    metadata.step = Math.floor((data - prev.data) / 1000 / 60 / 60 / 24);
+
+                    if (prevStep !== null && prevStep !== metadata.step) {
+                      delete metadata.step;
+                      delete metadata.last;
+                    } else {
+                      metadata.last = data;
+                    }
+                  }
+                }
+              } else {
+                metadata = { step: null };
+              }
+
+              sourceData[i][j] = {
+                data,
+                metadata,
+                isDate: true,
+              };
+
+              break;
+            }
+            default:
+              throw new Error();
+          }
+        } catch {
+          sourceData[i][j] = { data };
+        }
+      }
+    }
+
+    for (let i = 0; i < targetMatrixCell.rowCount; i++) {
+      const targetCells = targetValues[i];
+      const pos = i + 1;
+      const page = Math.ceil(pos / sourceMatrixCell.rowCount);
+      const fillData = sourceData[i % sourceMatrixCell.rowCount];
+      const newData: any = {};
+
+      let row: Row;
+
+      for (let j = 0; j < targetMatrixCell.columnCount; j++) {
+        const targetCell = targetCells[j];
+
+        if (!targetCell) continue;
+
+        row = targetCell.row;
+
+        const column = targetCell.column;
+        const fD = fillData[j % targetMatrixCell.columnCount];
+
+        let data = fD.data;
+
+        if (data !== null) {
+          if (fD.isNumber) {
+            if (fD.metadata.range.length > 1) {
+              data = FORECAST(
+                fD.metadata.index + page * fD.metadata.range.length,
+                fD.metadata.data,
+                fD.metadata.range,
+              );
+              data = parseFloat(data.toFixed(2));
+            } else {
+              data += page * fD.metadata.step;
+            }
+          } else if (fD.isDate) {
+            if (fD.metadata && fD.metadata.step !== undefined && fD.metadata.last !== undefined) {
+              data = fD.metadata.last.clone();
+              data.add(pos * fD.metadata.step, 'd');
+            } else {
+              data = data.clone();
+            }
+          }
+        }
+
+        newData[column.id] = data;
+
+        this._markColumnAsInteracted(column);
+      }
+
+      if (row) {
+        this._markCellDataAsEdited(row, newData, undefined, TableCellActionType.Fill);
+      }
+    }
+
+    this._emitCellDataAsEdited();
+
+    this.toastService.add({
+      severity: 'info',
+      summary: 'Fill complete',
+      life: 3000,
+    });
+  }
+
+  moveToCell(direction: Direction) {
+    const selectingIdx = this.tableService.layoutProps.cell.selection?.primary;
+
+    if (!selectingIdx) return;
+
+    let { rowIndex, columnIndex } = selectingIdx;
+
+    switch (direction) {
+      case 'above':
+        rowIndex--;
+        break;
+      case 'below':
+        rowIndex++;
+        break;
+      case 'before':
+        columnIndex--;
+        break;
+      case 'after':
+        columnIndex++;
+        break;
+    }
+
+    const index = { rowIndex, columnIndex };
+
+    if (!this._checkCellIndexValid(index)) {
+      return;
+    }
+
+    this.selectCells(index, index, true);
+  }
+
+  extendSelectedCells(direction: Direction, step = 1) {
+    const selectingIdx = this.tableService.layoutProps.cell.selection?.primary;
+
+    if (!selectingIdx) return;
+
+    let startIdx = { ...selectingIdx };
+    let endIdx = { ...selectingIdx };
+
+    const selection = this.tableService.layoutProps.cell.selection;
+
+    if (selection) {
+      startIdx = { ...selection.start };
+      endIdx = { ...selection.end };
+    }
+
+    switch (direction) {
+      case 'above':
+        if (startIdx.rowIndex < selectingIdx.rowIndex) {
+          startIdx.rowIndex -= step;
+        } else {
+          endIdx.rowIndex -= step;
+        }
+        break;
+      case 'below':
+        if (startIdx.rowIndex < selectingIdx.rowIndex) {
+          startIdx.rowIndex += step;
+        } else {
+          endIdx.rowIndex += step;
+        }
+        break;
+      case 'before':
+        if (startIdx.columnIndex < selectingIdx.columnIndex) {
+          startIdx.columnIndex -= step;
+        } else {
+          endIdx.columnIndex -= step;
+        }
+        break;
+      case 'after':
+        if (startIdx.columnIndex < selectingIdx.columnIndex) {
+          startIdx.columnIndex += step;
+        } else {
+          endIdx.columnIndex += step;
+        }
+        break;
+    }
+
+    if (!this._checkCellIndexValid(startIdx) || !this._checkCellIndexValid(endIdx)) {
+      return;
+    }
+
+    this.selectCells(startIdx, endIdx, true, true);
+  }
+
+  protected getCellOffset(index: CellIndex): CellOffset {
+    if (this.tableGroupService.isGrouping) {
+      return this.tableGroupService.getRowCellOffsetInGroup(index);
+    }
+
+    const left = _getColumnOffset(this.tableColumnService.findColumnByIndex(index.columnIndex));
+    const top = index.rowIndex * this.tableRowService.rowHeight;
+
+    return { left, top };
+  }
+
+  protected findCellIndex(cell: Cell): CellIndex {
+    return {
+      rowIndex: this.tableRowService.findRowIndex(cell.row),
+      columnIndex: this.tableColumnService.findColumnIndex(cell.column),
+    };
+  }
+
+  findCellByIndex(index: CellIndex): Cell {
+    return {
+      row: this.tableRowService.findRowByIndex(index.rowIndex),
+      column: this.tableColumnService.findColumnByIndex(index.columnIndex),
+    };
+  }
+
+  findCellElementByIndex(index: CellIndex): HTMLElement {
+    const rowIdxAttr = `[data-row-index="${index.rowIndex}"]`;
+    const columnIdxAttr = `[data-column-index="${index.columnIndex}"]`;
+
+    return this.host.elementRef.nativeElement.querySelector(`${rowIdxAttr}${columnIdxAttr}`);
+  }
+
+  findCellByElement(element: HTMLElement, cellType?: string): CellIndex {
+    const cell = element.closest(cellType ? `[cell-type="${cellType}"]` : '[cell-type]');
+    if (!cell) return null;
+    const rowIndex = parseFloat(cell.getAttribute('data-row-index'));
+    const columnIndex = parseFloat(cell.getAttribute('data-column-index'));
+    return { rowIndex, columnIndex };
+  }
+
+  compareCell(source: Cell, destination: Cell): boolean {
+    return source.row.id === destination.row.id && source.column.id === source.column.id;
+  }
+
+  compareCellIndex(
+    { rowIndex: sRIdx, columnIndex: sCIdx }: CellIndex,
+    { rowIndex: dRIdx, columnIndex: dCIdx }: CellIndex,
+  ): -1 | 0 | 1 {
+    if (sRIdx < dRIdx) {
+      return -1;
+    } else if (sRIdx > dRIdx) {
+      return 1;
+    }
+
+    if (sCIdx < dCIdx) {
+      return -1;
+    } else if (sCIdx > dCIdx) {
+      return 1;
+    }
+
+    return 0;
+  }
+
+  protected getInteractiveCells(
+    excludeDataTypes?: EDataType[],
+    excludeStates?: ExcludeCellState[],
+  ): MatrixCell | null {
+    let matrix: MatrixCell;
+
+    if (this.tableRowService.selectedRows.size) {
+      const cells: Cell[] = [];
+      for (const row of this.tableRowService.selectedRows) {
+        for (const column of this.tableColumnService.displayingColumns) {
+          cells.push({ row, column });
+        }
+      }
+      matrix = new MatrixCell(cells);
+    } else if (this.tableService.layoutProps.column.selection) {
+      const cells: Cell[] = [];
+      for (const row of this.host.rows) {
+        for (const columnIdx of this.tableService.layoutProps.column.selection) {
+          const column = this.tableColumnService.findColumnByIndex(columnIdx);
+          cells.push({ row, column });
+        }
+      }
+      matrix = new MatrixCell(cells);
+    } else if (this.tableService.layoutProps.cell.selection) {
+      matrix = this.getCells(
+        this.tableService.layoutProps.cell.selection.start,
+        this.tableService.layoutProps.cell.selection.end,
+      );
+    }
+
+    if (!matrix) return null;
+
+    return excludeDataTypes?.length || excludeStates?.length
+      ? this._filterExcludeCells(matrix, excludeDataTypes, excludeStates)
+      : matrix;
+  }
+
+  copyInteractiveCells(clipboard: Clipboard) {
+    const matrixCell = this.getInteractiveCells(clipboard.isCutAction && UNCUTABLE_DATA_TYPES);
+
+    if (!matrixCell?.count) return;
+
+    const matrix: ClipboardItem[][] = [];
+    let count = 0;
+
+    for (const cells of matrixCell.values()) {
+      const items = [];
+
+      for (const cell of cells) {
+        if (!cell) continue;
+
+        const { row, column } = cell;
+
+        let data = row.data?.[column.id];
+        let text = '';
+
+        if (!_.isEmpty(data)) {
+          data = _.cloneDeep(data);
+          text = column.field.toString(data);
+        }
+
+        items.push({
+          text,
+          data,
+          metadata: cell,
+        });
+
+        count++;
+      }
+
+      matrix.push(items);
+    }
+
+    clipboard.write(matrix as any);
+
+    this.toastService.add({
+      severity: 'success',
+      summary: clipboard.isCutAction ? 'Cut Success' : 'Copy Success',
+      detail: `Copied ${count} of ${matrixCell.count} cells`,
+      life: 3000,
+    });
+  }
+
+  clearInteractiveCells() {
+    const matrix = this.getInteractiveCells();
+
+    if (!matrix?.count) return;
+
+    this.clearCells(matrix);
+  }
+
+  updateCellsData(rows: Row[], newData: RowCellData) {
+    for (const columnID in newData) {
+      this._markColumnAsInteracted(this.tableColumnService.findColumnByID(columnID));
+    }
+
+    for (const row of rows) {
+      this._markCellDataAsEdited(row, newData);
+    }
+
+    this._emitCellDataAsEdited();
+  }
+
+  searchCellPredicate(row: Row, column: Column): string {
+    return row.data?.[column.id] ?? '';
+  }
+
+  private _clearCells(matrixCell: MatrixCell): [number, number] {
+    matrixCell = this._filterExcludeCells(matrixCell, UNCLEARABLE_DATA_TYPES, [
+      ExcludeCellState.Required,
+      ExcludeCellState.Empty,
+      ExcludeCellState.NonEditable,
+    ]);
+
+    let count = 0;
+
+    for (const cells of matrixCell.values()) {
+      const newData: RowCellData = {};
+
+      let row: Row;
+
+      for (const cell of cells) {
+        if (!cell) continue;
+
+        row = cell.row;
+
+        const column = cell.column;
+
+        let data = null;
+
+        switch (column.field.dataType) {
+          case EDataType.Checkbox:
+            data ||= false;
+            break;
+        }
+
+        newData[column.id] = data;
+
+        this._markColumnAsInteracted(column);
+
+        count++;
+      }
+
+      if (row) {
+        this._markCellDataAsEdited(row, newData, undefined, TableCellActionType.Clear);
+      }
+    }
+
+    this._emitCellDataAsEdited();
+
+    return [count, matrixCell.count];
+  }
+
+  private _scrollToCell(index: CellIndex) {
+    const { rowIndex, columnIndex } = index;
+
+    if (rowIndex === -1 || columnIndex === -1 || _.isNil(rowIndex) || _.isNil(columnIndex)) {
+      return;
+    }
+
+    const { left: cellOffsetLeft, top: cellOffsetTop } = this.getCellOffset(index);
+    const { scrollLayout, scrollLeft, scrollTop, viewport } = this.host.virtualScroll;
+
+    const horizontalTrackOffsetX = scrollLayout.horizontal.track.offset.x;
+    const { width: cellWidth } = this.tableColumnService.findColumnByIndex(columnIndex);
+    let left = scrollLeft;
+
+    if (cellOffsetLeft >= horizontalTrackOffsetX) {
+      if (cellOffsetLeft - horizontalTrackOffsetX < scrollLeft) {
+        left -= scrollLeft - cellOffsetLeft + horizontalTrackOffsetX;
+      } else if (cellOffsetLeft + cellWidth > scrollLeft + viewport.width) {
+        left += cellOffsetLeft + cellWidth - (scrollLeft + viewport.width);
+      }
+    }
+
+    const verticalTrackOffsetY = scrollLayout.vertical.track.offset.y;
+    const cellHeight = this.tableRowService.rowHeight;
+    let top = scrollTop;
+
+    if (cellOffsetTop >= verticalTrackOffsetY) {
+      if (cellOffsetTop - verticalTrackOffsetY < scrollTop) {
+        top -= scrollTop - cellOffsetTop + verticalTrackOffsetY - Dimension.BodyVerticalPadding;
+      } else if (cellOffsetTop + cellHeight > scrollTop + viewport.height) {
+        top +=
+          cellOffsetTop +
+          cellHeight -
+          (scrollTop + viewport.height) +
+          Dimension.BodyVerticalPadding;
+      }
+    }
+
+    this.host.virtualScroll.scrollTo({ left, top });
+  }
+
+  private _checkCellIndexValid({ rowIndex, columnIndex }: CellIndex): boolean {
+    if (rowIndex < 0) {
+      return false;
+    } else {
+      const lastRowIndex = this.tableRowService.getLastRowIndex();
+
+      if (rowIndex > lastRowIndex) {
+        return false;
+      }
+    }
+
+    if (columnIndex < 0) {
+      return false;
+    } else {
+      const lastColumnIndex = this.tableColumnService.getLastColumnIndex();
+
+      if (columnIndex > lastColumnIndex) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private _markColumnAsInteracted(column: Column) {
+    this._interactedColumns ||= new Set();
+
+    if (this._interactedColumns.has(column)) {
+      return;
+    }
+
+    this._interactedColumns.add(column);
+  }
+
+  private _markCellDataAsEdited(
+    row: Row,
+    newData: RowCellData,
+    rawData: RowCellData = newData,
+    type: TableCellActionType = TableCellActionType.Edit,
+  ) {
+    row.data = { ...row.data, ...rawData };
+
+    if (this.tableRowService.checkRowIsDraft(row)) {
+      this._interactedColumns?.clear();
+      return;
+    }
+
+    let event = this._dataEditedEEC.getEvent(row.id);
+
+    if (event) {
+      event.payload.newData = { ...event.payload.newData, ...newData };
+    } else {
+      event = { type, payload: { row, newData } };
+    }
+
+    this._dataEditedEEC.addEvent(row.id, event);
+  }
+
+  private _emitCellDataAsEdited() {
+    this._dataEditedEEC.emit();
+  }
+
+  private _emitCellAsSelected = _.debounce((selectedCells: Cell[]) => {
+    this.host.cellAction.emit({
+      type: TableCellActionType.Select,
+      payload: selectedCells,
+    });
+  }, 200);
+
+  private _filterExcludeCells(
+    matrix: MatrixCell,
+    excludeDataTypes: EDataType[],
+    excludeStates: ExcludeCellState[],
+  ): MatrixCell {
+    const excludeDataTypeSet = new Set<EDataType>(excludeDataTypes);
+    const excludeRequired = _.includes(excludeStates, ExcludeCellState.Required);
+    const excludeEmpty = _.includes(excludeStates, ExcludeCellState.Empty);
+    const excludeNonEditable = _.includes(excludeStates, ExcludeCellState.NonEditable);
+
+    for (const cells of matrix.values()) {
+      for (let i = 0; i < cells.length; i++) {
+        const { row, column } = cells[i];
+
+        if (
+          (!excludeDataTypeSet.size || !excludeDataTypeSet.has(column.field.dataType)) &&
+          (!excludeRequired || !column.field.required) &&
+          (!excludeEmpty ||
+            (column.field.dataType === EDataType.Checkbox
+              ? row.data?.[column.id] === true
+              : !_.isEmpty(row.data?.[column.id]))) &&
+          (!excludeNonEditable || row.editable === true || row.editable?.[column.id] === true)
+        ) {
+          continue;
+        }
+
+        cells[i] = null;
+      }
+    }
+
+    return matrix;
+  }
+
+  private _openErrorTooltip(cellElement: HTMLElement, key: string) {
+    // if (this._tooltipRef?.isOpened) return;
+    // this._tooltipRef = this._tooltipService.open(
+    //   cellElement,
+    //   this.translateService.instant(`SPREADSHEET.MESSAGE.${key}`),
+    //   undefined,
+    //   { position: 'start-above', type: 'error', disableClose: true }
+    // );
+  }
+
+  private _closeErrorTooltip() {
+    // this._tooltipRef?.close();
+  }
+}

@@ -1,13 +1,11 @@
-import _ from 'lodash';
-
 import { Field } from '../field/objects';
-import { Cell } from '../components/sub-classes/cell';
-import { Column } from '../components/sub-classes/column';
+import { Column } from '../components/services/table-column.service';
+import { Cell } from '../components/services/table-cell.service';
 import { ClipboardItem } from './clipboard';
 
 export function parseClipboardInternal(
   column: Column,
-  { text, data, metadata }: ClipboardItem<Cell>
+  { text, data, metadata }: ClipboardItem<Cell>,
 ): any {
   if (metadata.column.id === column.id) return data;
 
@@ -31,7 +29,7 @@ export function parseClipboardExternal(
   field: Field,
   text: string,
   data?: any,
-  sourceField?: Field
+  sourceField?: Field,
 ) {
   return field.convertTextToData(text);
 }

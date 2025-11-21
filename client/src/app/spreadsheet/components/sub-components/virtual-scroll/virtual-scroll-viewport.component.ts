@@ -17,10 +17,10 @@ import {
   Output,
 } from '@angular/core';
 
-import { Column } from '../../sub-classes/column';
-import { Dimension } from '../../sub-classes/main';
-import { Group } from '../../sub-classes/group';
-import { Row } from '../../sub-classes/row';
+import { Dimension } from '../../services/table.service';
+import { Column } from '../../services/table-column.service';
+import { Row } from '../../services/table-row.service';
+import { Group } from '../../services/table-group.service';
 
 import type { _Scrolling } from './virtual-scroll.component';
 import {

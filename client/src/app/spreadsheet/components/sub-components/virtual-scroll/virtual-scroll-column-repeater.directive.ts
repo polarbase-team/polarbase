@@ -1,6 +1,6 @@
 import { Directive, Input, TrackByFunction } from '@angular/core';
 
-import { Column } from '../../sub-classes/column';
+import { Column } from '../../services/table-column.service';
 
 import {
   _RecycleViewRepeaterStrategy,

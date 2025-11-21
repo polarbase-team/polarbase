@@ -1,8 +1,8 @@
 import { Directive, Input, TrackByFunction } from '@angular/core';
 
-import { Dimension } from '../../sub-classes/main';
-import { Group } from '../../sub-classes/group';
-import { Row } from '../../sub-classes/row';
+import { Dimension } from '../../services/table.service';
+import { Group } from '../../services/table-group.service';
+import { Row } from '../../services/table-row.service';
 
 import {
   _ViewContext,
