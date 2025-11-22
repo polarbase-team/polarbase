@@ -8,7 +8,7 @@ export type SortData = string | number;
 
 type ComparedResult = -1 | 0 | 1;
 
-export function sort(v1: SortPredicateReturnType, v2: SortPredicateReturnType): ComparedResult {
+export function sort(v1: SortPredicateReturnType, v2: SortPredicateReturnType) {
   let compared: ComparedResult = 0;
   let s1 = v1[0];
   let s2 = v2[0];
@@ -62,7 +62,7 @@ export function sortPredicate(
   columns: TableColumn[],
   columnIndex: number,
   row: TableRow,
-): SortPredicateReturnType {
+): SortPredicateReturnType | null {
   const column = columns[columnIndex];
   if (!column) return null;
   return [row.data?.[column.id] ?? '', column.sortType === 'desc'];
@@ -70,9 +70,9 @@ export function sortPredicate(
 
 export function sortBy(rows: TableRow[], sortByColumns: TableColumn[]) {
   const items = [...rows];
-  const loop: number = sortByColumns.length;
+  const loop = sortByColumns.length;
 
-  items.sort((a: TableRow, b: TableRow) => {
+  items.sort((a, b) => {
     return makeupSortPredicate(sortByColumns, a, b, loop);
   });
 
@@ -88,7 +88,7 @@ function makeupSortPredicate(
 ): ComparedResult {
   const v1 = sortPredicate(sortByColumns, i, srcRow);
   const v2 = sortPredicate(sortByColumns, i, desRow);
-  let compared: ComparedResult = sort(v1, v2);
+  let compared = sort(v1, v2);
 
   // if s1 === s2 compare the next condition
   if (compared === 0 && loop > i + 1) {

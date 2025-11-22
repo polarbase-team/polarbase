@@ -1,31 +1,31 @@
+import _ from 'lodash';
 import { fromEvent, Subject, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import _ from 'lodash';
 
-export type ClipboardItem<T = any> = {
+export interface ClipboardItem<T = any> {
   text: string;
   data?: any;
   metadata?: T;
-};
+}
 
-export type ClipboardData<T = any> = {
+export interface ClipboardData<T = any> {
   matrix: ClipboardItem<T>[][] | null;
   rowCount: number;
   columnCount: number;
   count: number;
-};
+}
 
-export type ClipboardConfig = {
+export interface ClipboardConfig {
   target: HTMLElement;
   pause: boolean;
   shouldPause: (e: ClipboardEvent) => boolean;
-};
+}
 
 const TAB_CHAR: string = '\t';
 const NEWLINE_CHAR: string = '\n';
 const EMPTY_REGEX: RegExp = /[^\n\t]/g;
 
-const splitTextIntoMatrix = _.memoize(function (text: string): ClipboardItem[][] {
+function splitTextIntoMatrix(text: string) {
   if (text.match(EMPTY_REGEX) === null) {
     return [[{ text: '' }]];
   }
@@ -43,26 +43,22 @@ const splitTextIntoMatrix = _.memoize(function (text: string): ClipboardItem[][]
   }
 
   return matrix;
-});
+}
 
 export class Clipboard<T = any> {
-  readonly copy$: Subject<ClipboardEvent> = new Subject<ClipboardEvent>();
-  readonly cut$: Subject<[ClipboardEvent, ClipboardData<T>]> = new Subject<
-    [ClipboardEvent, ClipboardData<T>]
-  >();
-  readonly paste$: Subject<[ClipboardEvent, ClipboardData<T>]> = new Subject<
-    [ClipboardEvent, ClipboardData<T>]
-  >();
+  readonly copy$ = new Subject<ClipboardEvent>();
+  readonly cut$ = new Subject<[ClipboardEvent, ClipboardData<T>]>();
+  readonly paste$ = new Subject<[ClipboardEvent, ClipboardData<T>]>();
 
-  private _matrix: ClipboardItem<T>[][];
-  private _nativeText: string;
+  private matrix: ClipboardItem<T>[][];
+  private nativeText: string;
   private _isCutAction: boolean;
-  private _isPaused: boolean;
-  private _copyEventSub: Subscription;
-  private _cutEventSub: Subscription;
-  private _pasteEventSub: Subscription;
+  private isPaused: boolean;
+  private copyEventSub: Subscription;
+  private cutEventSub: Subscription;
+  private pasteEventSub: Subscription;
 
-  get isCutAction(): boolean {
+  get isCutAction() {
     return this._isCutAction;
   }
 
@@ -71,86 +67,73 @@ export class Clipboard<T = any> {
     let shouldPause: (e: ClipboardEvent) => boolean;
 
     if (config) {
-      this._isPaused = config.pause;
-
+      this.isPaused = config.pause;
       target = config.target || target;
       shouldPause = config.shouldPause;
     }
 
-    this._copyEventSub = fromEvent<ClipboardEvent>(target, 'copy')
-      .pipe(filter((e): boolean => !this._isPaused && !shouldPause?.(e)))
+    this.copyEventSub = fromEvent<ClipboardEvent>(target, 'copy')
+      .pipe(filter((e) => !this.isPaused && !shouldPause?.(e)))
       .subscribe((e) => {
-        const isPaused: boolean = this._isPaused || shouldPause?.(e);
-
+        const isPaused = this.isPaused || shouldPause?.(e);
         if (isPaused) return;
 
         this._isCutAction = false;
-
         this.copy$.next(e);
       });
 
-    this._cutEventSub = fromEvent<ClipboardEvent>(target, 'cut')
-      .pipe(filter((e): boolean => !this._isPaused && !shouldPause?.(e)))
+    this.cutEventSub = fromEvent<ClipboardEvent>(target, 'cut')
+      .pipe(filter((e) => !this.isPaused && !shouldPause?.(e)))
       .subscribe((e) => {
-        const isPaused: boolean = this._isPaused || shouldPause?.(e);
-
+        const isPaused = this.isPaused || shouldPause?.(e);
         if (isPaused) return;
 
         this._isCutAction = true;
-
         this.copy$.next(e);
       });
 
-    this._pasteEventSub = fromEvent<ClipboardEvent>(target, 'paste')
-      .pipe(filter((e): boolean => !this._isPaused && !shouldPause?.(e)))
+    this.pasteEventSub = fromEvent<ClipboardEvent>(target, 'paste')
+      .pipe(filter((e) => !this.isPaused && !shouldPause?.(e)))
       .subscribe((e) => {
-        const isPaused: boolean = this._isPaused || shouldPause?.(e);
-
+        const isPaused = this.isPaused || shouldPause?.(e);
         if (isPaused) return;
 
         const nativePastedText: string = e.clipboardData
           .getData('text')
           .replace(/\r\n/g, NEWLINE_CHAR);
+        if (this.nativeText !== nativePastedText) {
+          this.nativeText = nativePastedText;
 
-        if (this._nativeText !== nativePastedText) {
-          this._nativeText = nativePastedText;
-
-          const matrix: ClipboardItem[][] = splitTextIntoMatrix(this._nativeText);
-
-          this._matrix = [...matrix];
+          const matrix: ClipboardItem[][] = splitTextIntoMatrix(this.nativeText);
+          this.matrix = [...matrix];
           this._isCutAction = false;
         }
 
         const data: ClipboardData<T> = this.read();
-
-        if (this._isCutAction) {
+        if (this.isCutAction) {
           this.cut$.next([e, data]);
-
           this._isCutAction = false;
         }
-
         this.paste$.next([e, data]);
       });
   }
 
   continue() {
-    this._isPaused = false;
+    this.isPaused = false;
   }
 
   pause() {
-    this._isPaused = true;
+    this.isPaused = true;
   }
 
   stop() {
-    this._copyEventSub.unsubscribe();
-    this._cutEventSub.unsubscribe();
-    this._pasteEventSub.unsubscribe();
-
+    this.copyEventSub.unsubscribe();
+    this.cutEventSub.unsubscribe();
+    this.pasteEventSub.unsubscribe();
     this.copy$.complete();
     this.cut$.complete();
     this.paste$.complete();
-
-    this._isPaused = this._copyEventSub = this._cutEventSub = this._pasteEventSub = undefined;
+    this.isPaused = this.copyEventSub = this.cutEventSub = this.pasteEventSub = undefined;
   }
 
   read(): ClipboardData<T> {
@@ -160,26 +143,22 @@ export class Clipboard<T = any> {
       columnCount: 0,
       count: 0,
     };
-
-    if (this._matrix) {
-      data.matrix = this._matrix;
-      data.rowCount = this._matrix.length;
-      data.columnCount = this._matrix[0].length;
+    if (this.matrix) {
+      data.matrix = this.matrix;
+      data.rowCount = this.matrix.length;
+      data.columnCount = this.matrix[0].length;
       data.count = data.rowCount * data.columnCount;
     }
-
     return data;
   }
 
   write(matrix: ClipboardItem<T>[][]) {
-    this._matrix = matrix;
+    this.matrix = matrix;
 
     const t: string[] = [];
-
     for (const items of matrix) {
       t.push(_.map(items, 'text').join(TAB_CHAR));
     }
-
-    navigator.clipboard.writeText((this._nativeText = t.join(NEWLINE_CHAR)));
+    navigator.clipboard.writeText((this.nativeText = t.join(NEWLINE_CHAR)));
   }
 }
