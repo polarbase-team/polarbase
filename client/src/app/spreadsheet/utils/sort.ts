@@ -6,17 +6,16 @@ export type SortType = 'asc' | 'desc';
 export type SortPredicateReturnType = [any, boolean];
 export type SortData = string | number;
 
-export function sort(v1: SortPredicateReturnType, v2: SortPredicateReturnType): -1 | 0 | 1 {
-  let compared: -1 | 0 | 1 = 0;
+type ComparedResult = -1 | 0 | 1;
 
-  let s1: any = v1[0];
-  let s2: any = v2[0];
-
-  const isReverse: boolean = v1[1];
+export function sort(v1: SortPredicateReturnType, v2: SortPredicateReturnType): ComparedResult {
+  let compared: ComparedResult = 0;
+  let s1 = v1[0];
+  let s2 = v2[0];
 
   if (_.isArray(s1) && _.isArray(s2)) {
-    const s1Bk: any = s1;
-    const s2Bk: any = s2;
+    const s1Bk = s1;
+    const s2Bk = s2;
 
     s1 = s1[0];
     s2 = s2[0];
@@ -55,7 +54,8 @@ export function sort(v1: SortPredicateReturnType, v2: SortPredicateReturnType): 
       break;
   }
 
-  return compared === 0 ? compared : isReverse ? ((compared * -1) as any) : compared;
+  const isReverse = v1[1];
+  return compared === 0 ? compared : isReverse ? ((compared * -1) as ComparedResult) : compared;
 }
 
 export function sortPredicate(
@@ -85,10 +85,10 @@ function makeupSortPredicate(
   desRow: TableRow,
   loop: number = 1,
   i: number = 0,
-): -1 | 0 | 1 {
-  const v1: SortPredicateReturnType = sortPredicate(sortByColumns, i, srcRow);
-  const v2: SortPredicateReturnType = sortPredicate(sortByColumns, i, desRow);
-  let compared: -1 | 0 | 1 = sort(v1, v2);
+): ComparedResult {
+  const v1 = sortPredicate(sortByColumns, i, srcRow);
+  const v2 = sortPredicate(sortByColumns, i, desRow);
+  let compared: ComparedResult = sort(v1, v2);
 
   // if s1 === s2 compare the next condition
   if (compared === 0 && loop > i + 1) {
