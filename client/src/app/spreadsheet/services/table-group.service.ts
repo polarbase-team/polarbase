@@ -28,7 +28,7 @@ function calculateInGroup(
     group.metadata.calculatedResult.set(
       column.id,
       calculateBy(
-        _.map(group.items, 'data'),
+        _.map(group.rows, 'data'),
         column.calculateType,
         calculatePredicate?.bind(this, column.field),
         column?.field,
@@ -87,7 +87,7 @@ function findGroupByItemIndex(itemIndex: number, group?: TableGroup) {
         continue;
       }
 
-      if (itemIndex > _viewProps.startItemIndex + childGroup.items.length - 1) {
+      if (itemIndex > _viewProps.startItemIndex + childGroup.rows.length - 1) {
         start = mid + 1;
         continue;
       }
@@ -143,15 +143,12 @@ export class TableGroupService extends TableBaseService {
 
   sortInGroup(columns: TableColumn[]) {
     if (!columns?.length) return;
-    this.rootGroup.sortItem(
-      this.tableColumnService.sortColumnPredicate.bind(this, columns),
-      columns.length,
-    );
+    this.rootGroup.sortRows(columns);
     this.markGroupAsChanged();
   }
 
   unsortInGroup() {
-    this.rootGroup.unsortItem();
+    this.rootGroup.unsortRows();
     this.markGroupAsChanged();
   }
 
@@ -185,7 +182,7 @@ export class TableGroupService extends TableBaseService {
   }
 
   deleteRowsInGroup(deletedRows: TableRow[]) {
-    this.rootGroup.removeItems(deletedRows);
+    this.rootGroup.removeRows(deletedRows);
     this.markGroupAsChanged();
   }
 
@@ -209,8 +206,8 @@ export class TableGroupService extends TableBaseService {
       newMovedIndex--;
     }
 
-    this.rootGroup.removeItems(movedRows);
-    targetGroup.items.splice(newMovedIndex, 0, ...movedRows);
+    this.rootGroup.removeRows(movedRows);
+    targetGroup.rows.splice(newMovedIndex, 0, ...movedRows);
 
     this.tableCellService.updateCellsData(movedRows, rowDataNeedUpdate);
     this.markGroupAsChanged();
@@ -245,7 +242,7 @@ export class TableGroupService extends TableBaseService {
   }
 
   getLastRowIndexInGroup() {
-    return this.rootGroup.items.length - 1;
+    return this.rootGroup.rows.length - 1;
   }
 
   findGroupAtPointerPosition(pointerPosition: Point) {
@@ -287,19 +284,19 @@ export class TableGroupService extends TableBaseService {
   }
 
   findRowGroupIndex(group: TableGroup, row: TableRow) {
-    return _.indexOf(group.items, row);
+    return _.indexOf(group.rows, row);
   }
 
   findRowIndexInGroup(row: TableRow) {
-    return _.indexOf(this.rootGroup.items, row);
+    return _.indexOf(this.rootGroup.rows, row);
   }
 
   findRowIndexInGroupByID(id: TableRow['id']) {
-    return _.findIndex(this.rootGroup.items, { id });
+    return _.findIndex(this.rootGroup.rows, { id });
   }
 
   findRowInGroupByIndex(index: number) {
-    return this.rootGroup.items[index];
+    return this.rootGroup.rows[index];
   }
 
   markGroupAsChanged() {
@@ -316,35 +313,13 @@ export class TableGroupService extends TableBaseService {
     this.disableAddRowInGroup = disableAddRowInGroup;
   }
 
-  sortGroupPredicate(
-    groupingColumns: TableColumn[],
-    currentRow: TableRow,
-    rowCompared: TableRow,
-    depth: number,
-  ) {
-    const column = groupingColumns[groupingColumns.length - depth];
-    if (!column) return null;
-
-    return this.tableColumnService.sortColumnPredicate(
-      [
-        {
-          ...column,
-          sortingType: column.groupingType,
-        },
-      ],
-      0,
-      currentRow,
-      rowCompared,
-    );
-  }
-
   parseGroupMetadataPredicate(groupingColumns: TableColumn[], group: TableGroup) {
     const idx = groupingColumns.length - (group.totalChildrenDepth + 1);
     const column = groupingColumns[idx];
     let data: any;
     let parsed: string = '';
     if (column) {
-      data = group.items[0]?.data?.[column.id] ?? null;
+      data = group.rows[0]?.data?.[column.id] ?? null;
       parsed = column.field.toString(data);
     }
 

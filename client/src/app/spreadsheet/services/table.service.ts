@@ -399,10 +399,8 @@ export class TableService extends TableBaseService {
 
     this.tableGroupService.rootGroup = groupBy(
       this.host.rows,
-      this.tableColumnService.groupColumnPredicate.bind(this, columns),
-      this.tableGroupService.sortGroupPredicate.bind(this, columns),
-      this.tableGroupService.parseGroupMetadataPredicate.bind(this, columns),
-      this.tableGroupService.groupDepth,
+      columns,
+      this.tableGroupService.parseGroupMetadataPredicate.bind(this.tableGroupService, columns),
     );
 
     this.sort();
@@ -448,11 +446,7 @@ export class TableService extends TableBaseService {
       this.tableGroupService.sortInGroup(columns);
     } else {
       this.tableRowService.bkRows ||= [...this.host.rows];
-      this.host.rows = sortBy(
-        this.host.rawRows,
-        this.tableColumnService.sortColumnPredicate.bind(this, columns),
-        columns.length,
-      );
+      this.host.rows = sortBy(this.host.rawRows, columns);
     }
 
     this.host.updateStates();

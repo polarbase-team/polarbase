@@ -10,14 +10,13 @@ import {
 import { MenuItem } from 'primeng/api';
 
 import { DataType } from '../field/interfaces';
-import { CalculateType, parseGroupFieldData } from '../utils/calculate';
-import { SortingPredicateReturnType, SortingType } from '../utils/sort';
-import { GroupingType } from '../utils/group';
+import { CalculateType } from '../utils/calculate';
+import { GroupType } from '../utils/group';
+import { SortType } from '../utils/sort';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { Dimension } from './table.service';
 import { ResizeEvent } from 'angular-resizable-element';
 import { TableBaseService } from './table-base.service';
-import { TableRow } from '../models/table-row';
 import { TableColumn } from '../models/table-column';
 import { TableColumnActionType } from '../events/table-column';
 import { TableActionType } from '../events/table';
@@ -293,11 +292,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  groupByColumn(
-    column: TableColumn,
-    groupingType: GroupingType = 'asc',
-    replaceColumn?: TableColumn,
-  ) {
+  groupByColumn(column: TableColumn, groupingType: GroupType = 'asc', replaceColumn?: TableColumn) {
     if (!column?.id || !groupingType || column.groupingType === groupingType) return;
 
     column.groupingType = groupingType;
@@ -336,7 +331,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  sortByColumn(column: TableColumn, sortingType: SortingType = 'asc', replaceColumn?: TableColumn) {
+  sortByColumn(column: TableColumn, sortingType: SortType = 'asc', replaceColumn?: TableColumn) {
     if (!column?.id || !sortingType || column.sortingType === sortingType) return;
 
     column.sortingType = sortingType;
@@ -453,11 +448,19 @@ export class TableColumnService extends TableBaseService {
         items.push(
           { separator: true },
           {
-            label: 'Group',
+            label: 'Group (ASC)',
             icon: 'pi pi-list',
             disabled: UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType),
             command: () => {
               this.groupByColumn(column, 'asc');
+            },
+          },
+          {
+            label: 'Group (DESC)',
+            icon: 'pi pi-list',
+            disabled: UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType),
+            command: () => {
+              this.groupByColumn(column, 'desc');
             },
           },
         );
@@ -796,28 +799,5 @@ export class TableColumnService extends TableBaseService {
 
   markDisplayingColumnsAsChanged(columns: TableColumn[] = this.displayingColumns) {
     this.displayingColumns = [...columns];
-  }
-
-  groupColumnPredicate(groupingColumns: TableColumn[], row: TableRow, depth: number): any {
-    const idx = groupingColumns.length - depth;
-    const column = groupingColumns[idx];
-    if (!column) return;
-    return parseGroupFieldData(column.field, row.data);
-  }
-
-  sortColumnPredicate(
-    sortingColumns: TableColumn[],
-    sortingColumnIndex: number,
-    currentRow: TableRow,
-    rowCompared: TableRow,
-  ): SortingPredicateReturnType {
-    const column = sortingColumns[sortingColumnIndex];
-    if (!column) return null;
-    return [this._parseSortValue(currentRow, rowCompared, column), column.sortingType === 'desc'];
-  }
-
-  private _parseSortValue(currentRow: TableRow, rowCompared: TableRow, column: TableColumn): any {
-    const data = currentRow.data?.[column.id];
-    return data ?? '';
   }
 }

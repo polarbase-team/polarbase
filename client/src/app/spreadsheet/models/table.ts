@@ -1,6 +1,6 @@
 import { CalculateType } from '../utils/calculate';
-import { GroupingType } from '../utils/group';
-import { SortingType } from '../utils/sort';
+import { GroupType } from '../utils/group';
+import { SortType } from '../utils/sort';
 import { TableColumn } from './table-column';
 
 export const TableRowSize = {
@@ -15,8 +15,8 @@ export type TableConfig = Partial<{
   sideSpacing?: number;
   streamData: boolean;
   calculating: [TableColumn | TableColumn['id'], CalculateType][];
-  grouping: [TableColumn | TableColumn['id'], GroupingType][];
-  sorting: [TableColumn | TableColumn['id'], SortingType][];
+  grouping: [TableColumn | TableColumn['id'], GroupType][];
+  sorting: [TableColumn | TableColumn['id'], SortType][];
   column: {
     frozenIndex?: number | null;
     maxFrozenRatio?: number;

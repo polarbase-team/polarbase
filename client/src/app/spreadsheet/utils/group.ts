@@ -1,26 +1,28 @@
 import _ from 'lodash';
 
-import { sortBy, sort, SortingPredicateReturnType, SortingType } from './sort';
+import { sortBy, sort, SortPredicateReturnType, SortType, sortPredicate } from './sort';
+import { TableColumn } from '../models/table-column';
+import { TableRow } from '../models/table-row';
 
-type GroupData = { key: number; items: any[] };
+type GroupData = { key: number; rows: TableRow[] };
 
-export type GroupingType = SortingType;
+export type GroupType = SortType;
 export type HierarchyGroup = {
   id?: number;
   depth?: number;
   totalChildrenDepth?: number;
-  items?: any[];
+  rows?: TableRow[];
   parent?: HierarchyGroup;
   previous?: HierarchyGroup;
   children?: HierarchyGroup[];
   metadata?: any;
   clone?: typeof clone;
-  sortItem?: typeof sortItem;
-  unsortItem?: typeof unsortItem;
+  sortRows?: typeof sortRows;
+  unsortRows?: typeof unsortRows;
   findClosest?: typeof findClosest;
-  addItems?: typeof addItems;
-  removeItems?: typeof removeItems;
-  _items?: any[];
+  addRows?: typeof addRows;
+  removeRows?: typeof removeRows;
+  _rows?: TableRow[];
 };
 
 function djb2Hash(str: string): number {
@@ -43,64 +45,57 @@ function clone(): HierarchyGroup {
   return group;
 }
 
-function sortItem(
-  sortingPredicate?: (...args: any) => SortingPredicateReturnType,
-  loop: number = 1
-) {
-  if (!this._items) {
-    this._items = [...this.items];
+function sortRows(sortByColumns: TableColumn[]) {
+  if (!this._rows) {
+    this._rows = [...this.rows];
   }
 
-  this.items = sortBy(this.items, sortingPredicate, loop);
+  this.rows = sortBy(this.rows, sortByColumns);
 
   if (!this.children) {
     return;
   }
 
   for (const childGroup of this.children) {
-    if (!_.isFunction(childGroup?.sortItem)) return;
-
-    childGroup.sortItem(sortingPredicate, loop);
+    childGroup.sortRows(sortByColumns);
   }
 }
 
-function unsortItem() {
-  this.items = [...this._items];
-  this._items = null;
+function unsortRows() {
+  this.rows = [...this._rows];
+  this._rows = null;
 
   if (!this.children) {
     return;
   }
 
   for (const childGroup of this.children) {
-    if (!_.isFunction(childGroup?.unsortItem)) return;
-
-    childGroup.unsortItem();
+    childGroup.unsortRows();
   }
 }
 
-function addItems(items: any[], position: number = this.items.length) {
-  if (position < 0 || position > this.items.length) return;
+function addRows(rows: any[], position: number = this.rows.length) {
+  if (position < 0 || position > this.rows.length) return;
 
-  const prevItem: any = this.items[position - 1];
-  const nextItem: any = this.items[position];
+  const prevItem: any = this.rows[position - 1];
+  const nextItem: any = this.rows[position];
 
-  this.items.splice(position, 0, ...items);
+  this.rows.splice(position, 0, ...rows);
 
   if (!this.parent) return;
 
   let targetIdx: number = 0;
 
   if (prevItem) {
-    targetIdx = _.indexOf(this.parent.items, prevItem) + 1;
+    targetIdx = _.indexOf(this.parent.rows, prevItem) + 1;
   } else if (nextItem) {
-    targetIdx = _.indexOf(this.parent.items, nextItem);
+    targetIdx = _.indexOf(this.parent.rows, nextItem);
   } else {
     let prevGroup: HierarchyGroup = this.previous;
 
     while (prevGroup) {
-      if (prevGroup.items.length) {
-        targetIdx = _.indexOf(this.parent.items, _.last(prevGroup.items)) + 1;
+      if (prevGroup.rows.length) {
+        targetIdx = _.indexOf(this.parent.rows, _.last(prevGroup.rows)) + 1;
         break;
       }
 
@@ -108,18 +103,18 @@ function addItems(items: any[], position: number = this.items.length) {
     }
   }
 
-  this.parent.addItems(items, targetIdx);
+  this.parent.addRows(rows, targetIdx);
 }
 
-function removeItems(items: any[]): boolean {
-  const length: number = this.items.length;
+function removeRows(rows: any[]): boolean {
+  const length: number = this.rows.length;
 
-  _.pull(this.items, ...items);
+  _.pull(this.rows, ...rows);
 
-  if (length !== this.items.length) {
+  if (length !== this.rows.length) {
     if (this.children) {
       for (const childGroup of this.children) {
-        if (childGroup.removeItems(items)) break;
+        if (childGroup.removeRows(rows)) break;
       }
     }
 
@@ -142,28 +137,37 @@ function findClosest(includeRootGroup?: boolean): HierarchyGroup[] {
   return includeRootGroup ? groups : groups.slice(1);
 }
 
-function groupData(
-  data: GroupData,
-  groupingPredicate: (...args: any) => any,
-  sortingPredicate: (...args: any) => SortingPredicateReturnType,
-  depth: number = 1
-): any {
+function groupPredicate(groupByColumns: TableColumn[], row: TableRow, depth: number): any {
+  const idx = groupByColumns.length - depth;
+  const column = groupByColumns[idx];
+  if (!column) return;
+  return row.data;
+}
+
+function sortGroupPredicate(groupByColumns: TableColumn[], currentRow: TableRow, depth: number) {
+  const column = groupByColumns[groupByColumns.length - depth];
+  if (!column) return null;
+
+  return sortPredicate([{ ...column, sortingType: column.groupingType }], 0, currentRow);
+}
+
+function groupData(data: GroupData, groupByColumns: TableColumn[], depth: number = 1): any {
   if (depth <= 0) return data;
 
-  const r: Record<number, any> = _.groupBy(data.items, (i: any) => {
+  const r: Record<number, any> = _.groupBy(data.rows, (i: any) => {
     return djb2Hash(
       JSON.stringify({
         key: data.key,
-        data: groupingPredicate(i, depth),
-      })
+        data: groupPredicate(groupByColumns, i, depth),
+      }),
     );
   });
 
   const groupKeySorted: any[] = _.chain(r)
     .map((v: any[], k: string): any[] => ({ ...v[0], key: parseFloat(k) }))
     .sort((a: any, b: any) => {
-      const v1: SortingPredicateReturnType = sortingPredicate(a, b, depth);
-      const v2: SortingPredicateReturnType = sortingPredicate(b, a, depth);
+      const v1: SortPredicateReturnType = sortGroupPredicate(groupByColumns, a, depth);
+      const v2: SortPredicateReturnType = sortGroupPredicate(groupByColumns, b, depth);
 
       return sort(v1, v2);
     })
@@ -172,42 +176,44 @@ function groupData(
 
   return {
     key: data.key,
-    items: _.map(groupKeySorted, (key: number) =>
-      groupData({ key, items: r[key] }, groupingPredicate, sortingPredicate, depth - 1)
+    rows: _.map(groupKeySorted, (key: number) =>
+      groupData({ key, rows: r[key] }, groupByColumns, depth - 1),
     ),
   };
 }
 
 function createHierarchy(
   data: GroupData,
+  groupByColumns: TableColumn[],
   parseMetadataPredicate?: (...args: any) => any,
   depth: number = 1,
-  cd: number = 0
+  cd: number = 0,
 ): HierarchyGroup {
   const group: HierarchyGroup = {
     id: data.key,
     depth: cd,
     totalChildrenDepth: depth - cd,
-    clone,
-    sortItem,
-    unsortItem,
-    findClosest,
-    addItems,
-    removeItems,
   };
+  group.clone = group.clone.bind(group);
+  group.sortRows = sortRows.bind(group, groupByColumns);
+  group.unsortRows = group.unsortRows.bind(group);
+  group.findClosest = group.findClosest.bind(group);
+  group.addRows = group.addRows.bind(group);
+  group.removeRows = group.removeRows.bind(group);
 
   if (cd >= depth) {
-    group.items = data.items;
+    group.rows = data.rows;
   } else {
-    group.items = [];
+    group.rows = [];
     group.children = [];
 
-    for (const value of data.items) {
+    for (const value of data.rows) {
       const childGroup: HierarchyGroup = createHierarchy(
-        value,
+        value as unknown as GroupData,
+        groupByColumns,
         parseMetadataPredicate,
         depth,
-        cd + 1
+        cd + 1,
       );
 
       childGroup.parent = group;
@@ -215,8 +221,8 @@ function createHierarchy(
 
       group.children.push(childGroup);
 
-      for (const item of childGroup.items) {
-        group.items.push(item);
+      for (const item of childGroup.rows) {
+        group.rows.push(item);
       }
     }
   }
@@ -227,15 +233,15 @@ function createHierarchy(
 }
 
 export function groupBy(
-  data: any[],
-  groupingPredicate?: (v: any, d: number) => any,
-  sortingPredicate?: (k1: any, k2: any, d: number) => [any, boolean],
+  rows: TableRow[],
+  groupByColumns: TableColumn[],
   parseMetadataPredicate?: (group: HierarchyGroup) => any,
-  depth?: number
 ): HierarchyGroup {
+  const depth = groupByColumns.length;
   return createHierarchy(
-    groupData({ key: 0, items: data }, groupingPredicate, sortingPredicate, depth),
+    groupData({ key: 0, rows }, groupByColumns, depth),
+    groupByColumns,
     parseMetadataPredicate,
-    depth
+    depth,
   );
 }

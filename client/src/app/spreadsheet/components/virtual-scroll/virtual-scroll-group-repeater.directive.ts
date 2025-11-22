@@ -86,14 +86,14 @@ export function _makeUpGroupViewProps(
       h += s;
 
       _index += 1;
-      _startItemIndex += child.items.length;
+      _startItemIndex += child.rows.length;
     }
 
     height = h + Dimension.GroupHeaderHeight;
   } else {
-    height = group.items.length * itemSize + Dimension.GroupHeaderHeight + extraSize;
+    height = group.rows.length * itemSize + Dimension.GroupHeaderHeight + extraSize;
 
-    _makeUpRowViewProps(group.items, itemSize, _startItemIndex, groupView);
+    _makeUpRowViewProps(group.rows, itemSize, _startItemIndex, groupView);
   }
 
   // Removes excess height during make-up process.
@@ -134,11 +134,11 @@ export function _findGroupInsideViewport(
       if (!group.metadata.collapsed) {
         if (group.children) {
           _findGroupInsideViewport(group.children, itemSize, range, memo);
-        } else if (group.items.length) {
+        } else if (group.rows.length) {
           const s: number = Math.max(gs, vs);
           const e: number = Math.min(ge, ve);
 
-          memo[1].push(..._findRowInsideViewport(group.items, itemSize, [s - gs, e - s]));
+          memo[1].push(..._findRowInsideViewport(group.rows, itemSize, [s - gs, e - s]));
         }
       }
     }

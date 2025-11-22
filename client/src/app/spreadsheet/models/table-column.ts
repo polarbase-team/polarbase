@@ -1,7 +1,7 @@
 import { Field } from '../field/objects';
 import { CalculateType } from '../utils/calculate';
-import { GroupingType } from '../utils/group';
-import { SortingType } from '../utils/sort';
+import { GroupType } from '../utils/group';
+import { SortType } from '../utils/sort';
 
 export interface TableColumn {
   id: string | number;
@@ -11,6 +11,6 @@ export interface TableColumn {
   deletable?: boolean;
   hidden?: boolean;
   calculateType?: CalculateType;
-  groupingType?: GroupingType;
-  sortingType?: SortingType;
+  groupingType?: GroupType;
+  sortingType?: SortType;
 }
