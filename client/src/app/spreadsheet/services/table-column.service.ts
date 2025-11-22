@@ -10,9 +10,9 @@ import {
 
 import { DataType } from '../field/interfaces';
 import { Field } from '../field/objects';
-import { CalculateType, parseGroupFieldData } from '../helpers/calculate';
-import { SortingPredicateReturnType, SortingType } from '../helpers/sort';
-import { GroupingType } from '../helpers/group';
+import { CalculateType, parseGroupFieldData } from '../utils/calculate';
+import { SortingPredicateReturnType, SortingType } from '../utils/sort';
+import { GroupingType } from '../utils/group';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { Dimension } from './table.service';
 import { type Row } from './table-row.service';

@@ -38,8 +38,8 @@ import { Tooltip } from 'primeng/tooltip';
 import { Skeleton } from 'primeng/skeleton';
 import { Checkbox } from 'primeng/checkbox';
 import { ContextMenu } from 'primeng/contextmenu';
-import { Clipboard } from './helpers/clipboard';
-import { Keyboard } from './helpers/keyboard';
+import { Clipboard } from './utils/clipboard';
+import { Keyboard } from './utils/keyboard';
 import {
   _ScrollEvent,
   VirtualScrollComponent,

@@ -2,7 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import _ from 'lodash';
 
 import { Field } from '../field/objects';
-import { CalculateType, checkValidDate } from '../helpers/calculate';
+import { CalculateType, checkValidDate } from '../utils/calculate';
 
 @Pipe({
   name: 'calculatingResult',

@@ -9,9 +9,9 @@ import {
   NgZone,
   SimpleChanges,
 } from '@angular/core';
-import { calculateBy, calculateFieldPredicate, CalculateType } from '../helpers/calculate';
-import { groupBy, GroupingType } from '../helpers/group';
-import { sortBy, SortingType } from '../helpers/sort';
+import { calculateBy, calculateFieldPredicate, CalculateType } from '../utils/calculate';
+import { groupBy, GroupingType } from '../utils/group';
+import { sortBy, SortingType } from '../utils/sort';
 import type { Cell, CellIndex, CellOffset } from './table-cell.service';
 import type { Column } from './table-column.service';
 import type { Group } from './table-group.service';
@@ -19,7 +19,7 @@ import type { Row, RowSize } from './table-row.service';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DataType } from '../field/interfaces';
-import { searchBy } from '../helpers/search';
+import { searchBy } from '../utils/search';
 import { TableBaseService } from './table-base.service';
 import { FieldCellService } from '../components/cells/field-cell.service';
 

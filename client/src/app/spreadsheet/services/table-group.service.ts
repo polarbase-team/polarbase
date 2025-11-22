@@ -3,8 +3,8 @@ import { Point } from '@angular/cdk/drag-drop';
 
 import _ from 'lodash';
 
-import { calculateBy, calculateFieldPredicate } from '../helpers/calculate';
-import type { HierarchyGroup } from '../helpers/group';
+import { calculateBy, calculateFieldPredicate } from '../utils/calculate';
+import type { HierarchyGroup } from '../utils/group';
 import type { _GroupView } from '../components/virtual-scroll/virtual-scroll-group-repeater.directive';
 import { Dimension } from './table.service';
 import type { Column } from './table-column.service';

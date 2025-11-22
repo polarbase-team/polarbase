@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 import { DataType } from '../field/interfaces';
-import { CalculateType } from '../helpers/calculate';
+import { CalculateType } from '../utils/calculate';
 
 @Pipe({
   name: 'calculateTypes',

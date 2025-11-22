@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { MenuItem } from 'primeng/api';
 import { ChangeDetectorRef, DestroyRef, inject, Injectable, SimpleChanges } from '@angular/core';
-import { EmitEventController } from '../helpers/emit-event-controller';
+import { EmitEventController } from '../utils/emit-event-controller';
 import { Dimension } from './table.service';
 import type { Column } from './table-column.service';
 import type { Group } from './table-group.service';

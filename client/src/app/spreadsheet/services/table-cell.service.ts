@@ -8,11 +8,11 @@ import {
   Renderer2,
 } from '@angular/core';
 
-import { Clipboard, ClipboardData } from '../helpers/clipboard';
-import { EmitEventController } from '../helpers/emit-event-controller';
+import { Clipboard, ClipboardData } from '../utils/clipboard';
+import { EmitEventController } from '../utils/emit-event-controller';
 import { DataType } from '../field/interfaces';
-import { ClipboardItem } from '../helpers/clipboard';
-import { parseClipboardExternal, parseClipboardInternal } from '../helpers/paste';
+import { ClipboardItem } from '../utils/clipboard';
+import { parseClipboardExternal, parseClipboardInternal } from '../utils/paste';
 import { type Column } from './table-column.service';
 import { type Row, type RowCellData } from './table-row.service';
 import { Dimension } from './table.service';
