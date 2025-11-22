@@ -414,17 +414,19 @@ export class TableColumnService extends TableBaseService {
       );
     } else {
       if (this.host.config.column.freezable) {
-        items.push({
-          label: 'Freeze up to This Column',
-          icon: 'pi pi-sign-in',
-          command: () => {
-            this.freezeUpToColumnIndex(columnIndex);
+        items.push(
+          {
+            label: 'Freeze up to This Column',
+            icon: 'pi pi-sign-in',
+            command: () => {
+              this.freezeUpToColumnIndex(columnIndex);
+            },
           },
-        });
+          { separator: true },
+        );
       }
       if (this.host.config.column.sortable) {
         items.push(
-          { separator: true },
           {
             label: 'Sort up',
             icon: 'pi pi-sort-amount-up',
@@ -441,32 +443,35 @@ export class TableColumnService extends TableBaseService {
               this.sortByColumn(column, 'desc');
             },
           },
+          { separator: true },
         );
       }
       if (this.host.config.column.groupable) {
         items.push(
+          {
+            label: 'Group',
+            icon: 'pi pi-list',
+            disabled: UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType),
+            items: [
+              {
+                label: 'Ascending',
+                command: () => {
+                  this.groupByColumn(column, 'asc');
+                },
+              },
+              {
+                label: 'Descending',
+                command: () => {
+                  this.groupByColumn(column, 'desc');
+                },
+              },
+            ],
+          },
           { separator: true },
-          {
-            label: 'Group (ASC)',
-            icon: 'pi pi-list',
-            disabled: UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType),
-            command: () => {
-              this.groupByColumn(column, 'asc');
-            },
-          },
-          {
-            label: 'Group (DESC)',
-            icon: 'pi pi-list',
-            disabled: UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType),
-            command: () => {
-              this.groupByColumn(column, 'desc');
-            },
-          },
         );
       }
       if (this.host.config.column.hideable) {
         items.push(
-          { separator: true },
           {
             label: 'Hide',
             icon: 'pi pi-eye-slash',
@@ -474,19 +479,17 @@ export class TableColumnService extends TableBaseService {
               this.hideColumn(column);
             },
           },
+          { separator: true },
         );
       }
       if (this.host.config.column.deletable) {
-        items.push(
-          { separator: true },
-          {
-            label: 'Delete',
-            icon: 'pi pi-trash',
-            command: () => {
-              this.deleteColumn(column);
-            },
+        items.push({
+          label: 'Delete',
+          icon: 'pi pi-trash',
+          command: () => {
+            this.deleteColumn(column);
           },
-        );
+        });
       }
     }
 

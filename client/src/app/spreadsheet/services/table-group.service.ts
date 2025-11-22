@@ -318,14 +318,14 @@ export class TableGroupService extends TableBaseService {
   openActionMenu(e: Event) {
     const items: MenuItem[] = [
       {
-        label: 'Expand All',
+        label: 'Expand all',
         icon: 'pi pi-arrow-up-right-and-arrow-down-left-from-center',
         command: () => {
           this.toggleAllGroup(false);
         },
       },
       {
-        label: 'Collapse All',
+        label: 'Collapse all',
         icon: 'pi pi-arrow-down-left-and-arrow-up-right-to-center',
         command: () => {
           this.toggleAllGroup(true);

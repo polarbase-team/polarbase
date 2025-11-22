@@ -218,32 +218,69 @@ export class TableRowService extends TableBaseService {
         },
       });
     } else {
+      items.push(
+        {
+          label: 'Change row size',
+          icon: 'pi pi-bars',
+          items: [
+            {
+              label: 'Small',
+              command: () => {
+                this.setRowSize('S');
+              },
+            },
+            {
+              label: 'Medium',
+              command: () => {
+                this.setRowSize('M');
+              },
+            },
+            {
+              label: 'Large',
+              command: () => {
+                this.setRowSize('L');
+              },
+            },
+            {
+              label: 'X-Large',
+              command: () => {
+                this.setRowSize('XL');
+              },
+            },
+          ],
+        },
+        { separator: true },
+      );
       if (this.host.config.row.expandable) {
-        items.push({
-          label: 'Expand',
-          icon: 'pi pi-external-link',
-          command: () => {
-            this.expandRow(row);
+        items.push(
+          {
+            label: 'Expand',
+            icon: 'pi pi-external-link',
+            command: () => {
+              this.expandRow(row);
+            },
           },
-        });
-        items.push({ separator: true });
+          { separator: true },
+        );
       }
       if (this.host.config.row.insertable) {
-        items.push({
-          label: 'Insert row above',
-          icon: 'pi pi-arrow-up',
-          command: () => {
-            this.createRow(null, rowIndex);
+        items.push(
+          {
+            label: 'Insert row above',
+            icon: 'pi pi-arrow-up',
+            command: () => {
+              this.createRow(null, rowIndex);
+            },
           },
-        });
-        items.push({
-          label: 'Insert row below',
-          icon: 'pi pi-arrow-down',
-          command: () => {
-            this.createRow(null, rowIndex + 1);
+          {
+            label: 'Insert row below',
+            icon: 'pi pi-arrow-down',
+            command: () => {
+              this.createRow(null, rowIndex + 1);
+            },
           },
-        });
-        items.push({ separator: true });
+          { separator: true },
+        );
       }
       if (this.host.config.row.deletable) {
         items.push({
