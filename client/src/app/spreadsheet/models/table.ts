@@ -10,13 +10,13 @@ export const TableRowSize = {
 } as const;
 export type TableRowSize = keyof typeof TableRowSize;
 
-export type TableConfig = Partial<{
+export type TableConfig = {
   sideSpacing?: number;
-  streamData: boolean;
-  calculateBy: [TableColumn | TableColumn['id'], CalculateType][];
-  groupBy: [TableColumn | TableColumn['id'], SortType][];
-  sortBy: [TableColumn | TableColumn['id'], SortType][];
-  column: {
+  streamData?: boolean;
+  calculateBy?: [TableColumn | TableColumn['id'], CalculateType][];
+  groupBy?: [TableColumn | TableColumn['id'], SortType][];
+  sortBy?: [TableColumn | TableColumn['id'], SortType][];
+  column?: {
     frozenIndex?: number | null;
     maxFrozenRatio?: number;
     defaultWidth?: number;
@@ -33,7 +33,7 @@ export type TableConfig = Partial<{
     resizable?: boolean;
     sortable?: boolean;
   };
-  row: {
+  row?: {
     size?: TableRowSize;
     selectable?: boolean;
     arrangeable?: boolean;
@@ -42,7 +42,7 @@ export type TableConfig = Partial<{
     insertable?: boolean;
     deletable?: boolean;
   };
-  cell: {
+  cell?: {
     fillable?: boolean;
   };
-}>;
+};
