@@ -245,7 +245,7 @@
               [style.height.px]="groupRect.height"
               [class.group-first-depth]="group.depth === 1"
               [class.group-last-depth]="group.depth === tableGroupService.state.groupDepth"
-              [class.group--collapsed]="group.metadata.collapsed"
+              [class.group--collapsed]="group.collasped"
               [class.box--radius]="group.depth === 1"
             >
               <div class="group__header">
@@ -254,7 +254,7 @@
                     <i
                       class="pi cursor-pointer"
                       style="color: var(--p-surface-500); font-size: 12px"
-                      [ngClass]="group.metadata.collapsed ? 'pi-chevron-right' : 'pi-chevron-down'"
+                      [ngClass]="group.collasped ? 'pi-chevron-right' : 'pi-chevron-down'"
                       (click)="tableGroupService.toggleGroup(group)"
                     ></i>
                   </div>
@@ -277,10 +277,10 @@
                       [style.minWidth.px]="columnRect.width - config.column.minWidth"
                       [style.maxWidth.px]="columnRect.width - config.column.minWidth"
                     >
-                      @if (group.metadata.empty) {
-                        <label>(Empty)</label>
+                      @if (group.label) {
+                        {{ group.label }}
                       } @else {
-                        {{ group.metadata.parsed || group.metadata.data }}
+                        <label>(Empty)</label>
                       }
                     </div>
                     <div
@@ -297,7 +297,7 @@
                             calculationBlockTemplate;
                             context: {
                               column,
-                              calculatedResult: group.metadata.calculatedResult?.get(column.id),
+                              calculatedResult: group.calculatedResult?.get(column.id),
                             }
                           "
                         ></ng-container>
@@ -318,7 +318,7 @@
                             calculationBlockTemplate;
                             context: {
                               column,
-                              calculatedResult: group.metadata.calculatedResult?.get(column.id),
+                              calculatedResult: group.calculatedResult?.get(column.id),
                             }
                           "
                         ></ng-container>
@@ -594,7 +594,7 @@
               [style.height.px]="groupRect.height"
               [class.group-first-depth]="group.depth === 1"
               [class.group-last-depth]="group.depth === tableGroupService.state.groupDepth"
-              [class.group--collapsed]="group.metadata.collapsed"
+              [class.group--collapsed]="group.collasped"
               [class.box--radius]="group.depth === 1"
             >
               <div class="group__header">
@@ -620,7 +620,7 @@
                           calculationBlockTemplate;
                           context: {
                             column,
-                            calculatedResult: group.metadata.calculatedResult?.get(column.id),
+                            calculatedResult: group.calculatedResult?.get(column.id),
                           }
                         "
                       ></ng-container>
@@ -795,7 +795,7 @@
               context: {
                 column,
                 calculatedResult: (tableGroupService.state.isGrouping
-                  ? tableGroupService.rootGroup.metadata.calculatedResult
+                  ? tableGroupService.rootGroup.calculatedResult
                   : tableService.calculatedResult
                 )?.get(column.id),
               }

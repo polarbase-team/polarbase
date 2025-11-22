@@ -346,7 +346,7 @@ export class TableService extends TableBaseService {
 
     if (this.tableGroupService.isGrouping) {
       this.tableGroupService.calculateInGroup(columns);
-      this.calculatedResult = this.tableGroupService.rootGroup.metadata.calculatedResult;
+      this.calculatedResult = this.tableGroupService.rootGroup.calculatedResult;
     } else {
       if (this.calculatedResult) {
         this.calculatedResult.clear();
@@ -384,7 +384,7 @@ export class TableService extends TableBaseService {
   group(columns?: TableColumn[]) {
     if (columns) {
       this.tableColumnService.groupedColumns.clear();
-      this.tableGroupService.collapsedGroupState.clear();
+      this.tableGroupService.collapsedState.clear();
 
       for (const column of columns) {
         this.tableColumnService.groupedColumns.set(column.id, column);
@@ -397,11 +397,9 @@ export class TableService extends TableBaseService {
       return;
     }
 
-    this.tableGroupService.rootGroup = groupBy(
-      this.host.rows,
-      columns,
-      this.tableGroupService.parseGroupMetadataPredicate.bind(this.tableGroupService, columns),
-    );
+    this.tableGroupService.rootGroup = groupBy(this.host.rows, columns, (group: TableGroup) => {
+      group.collapsed = this.tableGroupService.collapsedState.get(group.id);
+    });
 
     this.sort();
     this.calculate();
@@ -419,7 +417,7 @@ export class TableService extends TableBaseService {
     }
 
     this.tableColumnService.groupedColumns.clear();
-    this.tableGroupService.collapsedGroupState.clear();
+    this.tableGroupService.collapsedState.clear();
 
     this.tableGroupService.disableAddRowInGroup = false;
 

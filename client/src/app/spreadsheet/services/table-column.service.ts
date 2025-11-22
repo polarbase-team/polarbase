@@ -11,7 +11,6 @@ import { MenuItem } from 'primeng/api';
 
 import { DataType } from '../field/interfaces';
 import { CalculateType } from '../utils/calculate';
-import { GroupSortType } from '../utils/group';
 import { SortType } from '../utils/sort';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { Dimension } from './table.service';
@@ -292,7 +291,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  groupByColumn(column: TableColumn, sortType: GroupSortType = 'asc', replaceColumn?: TableColumn) {
+  groupByColumn(column: TableColumn, sortType: SortType = 'asc', replaceColumn?: TableColumn) {
     if (!column?.id || !sortType || column.groupSortType === sortType) return;
 
     column.groupSortType = sortType;

@@ -1,41 +1,46 @@
 import _ from 'lodash';
 
-import { sortBy, sort, SortPredicateReturnType, SortType, sortPredicate } from './sort';
+import { sortBy, sort, SortType, sortPredicate } from './sort';
 import { TableColumn } from '../models/table-column';
 import { TableRow } from '../models/table-row';
 
-export type GroupSortType = SortType;
-export type HierarchyGroup = {
-  id?: number;
-  depth?: number;
-  totalChildrenDepth?: number;
-  rows?: TableRow[];
-  parent?: HierarchyGroup;
-  previous?: HierarchyGroup;
-  children?: HierarchyGroup[];
-  metadata?: any;
-  clone?: typeof clone;
-  sortRows?: typeof sortRows;
-  unsortRows?: typeof unsortRows;
-  findClosest?: typeof findClosest;
-  addRows?: typeof addRows;
-  removeRows?: typeof removeRows;
-  _rows?: TableRow[];
-};
+export interface HierarchyGroup {
+  id: number;
+  depth: number;
+  totalChildrenDepth: number;
+  data: any;
+  label: string;
+  column: TableColumn;
+  rows: TableRow[];
+  parent: HierarchyGroup;
+  previous: HierarchyGroup;
+  children: HierarchyGroup[];
+  clone: typeof clone;
+  sortRows: typeof sortRows;
+  unsortRows: typeof unsortRows;
+  findClosest: typeof findClosest;
+  addRows: typeof addRows;
+  removeRows: typeof removeRows;
+}
 
-type GroupData = { key: number; items: any[] };
+interface GroupData {
+  key: number;
+  data: any;
+  label: string;
+  items: any[];
+}
 
-function djb2Hash(str: string): number {
+function djb2Hash(str: string) {
   let hash: number = 5381;
 
   for (let i: number = 0; i < str.length; i++) {
-    hash = (hash << 5) + hash + str.charCodeAt(i); // hash * 33 + c
+    hash = (hash << 5) + hash + str.charCodeAt(i);
   }
 
-  return hash >>> 0; // Unsigned 32-bit
+  return hash >>> 0;
 }
 
-function clone(): HierarchyGroup {
+function clone() {
   const group: HierarchyGroup = { ...this };
 
   for (const child of group.children) {
@@ -52,9 +57,7 @@ function sortRows(sortByColumns: TableColumn[]) {
 
   this.rows = sortBy(this.rows, sortByColumns);
 
-  if (!this.children) {
-    return;
-  }
+  if (!this.children) return;
 
   for (const childGroup of this.children) {
     childGroup.sortRows(sortByColumns);
@@ -65,40 +68,37 @@ function unsortRows() {
   this.rows = [...this._rows];
   this._rows = null;
 
-  if (!this.children) {
-    return;
-  }
+  if (!this.children) return;
 
   for (const childGroup of this.children) {
     childGroup.unsortRows();
   }
 }
 
-function addRows(rows: any[], position: number = this.rows.length) {
+function addRows(rows: TableRow[], position = this.rows.length) {
   if (position < 0 || position > this.rows.length) return;
 
-  const prevItem: any = this.rows[position - 1];
-  const nextItem: any = this.rows[position];
+  const prevItem = this.rows[position - 1];
+  const nextItem = this.rows[position];
 
   this.rows.splice(position, 0, ...rows);
 
   if (!this.parent) return;
 
-  let targetIdx: number = 0;
+  let targetIdx = 0;
 
   if (prevItem) {
     targetIdx = _.indexOf(this.parent.rows, prevItem) + 1;
   } else if (nextItem) {
     targetIdx = _.indexOf(this.parent.rows, nextItem);
   } else {
-    let prevGroup: HierarchyGroup = this.previous;
+    let prevGroup = this.previous;
 
     while (prevGroup) {
       if (prevGroup.rows.length) {
         targetIdx = _.indexOf(this.parent.rows, _.last(prevGroup.rows)) + 1;
         break;
       }
-
       prevGroup = prevGroup.previous;
     }
   }
@@ -106,8 +106,8 @@ function addRows(rows: any[], position: number = this.rows.length) {
   this.parent.addRows(rows, targetIdx);
 }
 
-function removeRows(rows: any[]) {
-  const length: number = this.rows.length;
+function removeRows(rows: TableRow[]) {
+  const length = this.rows.length;
 
   _.pull(this.rows, ...rows);
 
@@ -117,7 +117,6 @@ function removeRows(rows: any[]) {
         if (childGroup.removeRows(rows)) break;
       }
     }
-
     return true;
   }
 
@@ -130,7 +129,6 @@ function findClosest(includeRootGroup?: boolean) {
 
   while (parentGroup) {
     groups.unshift(parentGroup);
-
     parentGroup = parentGroup.parent;
   }
 
@@ -140,35 +138,37 @@ function findClosest(includeRootGroup?: boolean) {
 function groupPredicate(groupByColumns: TableColumn[], row: TableRow, depth: number) {
   const idx = groupByColumns.length - depth;
   const column = groupByColumns[idx];
-  if (!column) return;
-  return row.data?.[column.id];
+  if (!column) return null;
+  const data = row.data?.[column.id];
+  const label = column.field.toString(data);
+  return { data, label };
 }
 
 function sortGroupPredicate(groupByColumns: TableColumn[], currentRow: TableRow, depth: number) {
   const column = groupByColumns[groupByColumns.length - depth];
   if (!column) return null;
-
   return sortPredicate([{ ...column, sortType: column.groupSortType }], 0, currentRow);
 }
 
-function groupData(data: GroupData, groupByColumns: TableColumn[], depth: number = 1): GroupData {
+function buildData(data: GroupData, groupByColumns: TableColumn[], depth: number = 1): GroupData {
   if (depth <= 0) return data;
 
-  const r: Record<number, any> = _.groupBy(data.items, (i: any) => {
+  const store = {};
+  const result: Record<number, any> = _.groupBy(data.items, (i) => {
+    const dt = groupPredicate(groupByColumns, i, depth);
+    store[data.key] = dt;
     return djb2Hash(
       JSON.stringify({
         key: data.key,
-        data: groupPredicate(groupByColumns, i, depth),
+        data: dt,
       }),
     );
   });
-
-  const groupKeySorted: any[] = _.chain(r)
-    .map((v: any[], k: string): any[] => ({ ...v[0], key: parseFloat(k) }))
+  const keys: number[] = _.chain(result)
+    .map((v: any[], k: string) => ({ ...v[0], key: parseFloat(k) }))
     .sort((a: any, b: any) => {
-      const v1: SortPredicateReturnType = sortGroupPredicate(groupByColumns, a, depth);
-      const v2: SortPredicateReturnType = sortGroupPredicate(groupByColumns, b, depth);
-
+      const v1 = sortGroupPredicate(groupByColumns, a, depth);
+      const v2 = sortGroupPredicate(groupByColumns, b, depth);
       return sort(v1, v2);
     })
     .map('key')
@@ -176,24 +176,30 @@ function groupData(data: GroupData, groupByColumns: TableColumn[], depth: number
 
   return {
     key: data.key,
-    items: _.map(groupKeySorted, (key) =>
-      groupData({ key, items: r[key] }, groupByColumns, depth - 1),
+    data: data.data,
+    label: data.label,
+    items: _.map(keys, (key) =>
+      buildData({ key, items: result[key], ...store[key] }, groupByColumns, depth - 1),
     ),
   };
 }
 
-function createHierarchy(
+function buildHierarchy(
   data: GroupData,
   groupByColumns: TableColumn[],
-  parseMetadataPredicate?: (...args: any) => any,
+  onGroupNodeCreated?: (group: HierarchyGroup) => void,
   depth: number = 1,
   cd: number = 0,
 ) {
-  const group: HierarchyGroup = {
+  const totalChildrenDepth = depth - cd;
+  const idx = groupByColumns.length - (totalChildrenDepth + 1);
+  const column = groupByColumns[idx];
+  const group = {
     id: data.key,
+    column,
     depth: cd,
-    totalChildrenDepth: depth - cd,
-  };
+    totalChildrenDepth,
+  } as HierarchyGroup;
   group.clone = clone.bind(group);
   group.sortRows = sortRows.bind(group, groupByColumns);
   group.unsortRows = unsortRows.bind(group);
@@ -207,14 +213,8 @@ function createHierarchy(
     group.rows = [];
     group.children = [];
 
-    for (const value of data.items) {
-      const childGroup = createHierarchy(
-        value,
-        groupByColumns,
-        parseMetadataPredicate,
-        depth,
-        cd + 1,
-      );
+    for (const item of data.items) {
+      const childGroup = buildHierarchy(item, groupByColumns, onGroupNodeCreated, depth, cd + 1);
       childGroup.parent = group;
       childGroup.previous = group.children[group.children.length - 1];
 
@@ -225,7 +225,7 @@ function createHierarchy(
     }
   }
 
-  group.metadata = parseMetadataPredicate(group);
+  onGroupNodeCreated?.(group);
 
   return group;
 }
@@ -233,13 +233,10 @@ function createHierarchy(
 export function groupBy(
   rows: TableRow[],
   groupByColumns: TableColumn[],
-  parseMetadataPredicate?: (group: HierarchyGroup) => any,
-): HierarchyGroup {
+  onGroupNodeCreated?: (group: HierarchyGroup) => void,
+) {
+  const rootGroup = { key: 0, items: rows } as GroupData;
   const depth = groupByColumns.length;
-  return createHierarchy(
-    groupData({ key: 0, items: rows }, groupByColumns, depth),
-    groupByColumns,
-    parseMetadataPredicate,
-    depth,
-  );
+  const data = buildData(rootGroup, groupByColumns, depth);
+  return buildHierarchy(data, groupByColumns, onGroupNodeCreated, depth);
 }

@@ -1,5 +1,4 @@
 import { CalculateType } from '../utils/calculate';
-import { GroupSortType } from '../utils/group';
 import { SortType } from '../utils/sort';
 import { TableColumn } from './table-column';
 
@@ -15,7 +14,7 @@ export type TableConfig = Partial<{
   sideSpacing?: number;
   streamData: boolean;
   calculateBy: [TableColumn | TableColumn['id'], CalculateType][];
-  groupBy: [TableColumn | TableColumn['id'], GroupSortType][];
+  groupBy: [TableColumn | TableColumn['id'], SortType][];
   sortBy: [TableColumn | TableColumn['id'], SortType][];
   column: {
     frozenIndex?: number | null;

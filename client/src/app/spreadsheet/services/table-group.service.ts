@@ -18,14 +18,14 @@ function calculateInGroup(
   columns: TableColumn[],
   calculatePredicate?: (...args: any) => any,
 ) {
-  if (group.metadata.calculatedResult) {
-    group.metadata.calculatedResult.clear();
+  if (group.calculatedResult) {
+    group.calculatedResult.clear();
   } else {
-    group.metadata.calculatedResult = new Map();
+    group.calculatedResult = new Map();
   }
 
   for (const column of columns) {
-    group.metadata.calculatedResult.set(
+    group.calculatedResult.set(
       column.id,
       calculateBy(
         _.map(group.rows, 'data'),
@@ -101,7 +101,7 @@ function findGroupByItemIndex(itemIndex: number, group?: TableGroup) {
 
 @Injectable()
 export class TableGroupService extends TableBaseService {
-  collapsedGroupState = new Map<number, boolean>();
+  collapsedState = new Map<number, boolean>();
   rootGroup: TableGroup;
   disableAddRowInGroup: boolean;
 
@@ -132,7 +132,7 @@ export class TableGroupService extends TableBaseService {
   }
 
   toggleGroup(group: TableGroup) {
-    this._toggleGroup(group, !group.metadata.collapsed);
+    this._toggleGroup(group, !group.collapsed);
     this.markGroupAsChanged();
   }
 
@@ -158,8 +158,7 @@ export class TableGroupService extends TableBaseService {
       let g = group;
       const data: any = {};
       do {
-        const { metadata } = g;
-        data[metadata.column.id] = metadata.data;
+        data[g.column.id] = g.data;
         g = g.parent;
       } while (g?.depth > 0);
       newRow = this.tableRowService.createRow(data, position, (row: TableRow) => {
@@ -171,7 +170,7 @@ export class TableGroupService extends TableBaseService {
       this.tableService.group();
     }
 
-    if (group.metadata.collapsed) {
+    if (group.collapsed) {
       let g = group;
       do {
         this._toggleGroup(g, false);
@@ -191,8 +190,9 @@ export class TableGroupService extends TableBaseService {
     const rowDataNeedUpdate: TableRowCellData = {};
 
     for (const group of targetGroups) {
-      if (!group.metadata) continue;
-      rowDataNeedUpdate[group.metadata.column.id] = group.metadata.data;
+      if (group.column) {
+        rowDataNeedUpdate[group.column.id] = group.data;
+      }
     }
 
     let newMovedIndex = movedIndex;
@@ -313,28 +313,9 @@ export class TableGroupService extends TableBaseService {
     this.disableAddRowInGroup = disableAddRowInGroup;
   }
 
-  parseGroupMetadataPredicate(groupedColumns: TableColumn[], group: TableGroup) {
-    const idx = groupedColumns.length - (group.totalChildrenDepth + 1);
-    const column = groupedColumns[idx];
-    let data: any;
-    let parsed: string = '';
-    if (column) {
-      data = group.rows[0]?.data?.[column.id] ?? null;
-      parsed = column.field.toString(data);
-    }
-
-    return {
-      column,
-      data,
-      parsed,
-      collapsed: this.collapsedGroupState.get(group.id) ?? false,
-      empty: data === undefined || data === null,
-    };
-  }
-
   private _toggleGroup(group: TableGroup, collapsed: boolean) {
-    group.metadata.collapsed = collapsed;
-    this.collapsedGroupState.set(group.id, group.metadata.collapsed);
+    group.collapsed = collapsed;
+    this.collapsedState.set(group.id, collapsed);
   }
 
   private _toggleGroupRecursive(group: TableGroup, collapsed: boolean) {
