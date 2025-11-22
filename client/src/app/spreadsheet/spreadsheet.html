@@ -90,27 +90,7 @@
           [style.height.%]="100"
           [style.minHeight.%]="100"
           [style.maxHeight.%]="100"
-        >
-          @if (column.field.required) {
-            <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
-          }
-          <div
-            class="text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis flex-1"
-            [attr.title]="column.field.name"
-          >
-            {{ column.field.name }}
-          </div>
-          <div class="flex flex-row gap-2 align-items-start justify-content-center">
-            @if (column.field.description?.length) {
-              <i
-                class="pi pi-info-circle"
-                style="color: var(--p-surface-500); font-size: 12px"
-                [pTooltip]="column.field.description"
-                tooltipPosition="bottom"
-              ></i>
-            }
-          </div>
-        </div>
+        ></div>
         @if (column.field.required) {
           <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
         }
