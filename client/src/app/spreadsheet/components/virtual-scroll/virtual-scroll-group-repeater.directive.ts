@@ -1,8 +1,6 @@
 import { Directive, Input, TrackByFunction } from '@angular/core';
 
 import { Dimension } from '../../services/table.service';
-import { Group } from '../../services/table-group.service';
-import { Row } from '../../services/table-row.service';
 
 import {
   _ViewContext,
@@ -14,31 +12,35 @@ import {
   _findRowInsideViewport,
   _makeUpRowViewProps,
 } from './virtual-scroll-row-repeater.directive';
+import { TableGroup } from '../../models/table-group';
+import { TableRow } from '../../models/table-row';
 
-type GroupView = Group & {
+type GroupView = TableGroup & {
   _viewProps: _ViewProps & {
     startItemIndex: number;
   };
 };
 
-type GroupViewContext = _ViewContext<Group>;
+type GroupViewContext = _ViewContext<TableGroup>;
 
-const GROUP_TRACK_BY_FN: TrackByFunction<Group> = (_i: number, group: Group): Group['id'] =>
-  group.id;
+const GROUP_TRACK_BY_FN: TrackByFunction<TableGroup> = (
+  _i: number,
+  group: TableGroup,
+): TableGroup['id'] => group.id;
 
 export type _GroupView = GroupView;
 export type _GroupViewContext = GroupViewContext;
 
-export const _GROUP_TRACK_BY_FN: TrackByFunction<Group> = GROUP_TRACK_BY_FN;
+export const _GROUP_TRACK_BY_FN: TrackByFunction<TableGroup> = GROUP_TRACK_BY_FN;
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export function _getGroupRect(group: Group): _ViewRect {
+export function _getGroupRect(group: TableGroup): _ViewRect {
   return group ? (group as _GroupView)._viewProps.rect : null;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export function _makeUpGroupViewProps(
-  group: Group,
+  group: TableGroup,
   itemSize: number,
   extraSize: number = 0,
   _index: number = 0,
@@ -109,13 +111,13 @@ export function _makeUpGroupViewProps(
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export function _findGroupInsideViewport(
-  groups: Group[],
+  groups: TableGroup[],
   itemSize: number,
   range: [number, number],
-  memo: [Group[], Row[]] = [[], []],
+  memo: [TableGroup[], TableRow[]] = [[], []],
   start: number = 0,
   end: number = groups.length - 1,
-): [Group[], Row[]] {
+): [TableGroup[], TableRow[]] {
   if (start <= end) {
     const mid: number = Math.floor((start + end) / 2);
     const group: GroupView = groups[mid] as GroupView;
@@ -159,14 +161,17 @@ export function _findGroupInsideViewport(
   selector: '[virtualScrollGroupRepeater]',
   exportAs: 'virtualScrollGroupRepeater',
 })
-export class VirtualScrollGroupRepeaterDirective extends _ViewRepeater<Group, GroupViewContext> {
+export class VirtualScrollGroupRepeaterDirective extends _ViewRepeater<
+  TableGroup,
+  GroupViewContext
+> {
   @Input('virtualScrollGroupRepeaterStartIndex')
   override dataSourceStartIndex: number = 0;
   @Input('virtualScrollGroupRepeaterTrackBy')
-  override dataSourceTrackByFn: TrackByFunction<Group> = GROUP_TRACK_BY_FN;
+  override dataSourceTrackByFn: TrackByFunction<TableGroup> = GROUP_TRACK_BY_FN;
 
   @Input('virtualScrollGroupRepeater')
-  set groupDs(ds: Group[]) {
+  set groupDs(ds: TableGroup[]) {
     this.dataSource = ds;
   }
 

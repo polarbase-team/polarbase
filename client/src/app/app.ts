@@ -7,8 +7,11 @@ import {
   DropdownField,
   DateField,
 } from './spreadsheet/field/objects';
-import { SpreadsheetComponent, Column, Row, Config } from './spreadsheet/spreadsheet.component';
+import { SpreadsheetComponent } from './spreadsheet/spreadsheet.component';
+import { TableColumn } from './spreadsheet/models/table-column';
 import _ from 'lodash';
+import { TableRow } from './spreadsheet/models/table-row';
+import { TableConfig } from './spreadsheet/models/table';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +21,7 @@ import _ from 'lodash';
 })
 export class App {
   console = console;
-  columns: Column[] = [
+  columns: TableColumn[] = [
     {
       id: _.uniqueId(),
       field: new TextField({ name: 'Text', required: true }),
@@ -43,10 +46,10 @@ export class App {
       field: new DateField({ name: 'Date' }),
     },
   ];
-  rows: Row[] = _.map(_.range(1, 100), (index: number) => {
-    return { id: _.uniqueId() } as Row;
+  rows: TableRow[] = _.map(_.range(1, 100), (index: number) => {
+    return { id: _.uniqueId() } as TableRow;
   });
-  config: Config = {
+  config: TableConfig = {
     sideSpacing: 20,
     row: {
       size: 'S',

@@ -18,7 +18,6 @@ import _ from 'lodash';
 
 import { DataType } from '../../field/interfaces';
 import { Field } from '../../field/objects';
-import { Cell, Column, Row } from '../../spreadsheet.component';
 import { FieldCell } from './field-cell';
 import { FieldCellEditable } from './field-cell-editable';
 import { CheckboxFieldCellComponent } from './checkbox/cell.component';
@@ -27,6 +26,9 @@ import { NumberFieldCellComponent } from './number/cell.component';
 import { TextFieldCellComponent } from './text/cell.component';
 import { DropdownFieldCellComponent } from './dropdown/cell.component';
 import { FieldCellSelectingState, FieldCellService } from './field-cell.service';
+import { TableRow } from '../../models/table-row';
+import { TableColumn } from '../../models/table-column';
+import { TableCell } from '../../models/table-cell';
 
 const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
   [DataType.Checkbox, CheckboxFieldCellComponent],
@@ -41,8 +43,8 @@ const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
   exportAs: 'fieldCellFactory',
 })
 export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
-  @Input() row: Row;
-  @Input() column: Column;
+  @Input() row: TableRow;
+  @Input() column: TableColumn;
   @Input() field: Field;
   @Input() data: any;
   @Input() readonly: boolean;
@@ -202,7 +204,7 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
     const { instance } = this._cmpRef;
     if (!(instance instanceof FieldCellEditable)) return;
 
-    const cell: Cell = { row: this.row, column: this.column };
+    const cell: TableCell = { row: this.row, column: this.column };
     let state = this._fieldCellService.getSelectingState();
     let data = this.data;
 

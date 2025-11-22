@@ -13,8 +13,6 @@ import { EmitEventController } from '../utils/emit-event-controller';
 import { DataType } from '../field/interfaces';
 import { ClipboardItem } from '../utils/clipboard';
 import { parseClipboardExternal, parseClipboardInternal } from '../utils/paste';
-import { type Column } from './table-column.service';
-import { type Row, type RowCellData } from './table-row.service';
 import { Dimension } from './table.service';
 import { FieldCellService } from '../components/cells/field-cell.service';
 import { FieldValidationErrors, FieldValidationKey } from '../field/objects/field.object';
@@ -24,11 +22,10 @@ import dayjs, { isDayjs } from 'dayjs';
 import { FORECAST } from '@formulajs/formulajs';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { TableBaseService } from './table-base.service';
-
-export interface Cell {
-  row: Row;
-  column: Column;
-}
+import { TableCell } from '../models/table-cell';
+import { TableCellActionType, TableCellEditedEvent } from '../events/table-cell';
+import { TableColumn } from '../models/table-column';
+import { TableRow, TableRowCellData } from '../models/table-row';
 
 export interface CellIndex {
   rowIndex: number;
@@ -59,7 +56,7 @@ const UNPASTEABLE_DATA_TYPES: DataType[] = [];
 const UNCLEARABLE_DATA_TYPES: DataType[] = [];
 const UNCUTABLE_DATA_TYPES: DataType[] = [];
 
-function parseClipboardItemToData(column: Column, item: ClipboardItem<Cell>) {
+function parseClipboardItemToData(column: TableColumn, item: ClipboardItem<TableCell>) {
   const { text, data, metadata } = item;
 
   if (data !== undefined && metadata !== undefined) {
@@ -72,7 +69,7 @@ function parseClipboardItemToData(column: Column, item: ClipboardItem<Cell>) {
 }
 
 export class MatrixCell {
-  private _values: Cell[][] = [];
+  private _values: TableCell[][] = [];
 
   get rowCount() {
     return this._values.length;
@@ -86,9 +83,9 @@ export class MatrixCell {
     return this.rowCount * this.columnCount;
   }
 
-  constructor(cells?: Cell[]) {
+  constructor(cells?: TableCell[]) {
     if (cells) {
-      const map = new Map<Row['id'], Cell[]>();
+      const map = new Map<TableRow['id'], TableCell[]>();
       for (const cell of cells) {
         const rowId = cell.row.id;
         if (!map.has(rowId)) {
@@ -104,7 +101,7 @@ export class MatrixCell {
     return this._values;
   }
 
-  addRow(columns?: Cell[]) {
+  addRow(columns?: TableCell[]) {
     const cells = columns || [];
     this._values.push(cells);
     return cells;
@@ -113,32 +110,6 @@ export class MatrixCell {
   removeRow(idx: number) {
     this._values.splice(idx, 1);
   }
-}
-
-interface CellDataEditedEvent {
-  row: Row;
-  newData: RowCellData;
-}
-
-export const TableCellActionType = {
-  Edit: 'edit',
-  Paste: 'paste',
-  Clear: 'clear',
-  Fill: 'fill',
-  Select: 'select',
-} as const;
-
-export type TableCellActionType = (typeof TableCellActionType)[keyof typeof TableCellActionType];
-export interface TableCellActionPayload {
-  [TableCellActionType.Edit]: CellDataEditedEvent[];
-  [TableCellActionType.Paste]: CellDataEditedEvent[];
-  [TableCellActionType.Clear]: CellDataEditedEvent[];
-  [TableCellActionType.Fill]: CellDataEditedEvent[];
-  [TableCellActionType.Select]: Cell[] | null;
-}
-export interface TableCellAction<T extends TableCellActionType = TableCellActionType> {
-  type: T;
-  payload: TableCellActionPayload[T];
 }
 
 @Injectable()
@@ -150,15 +121,15 @@ export class TableCellService extends TableBaseService {
   private readonly _toastService = inject(MessageService);
   private readonly _fieldCellService = inject(FieldCellService);
   private readonly _dataEditedEEC: EmitEventController<
-    Row['id'],
-    { type: TableCellActionType; payload: CellDataEditedEvent }
+    TableRow['id'],
+    { type: TableCellActionType; payload: TableCellEditedEvent }
   > = new EmitEventController({
     autoEmit: false,
     onEmitted: (events) => {
-      const editPayload: CellDataEditedEvent[] = [];
-      const pastePayload: CellDataEditedEvent[] = [];
-      const clearPayload: CellDataEditedEvent[] = [];
-      const fillPayload: CellDataEditedEvent[] = [];
+      const editPayload: TableCellEditedEvent[] = [];
+      const pastePayload: TableCellEditedEvent[] = [];
+      const clearPayload: TableCellEditedEvent[] = [];
+      const fillPayload: TableCellEditedEvent[] = [];
 
       for (const { type, payload } of events) {
         switch (type) {
@@ -240,7 +211,7 @@ export class TableCellService extends TableBaseService {
       }
     },
   });
-  private _interactedColumns: Set<Column>;
+  private _interactedColumns: Set<TableColumn>;
 
   get canFillCell() {
     return this.host.config.cell.fillable;
@@ -260,7 +231,7 @@ export class TableCellService extends TableBaseService {
     this.state.isFocusedInputInCellEditor = this.isFocusedInputInCellEditor;
   }
 
-  scrollToCell({ row, column }: Partial<Cell>) {
+  scrollToCell({ row, column }: Partial<TableCell>) {
     const idx: CellIndex = { rowIndex: 0, columnIndex: 0 };
 
     if (row) {
@@ -327,8 +298,8 @@ export class TableCellService extends TableBaseService {
       (data: any) => {
         if (data !== undefined) {
           const { row, column } = state.cell;
-          const newData: RowCellData = { [column.id]: data };
-          let rawData: RowCellData;
+          const newData: TableRowCellData = { [column.id]: data };
+          let rawData: TableRowCellData;
 
           this._markColumnAsInteracted(column);
           this._markCellDataAsEdited(row, newData, rawData);
@@ -458,7 +429,7 @@ export class TableCellService extends TableBaseService {
       endColumnIdx = idx;
     }
 
-    const selectedCells: Cell[] = [];
+    const selectedCells: TableCell[] = [];
 
     for (let i = startRowIdx; i <= endRowIdx; i++) {
       const rowIndex = Math.abs(i);
@@ -538,7 +509,7 @@ export class TableCellService extends TableBaseService {
     });
   }
 
-  cutCells(clipboardData: ClipboardData<Cell>) {
+  cutCells(clipboardData: ClipboardData<TableCell>) {
     const matrixCell = new MatrixCell();
 
     for (const items of clipboardData.matrix) {
@@ -555,7 +526,7 @@ export class TableCellService extends TableBaseService {
     });
   }
 
-  pasteCells(clipboardData: ClipboardData<Cell>) {
+  pasteCells(clipboardData: ClipboardData<TableCell>) {
     let matrix: MatrixCell;
 
     if (this.tableService.layoutProps.column.selection) {
@@ -637,7 +608,7 @@ export class TableCellService extends TableBaseService {
       const newData: any = {};
 
       let rawData: any;
-      let row: Row;
+      let row: TableRow;
 
       for (let j = 0; j < matrix.columnCount; j++) {
         const cell = cells[j];
@@ -817,7 +788,7 @@ export class TableCellService extends TableBaseService {
       const fillData = sourceData[i % sourceMatrixCell.rowCount];
       const newData: any = {};
 
-      let row: Row;
+      let row: TableRow;
 
       for (let j = 0; j < targetMatrixCell.columnCount; j++) {
         const targetCell = targetCells[j];
@@ -967,14 +938,14 @@ export class TableCellService extends TableBaseService {
     return { left, top };
   }
 
-  protected findCellIndex(cell: Cell): CellIndex {
+  protected findCellIndex(cell: TableCell): CellIndex {
     return {
       rowIndex: this.tableRowService.findRowIndex(cell.row),
       columnIndex: this.tableColumnService.findColumnIndex(cell.column),
     };
   }
 
-  findCellByIndex(index: CellIndex): Cell {
+  findCellByIndex(index: CellIndex): TableCell {
     return {
       row: this.tableRowService.findRowByIndex(index.rowIndex),
       column: this.tableColumnService.findColumnByIndex(index.columnIndex),
@@ -996,7 +967,7 @@ export class TableCellService extends TableBaseService {
     return { rowIndex, columnIndex };
   }
 
-  compareCell(source: Cell, destination: Cell): boolean {
+  compareCell(source: TableCell, destination: TableCell): boolean {
     return source.row.id === destination.row.id && source.column.id === source.column.id;
   }
 
@@ -1026,7 +997,7 @@ export class TableCellService extends TableBaseService {
     let matrix: MatrixCell;
 
     if (this.tableRowService.selectedRows.size) {
-      const cells: Cell[] = [];
+      const cells: TableCell[] = [];
       for (const row of this.tableRowService.selectedRows) {
         for (const column of this.tableColumnService.displayingColumns) {
           cells.push({ row, column });
@@ -1034,7 +1005,7 @@ export class TableCellService extends TableBaseService {
       }
       matrix = new MatrixCell(cells);
     } else if (this.tableService.layoutProps.column.selection) {
-      const cells: Cell[] = [];
+      const cells: TableCell[] = [];
       for (const row of this.host.rows) {
         for (const columnIdx of this.tableService.layoutProps.column.selection) {
           const column = this.tableColumnService.findColumnByIndex(columnIdx);
@@ -1110,7 +1081,7 @@ export class TableCellService extends TableBaseService {
     this.clearCells(matrix);
   }
 
-  updateCellsData(rows: Row[], newData: RowCellData) {
+  updateCellsData(rows: TableRow[], newData: TableRowCellData) {
     for (const columnID in newData) {
       this._markColumnAsInteracted(this.tableColumnService.findColumnByID(columnID));
     }
@@ -1122,7 +1093,7 @@ export class TableCellService extends TableBaseService {
     this._emitCellDataAsEdited();
   }
 
-  searchCellPredicate(row: Row, column: Column): string {
+  searchCellPredicate(row: TableRow, column: TableColumn): string {
     return row.data?.[column.id] ?? '';
   }
 
@@ -1136,9 +1107,9 @@ export class TableCellService extends TableBaseService {
     let count = 0;
 
     for (const cells of matrixCell.values()) {
-      const newData: RowCellData = {};
+      const newData: TableRowCellData = {};
 
-      let row: Row;
+      let row: TableRow;
 
       for (const cell of cells) {
         if (!cell) continue;
@@ -1237,7 +1208,7 @@ export class TableCellService extends TableBaseService {
     return true;
   }
 
-  private _markColumnAsInteracted(column: Column) {
+  private _markColumnAsInteracted(column: TableColumn) {
     this._interactedColumns ||= new Set();
 
     if (this._interactedColumns.has(column)) {
@@ -1248,9 +1219,9 @@ export class TableCellService extends TableBaseService {
   }
 
   private _markCellDataAsEdited(
-    row: Row,
-    newData: RowCellData,
-    rawData: RowCellData = newData,
+    row: TableRow,
+    newData: TableRowCellData,
+    rawData: TableRowCellData = newData,
     type: TableCellActionType = TableCellActionType.Edit,
   ) {
     row.data = { ...row.data, ...rawData };
@@ -1275,7 +1246,7 @@ export class TableCellService extends TableBaseService {
     this._dataEditedEEC.emit();
   }
 
-  private _emitCellAsSelected = _.debounce((selectedCells: Cell[]) => {
+  private _emitCellAsSelected = _.debounce((selectedCells: TableCell[]) => {
     this.host.cellAction.emit({
       type: TableCellActionType.Select,
       payload: selectedCells,

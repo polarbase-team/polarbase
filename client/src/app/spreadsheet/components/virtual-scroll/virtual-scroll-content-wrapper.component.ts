@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, ContentChild, Directive } from '@angular/core';
 
-import { Column } from '../../services/table-column.service';
-
 import { VirtualScrollGroupRepeaterDirective } from './virtual-scroll-group-repeater.directive';
 import { VirtualScrollRowRepeaterDirective } from './virtual-scroll-row-repeater.directive';
+import { TableColumn } from '../../models/table-column';
 
 @Directive()
 class VirtualScrollContentWrapperComponent {
@@ -11,7 +10,7 @@ class VirtualScrollContentWrapperComponent {
   readonly groupRepeater: VirtualScrollGroupRepeaterDirective;
   @ContentChild(VirtualScrollRowRepeaterDirective, { static: true, descendants: true })
   readonly rowRepeater: VirtualScrollRowRepeaterDirective;
-  columns: Column[];
+  columns: TableColumn[];
 }
 
 @Component({

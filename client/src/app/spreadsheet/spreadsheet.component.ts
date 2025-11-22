@@ -45,16 +45,8 @@ import {
   VirtualScrollComponent,
 } from './components/virtual-scroll/virtual-scroll.component';
 import { FieldCellService } from './components/cells/field-cell.service';
-import {
-  Cell,
-  CellIndex,
-  TableCellAction,
-  TableCellActionType,
-} from './services/table-cell.service';
-import { Column, TableColumnAction, TableColumnActionType } from './services/table-column.service';
-import { Config, Dimension, SearchInfo } from './services/table.service';
-import { Row, TableRowAction, TableRowActionType } from './services/table-row.service';
-import { Group } from './services/table-group.service';
+import { CellIndex } from './services/table-cell.service';
+import { Dimension } from './services/table.service';
 import { VirtualScrollViewportComponent } from './components/virtual-scroll/virtual-scroll-viewport.component';
 import { CalculatingResultPipe } from './pipes/calculating-result.pipe';
 import {
@@ -76,6 +68,15 @@ import { TableRowService } from './services/table-row.service';
 import { TableCellService } from './services/table-cell.service';
 import { TableGroupService } from './services/table-group.service';
 import { TableService } from './services/table.service';
+import { TableAction } from './events/table';
+import { TableCellAction, TableCellActionType } from './events/table-cell';
+import { TableCell } from './models/table-cell';
+import { TableConfig } from './models/table';
+import { TableRowAction, TableRowActionType } from './events/table-row';
+import { TableColumn } from './models/table-column';
+import { TableRow } from './models/table-row';
+import { TableGroup } from './models/table-group';
+import { TableColumnAction, TableColumnActionType } from './events/table-column';
 
 export * from './services/table.service';
 export * from './services/table-cell.service';
@@ -133,12 +134,12 @@ export class SpreadsheetComponent
     AfterViewChecked,
     OnDestroy
 {
-  @Input() config: Config;
-  @Input() columns: Column[];
-  @Input('rows') rawRows: Row[];
-  rows: Row[];
+  @Input() config: TableConfig;
+  @Input() columns: TableColumn[];
+  @Input('rows') rawRows: TableRow[];
+  rows: TableRow[];
 
-  @Output() searching = new EventEmitter<SearchInfo>();
+  @Output() action = new EventEmitter<TableAction>();
   @Output() columnAction = new EventEmitter<TableColumnAction>();
   @Output() rowAction = new EventEmitter<TableRowAction>();
   @Output() cellAction = new EventEmitter<TableCellAction>();
@@ -170,7 +171,7 @@ export class SpreadsheetComponent
   isMouseHiding = false;
 
   private _keyboard: Keyboard;
-  private _clipboard: Clipboard<Cell>;
+  private _clipboard: Clipboard<TableCell>;
   private _scrollAnimationFrame: number;
 
   @HostBinding('class')
@@ -825,7 +826,7 @@ export class SpreadsheetComponent
       return;
     }
 
-    let group: Group;
+    let group: TableGroup;
     let rowGroupIndex: number;
 
     if (this.tableGroupService.isGrouping) {

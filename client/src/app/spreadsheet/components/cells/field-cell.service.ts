@@ -4,10 +4,10 @@ import _ from 'lodash';
 
 import { DataType } from '../../field/interfaces';
 import { FieldValidationErrors } from '../../field/objects';
-import { Cell } from '../../spreadsheet.component';
 import { FieldCell } from './field-cell';
+import { TableCell } from '../../models/table-cell';
 
-function matchCell(checkCell: Cell): boolean {
+function matchCell(checkCell: TableCell): boolean {
   return this.cell.row.id === checkCell.row.id && this.cell.column.id === checkCell.column.id;
 }
 
@@ -64,13 +64,13 @@ function reset() {
 }
 
 export type FieldCellSelectingState = {
-  cell: Cell;
+  cell: TableCell;
   data: any;
   savedData: any;
   isEditing: boolean;
   revert$: Subject<void>;
   validate$: Subject<FieldValidationErrors | null>;
-  matchCell(c: Cell): boolean;
+  matchCell(c: TableCell): boolean;
   detectChange(): boolean;
   flush(
     callback?: (data: any) => void,

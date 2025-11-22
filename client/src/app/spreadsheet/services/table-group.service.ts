@@ -1,35 +1,20 @@
+import _ from 'lodash';
 import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
 import { Point } from '@angular/cdk/drag-drop';
-
-import _ from 'lodash';
-
 import { calculateBy, calculateFieldPredicate } from '../utils/calculate';
-import type { HierarchyGroup } from '../utils/group';
 import type { _GroupView } from '../components/virtual-scroll/virtual-scroll-group-repeater.directive';
 import { Dimension } from './table.service';
-import type { Column } from './table-column.service';
-import type { RowCellData, Row } from './table-row.service';
 import type { CellIndex } from './table-cell.service';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { FIELD_READONLY } from '../field/resources/field';
 import { TableBaseService } from './table-base.service';
-
-export type Group = HierarchyGroup & {
-  items?: Row[];
-  children?: Group[];
-  metadata?: {
-    column: Column;
-    data: any;
-    parsed: string;
-    empty: boolean;
-    collapsed: boolean;
-    calculatedResult?: Map<Column['id'], any>;
-  };
-};
+import { TableGroup } from '../models/table-group';
+import { TableColumn } from '../models/table-column';
+import { TableRow, TableRowCellData } from '../models/table-row';
 
 function calculateInGroup(
-  group: Group,
-  columns: Column[],
+  group: TableGroup,
+  columns: TableColumn[],
   calculatePredicate?: (...args: any) => any,
 ) {
   if (group.metadata.calculatedResult) {
@@ -57,7 +42,7 @@ function calculateInGroup(
   }
 }
 
-function findGroupAtPointerOffset(group: Group, pointerOffsetY: number): Group {
+function findGroupAtPointerOffset(group: TableGroup, pointerOffsetY: number) {
   if (group.children) {
     let start = 0;
     let end = group.children.length - 1;
@@ -86,7 +71,7 @@ function findGroupAtPointerOffset(group: Group, pointerOffsetY: number): Group {
   return group;
 }
 
-function findGroupByItemIndex(itemIndex: number, group?: Group): HierarchyGroup {
+function findGroupByItemIndex(itemIndex: number, group?: TableGroup) {
   if (group?.children) {
     let start = 0;
     let end = group.children.length - 1;
@@ -116,7 +101,7 @@ function findGroupByItemIndex(itemIndex: number, group?: Group): HierarchyGroup 
 @Injectable()
 export class TableGroupService extends TableBaseService {
   collapsedGroupState = new Map<number, boolean>();
-  rootGroup: Group;
+  rootGroup: TableGroup;
   disableAddRowInGroup: boolean;
 
   private readonly _cdRef = inject(ChangeDetectorRef);
@@ -145,17 +130,17 @@ export class TableGroupService extends TableBaseService {
     this._cdRef.detectChanges();
   }
 
-  toggleGroup(group: Group) {
+  toggleGroup(group: TableGroup) {
     this._toggleGroup(group, !group.metadata.collapsed);
     this.markGroupAsChanged();
   }
 
-  calculateInGroup(columns: Column[]) {
+  calculateInGroup(columns: TableColumn[]) {
     if (!columns?.length) return;
     calculateInGroup(this.rootGroup, columns, calculateFieldPredicate);
   }
 
-  sortInGroup(columns: Column[]) {
+  sortInGroup(columns: TableColumn[]) {
     if (!columns?.length) return;
     this.rootGroup.sortItem(
       this.tableColumnService.sortColumnPredicate.bind(this, columns),
@@ -169,11 +154,8 @@ export class TableGroupService extends TableBaseService {
     this.markGroupAsChanged();
   }
 
-  async createRowInGroup(
-    group = this.getSelectingGroup() || this.getFirstGroup(),
-    position?: number,
-  ): Promise<Row> {
-    let newRow: Row;
+  createRowInGroup(group = this.getSelectingGroup() || this.getFirstGroup(), position?: number) {
+    let newRow: TableRow;
     if (group !== this.rootGroup) {
       let g = group;
       const data: any = {};
@@ -182,12 +164,12 @@ export class TableGroupService extends TableBaseService {
         data[metadata.column.id] = metadata.data;
         g = g.parent;
       } while (g?.depth > 0);
-      newRow = await this.tableRowService.createRow(data, position, (row: Row) => {
+      newRow = this.tableRowService.createRow(data, position, (row: TableRow) => {
         group.addItems([row], position);
         this.markGroupAsChanged();
       });
     } else {
-      newRow = await this.tableRowService.createRow(undefined, position);
+      newRow = this.tableRowService.createRow(undefined, position);
       this.tableService.group();
     }
 
@@ -201,14 +183,14 @@ export class TableGroupService extends TableBaseService {
     return newRow;
   }
 
-  deleteRowsInGroup(deletedRows: Row[]) {
+  deleteRowsInGroup(deletedRows: TableRow[]) {
     this.rootGroup.removeItems(deletedRows);
     this.markGroupAsChanged();
   }
 
-  moveRowsInGroup(movedRows: Row[], movedIndex: number, targetGroup: Group) {
+  moveRowsInGroup(movedRows: TableRow[], movedIndex: number, targetGroup: TableGroup) {
     const targetGroups = [...targetGroup.findClosest(), targetGroup];
-    const rowDataNeedUpdate: RowCellData = {};
+    const rowDataNeedUpdate: TableRowCellData = {};
 
     for (const group of targetGroups) {
       if (!group.metadata) continue;
@@ -303,15 +285,15 @@ export class TableGroupService extends TableBaseService {
     };
   }
 
-  findRowGroupIndex(group: Group, row: Row) {
+  findRowGroupIndex(group: TableGroup, row: TableRow) {
     return _.indexOf(group.items, row);
   }
 
-  findRowIndexInGroup(row: Row) {
+  findRowIndexInGroup(row: TableRow) {
     return _.indexOf(this.rootGroup.items, row);
   }
 
-  findRowIndexInGroupByID(id: Row['id']) {
+  findRowIndexInGroupByID(id: TableRow['id']) {
     return _.findIndex(this.rootGroup.items, { id });
   }
 
@@ -333,7 +315,12 @@ export class TableGroupService extends TableBaseService {
     this.disableAddRowInGroup = disableAddRowInGroup;
   }
 
-  sortGroupPredicate(groupingColumns: Column[], currentRow: Row, rowCompared: Row, depth: number) {
+  sortGroupPredicate(
+    groupingColumns: TableColumn[],
+    currentRow: TableRow,
+    rowCompared: TableRow,
+    depth: number,
+  ) {
     const column = groupingColumns[groupingColumns.length - depth];
     if (!column) return null;
 
@@ -350,7 +337,7 @@ export class TableGroupService extends TableBaseService {
     );
   }
 
-  parseGroupMetadataPredicate(groupingColumns: Column[], group: Group) {
+  parseGroupMetadataPredicate(groupingColumns: TableColumn[], group: TableGroup) {
     const idx = groupingColumns.length - (group.totalChildrenDepth + 1);
     const column = groupingColumns[idx];
     let data: any;
@@ -369,12 +356,12 @@ export class TableGroupService extends TableBaseService {
     };
   }
 
-  private _toggleGroup(group: Group, collapsed: boolean) {
+  private _toggleGroup(group: TableGroup, collapsed: boolean) {
     group.metadata.collapsed = collapsed;
     this.collapsedGroupState.set(group.id, group.metadata.collapsed);
   }
 
-  private _toggleGroupRecursive(group: Group, collapsed: boolean) {
+  private _toggleGroupRecursive(group: TableGroup, collapsed: boolean) {
     this._toggleGroup(group, collapsed);
     if (group.children?.length) {
       for (const child of group.children) {

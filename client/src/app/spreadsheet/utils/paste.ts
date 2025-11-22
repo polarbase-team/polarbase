@@ -1,11 +1,11 @@
 import { Field } from '../field/objects';
-import { Column } from '../services/table-column.service';
-import { Cell } from '../services/table-cell.service';
+import { TableCell } from '../models/table-cell';
+import { TableColumn } from '../models/table-column';
 import { ClipboardItem } from './clipboard';
 
 export function parseClipboardInternal(
-  column: Column,
-  { text, data, metadata }: ClipboardItem<Cell>,
+  column: TableColumn,
+  { text, data, metadata }: ClipboardItem<TableCell>,
 ): any {
   if (metadata.column.id === column.id) return data;
 

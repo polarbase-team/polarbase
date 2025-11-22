@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import _ from 'lodash';
 
 import { DateField } from '../field/objects';
-import { Column } from '../services/table-column.service';
+import { TableColumn } from '../models/table-column';
 
 function search(str: string, match: string): boolean {
   if (!_.isString(str)) return false;
@@ -22,7 +22,7 @@ export function searchBy(
   return _.filter(data, (i: any) => search(searchingPredicate.apply(null, i), searchQuery));
 }
 
-export function parseSearchValue(data: string, column: Column): string {
+export function parseSearchValue(data: string, column: TableColumn): string {
   if (!data) return '';
 
   switch (column.field.dataType) {

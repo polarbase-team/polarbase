@@ -11,10 +11,10 @@ import {
 } from '@angular/core';
 
 import { Field } from '../../field/objects';
-import { Row } from '../../services/table-row.service';
+import { TableRow } from '../../models/table-row';
 
 export interface InputContext {
-  row: Row;
+  row: TableRow;
   other: any;
 }
 

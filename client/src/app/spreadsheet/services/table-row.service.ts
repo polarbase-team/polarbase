@@ -3,18 +3,20 @@ import { MenuItem } from 'primeng/api';
 import { ChangeDetectorRef, DestroyRef, inject, Injectable, SimpleChanges } from '@angular/core';
 import { EmitEventController } from '../utils/emit-event-controller';
 import { Dimension } from './table.service';
-import type { Column } from './table-column.service';
-import type { Group } from './table-group.service';
-import { type CellIndex, type TableCellAction, TableCellActionType } from './table-cell.service';
+import type { CellIndex } from './table-cell.service';
 import { debounceTime, distinctUntilChanged, filter, map, pairwise } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CdkDragEnd, CdkDragMove, CdkDragStart, Point } from '@angular/cdk/drag-drop';
 import { TableBaseService } from './table-base.service';
+import { TableRow } from '../models/table-row';
+import { TableGroup } from '../models/table-group';
+import { TableRowAction, TableRowActionType, TableRowAddedEvent } from '../events/table-row';
+import { TableCellAction, TableCellActionType } from '../events/table-cell';
 
 function flushEEC(
   controller: EmitEventController<any, any>,
-  row: Row,
-  predicate: (event: any) => Row['id'],
+  row: TableRow,
+  predicate: (event: any) => TableRow['id'],
 ) {
   if (!controller?.getLength()) return;
 
@@ -41,52 +43,11 @@ export const RowSize = {
 } as const;
 export type RowSize = keyof typeof RowSize;
 
-export type Row = {
-  id: string | number;
-  name: string;
-  data: RowCellData;
-  editable?: boolean | Record<Column['id'], boolean>;
-  deletable?: boolean;
-  selected?: boolean;
-};
-export type RowCellData = Record<Column['id'], any>;
-
 type FoundRow = {
   rowIndex: number;
   rowOffset: number;
-  group?: Group;
+  group?: TableGroup;
 };
-
-interface TableRowAddedEvent {
-  row: Row;
-  insertedIndex: number;
-}
-interface TableRowMovedEvent {
-  row: Row;
-  movedIndex: number;
-}
-
-export const TableRowActionType = {
-  Add: 'add',
-  Delete: 'delete',
-  Expand: 'expand',
-  Move: 'move',
-  Select: 'select',
-} as const;
-export type TableRowActionType = (typeof TableRowActionType)[keyof typeof TableRowActionType];
-
-export interface TableRowActionPayload {
-  [TableRowActionType.Add]: TableRowAddedEvent[];
-  [TableRowActionType.Delete]: Row[];
-  [TableRowActionType.Expand]: Row;
-  [TableRowActionType.Move]: TableRowMovedEvent[];
-  [TableRowActionType.Select]: Row[] | null;
-}
-
-export interface TableRowAction<T extends TableRowActionType = TableRowActionType> {
-  type: T;
-  payload: TableRowActionPayload[T];
-}
 
 @Injectable()
 export class TableRowService extends TableBaseService {
@@ -94,18 +55,19 @@ export class TableRowService extends TableBaseService {
   private readonly _cdRef = inject(ChangeDetectorRef);
 
   rowActionItems: MenuItem[] | undefined;
-  draftRow: Row;
-  bkRows: Row[];
-  selectedRows = new Set<Row>();
-  protected draggingRows = new Set<Row>();
+  draftRow: TableRow;
+  bkRows: TableRow[];
+  selectedRows = new Set<TableRow>();
+  protected draggingRows = new Set<TableRow>();
 
-  private _rowLookup = new Map<Row['id'], Row>();
-  private _addedEEC: EmitEventController<Row['id'], TableRowAddedEvent> = new EmitEventController({
-    autoEmit: false,
-    onEmitted: (events) => {
-      this.host.rowAction.emit({ type: TableRowActionType.Add, payload: events });
-    },
-  });
+  private _rowLookup = new Map<TableRow['id'], TableRow>();
+  private _addedEEC: EmitEventController<TableRow['id'], TableRowAddedEvent> =
+    new EmitEventController({
+      autoEmit: false,
+      onEmitted: (events) => {
+        this.host.rowAction.emit({ type: TableRowActionType.Add, payload: events });
+      },
+    });
 
   get rowHeight(): number {
     return RowSize[this.host.config.row.size];
@@ -136,7 +98,7 @@ export class TableRowService extends TableBaseService {
           (event): event is Extract<TableCellAction, { type: typeof TableCellActionType.Select }> =>
             event.type === TableCellActionType.Select,
         ),
-        map(({ payload }: { payload: Row[] }) => payload?.[0] || null),
+        map(({ payload }: { payload: TableRow[] }) => payload?.[0] || null),
         distinctUntilChanged(),
         pairwise(),
         debounceTime(0),
@@ -153,7 +115,7 @@ export class TableRowService extends TableBaseService {
             event.type === TableRowActionType.Add,
         ),
         map(({ payload }) => {
-          return (payload as { row: Row }[]).map((e) => e.row);
+          return (payload as { row: TableRow }[]).map((e) => e.row);
         }),
         takeUntilDestroyed(this._destroyRef),
       )
@@ -179,7 +141,7 @@ export class TableRowService extends TableBaseService {
     this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
   }
 
-  initRows(rows: Row[]) {
+  initRows(rows: TableRow[]) {
     this.selectedRows.clear();
     this._rowLookup.clear();
 
@@ -196,7 +158,7 @@ export class TableRowService extends TableBaseService {
     this._cdRef.markForCheck();
   }
 
-  pushRows(rows: Row[]) {
+  pushRows(rows: TableRow[]) {
     this.host.rawRows = this.host.rawRows ? [...this.host.rawRows, ...rows] : rows;
     this.host.rows = [...this.host.rawRows];
 
@@ -213,7 +175,7 @@ export class TableRowService extends TableBaseService {
     this._cdRef.markForCheck();
   }
 
-  updateRows(rows: Row[], shouldCheckSelectedState?: boolean) {
+  updateRows(rows: TableRow[], shouldCheckSelectedState?: boolean) {
     if (shouldCheckSelectedState) {
       for (const row of rows) {
         row.selected ? this.selectedRows.add(row) : this.selectedRows.delete(row);
@@ -232,7 +194,7 @@ export class TableRowService extends TableBaseService {
     this._cdRef.markForCheck();
   }
 
-  addRow(group?: Group) {
+  addRow(group?: TableGroup) {
     if (!this.canAddRow) return;
     this.tableGroupService.isGrouping
       ? this.tableGroupService.createRowInGroup(group)
@@ -244,7 +206,7 @@ export class TableRowService extends TableBaseService {
     this._addedEEC.flush();
   }
 
-  openRowActionMenu(e: Event, row: Row, rowIndex: number) {
+  openRowActionMenu(e: Event, row: TableRow, rowIndex: number) {
     const items: MenuItem[] = [];
 
     if (this.selectedRows?.size > 1) {
@@ -298,7 +260,7 @@ export class TableRowService extends TableBaseService {
     this.host.rowActionMenu.show(e);
   }
 
-  onRowDragStarted(e: CdkDragStart<Row>) {
+  onRowDragStarted(e: CdkDragStart<TableRow>) {
     this.tableCellService.deselectAllCells();
     const draggingRow = e.source.data;
     this.draggingRows.add(draggingRow);
@@ -310,7 +272,7 @@ export class TableRowService extends TableBaseService {
     }
   }
 
-  onRowDragMoved(e: CdkDragMove<Row>) {
+  onRowDragMoved(e: CdkDragMove<TableRow>) {
     const foundRow = this.findRowAtPointerPosition(e.pointerPosition);
     let group;
     let rowIndex;
@@ -330,7 +292,7 @@ export class TableRowService extends TableBaseService {
     this.tableService.layoutProps.row.dragPlaceholderOffset = rowOffset;
   }
 
-  onRowDragEnded(e: CdkDragEnd<Row>) {
+  onRowDragEnded(e: CdkDragEnd<TableRow>) {
     const { dragPlaceholderIndex } = this.tableService.layoutProps.row;
     if (dragPlaceholderIndex === null) return;
     const currentIndex = dragPlaceholderIndex;
@@ -351,7 +313,7 @@ export class TableRowService extends TableBaseService {
     this.draggingRows.clear();
   }
 
-  protected expandRow(row: Row) {
+  protected expandRow(row: TableRow) {
     this.host.rowAction.emit({ type: TableRowActionType.Expand, payload: row });
   }
 
@@ -361,7 +323,7 @@ export class TableRowService extends TableBaseService {
     this.expandRow(this.findRowByIndex(selecting.rowIndex));
   }
 
-  createRow(data?: any, position?: number, onBeforeInsert?: (r: Row, p: number) => void) {
+  createRow(data?: any, position?: number, onBeforeInsert?: (r: TableRow, p: number) => void) {
     const newRow = this._generateRow({ data });
     onBeforeInsert?.(newRow, position);
 
@@ -385,14 +347,14 @@ export class TableRowService extends TableBaseService {
     this.tableService.calculate();
   }
 
-  protected async deleteRow(row: Row) {
+  protected async deleteRow(row: TableRow) {
     this.tableCellService.deselectAllCells();
     this._removeRows([row]);
     this.host.rowAction.emit({ type: TableRowActionType.Delete, payload: [row] });
     this.tableService.calculate();
   }
 
-  toggleRow(row: Row) {
+  toggleRow(row: TableRow) {
     this.tableCellService.deselectAllCells();
     this.tableColumnService.deselectAllColumns();
 
@@ -456,7 +418,7 @@ export class TableRowService extends TableBaseService {
     this.host.rowAction.emit({ type: TableRowActionType.Select, payload: null });
   }
 
-  protected moveRows(movedRows: Row[], movedIndex: number) {
+  protected moveRows(movedRows: TableRow[], movedIndex: number) {
     let newMovedIndex = movedIndex;
     for (const movedRow of movedRows) {
       const idx = this.findRowIndex(movedRow);
@@ -477,7 +439,7 @@ export class TableRowService extends TableBaseService {
     });
   }
 
-  protected getSelectedRows(): Row[] {
+  protected getSelectedRows(): TableRow[] {
     const selectedRows = [...this.selectedRows];
 
     if (!selectedRows.length) {
@@ -526,29 +488,29 @@ export class TableRowService extends TableBaseService {
     };
   }
 
-  findRowByIndex(index: number): Row {
+  findRowByIndex(index: number): TableRow {
     return this.tableGroupService.isGrouping
       ? this.tableGroupService.findRowInGroupByIndex(index)
       : this.host.rows[index];
   }
 
-  findRowByID(id: Row['id']): Row {
+  findRowByID(id: TableRow['id']): TableRow {
     return this._rowLookup.has(id) ? this._rowLookup.get(id) : _.find(this.host.rows, { id });
   }
 
-  findRowIndex(row: Row): number {
+  findRowIndex(row: TableRow): number {
     return this.tableGroupService.isGrouping
       ? this.tableGroupService.findRowIndexInGroup(row)
       : _.indexOf(this.host.rows, row);
   }
 
-  findRowIndexByID(id: Row['id']): number {
+  findRowIndexByID(id: TableRow['id']): number {
     return this.tableGroupService.isGrouping
       ? this.tableGroupService.findRowIndexInGroupByID(id)
       : _.findIndex(this.host.rows, { id });
   }
 
-  protected markRowsAsChanged(rows: Row[] = this.host.rows, slient: boolean = false) {
+  protected markRowsAsChanged(rows: TableRow[] = this.host.rows, slient: boolean = false) {
     this.host.rows = [...rows];
 
     if (slient) return;
@@ -562,22 +524,22 @@ export class TableRowService extends TableBaseService {
     }
   }
 
-  markRowsAsStreamed(rows: Row[]) {
+  markRowsAsStreamed(rows: TableRow[]) {
     for (const row of rows) {
       (row as any)._isStreamed = true;
     }
   }
 
-  checkRowIsDraft(row: Row): boolean {
+  checkRowIsDraft(row: TableRow): boolean {
     return this.draftRow === row;
   }
 
-  private _generateRow(extra?: Partial<Row>): Row {
+  private _generateRow(extra?: Partial<TableRow>) {
     return _.cloneDeep({
       ...extra,
       id: _.uniqueId(),
       selected: false,
-    }) as Row;
+    }) as TableRow;
   }
 
   private _insertRow(row: any, position = this.host.rows?.length, slient = false) {
@@ -606,7 +568,7 @@ export class TableRowService extends TableBaseService {
     });
   }
 
-  private _removeRows(rows: Row[], slient: boolean = false) {
+  private _removeRows(rows: TableRow[], slient: boolean = false) {
     this.markRowsAsChanged(_.pull(this.host.rows, ...rows), slient);
 
     if (this.tableGroupService.isGrouping) {

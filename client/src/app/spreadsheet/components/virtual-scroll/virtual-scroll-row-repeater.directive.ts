@@ -1,8 +1,6 @@
 import { Directive, Input, TrackByFunction } from '@angular/core';
 
 import { Dimension } from '../../services/table.service';
-import { Group } from '../../services/table-group.service';
-import { Row } from '../../services/table-row.service';
 
 import {
   _RecycleViewRepeaterStrategy,
@@ -13,34 +11,37 @@ import {
   _ViewRepeater,
 } from './recycle-view-repeater-strategy';
 import type { _GroupView } from './virtual-scroll-group-repeater.directive';
+import { TableRow } from '../../models/table-row';
+import { TableGroup } from '../../models/table-group';
 
-type RowView = Row & {
+type RowView = TableRow & {
   _viewProps: _ViewProps & {
     indexInGroup: number;
-    group: Group;
+    group: TableGroup;
   };
 };
 
-type RowViewContext = _ViewContext<Row> & {
-  group: Group;
+type RowViewContext = _ViewContext<TableRow> & {
+  group: TableGroup;
   indexInGroup: number;
 };
 
-const ROW_TRACK_BY_FN: TrackByFunction<Row> = (_i: number, row: Row): Row['id'] => row.id;
+const ROW_TRACK_BY_FN: TrackByFunction<TableRow> = (_i: number, row: TableRow): TableRow['id'] =>
+  row.id;
 
 export type _RowView = RowView;
 export type _RowViewContext = RowViewContext;
 
-export const _ROW_TRACK_BY_FN: TrackByFunction<Row> = ROW_TRACK_BY_FN;
+export const _ROW_TRACK_BY_FN: TrackByFunction<TableRow> = ROW_TRACK_BY_FN;
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export function _getRowRect(row: Row): _ViewRect {
+export function _getRowRect(row: TableRow): _ViewRect {
   return (row as _RowView)?._viewProps.rect || null;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export function _makeUpRowViewProps(
-  rows: Row[],
+  rows: TableRow[],
   itemSize: number,
   _startIndex: number = 0,
   _group?: _GroupView,
@@ -76,11 +77,11 @@ export function _makeUpRowViewProps(
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export function _findRowInsideViewport(
-  rows: Row[],
+  rows: TableRow[],
   rowHeight: number,
   range: [number, number],
   nodePadding: number = 1,
-): Row[] {
+): TableRow[] {
   let startIdx: number = Math.floor(range[0] / rowHeight) - nodePadding;
 
   startIdx = Math.max(0, startIdx);
@@ -96,14 +97,14 @@ export function _findRowInsideViewport(
   selector: '[virtualScrollRowRepeater]',
   exportAs: 'virtualScrollRowRepeater',
 })
-export class VirtualScrollRowRepeaterDirective extends _ViewRepeater<Row, RowViewContext> {
+export class VirtualScrollRowRepeaterDirective extends _ViewRepeater<TableRow, RowViewContext> {
   @Input('virtualScrollRowRepeaterStartIndex')
   override dataSourceStartIndex: number = 0;
   @Input('virtualScrollRowRepeaterTrackBy')
-  override dataSourceTrackByFn: TrackByFunction<Row> = ROW_TRACK_BY_FN;
+  override dataSourceTrackByFn: TrackByFunction<TableRow> = ROW_TRACK_BY_FN;
 
   @Input('virtualScrollRowRepeater')
-  set rowDs(ds: Row[]) {
+  set rowDs(ds: TableRow[]) {
     this.dataSource = ds;
   }
 

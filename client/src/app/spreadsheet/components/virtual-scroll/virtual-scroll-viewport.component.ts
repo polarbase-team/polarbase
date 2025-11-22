@@ -18,9 +18,6 @@ import {
 } from '@angular/core';
 
 import { Dimension } from '../../services/table.service';
-import { Column } from '../../services/table-column.service';
-import { Row } from '../../services/table-row.service';
-import { Group } from '../../services/table-group.service';
 
 import type { _Scrolling } from './virtual-scroll.component';
 import {
@@ -42,6 +39,9 @@ import {
   VirtualScrollLeftContentWrapperComponent as VSLeftCWComponent,
   VirtualScrollRightContentWrapperComponent as VSRightCWComponent,
 } from './virtual-scroll-content-wrapper.component';
+import { TableColumn } from '../../models/table-column';
+import { TableRow } from '../../models/table-row';
+import { TableGroup } from '../../models/table-group';
 
 export type ViewportSizeUpdatedEvent = {
   updateOnWidth: boolean;
@@ -78,14 +78,14 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   private readonly _iterableDiffers: IterableDiffers = inject(IterableDiffers);
   private readonly _resizeObserve: ResizeObserver = new ResizeObserver(this._onResized.bind(this));
 
-  private _leftColumns: Column[];
-  private _rightColumns: Column[];
-  private _leftColumnDs: Column[];
-  private _rightColumnDs: Column[];
-  private _rows: Row[];
-  private _rowDs: Row[];
-  private _rootGroup: Group;
-  private _groupDs: Group[];
+  private _leftColumns: TableColumn[];
+  private _rightColumns: TableColumn[];
+  private _leftColumnDs: TableColumn[];
+  private _rightColumnDs: TableColumn[];
+  private _rows: TableRow[];
+  private _rowDs: TableRow[];
+  private _rootGroup: TableGroup;
+  private _groupDs: TableGroup[];
   private _rowHeight: number;
   private _groupDepth: number;
   private _leftWidth: number;
@@ -98,18 +98,18 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   private _canCheckDiff: boolean;
   private _needsUpdate: boolean;
   private _forcesUpdate: boolean;
-  private _leftColumnDsDiffer: IterableDiffer<Column>;
-  private _rightColumnDsDiffer: IterableDiffer<Column>;
-  private _rowDsDiffer: IterableDiffer<Row>;
-  private _rowRangeDiffer: IterableDiffer<Row>;
-  private _groupDsDiffer: IterableDiffer<Group>;
-  private _groupRangeDiffer: IterableDiffer<Group>;
+  private _leftColumnDsDiffer: IterableDiffer<TableColumn>;
+  private _rightColumnDsDiffer: IterableDiffer<TableColumn>;
+  private _rowDsDiffer: IterableDiffer<TableRow>;
+  private _rowRangeDiffer: IterableDiffer<TableRow>;
+  private _groupDsDiffer: IterableDiffer<TableGroup>;
+  private _groupRangeDiffer: IterableDiffer<TableGroup>;
 
   @Input()
-  get leftColumns(): Column[] {
+  get leftColumns(): TableColumn[] {
     return this._leftColumns;
   }
-  set leftColumns(columns: Column[]) {
+  set leftColumns(columns: TableColumn[]) {
     const isChanged: boolean = this._leftColumns !== columns;
 
     this._leftColumns = columns;
@@ -129,10 +129,10 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   }
 
   @Input()
-  get rightColumns(): Column[] {
+  get rightColumns(): TableColumn[] {
     return this._rightColumns;
   }
-  set rightColumns(columns: Column[]) {
+  set rightColumns(columns: TableColumn[]) {
     const isChanged: boolean = this._rightColumns !== columns;
 
     this._rightColumns = columns;
@@ -152,10 +152,10 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   }
 
   @Input()
-  get rows(): Row[] {
+  get rows(): TableRow[] {
     return this._rows;
   }
-  set rows(rows: Row[]) {
+  set rows(rows: TableRow[]) {
     const isChanged: boolean = this._rows !== rows;
 
     this._rows = rows;
@@ -177,10 +177,10 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   }
 
   @Input()
-  get rootGroup(): Group {
+  get rootGroup(): TableGroup {
     return this._rootGroup;
   }
-  set rootGroup(group: Group) {
+  set rootGroup(group: TableGroup) {
     const isChanged: boolean = this._rootGroup !== group;
 
     this._isGrouping = !!group;
@@ -287,8 +287,8 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     [scrollTop, scrollingY]: [number, _Scrolling?],
   ) {
     if (scrollingX !== false) {
-      const leftColumnRange: Column[] = this._leftColumnDs;
-      const rightColumnRange: Column[] = _findColumnInsideViewport(this._rightColumnDs, [
+      const leftColumnRange: TableColumn[] = this._leftColumnDs;
+      const rightColumnRange: TableColumn[] = _findColumnInsideViewport(this._rightColumnDs, [
         scrollLeft,
         scrollLeft + (this.width - this.leftWidth),
       ]);
@@ -301,10 +301,10 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     }
 
     if (scrollingY !== false) {
-      let rowRange: Row[];
+      let rowRange: TableRow[];
 
       if (this._isGrouping) {
-        const [groupRange, rowRangeInGroup]: [Group[], Row[]] = _findGroupInsideViewport(
+        const [groupRange, rowRangeInGroup]: [TableGroup[], TableRow[]] = _findGroupInsideViewport(
           this._groupDs,
           this._rowHeight,
           [scrollTop, scrollTop + this.height],
@@ -335,7 +335,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     let shouldMakeUpGroupViewProps: boolean;
 
     if (this._leftColumnDsDiffer) {
-      const columnLeftDsChanges: IterableChanges<Column> = this._leftColumnDsDiffer.diff(
+      const columnLeftDsChanges: IterableChanges<TableColumn> = this._leftColumnDsDiffer.diff(
         this._leftColumnDs,
       );
 
@@ -347,7 +347,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     }
 
     if (this._rightColumnDsDiffer) {
-      const columnRightDsChanges: IterableChanges<Column> = this._rightColumnDsDiffer.diff(
+      const columnRightDsChanges: IterableChanges<TableColumn> = this._rightColumnDsDiffer.diff(
         this._rightColumnDs,
       );
 
@@ -359,7 +359,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     }
 
     if (this._rowDsDiffer) {
-      const rowDsChanges: IterableChanges<Row> = this._rowDsDiffer.diff(this._rowDs);
+      const rowDsChanges: IterableChanges<TableRow> = this._rowDsDiffer.diff(this._rowDs);
 
       if (!this._isGrouping) {
         if (rowDsChanges) {
@@ -375,7 +375,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     }
 
     if (this._groupDsDiffer) {
-      const groupDsChanges: IterableChanges<Group> = this._groupDsDiffer.diff(this._groupDs);
+      const groupDsChanges: IterableChanges<TableGroup> = this._groupDsDiffer.diff(this._groupDs);
 
       if (groupDsChanges) {
         if (this._groupDs.length) {
@@ -476,7 +476,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     });
   }
 
-  private _updateColumnRange(leftColumnRange: Column[], rightColumnRange: Column[]) {
+  private _updateColumnRange(leftColumnRange: TableColumn[], rightColumnRange: TableColumn[]) {
     this._ngZone.run(() => {
       this.leftWrapper.columns = leftColumnRange;
       this.rightWrapper.columns = rightColumnRange;
@@ -485,8 +485,8 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     });
   }
 
-  private _updateRowRange(rowRange: Row[]) {
-    const changes: IterableChanges<Row> = this._rowRangeDiffer.diff(rowRange);
+  private _updateRowRange(rowRange: TableRow[]) {
+    const changes: IterableChanges<TableRow> = this._rowRangeDiffer.diff(rowRange);
 
     if (!changes) return;
 
@@ -498,8 +498,8 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     });
   }
 
-  private _updateGroupRange(groupRange: Group[]) {
-    const changes: IterableChanges<Group> = this._groupRangeDiffer.diff(groupRange);
+  private _updateGroupRange(groupRange: TableGroup[]) {
+    const changes: IterableChanges<TableGroup> = this._groupRangeDiffer.diff(groupRange);
 
     if (!changes) return;
 

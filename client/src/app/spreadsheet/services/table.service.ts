@@ -1,5 +1,4 @@
 import _ from 'lodash';
-
 import {
   ChangeDetectorRef,
   DestroyRef,
@@ -9,19 +8,22 @@ import {
   NgZone,
   SimpleChanges,
 } from '@angular/core';
-import { calculateBy, calculateFieldPredicate, CalculateType } from '../utils/calculate';
-import { groupBy, GroupingType } from '../utils/group';
-import { sortBy, SortingType } from '../utils/sort';
-import type { Cell, CellIndex, CellOffset } from './table-cell.service';
-import type { Column } from './table-column.service';
-import type { Group } from './table-group.service';
-import type { Row, RowSize } from './table-row.service';
+import { calculateBy, calculateFieldPredicate } from '../utils/calculate';
+import { groupBy } from '../utils/group';
+import { sortBy } from '../utils/sort';
+import type { CellIndex, CellOffset } from './table-cell.service';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DataType } from '../field/interfaces';
 import { searchBy } from '../utils/search';
 import { TableBaseService } from './table-base.service';
 import { FieldCellService } from '../components/cells/field-cell.service';
+import { TableGroup } from '../models/table-group';
+import { TableConfig } from '../models/table';
+import { TableRow } from '../models/table-row';
+import { TableColumn } from '../models/table-column';
+import { TableCell } from '../models/table-cell';
+import { TableSearchInfo } from '../events/table';
 
 export const Dimension = {
   HeaderHeight: 36,
@@ -36,48 +38,6 @@ export const Dimension = {
   GroupPadding: 20,
   GroupSpacing: 20,
 } as const;
-
-export type SearchInfo = {
-  total: number;
-  current: number;
-};
-
-export type Config = Partial<{
-  sideSpacing?: number;
-  streamData: boolean;
-  calculating: [Column | Column['id'], CalculateType][];
-  grouping: [Column | Column['id'], GroupingType][];
-  sorting: [Column | Column['id'], SortingType][];
-  column: {
-    frozenIndex?: number | null;
-    maxFrozenRatio?: number;
-    defaultWidth?: number;
-    minWidth?: number;
-    maxWidth?: number;
-    arrangeable?: boolean;
-    calculable?: boolean;
-    creatable?: boolean;
-    editable?: boolean;
-    deletable?: boolean;
-    freezable?: boolean;
-    groupable?: boolean;
-    hideable?: boolean;
-    resizable?: boolean;
-    sortable?: boolean;
-  };
-  row: {
-    size?: RowSize;
-    selectable?: boolean;
-    arrangeable?: boolean;
-    expandable?: boolean;
-    creatable?: boolean;
-    insertable?: boolean;
-    deletable?: boolean;
-  };
-  cell: {
-    fillable?: boolean;
-  };
-}>;
 
 export type LayoutProps = Partial<{
   frozenDivider: {
@@ -97,7 +57,7 @@ export type LayoutProps = Partial<{
     selection?: Set<number>;
   };
   row: {
-    dragOverGroup?: Group;
+    dragOverGroup?: TableGroup;
     dragPlaceholderIndex?: number;
     dragPlaceholderOffset?: number;
   };
@@ -118,14 +78,14 @@ export type LayoutProps = Partial<{
       count: number;
     };
     searching?: {
-      found: Map<Row['id'], Map<Column['id'], Cell>>;
+      found: Map<TableRow['id'], Map<TableColumn['id'], TableCell>>;
       resultIndex: number;
     };
     invalid?: CellIndex;
   };
 }>;
 
-const DEFAULT_CONFIG: Config = {
+const DEFAULT_CONFIG: TableConfig = {
   streamData: false,
   sideSpacing: 0,
   column: {
@@ -168,10 +128,10 @@ export class TableService extends TableBaseService {
     row: {},
     cell: {},
   };
-  streamData$: Subject<Row[]>;
+  streamData$: Subject<TableRow[]>;
   isDataStreaming: boolean;
-  searchResult: [Row, Column][];
-  calculatedResult: Map<Column['id'], any>;
+  searchResult: [TableRow, TableColumn][];
+  calculatedResult: Map<TableColumn['id'], any>;
 
   private readonly _ngZone = inject(NgZone);
   private readonly _destroyRef = inject(DestroyRef);
@@ -195,7 +155,7 @@ export class TableService extends TableBaseService {
     return (this.host.config.column.calculable ? Dimension.FooterHeight : 0) + 16;
   }
 
-  get searchInfo(): SearchInfo {
+  get searchInfo(): TableSearchInfo {
     const total = this.searchResult?.length || 0;
     const { searching } = this.layoutProps.cell;
     const current = total > 0 ? searching?.resultIndex + 1 : 0;
@@ -203,7 +163,7 @@ export class TableService extends TableBaseService {
     return { current, total };
   }
 
-  get selectedRowsArr(): Row[] {
+  get selectedRowsArr(): TableRow[] {
     return [...this.tableRowService.selectedRows];
   }
 
@@ -272,12 +232,12 @@ export class TableService extends TableBaseService {
   }, 1000);
 
   search(searchQuery: string) {
-    let searchResult: [Row, Column][];
+    let searchResult: [TableRow, TableColumn][];
     let searching;
     let focusing;
 
     if (searchQuery) {
-      const data: [Row, Column][] = [];
+      const data: [TableRow, TableColumn][] = [];
 
       const searchColumns = _.filter(this.tableColumnService.displayingColumns, (c) =>
         _.includes([DataType.Text, DataType.Date, DataType.Number], c.field.dataType),
@@ -368,7 +328,7 @@ export class TableService extends TableBaseService {
     this._cdRef.markForCheck();
   }
 
-  calculate(columns?: Column[]) {
+  calculate(columns?: TableColumn[]) {
     if (columns) {
       this.tableColumnService.calculatingColumns.clear();
       for (const column of columns) {
@@ -420,7 +380,7 @@ export class TableService extends TableBaseService {
     this._cdRef.markForCheck();
   }
 
-  group(columns?: Column[]) {
+  group(columns?: TableColumn[]) {
     if (columns) {
       this.tableColumnService.groupingColumns.clear();
       this.tableGroupService.collapsedGroupState.clear();
@@ -468,7 +428,7 @@ export class TableService extends TableBaseService {
     this._cdRef.markForCheck();
   }
 
-  sort(columns?: Column[]) {
+  sort(columns?: TableColumn[]) {
     if (columns) {
       this.tableColumnService.sortingColumns.clear();
 

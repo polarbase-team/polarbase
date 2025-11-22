@@ -1,7 +1,5 @@
 import { Directive, Input, TrackByFunction } from '@angular/core';
 
-import { Column } from '../../services/table-column.service';
-
 import {
   _RecycleViewRepeaterStrategy,
   _ViewContext,
@@ -9,36 +7,39 @@ import {
   _ViewRect,
   _ViewRepeater,
 } from './recycle-view-repeater-strategy';
+import { TableColumn } from '../../models/table-column';
 
-type ColumnView = Column & {
+type ColumnView = TableColumn & {
   _viewProps: _ViewProps & {
     offset: number;
   };
 };
 
-type ColumnViewContext = _ViewContext<Column>;
+type ColumnViewContext = _ViewContext<TableColumn>;
 
-const COLUMN_TRACK_BY_FN: TrackByFunction<Column> = (_i: number, column: Column): Column['id'] =>
-  column.id;
+const COLUMN_TRACK_BY_FN: TrackByFunction<TableColumn> = (
+  _i: number,
+  column: TableColumn,
+): TableColumn['id'] => column.id;
 
 export type _ColumnView = ColumnView;
 export type _ColumnViewContext = ColumnViewContext;
 
-export const _COLUMN_TRACK_BY_FN: TrackByFunction<Column> = COLUMN_TRACK_BY_FN;
+export const _COLUMN_TRACK_BY_FN: TrackByFunction<TableColumn> = COLUMN_TRACK_BY_FN;
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export function _getColumnRect(column: Column): _ViewRect {
+export function _getColumnRect(column: TableColumn): _ViewRect {
   return column ? (column as _ColumnView)._viewProps.rect : null;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export function _getColumnOffset(column: Column): number {
+export function _getColumnOffset(column: TableColumn): number {
   return column ? (column as _ColumnView)._viewProps.offset : null;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export function _makeUpColumnViewProps(
-  columns: Column[],
+  columns: TableColumn[],
   startLeft: number = 0,
   startOffset: number = 0,
 ): number {
@@ -64,12 +65,12 @@ export function _makeUpColumnViewProps(
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export function _findColumnInsideViewport(
-  columns: Column[],
+  columns: TableColumn[],
   viewportRange: [number, number],
-  memo: Column[] = [],
+  memo: TableColumn[] = [],
   start: number = 0,
   end: number = columns.length - 1,
-): Column[] {
+): TableColumn[] {
   if (start <= end) {
     const mid: number = Math.floor((start + end) / 2);
     const column: ColumnView = columns[mid] as ColumnView;
@@ -105,14 +106,17 @@ export function _findColumnInsideViewport(
   selector: '[virtualScrollColumnRepeater]',
   exportAs: 'virtualScrollColumnRepeater',
 })
-export class VirtualScrollColumnRepeaterDirective extends _ViewRepeater<Column, ColumnViewContext> {
+export class VirtualScrollColumnRepeaterDirective extends _ViewRepeater<
+  TableColumn,
+  ColumnViewContext
+> {
   @Input('virtualScrollColumnRepeaterStartIndex')
   override dataSourceStartIndex: number = 0;
   @Input('virtualScrollColumnRepeaterTrackBy')
-  override dataSourceTrackByFn: TrackByFunction<Column> = COLUMN_TRACK_BY_FN;
+  override dataSourceTrackByFn: TrackByFunction<TableColumn> = COLUMN_TRACK_BY_FN;
 
   @Input('virtualScrollColumnRepeater')
-  set columnDs(ds: Column[]) {
+  set columnDs(ds: TableColumn[]) {
     this.dataSource = ds;
   }
 

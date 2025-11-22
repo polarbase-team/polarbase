@@ -9,35 +9,19 @@ import {
 } from '@angular/cdk/drag-drop';
 
 import { DataType } from '../field/interfaces';
-import { Field } from '../field/objects';
 import { CalculateType, parseGroupFieldData } from '../utils/calculate';
 import { SortingPredicateReturnType, SortingType } from '../utils/sort';
 import { GroupingType } from '../utils/group';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { Dimension } from './table.service';
-import { type Row } from './table-row.service';
 import { MenuItem } from 'primeng/api';
 import { ResizeEvent } from 'angular-resizable-element';
 import { TableBaseService } from './table-base.service';
+import { TableRow } from '../models/table-row';
+import { TableColumn } from '../models/table-column';
+import { TableColumnActionType } from '../events/table-column';
 
-export type Column = {
-  id: string | number;
-  field: Field;
-  width?: number;
-  editable?: boolean;
-  deletable?: boolean;
-  hidden?: boolean;
-  calculateType?: CalculateType;
-  groupingType?: GroupingType;
-  sortingType?: SortingType;
-};
-
-type ColumnMovedEvent = {
-  column: Column;
-  position: number;
-};
-
-interface ColumnExtra extends Column {
+interface TableColumnExtra extends TableColumn {
   _bkWidth?: number;
   _isDragging?: boolean;
   _isResizing?: boolean;
@@ -47,7 +31,7 @@ const UNGROUPABLE_FIELD_DATA_TYPES: ReadonlySet<DataType> = new Set();
 const UNSORTABLE_FIELD_DATA_TYPES: ReadonlySet<DataType> = new Set();
 
 function calculateColumnDragPlaceholderIndex(
-  columns: Column[],
+  columns: TableColumn[],
   offsetX: number,
   scrollLeft: number,
   frozenIndex: number,
@@ -92,7 +76,7 @@ function calculateColumnDragPlaceholderIndex(
 }
 
 function calculateFreezeDividerDragPlaceholderIndex(
-  columns: Column[],
+  columns: TableColumn[],
   offsetX: number,
   scrollLeft: number,
   frozenIndex: number,
@@ -128,59 +112,18 @@ function calculateFreezeDividerDragPlaceholderIndex(
   return dragPlaceholderIndex;
 }
 
-export const TableColumnActionType = {
-  Clear: 'clear',
-  Delete: 'delete',
-  Move: 'move',
-  Resize: 'resize',
-  Freeze: 'freeze',
-  Hide: 'hide',
-  Unhide: 'unhide',
-  Calculate: 'calculate',
-  Uncalculate: 'uncalculate',
-  Group: 'group',
-  Ungroup: 'ungroup',
-  Sort: 'sort',
-  Unsort: 'unsort',
-  Select: 'select',
-} as const;
-export type TableColumnActionType =
-  (typeof TableColumnActionType)[keyof typeof TableColumnActionType];
-
-export interface TableColumnActionPayload {
-  [TableColumnActionType.Clear]: Column;
-  [TableColumnActionType.Delete]: Column[];
-  [TableColumnActionType.Move]: ColumnMovedEvent;
-  [TableColumnActionType.Resize]: Column;
-  [TableColumnActionType.Freeze]: number;
-  [TableColumnActionType.Hide]: Column[];
-  [TableColumnActionType.Unhide]: Column[];
-  [TableColumnActionType.Calculate]: Column;
-  [TableColumnActionType.Uncalculate]: Column;
-  [TableColumnActionType.Group]: Column;
-  [TableColumnActionType.Ungroup]: Column;
-  [TableColumnActionType.Sort]: Column;
-  [TableColumnActionType.Unsort]: Column;
-  [TableColumnActionType.Select]: Column[] | null;
-}
-
-export interface TableColumnAction<T extends TableColumnActionType = TableColumnActionType> {
-  type: T;
-  payload: TableColumnActionPayload[T];
-}
-
 @Injectable()
 export class TableColumnService extends TableBaseService {
   columnActionItems: MenuItem[] | undefined;
-  leftColumns: Column[];
-  rightColumns: Column[];
-  calculatingColumns = new Map<Column['id'], Column>();
-  groupingColumns = new Map<Column['id'], Column>();
-  sortingColumns = new Map<Column['id'], Column>();
+  leftColumns: TableColumn[];
+  rightColumns: TableColumn[];
+  calculatingColumns = new Map<TableColumn['id'], TableColumn>();
+  groupingColumns = new Map<TableColumn['id'], TableColumn>();
+  sortingColumns = new Map<TableColumn['id'], TableColumn>();
 
   private readonly _cdRef = inject(ChangeDetectorRef);
-  private _displayingColumns: Column[];
-  private _columnLookup: Map<Column['id'], Column>;
+  private _displayingColumns: TableColumn[];
+  private _columnLookup: Map<TableColumn['id'], TableColumn>;
 
   get frozenIndex(): number {
     let frozenIndex = this.host.config.column.frozenIndex;
@@ -190,10 +133,10 @@ export class TableColumnService extends TableBaseService {
     return frozenIndex;
   }
 
-  get displayingColumns(): Column[] {
+  get displayingColumns(): TableColumn[] {
     return this._displayingColumns;
   }
-  set displayingColumns(columns: Column[]) {
+  set displayingColumns(columns: TableColumn[]) {
     this._displayingColumns = columns;
     this.leftColumns = columns.slice(0, this.frozenIndex + 1);
     this.rightColumns = columns.slice(this.frozenIndex + 1);
@@ -211,7 +154,7 @@ export class TableColumnService extends TableBaseService {
     if ('config' in changes && changes['config'].isFirstChange) {
       if (this.host.config.calculating) {
         for (const [c, t] of this.host.config.calculating) {
-          const column = _.isString(c) ? this.findColumnByID(c) : (c as Column);
+          const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
           column.calculateType = t;
           this.calculatingColumns.set(column.id, column);
@@ -219,7 +162,7 @@ export class TableColumnService extends TableBaseService {
       }
       if (this.host.config.grouping) {
         for (const [c, t] of this.host.config.grouping) {
-          const column = _.isString(c) ? this.findColumnByID(c) : (c as Column);
+          const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
           column.groupingType = t;
           this.groupingColumns.set(column.id, column);
@@ -227,7 +170,7 @@ export class TableColumnService extends TableBaseService {
       }
       if (this.host.config.sorting) {
         for (const [c, t] of this.host.config.sorting) {
-          const column = _.isString(c) ? this.findColumnByID(c) : (c as Column);
+          const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
           column.sortingType = t;
           this.sortingColumns.set(column.id, column);
@@ -246,7 +189,7 @@ export class TableColumnService extends TableBaseService {
     this.state.canDeleteSelectedColumns = this.canDeleteSelectedColumns;
   }
 
-  updateColumns(columns: Column[]) {
+  updateColumns(columns: TableColumn[]) {
     if (!columns) return;
 
     const displayingColumns = new Set(this.displayingColumns);
@@ -268,7 +211,7 @@ export class TableColumnService extends TableBaseService {
     this._cdRef.markForCheck();
   }
 
-  getGroupableColumns(includeColumn?: Column): Column[] {
+  getGroupableColumns(includeColumn?: TableColumn): TableColumn[] {
     return _.filter(
       this.host.columns,
       (column) =>
@@ -277,7 +220,7 @@ export class TableColumnService extends TableBaseService {
     );
   }
 
-  getSortableColumns(includeColumn?: Column): Column[] {
+  getSortableColumns(includeColumn?: TableColumn): TableColumn[] {
     return _.filter(
       this.host.columns,
       (column) =>
@@ -286,13 +229,13 @@ export class TableColumnService extends TableBaseService {
     );
   }
 
-  setColumnWidth(column: Column, width: number) {
+  setColumnWidth(column: TableColumn, width: number) {
     if (!column) return;
     column.width = width;
     this._cdRef.markForCheck();
   }
 
-  moveColumn(column: Column, newIndex: number) {
+  moveColumn(column: TableColumn, newIndex: number) {
     const currentIndex = this.findColumnRawIndex(column);
     moveItemInArray(this.host.columns, currentIndex, newIndex);
     if (column.hidden) return;
@@ -300,7 +243,7 @@ export class TableColumnService extends TableBaseService {
     this._cdRef.markForCheck();
   }
 
-  hideColumn(column: Column) {
+  hideColumn(column: TableColumn) {
     if (!column) return;
 
     column.hidden = true;
@@ -312,7 +255,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  unhideColumn(column: Column) {
+  unhideColumn(column: TableColumn) {
     if (!column) return;
 
     column.hidden = false;
@@ -324,7 +267,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  calculateByColumn(column: Column, calculateType: CalculateType) {
+  calculateByColumn(column: TableColumn, calculateType: CalculateType) {
     if (!column || !calculateType || column.calculateType === calculateType) return;
 
     column.calculateType = calculateType;
@@ -337,7 +280,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  uncalculateByColumn(column: Column) {
+  uncalculateByColumn(column: TableColumn) {
     if (!column || !this.calculatingColumns.has(column.id)) return;
 
     delete column.calculateType;
@@ -349,13 +292,17 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  groupByColumn(column: Column, groupingType: GroupingType = 'asc', replaceColumn?: Column) {
+  groupByColumn(
+    column: TableColumn,
+    groupingType: GroupingType = 'asc',
+    replaceColumn?: TableColumn,
+  ) {
     if (!column?.id || !groupingType || column.groupingType === groupingType) return;
 
     column.groupingType = groupingType;
     if (replaceColumn) {
       delete replaceColumn.groupingType;
-      const groupingColumns = new Map<Column['id'], Column>();
+      const groupingColumns = new Map<TableColumn['id'], TableColumn>();
       for (const [key, value] of this.groupingColumns) {
         if (key === replaceColumn.id) {
           groupingColumns.set(column.id, column);
@@ -375,7 +322,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  ungroupByColumn(column: Column) {
+  ungroupByColumn(column: TableColumn) {
     if (!column?.id || !this.groupingColumns.has(column.id)) return;
 
     delete column.groupingType;
@@ -388,13 +335,13 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  sortByColumn(column: Column, sortingType: SortingType = 'asc', replaceColumn?: Column) {
+  sortByColumn(column: TableColumn, sortingType: SortingType = 'asc', replaceColumn?: TableColumn) {
     if (!column?.id || !sortingType || column.sortingType === sortingType) return;
 
     column.sortingType = sortingType;
     if (replaceColumn) {
       delete replaceColumn.sortingType;
-      const sortingColumns = new Map<Column['id'], Column>();
+      const sortingColumns = new Map<TableColumn['id'], TableColumn>();
       for (const [key, value] of this.sortingColumns) {
         if (key === replaceColumn.id) {
           sortingColumns.set(column.id, column);
@@ -414,7 +361,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  unsortByColumn(column: Column) {
+  unsortByColumn(column: TableColumn) {
     if (!column?.id || !this.sortingColumns.has(column.id)) return;
 
     delete column.sortingType;
@@ -427,7 +374,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  clearColumn(column: Column) {
+  clearColumn(column: TableColumn) {
     for (const row of this.host.rows) {
       row.data ||= {};
       row.data[column.id] = null;
@@ -450,7 +397,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  openColumnActionMenu(e: Event, column: Column, columnIndex: number) {
+  openColumnActionMenu(e: Event, column: TableColumn, columnIndex: number) {
     const items: MenuItem[] = [];
 
     if (this.tableService.layoutProps.column.selection?.size > 1) {
@@ -585,13 +532,13 @@ export class TableColumnService extends TableBaseService {
     this.host.updateStates();
   }
 
-  onColumnDragStarted(_e: CdkDragStart, column: ColumnExtra) {
+  onColumnDragStarted(_e: CdkDragStart, column: TableColumnExtra) {
     this.tableCellService.deselectAllCells();
     this.deselectAllColumns();
     column._isDragging = true;
   }
 
-  onColumnDragEnded(_e: CdkDragEnd, column: ColumnExtra) {
+  onColumnDragEnded(_e: CdkDragEnd, column: TableColumnExtra) {
     column._isDragging = false;
   }
 
@@ -633,7 +580,7 @@ export class TableColumnService extends TableBaseService {
       offset + this.host.config.sideSpacing;
   }
 
-  onColumnDropped(e: CdkDragDrop<Column[]>) {
+  onColumnDropped(e: CdkDragDrop<TableColumn[]>) {
     const { dragPlaceholderIndex } = this.tableService.layoutProps.column;
     if (dragPlaceholderIndex === null) return;
     const previousIndex = e.previousIndex;
@@ -664,7 +611,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  onColumnResizing(event: ResizeEvent, column: ColumnExtra, _idx: number) {
+  onColumnResizing(event: ResizeEvent, column: TableColumnExtra, _idx: number) {
     let newWidth = event.rectangle.width;
 
     const minWidth = this.host.config.column.minWidth;
@@ -693,7 +640,7 @@ export class TableColumnService extends TableBaseService {
     }
   }
 
-  onColumnResized(event: ResizeEvent, column: ColumnExtra) {
+  onColumnResized(event: ResizeEvent, column: TableColumnExtra) {
     let newWidth = event.rectangle.width;
 
     const minWidth = this.host.config.column.minWidth;
@@ -763,7 +710,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  protected async deleteColumn(column: Column) {
+  protected async deleteColumn(column: TableColumn) {
     _.remove(this.host.columns, column);
     this.markDisplayingColumnsAsChanged(_.without(this.displayingColumns, column));
     this.tableCellService.deselectAllCells();
@@ -803,9 +750,9 @@ export class TableColumnService extends TableBaseService {
     return this.displayingColumns.length - 1;
   }
 
-  protected getSelectedColumns(): Column[] {
+  protected getSelectedColumns(): TableColumn[] {
     const { selection } = this.tableService.layoutProps.column;
-    const columns: Column[] = [];
+    const columns: TableColumn[] = [];
     if (selection) {
       for (const idx of selection) {
         columns.push(this.findColumnByIndex(idx));
@@ -814,43 +761,43 @@ export class TableColumnService extends TableBaseService {
     return columns;
   }
 
-  findColumnByIndex(index: number): Column {
+  findColumnByIndex(index: number): TableColumn {
     return this.displayingColumns[index];
   }
 
-  findColumnByRawIndex(index: number): Column {
+  findColumnByRawIndex(index: number): TableColumn {
     return this.host.columns[index];
   }
 
-  findColumnByID(id: Column['id']): Column {
+  findColumnByID(id: TableColumn['id']): TableColumn {
     return this._columnLookup?.has(id)
       ? this._columnLookup.get(id)
       : _.find(this.host.columns, { id });
   }
 
-  findColumnIndex(column: Column): number {
+  findColumnIndex(column: TableColumn): number {
     const idx = _.indexOf(this.displayingColumns, column);
     return idx === -1 ? this.findColumnIndexByID(column.id) : idx;
   }
 
-  findColumnIndexByID(id: Column['id']): number {
+  findColumnIndexByID(id: TableColumn['id']): number {
     return _.findIndex(this.displayingColumns, { id });
   }
 
-  findColumnRawIndex(column: Column): number {
+  findColumnRawIndex(column: TableColumn): number {
     const idx = _.indexOf(this.host.columns, column);
     return idx === -1 ? this.findColumnRawIndexByID(column.id) : idx;
   }
 
-  findColumnRawIndexByID(id: Column['id']): number {
+  findColumnRawIndexByID(id: TableColumn['id']): number {
     return _.findIndex(this.host.columns, { id });
   }
 
-  markDisplayingColumnsAsChanged(columns: Column[] = this.displayingColumns) {
+  markDisplayingColumnsAsChanged(columns: TableColumn[] = this.displayingColumns) {
     this.displayingColumns = [...columns];
   }
 
-  groupColumnPredicate(groupingColumns: Column[], row: Row, depth: number): any {
+  groupColumnPredicate(groupingColumns: TableColumn[], row: TableRow, depth: number): any {
     const idx = groupingColumns.length - depth;
     const column = groupingColumns[idx];
     if (!column) return;
@@ -858,17 +805,17 @@ export class TableColumnService extends TableBaseService {
   }
 
   sortColumnPredicate(
-    sortingColumns: Column[],
+    sortingColumns: TableColumn[],
     sortingColumnIndex: number,
-    currentRow: Row,
-    rowCompared: Row,
+    currentRow: TableRow,
+    rowCompared: TableRow,
   ): SortingPredicateReturnType {
     const column = sortingColumns[sortingColumnIndex];
     if (!column) return null;
     return [this._parseSortValue(currentRow, rowCompared, column), column.sortingType === 'desc'];
   }
 
-  private _parseSortValue(currentRow: Row, rowCompared: Row, column: Column): any {
+  private _parseSortValue(currentRow: TableRow, rowCompared: TableRow, column: TableColumn): any {
     const data = currentRow.data?.[column.id];
     return data ?? '';
   }
