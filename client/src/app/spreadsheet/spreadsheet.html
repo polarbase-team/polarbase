@@ -86,9 +86,9 @@
           [style.width.px]="column.width"
           [style.minWidth.px]="column.width"
           [style.maxWidth.px]="column.width"
-          [style.height.px]="elementRef.nativeElement.clientHeight"
-          [style.minHeight.px]="elementRef.nativeElement.clientHeight"
-          [style.maxHeight.px]="elementRef.nativeElement.clientHeight"
+          [style.height.%]="100"
+          [style.minHeight.%]="100"
+          [style.maxHeight.%]="100"
         >
           @if (column.field.required) {
             <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>

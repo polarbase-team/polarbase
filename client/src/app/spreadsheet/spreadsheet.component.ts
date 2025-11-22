@@ -168,7 +168,6 @@ export class SpreadsheetComponent
 
   protected readonly destroyRef = inject(DestroyRef);
   protected readonly cdRef = inject(ChangeDetectorRef);
-  protected readonly elementRef = inject(ElementRef);
   protected readonly renderer = inject(Renderer2);
   protected readonly ngZone = inject(NgZone);
   protected readonly fieldCellService = inject(FieldCellService);
