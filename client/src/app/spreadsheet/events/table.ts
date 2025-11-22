@@ -5,7 +5,7 @@ export interface TableSearchInfo {
 
 export const TableActionType = {
   Search: 'search',
-  Freeze: 'frezee',
+  Freeze: 'freeze',
 } as const;
 export type TableActionType = (typeof TableActionType)[keyof typeof TableActionType];
 

@@ -10,7 +10,6 @@ export const TableColumnActionType = {
   Delete: 'delete',
   Move: 'move',
   Resize: 'resize',
-  Freeze: 'freeze',
   Hide: 'hide',
   Unhide: 'unhide',
   Calculate: 'calculate',
@@ -29,7 +28,6 @@ export interface TableColumnActionPayload {
   [TableColumnActionType.Delete]: TableColumn[];
   [TableColumnActionType.Move]: TableColumnMovedEvent;
   [TableColumnActionType.Resize]: TableColumn;
-  [TableColumnActionType.Freeze]: number;
   [TableColumnActionType.Hide]: TableColumn[];
   [TableColumnActionType.Unhide]: TableColumn[];
   [TableColumnActionType.Calculate]: TableColumn;

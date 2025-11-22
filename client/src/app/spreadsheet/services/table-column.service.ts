@@ -20,6 +20,7 @@ import { TableBaseService } from './table-base.service';
 import { TableRow } from '../models/table-row';
 import { TableColumn } from '../models/table-column';
 import { TableColumnActionType } from '../events/table-column';
+import { TableActionType } from '../events/table';
 
 interface TableColumnExtra extends TableColumn {
   _bkWidth?: number;
@@ -420,7 +421,7 @@ export class TableColumnService extends TableBaseService {
     } else {
       if (this.host.config.column.freezable) {
         items.push({
-          label: 'Freeze',
+          label: 'Freeze up to This Column',
           icon: 'pi pi-sign-in',
           command: () => {
             this.freezeUpToColumnIndex(columnIndex);
@@ -665,8 +666,8 @@ export class TableColumnService extends TableBaseService {
     if (columnIndex === this.frozenIndex) return;
     this.host.config.column.frozenIndex = columnIndex;
     this.markDisplayingColumnsAsChanged();
-    this.host.columnAction.emit({
-      type: TableColumnActionType.Freeze,
+    this.host.action.emit({
+      type: TableActionType.Freeze,
       payload: columnIndex,
     });
   }
