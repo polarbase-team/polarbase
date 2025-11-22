@@ -78,12 +78,6 @@ import { TableRow } from './models/table-row';
 import { TableGroup } from './models/table-group';
 import { TableColumnAction, TableColumnActionType } from './events/table-column';
 
-export * from './services/table.service';
-export * from './services/table-cell.service';
-export * from './services/table-column.service';
-export * from './services/table-row.service';
-export * from './services/table-group.service';
-
 const stack: SpreadsheetComponent[] = [];
 
 @Component({
