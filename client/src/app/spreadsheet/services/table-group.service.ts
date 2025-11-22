@@ -1,8 +1,9 @@
 import _ from 'lodash';
-import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
+import { Injectable, ChangeDetectorRef, inject } from '@angular/core';
 import { Point } from '@angular/cdk/drag-drop';
+
 import { calculateBy, calculateFieldPredicate } from '../utils/calculate';
-import type { _GroupView } from '../components/virtual-scroll/virtual-scroll-group-repeater.directive';
+import { _GroupView } from '../components/virtual-scroll/virtual-scroll-group-repeater.directive';
 import { Dimension } from './table.service';
 import type { CellIndex } from './table-cell.service';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';

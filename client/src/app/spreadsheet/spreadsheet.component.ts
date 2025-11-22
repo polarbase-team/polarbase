@@ -1,4 +1,5 @@
 import _ from 'lodash';
+
 import {
   AfterContentChecked,
   AfterContentInit,
@@ -22,15 +23,23 @@ import {
   Renderer2,
   SimpleChanges,
   ViewChild,
-  ViewContainerRef,
 } from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
+// Angular CDK
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+// Angular Third Party Modules
 import { ResizableModule } from 'angular-resizable-element';
+
+// RxJS
 import { fromEvent, map, merge, distinctUntilChanged, filter, Subject } from 'rxjs';
+
+// PrimeNG
 import { MessageService } from 'primeng/api';
 import { Chip } from 'primeng/chip';
 import { Toast } from 'primeng/toast';
@@ -38,24 +47,27 @@ import { Tooltip } from 'primeng/tooltip';
 import { Skeleton } from 'primeng/skeleton';
 import { Checkbox } from 'primeng/checkbox';
 import { ContextMenu } from 'primeng/contextmenu';
+
+// Utils
 import { Clipboard } from './utils/clipboard';
 import { Keyboard } from './utils/keyboard';
-import {
-  _ScrollEvent,
-  VirtualScrollComponent,
-} from './components/virtual-scroll/virtual-scroll.component';
+
+// Components & Directives
 import { FieldCellService } from './components/field-cell/field-cell.service';
-import { CellIndex } from './services/table-cell.service';
-import { Dimension } from './services/table.service';
+import {
+  VirtualScrollComponent,
+  _ScrollEvent,
+} from './components/virtual-scroll/virtual-scroll.component';
 import { VirtualScrollViewportComponent } from './components/virtual-scroll/virtual-scroll-viewport.component';
 import { CalculatingResultPipe } from './pipes/calculating-result.pipe';
+
 import {
-  _GroupView,
   VirtualScrollGroupRepeaterDirective,
+  _GroupView,
 } from './components/virtual-scroll/virtual-scroll-group-repeater.directive';
 import {
-  _getColumnOffset,
   VirtualScrollColumnRepeaterDirective,
+  _getColumnOffset,
 } from './components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { VirtualScrollRowRepeaterDirective } from './components/virtual-scroll/virtual-scroll-row-repeater.directive';
 import {
@@ -63,20 +75,25 @@ import {
   VirtualScrollRightContentWrapperComponent,
 } from './components/virtual-scroll/virtual-scroll-content-wrapper.component';
 import { FieldCellFactoryDirective } from './components/field-cell/field-cell-factory.directive';
+
+// Services
 import { TableColumnService } from './services/table-column.service';
 import { TableRowService } from './services/table-row.service';
-import { TableCellService } from './services/table-cell.service';
+import { TableCellService, CellIndex } from './services/table-cell.service';
 import { TableGroupService } from './services/table-group.service';
-import { TableService } from './services/table.service';
+import { TableService, Dimension } from './services/table.service';
+
+// Events & Models
 import { TableAction } from './events/table';
 import { TableCellAction, TableCellActionType } from './events/table-cell';
+import { TableRowAction, TableRowActionType } from './events/table-row';
+import { TableColumnAction, TableColumnActionType } from './events/table-column';
+
 import { TableCell } from './models/table-cell';
 import { TableConfig } from './models/table';
-import { TableRowAction, TableRowActionType } from './events/table-row';
 import { TableColumn } from './models/table-column';
 import { TableRow } from './models/table-row';
 import { TableGroup } from './models/table-group';
-import { TableColumnAction, TableColumnActionType } from './events/table-column';
 
 const stack: SpreadsheetComponent[] = [];
 

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { ChangeDetectorRef, inject, Injectable, SimpleChanges } from '@angular/core';
+import { Injectable, ChangeDetectorRef, inject, SimpleChanges } from '@angular/core';
 import {
   CdkDragDrop,
   CdkDragEnd,
@@ -7,6 +7,7 @@ import {
   CdkDragStart,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
+import { MenuItem } from 'primeng/api';
 
 import { DataType } from '../field/interfaces';
 import { CalculateType, parseGroupFieldData } from '../utils/calculate';
@@ -14,7 +15,6 @@ import { SortingPredicateReturnType, SortingType } from '../utils/sort';
 import { GroupingType } from '../utils/group';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { Dimension } from './table.service';
-import { MenuItem } from 'primeng/api';
 import { ResizeEvent } from 'angular-resizable-element';
 import { TableBaseService } from './table-base.service';
 import { TableRow } from '../models/table-row';

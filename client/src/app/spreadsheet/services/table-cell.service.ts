@@ -1,25 +1,24 @@
 import _ from 'lodash';
+import dayjs, { isDayjs } from 'dayjs';
+import { FORECAST } from '@formulajs/formulajs';
 import {
+  Injectable,
   ChangeDetectorRef,
   ElementRef,
-  inject,
-  Injectable,
   NgZone,
   Renderer2,
+  inject,
 } from '@angular/core';
+import { MessageService } from 'primeng/api';
 
-import { Clipboard, ClipboardData } from '../utils/clipboard';
+import { Clipboard, ClipboardData, ClipboardItem } from '../utils/clipboard';
 import { EmitEventController } from '../utils/emit-event-controller';
 import { DataType } from '../field/interfaces';
-import { ClipboardItem } from '../utils/clipboard';
 import { parseClipboardExternal, parseClipboardInternal } from '../utils/paste';
 import { Dimension } from './table.service';
 import { FieldCellService } from '../components/field-cell/field-cell.service';
 import { FieldValidationErrors, FieldValidationKey } from '../field/objects/field.object';
-import { MessageService } from 'primeng/api';
 import { DateField, NumberField } from '../field/objects';
-import dayjs, { isDayjs } from 'dayjs';
-import { FORECAST } from '@formulajs/formulajs';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { TableBaseService } from './table-base.service';
 import { TableCell } from '../models/table-cell';

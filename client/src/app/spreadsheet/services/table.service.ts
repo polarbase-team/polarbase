@@ -8,14 +8,15 @@ import {
   NgZone,
   SimpleChanges,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
+
 import { calculateBy, calculateFieldPredicate } from '../utils/calculate';
 import { groupBy } from '../utils/group';
 import { sortBy } from '../utils/sort';
-import type { CellIndex, CellOffset } from './table-cell.service';
-import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DataType } from '../field/interfaces';
 import { searchBy } from '../utils/search';
+import { DataType } from '../field/interfaces';
+import type { CellIndex, CellOffset } from './table-cell.service';
 import { TableBaseService } from './table-base.service';
 import { FieldCellService } from '../components/field-cell/field-cell.service';
 import { TableGroup } from '../models/table-group';

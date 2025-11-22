@@ -1,12 +1,13 @@
 import _ from 'lodash';
+import { Injectable, ChangeDetectorRef, DestroyRef, inject, SimpleChanges } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CdkDragStart, CdkDragMove, CdkDragEnd, type Point } from '@angular/cdk/drag-drop';
+import { debounceTime, distinctUntilChanged, filter, map, pairwise } from 'rxjs';
 import { MenuItem } from 'primeng/api';
-import { ChangeDetectorRef, DestroyRef, inject, Injectable, SimpleChanges } from '@angular/core';
+
 import { EmitEventController } from '../utils/emit-event-controller';
 import { Dimension } from './table.service';
 import type { CellIndex } from './table-cell.service';
-import { debounceTime, distinctUntilChanged, filter, map, pairwise } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CdkDragEnd, CdkDragMove, CdkDragStart, Point } from '@angular/cdk/drag-drop';
 import { TableBaseService } from './table-base.service';
 import { TableRow } from '../models/table-row';
 import { TableGroup } from '../models/table-group';
