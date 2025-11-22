@@ -44,7 +44,7 @@ import {
   _ScrollEvent,
   VirtualScrollComponent,
 } from './components/virtual-scroll/virtual-scroll.component';
-import { FieldCellService } from './components/cells/field-cell.service';
+import { FieldCellService } from './components/field-cell/field-cell.service';
 import { CellIndex } from './services/table-cell.service';
 import { Dimension } from './services/table.service';
 import { VirtualScrollViewportComponent } from './components/virtual-scroll/virtual-scroll-viewport.component';
@@ -62,7 +62,7 @@ import {
   VirtualScrollLeftContentWrapperComponent,
   VirtualScrollRightContentWrapperComponent,
 } from './components/virtual-scroll/virtual-scroll-content-wrapper.component';
-import { FieldCellFactoryDirective } from './components/cells/field-cell-factory.directive';
+import { FieldCellFactoryDirective } from './components/field-cell/field-cell-factory.directive';
 import { TableColumnService } from './services/table-column.service';
 import { TableRowService } from './services/table-row.service';
 import { TableCellService } from './services/table-cell.service';

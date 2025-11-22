@@ -14,7 +14,7 @@ import { DataType } from '../field/interfaces';
 import { ClipboardItem } from '../utils/clipboard';
 import { parseClipboardExternal, parseClipboardInternal } from '../utils/paste';
 import { Dimension } from './table.service';
-import { FieldCellService } from '../components/cells/field-cell.service';
+import { FieldCellService } from '../components/field-cell/field-cell.service';
 import { FieldValidationErrors, FieldValidationKey } from '../field/objects/field.object';
 import { MessageService } from 'primeng/api';
 import { DateField, NumberField } from '../field/objects';

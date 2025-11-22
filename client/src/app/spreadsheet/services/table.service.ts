@@ -17,7 +17,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DataType } from '../field/interfaces';
 import { searchBy } from '../utils/search';
 import { TableBaseService } from './table-base.service';
-import { FieldCellService } from '../components/cells/field-cell.service';
+import { FieldCellService } from '../components/field-cell/field-cell.service';
 import { TableGroup } from '../models/table-group';
 import { TableConfig } from '../models/table';
 import { TableRow } from '../models/table-row';
