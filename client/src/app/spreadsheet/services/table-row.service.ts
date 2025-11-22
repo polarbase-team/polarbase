@@ -52,17 +52,16 @@ type FoundRow = {
 
 @Injectable()
 export class TableRowService extends TableBaseService {
-  private readonly _destroyRef = inject(DestroyRef);
-  private readonly _cdRef = inject(ChangeDetectorRef);
-
   rowActionItems: MenuItem[] | undefined;
   draftRow: TableRow;
   bkRows: TableRow[];
   selectedRows = new Set<TableRow>();
-  protected draggingRows = new Set<TableRow>();
+  draggingRows = new Set<TableRow>();
 
-  private _rowLookup = new Map<TableRow['id'], TableRow>();
-  private _addedEEC: EmitEventController<TableRow['id'], TableRowAddedEvent> =
+  private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
+  private rowLookup = new Map<TableRow['id'], TableRow>();
+  private addedEEC: EmitEventController<TableRow['id'], TableRowAddedEvent> =
     new EmitEventController({
       autoEmit: false,
       onEmitted: (events) => {
@@ -103,10 +102,10 @@ export class TableRowService extends TableBaseService {
         distinctUntilChanged(),
         pairwise(),
         debounceTime(0),
-        takeUntilDestroyed(this._destroyRef),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(([_oldRow, newRow]) => {
-        flushEEC(this._addedEEC, newRow, ({ row }) => row.id);
+        flushEEC(this.addedEEC, newRow, ({ row }) => row.id);
       });
 
     this.host.rowAction
@@ -118,7 +117,7 @@ export class TableRowService extends TableBaseService {
         map(({ payload }) => {
           return (payload as { row: TableRow }[]).map((e) => e.row);
         }),
-        takeUntilDestroyed(this._destroyRef),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((rows) => {
         for (const row of rows) {
@@ -133,7 +132,7 @@ export class TableRowService extends TableBaseService {
   }
 
   override onDestroy() {
-    this._addedEEC.flush();
+    this.addedEEC.flush();
   }
 
   override updateStates() {
@@ -144,7 +143,7 @@ export class TableRowService extends TableBaseService {
 
   initRows(rows: TableRow[]) {
     this.selectedRows.clear();
-    this._rowLookup.clear();
+    this.rowLookup.clear();
 
     for (const row of rows) {
       if (!('_isInit' in row && (row as any)._isInit)) {
@@ -152,11 +151,11 @@ export class TableRowService extends TableBaseService {
         row.id ||= _.uniqueId();
       }
       if (row.selected) this.selectedRows.add(row);
-      this._rowLookup.set(row.id, row);
+      this.rowLookup.set(row.id, row);
     }
 
     this.tableService.handleDataUpdate();
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   pushRows(rows: TableRow[]) {
@@ -169,11 +168,11 @@ export class TableRowService extends TableBaseService {
         row.id ||= _.uniqueId();
       }
       if (row.selected) this.selectedRows.add(row);
-      this._rowLookup.set(row.id, row);
+      this.rowLookup.set(row.id, row);
     }
 
     this.tableService.handleDataUpdate();
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   updateRows(rows: TableRow[], shouldCheckSelectedState?: boolean) {
@@ -183,7 +182,7 @@ export class TableRowService extends TableBaseService {
       }
     }
     this.tableService.handleDataUpdate();
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   setRowSize(size: RowSize) {
@@ -192,7 +191,7 @@ export class TableRowService extends TableBaseService {
       this.tableGroupService.markGroupAsChanged();
     }
     this.host.updateStates();
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   addRow(group?: TableGroup) {
@@ -200,11 +199,11 @@ export class TableRowService extends TableBaseService {
     this.tableGroupService.isGrouping
       ? this.tableGroupService.createRowInGroup(group)
       : this.createRow();
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   flushAddedEEC() {
-    this._addedEEC.flush();
+    this.addedEEC.flush();
   }
 
   openRowActionMenu(e: Event, row: TableRow, rowIndex: number) {
@@ -314,7 +313,7 @@ export class TableRowService extends TableBaseService {
     this.draggingRows.clear();
   }
 
-  protected expandRow(row: TableRow) {
+  expandRow(row: TableRow) {
     this.host.rowAction.emit({ type: TableRowActionType.Expand, payload: row });
   }
 
@@ -329,11 +328,11 @@ export class TableRowService extends TableBaseService {
     onBeforeInsert?.(newRow, position);
 
     this._insertRow(newRow, position, true);
-    this._addedEEC.addEvent(newRow.id, { row: newRow, insertedIndex: position });
+    this.addedEEC.addEvent(newRow.id, { row: newRow, insertedIndex: position });
     return newRow;
   }
 
-  protected async deleteSelectedRows() {
+  deleteSelectedRows() {
     let canDeleteRows = this.getSelectedRows();
     if (!canDeleteRows.length) return;
 
@@ -348,7 +347,7 @@ export class TableRowService extends TableBaseService {
     this.tableService.calculate();
   }
 
-  protected async deleteRow(row: TableRow) {
+  deleteRow(row: TableRow) {
     this.tableCellService.deselectAllCells();
     this._removeRows([row]);
     this.host.rowAction.emit({ type: TableRowActionType.Delete, payload: [row] });
@@ -372,7 +371,7 @@ export class TableRowService extends TableBaseService {
 
     this.tableCellService.deselectAllCells();
 
-    this._addedEEC.emitEvent(this.draftRow.id);
+    this.addedEEC.emitEvent(this.draftRow.id);
 
     this.draftRow = null;
   }
@@ -384,7 +383,7 @@ export class TableRowService extends TableBaseService {
 
     this._removeRows([this.draftRow], true);
 
-    this._addedEEC.removeEvent(this.draftRow.id);
+    this.addedEEC.removeEvent(this.draftRow.id);
 
     this.draftRow = null;
   }
@@ -419,7 +418,7 @@ export class TableRowService extends TableBaseService {
     this.host.rowAction.emit({ type: TableRowActionType.Select, payload: null });
   }
 
-  protected moveRows(movedRows: TableRow[], movedIndex: number) {
+  moveRows(movedRows: TableRow[], movedIndex: number) {
     let newMovedIndex = movedIndex;
     for (const movedRow of movedRows) {
       const idx = this.findRowIndex(movedRow);
@@ -440,7 +439,7 @@ export class TableRowService extends TableBaseService {
     });
   }
 
-  protected getSelectedRows(): TableRow[] {
+  getSelectedRows(): TableRow[] {
     const selectedRows = [...this.selectedRows];
 
     if (!selectedRows.length) {
@@ -462,7 +461,7 @@ export class TableRowService extends TableBaseService {
       : this.host.rows.length - 1;
   }
 
-  protected findRowAtPointerPosition(pointerPosition: Point): FoundRow {
+  findRowAtPointerPosition(pointerPosition: Point): FoundRow {
     if (this.tableGroupService.isGrouping) {
       return this.tableGroupService.findRowInGroupAtPointerPosition(pointerPosition);
     }
@@ -496,7 +495,7 @@ export class TableRowService extends TableBaseService {
   }
 
   findRowByID(id: TableRow['id']): TableRow {
-    return this._rowLookup.has(id) ? this._rowLookup.get(id) : _.find(this.host.rows, { id });
+    return this.rowLookup.has(id) ? this.rowLookup.get(id) : _.find(this.host.rows, { id });
   }
 
   findRowIndex(row: TableRow): number {
@@ -511,7 +510,7 @@ export class TableRowService extends TableBaseService {
       : _.findIndex(this.host.rows, { id });
   }
 
-  protected markRowsAsChanged(rows: TableRow[] = this.host.rows, slient: boolean = false) {
+  markRowsAsChanged(rows: TableRow[] = this.host.rows, slient: boolean = false) {
     this.host.rows = [...rows];
 
     if (slient) return;
@@ -561,7 +560,7 @@ export class TableRowService extends TableBaseService {
 
       this.tableCellService.selectCells(cellIndex, cellIndex, true);
 
-      this._cdRef.detectChanges();
+      this.cdr.detectChanges();
 
       setTimeout(() => {
         this._focusToFieldCellTouchable(true);

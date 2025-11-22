@@ -159,6 +159,8 @@ export class SpreadsheetComponent
   readonly columnActionMenu: ContextMenu;
   @ViewChild('rowActionMenu', { static: true })
   readonly rowActionMenu: ContextMenu;
+  @ViewChild('groupActionMenu', { static: true })
+  readonly groupActionMenu: ContextMenu;
 
   readonly tableService = inject(TableService);
   readonly tableColumnService = inject(TableColumnService);
@@ -385,7 +387,7 @@ export class SpreadsheetComponent
 
         this._closeColumnActionMenu();
         this._closeRowActionMenu();
-        // this._closeGroupActionMenu();
+        this._closeGroupActionMenu();
 
         if (isRightClick) {
           this.ngZone.run(() => {
@@ -402,7 +404,7 @@ export class SpreadsheetComponent
                 this._openRowActionMenu(e1);
                 break;
               case 'group':
-                // this._openGroupActionMenu(e1);
+                this._openGroupActionMenu(e1);
                 break;
             }
           });
@@ -853,20 +855,15 @@ export class SpreadsheetComponent
     this.rowActionMenu.hide();
   }
 
-  // private _openGroupActionMenu(e: MouseEvent) {
-  //   if (this.groupActionMenu.isOpened) return;
-  //
-  //   this.menuService.open(e.target as HTMLElement, this.groupActionMenu, undefined, {
-  //     type: MenuType.ContextMenu,
-  //     offsetX: e.pageX,
-  //     offsetY: e.pageY,
-  //     viewContainerRef: this.vcRef,
-  //   });
-  // }
-  //
-  // private _closeGroupActionMenu() {
-  //   if (!this.groupActionMenu.isOpened) return;
-  //
-  //   this.groupActionMenu.close();
-  // }
+  private _openGroupActionMenu(e: MouseEvent) {
+    if (this.groupActionMenu.visible()) return;
+
+    this.tableGroupService.openActionMenu(e);
+  }
+  
+  private _closeGroupActionMenu() {
+    if (!this.groupActionMenu.visible()) return;
+  
+    this.groupActionMenu.hide();
+  }
 }

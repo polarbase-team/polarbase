@@ -12,6 +12,7 @@ import { TableBaseService } from './table-base.service';
 import { TableGroup } from '../models/table-group';
 import { TableColumn } from '../models/table-column';
 import { TableRow, TableRowCellData } from '../models/table-row';
+import { MenuItem } from 'primeng/api';
 
 function calculateInGroup(
   group: TableGroup,
@@ -101,6 +102,7 @@ function findGroupByItemIndex(itemIndex: number, group?: TableGroup) {
 
 @Injectable()
 export class TableGroupService extends TableBaseService {
+  groupActionItems: MenuItem[] | undefined;
   collapsedState = new Map<number, boolean>();
   rootGroup: TableGroup;
   disableAddRowInGroup: boolean;
@@ -125,8 +127,8 @@ export class TableGroupService extends TableBaseService {
     this.state.isGroupingWithoutGroup = this.isGroupingWithoutGroup;
   }
 
-  protected toggleAllGroup(isCollapse: boolean, group = this.rootGroup) {
-    this._toggleGroupRecursive(group, isCollapse);
+  protected toggleAllGroup(collapsed: boolean, group = this.rootGroup) {
+    this._toggleGroupRecursive(group, collapsed);
     this.markGroupAsChanged();
     this._cdRef.detectChanges();
   }
@@ -311,6 +313,27 @@ export class TableGroupService extends TableBaseService {
       );
     }
     this.disableAddRowInGroup = disableAddRowInGroup;
+  }
+
+  openActionMenu(e: Event) {
+    const items: MenuItem[] = [
+      {
+        label: 'Expand All',
+        icon: 'pi pi-arrow-up-right-and-arrow-down-left-from-center',
+        command: () => {
+          this.toggleAllGroup(false);
+        },
+      },
+      {
+        label: 'Collapse All',
+        icon: 'pi pi-arrow-down-left-and-arrow-up-right-to-center',
+        command: () => {
+          this.toggleAllGroup(true);
+        },
+      },
+    ];
+    this.groupActionItems = items;
+    this.host.groupActionMenu.show(e);
   }
 
   private _toggleGroup(group: TableGroup, collapsed: boolean) {

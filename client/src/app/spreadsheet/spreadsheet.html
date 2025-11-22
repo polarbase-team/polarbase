@@ -1,6 +1,7 @@
 <p-toast />
 <p-contextmenu #columnActionMenu [model]="tableColumnService.columnActionItems" appendTo="body" />
 <p-contextmenu #rowActionMenu [model]="tableRowService.rowActionItems" appendTo="body" />
+<p-contextmenu #groupActionMenu [model]="tableGroupService.groupActionItems" appendTo="body" />
 
 <virtual-scroll
   [sideSpacing]="config.sideSpacing"
@@ -245,7 +246,7 @@
               [style.height.px]="groupRect.height"
               [class.group-first-depth]="group.depth === 1"
               [class.group-last-depth]="group.depth === tableGroupService.state.groupDepth"
-              [class.group--collapsed]="group.collasped"
+              [class.group--collapsed]="group.collapsed"
               [class.box--radius]="group.depth === 1"
             >
               <div class="group__header">
@@ -254,7 +255,7 @@
                     <i
                       class="pi cursor-pointer"
                       style="color: var(--p-surface-500); font-size: 12px"
-                      [ngClass]="group.collasped ? 'pi-chevron-right' : 'pi-chevron-down'"
+                      [ngClass]="group.collapsed ? 'pi-chevron-right' : 'pi-chevron-down'"
                       (click)="tableGroupService.toggleGroup(group)"
                     ></i>
                   </div>
@@ -594,7 +595,7 @@
               [style.height.px]="groupRect.height"
               [class.group-first-depth]="group.depth === 1"
               [class.group-last-depth]="group.depth === tableGroupService.state.groupDepth"
-              [class.group--collapsed]="group.collasped"
+              [class.group--collapsed]="group.collapsed"
               [class.box--radius]="group.depth === 1"
             >
               <div class="group__header">
