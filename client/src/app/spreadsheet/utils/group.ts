@@ -25,9 +25,8 @@ export interface HierarchyGroup {
 
 interface GroupData {
   key: number;
-  data: any;
-  label: string;
   items: any[];
+  metadata: { data: any; label: string; column: TableColumn };
 }
 
 function djb2Hash(str: string) {
@@ -141,7 +140,7 @@ function groupPredicate(groupByColumns: TableColumn[], row: TableRow, depth: num
   if (!column) return null;
   const data = row.data?.[column.id];
   const label = column.field.toString(data);
-  return { data, label };
+  return { column, data, label };
 }
 
 function sortGroupPredicate(groupByColumns: TableColumn[], currentRow: TableRow, depth: number) {
@@ -153,16 +152,17 @@ function sortGroupPredicate(groupByColumns: TableColumn[], currentRow: TableRow,
 function buildData(data: GroupData, groupByColumns: TableColumn[], depth: number = 1): GroupData {
   if (depth <= 0) return data;
 
-  const store = {};
+  const metadata = {};
   const result: Record<number, any> = _.groupBy(data.items, (i) => {
     const dt = groupPredicate(groupByColumns, i, depth);
-    store[data.key] = dt;
-    return djb2Hash(
+    const key = djb2Hash(
       JSON.stringify({
         key: data.key,
-        data: dt,
+        data: dt.data,
       }),
     );
+    metadata[key] = dt;
+    return key;
   });
   const keys: number[] = _.chain(result)
     .map((v: any[], k: string) => ({ ...v[0], key: parseFloat(k) }))
@@ -176,29 +176,28 @@ function buildData(data: GroupData, groupByColumns: TableColumn[], depth: number
 
   return {
     key: data.key,
-    data: data.data,
-    label: data.label,
     items: _.map(keys, (key) =>
-      buildData({ key, items: result[key], ...store[key] }, groupByColumns, depth - 1),
+      buildData({ key, items: result[key], metadata: metadata[key] }, groupByColumns, depth - 1),
     ),
+    metadata: data.metadata,
   };
 }
 
 function buildHierarchy(
-  data: GroupData,
+  groupData: GroupData,
   groupByColumns: TableColumn[],
   onGroupNodeCreated?: (group: HierarchyGroup) => void,
   depth: number = 1,
   cd: number = 0,
 ) {
-  const totalChildrenDepth = depth - cd;
-  const idx = groupByColumns.length - (totalChildrenDepth + 1);
-  const column = groupByColumns[idx];
+  const { column, label, data } = groupData.metadata || {};
   const group = {
-    id: data.key,
+    id: groupData.key,
     column,
+    label,
+    data,
     depth: cd,
-    totalChildrenDepth,
+    totalChildrenDepth: depth - cd,
   } as HierarchyGroup;
   group.clone = clone.bind(group);
   group.sortRows = sortRows.bind(group, groupByColumns);
@@ -208,12 +207,12 @@ function buildHierarchy(
   group.removeRows = removeRows.bind(group);
 
   if (cd >= depth) {
-    group.rows = data.items;
+    group.rows = groupData.items;
   } else {
     group.rows = [];
     group.children = [];
 
-    for (const item of data.items) {
+    for (const item of groupData.items) {
       const childGroup = buildHierarchy(item, groupByColumns, onGroupNodeCreated, depth, cd + 1);
       childGroup.parent = group;
       childGroup.previous = group.children[group.children.length - 1];
