@@ -10,7 +10,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import { Field } from '../../../field/objects';
+import { Field } from '../../field/objects';
 import { Row } from '../../services/table-row.service';
 
 export interface InputContext {

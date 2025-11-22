@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import _ from 'lodash';
 
 import { DateField } from '../field/objects';
-import { Column } from '../components/services/table-column.service';
+import { Column } from '../services/table-column.service';
 
 function search(str: string, match: string): boolean {
   if (!_.isString(str)) return false;

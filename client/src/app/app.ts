@@ -7,12 +7,7 @@ import {
   DropdownField,
   DateField,
 } from './spreadsheet/field/objects';
-import {
-  SpreadsheetComponent,
-  Column,
-  Row,
-  Config,
-} from './spreadsheet/components/spreadsheet.component';
+import { SpreadsheetComponent, Column, Row, Config } from './spreadsheet/spreadsheet.component';
 import _ from 'lodash';
 
 @Component({

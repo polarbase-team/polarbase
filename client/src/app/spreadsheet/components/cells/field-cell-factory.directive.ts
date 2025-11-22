@@ -16,8 +16,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import _ from 'lodash';
 
-import { DataType } from '../../../field/interfaces';
-import { Field } from '../../../field/objects';
+import { DataType } from '../../field/interfaces';
+import { Field } from '../../field/objects';
 import { Cell, Column, Row } from '../../spreadsheet.component';
 import { FieldCell } from './field-cell';
 import { FieldCellEditable } from './field-cell-editable';

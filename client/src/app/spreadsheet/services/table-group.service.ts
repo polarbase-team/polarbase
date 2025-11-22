@@ -3,15 +3,15 @@ import { Point } from '@angular/cdk/drag-drop';
 
 import _ from 'lodash';
 
-import { calculateBy, calculateFieldPredicate } from '../../helpers/calculate';
-import type { HierarchyGroup } from '../../helpers/group';
-import type { _GroupView } from '../sub-components/virtual-scroll/virtual-scroll-group-repeater.directive';
+import { calculateBy, calculateFieldPredicate } from '../helpers/calculate';
+import type { HierarchyGroup } from '../helpers/group';
+import type { _GroupView } from '../components/virtual-scroll/virtual-scroll-group-repeater.directive';
 import { Dimension } from './table.service';
 import type { Column } from './table-column.service';
 import type { RowCellData, Row } from './table-row.service';
 import type { CellIndex } from './table-cell.service';
-import { _getColumnOffset } from '../sub-components/virtual-scroll/virtual-scroll-column-repeater.directive';
-import { FIELD_READONLY } from '../../field/resources/field';
+import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { FIELD_READONLY } from '../field/resources/field';
 import { TableBaseService } from './table-base.service';
 
 export type Group = HierarchyGroup & {

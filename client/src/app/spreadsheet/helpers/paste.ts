@@ -1,6 +1,6 @@
 import { Field } from '../field/objects';
-import { Column } from '../components/services/table-column.service';
-import { Cell } from '../components/services/table-cell.service';
+import { Column } from '../services/table-column.service';
+import { Cell } from '../services/table-cell.service';
 import { ClipboardItem } from './clipboard';
 
 export function parseClipboardInternal(

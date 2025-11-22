@@ -8,21 +8,21 @@ import {
   Renderer2,
 } from '@angular/core';
 
-import { Clipboard, ClipboardData } from '../../helpers/clipboard';
-import { EmitEventController } from '../../helpers/emit-event-controller';
-import { DataType } from '../../field/interfaces';
-import { ClipboardItem } from '../../helpers/clipboard';
-import { parseClipboardExternal, parseClipboardInternal } from '../../helpers/paste';
+import { Clipboard, ClipboardData } from '../helpers/clipboard';
+import { EmitEventController } from '../helpers/emit-event-controller';
+import { DataType } from '../field/interfaces';
+import { ClipboardItem } from '../helpers/clipboard';
+import { parseClipboardExternal, parseClipboardInternal } from '../helpers/paste';
 import { type Column } from './table-column.service';
 import { type Row, type RowCellData } from './table-row.service';
 import { Dimension } from './table.service';
-import { FieldCellService } from '../sub-components/cells/field-cell.service';
-import { FieldValidationErrors, FieldValidationKey } from '../../field/objects/field.object';
+import { FieldCellService } from '../components/cells/field-cell.service';
+import { FieldValidationErrors, FieldValidationKey } from '../field/objects/field.object';
 import { MessageService } from 'primeng/api';
-import { DateField, NumberField } from '../../field/objects';
+import { DateField, NumberField } from '../field/objects';
 import dayjs, { isDayjs } from 'dayjs';
 import { FORECAST } from '@formulajs/formulajs';
-import { _getColumnOffset } from '../sub-components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { TableBaseService } from './table-base.service';
 
 export interface Cell {

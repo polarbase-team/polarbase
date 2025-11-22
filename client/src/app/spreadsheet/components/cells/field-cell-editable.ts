@@ -1,7 +1,7 @@
 import { Directive, HostBinding, booleanAttribute, Input } from '@angular/core';
 import _ from 'lodash';
 
-import { DataType } from '../../../field/interfaces';
+import { DataType } from '../../field/interfaces';
 
 import { FieldCellTouchable } from './field-cell-touchable';
 

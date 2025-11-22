@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Checkbox } from 'primeng/checkbox';
 
-import { CheckboxData } from '../../../../field/interfaces';
+import { CheckboxData } from '../../../field/interfaces';
 import { FieldCellEditable } from '../field-cell-editable';
 import { CellTouchEvent } from '../field-cell-touchable';
 

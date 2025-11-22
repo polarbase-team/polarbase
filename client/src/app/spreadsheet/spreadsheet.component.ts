@@ -38,13 +38,13 @@ import { Tooltip } from 'primeng/tooltip';
 import { Skeleton } from 'primeng/skeleton';
 import { Checkbox } from 'primeng/checkbox';
 import { ContextMenu } from 'primeng/contextmenu';
-import { Clipboard } from '../helpers/clipboard';
-import { Keyboard } from '../helpers/keyboard';
+import { Clipboard } from './helpers/clipboard';
+import { Keyboard } from './helpers/keyboard';
 import {
   _ScrollEvent,
   VirtualScrollComponent,
-} from './sub-components/virtual-scroll/virtual-scroll.component';
-import { FieldCellService } from './sub-components/cells/field-cell.service';
+} from './components/virtual-scroll/virtual-scroll.component';
+import { FieldCellService } from './components/cells/field-cell.service';
 import {
   Cell,
   CellIndex,
@@ -55,22 +55,22 @@ import { Column, TableColumnAction, TableColumnActionType } from './services/tab
 import { Config, Dimension, SearchInfo } from './services/table.service';
 import { Row, TableRowAction, TableRowActionType } from './services/table-row.service';
 import { Group } from './services/table-group.service';
-import { VirtualScrollViewportComponent } from './sub-components/virtual-scroll/virtual-scroll-viewport.component';
-import { CalculatingResultPipe } from '../pipes/calculating-result.pipe';
+import { VirtualScrollViewportComponent } from './components/virtual-scroll/virtual-scroll-viewport.component';
+import { CalculatingResultPipe } from './pipes/calculating-result.pipe';
 import {
   _GroupView,
   VirtualScrollGroupRepeaterDirective,
-} from './sub-components/virtual-scroll/virtual-scroll-group-repeater.directive';
+} from './components/virtual-scroll/virtual-scroll-group-repeater.directive';
 import {
   _getColumnOffset,
   VirtualScrollColumnRepeaterDirective,
-} from './sub-components/virtual-scroll/virtual-scroll-column-repeater.directive';
-import { VirtualScrollRowRepeaterDirective } from './sub-components/virtual-scroll/virtual-scroll-row-repeater.directive';
+} from './components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { VirtualScrollRowRepeaterDirective } from './components/virtual-scroll/virtual-scroll-row-repeater.directive';
 import {
   VirtualScrollLeftContentWrapperComponent,
   VirtualScrollRightContentWrapperComponent,
-} from './sub-components/virtual-scroll/virtual-scroll-content-wrapper.component';
-import { FieldCellFactoryDirective } from './sub-components/cells/field-cell-factory.directive';
+} from './components/virtual-scroll/virtual-scroll-content-wrapper.component';
+import { FieldCellFactoryDirective } from './components/cells/field-cell-factory.directive';
 import { TableColumnService } from './services/table-column.service';
 import { TableRowService } from './services/table-row.service';
 import { TableCellService } from './services/table-cell.service';
