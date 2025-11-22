@@ -141,15 +141,15 @@ export class TableService extends TableBaseService {
   private readonly _fieldCellService = inject(FieldCellService);
 
   get shouldCalculate() {
-    return !!this.host.config.calculating || this.tableColumnService.calculatingColumns.size > 0;
+    return !!this.host.config.calculateBy || this.tableColumnService.calculatedColumns.size > 0;
   }
 
   get shouldGroup() {
-    return !!this.host.config.grouping || this.tableColumnService.groupingColumns.size > 0;
+    return !!this.host.config.groupBy || this.tableColumnService.groupedColumns.size > 0;
   }
 
   get shouldSort() {
-    return !!this.host.config.sorting || this.tableColumnService.sortingColumns.size > 0;
+    return !!this.host.config.sortBy || this.tableColumnService.sortedColumns.size > 0;
   }
 
   get actionBoxOffset() {
@@ -331,13 +331,13 @@ export class TableService extends TableBaseService {
 
   calculate(columns?: TableColumn[]) {
     if (columns) {
-      this.tableColumnService.calculatingColumns.clear();
+      this.tableColumnService.calculatedColumns.clear();
       for (const column of columns) {
         if (!column.calculateType) continue;
-        this.tableColumnService.calculatingColumns.set(column.id, column);
+        this.tableColumnService.calculatedColumns.set(column.id, column);
       }
-    } else if (this.tableColumnService.calculatingColumns.size) {
-      columns = [...this.tableColumnService.calculatingColumns.values()];
+    } else if (this.tableColumnService.calculatedColumns.size) {
+      columns = [...this.tableColumnService.calculatedColumns.values()];
     }
 
     if (this.isDataStreaming || !columns?.length) {
@@ -371,11 +371,11 @@ export class TableService extends TableBaseService {
   }
 
   uncalculate() {
-    for (const column of this.tableColumnService.calculatingColumns.values()) {
+    for (const column of this.tableColumnService.calculatedColumns.values()) {
       delete column.calculateType;
     }
 
-    this.tableColumnService.calculatingColumns.clear();
+    this.tableColumnService.calculatedColumns.clear();
     this.calculatedResult.clear();
 
     this._cdRef.markForCheck();
@@ -383,14 +383,14 @@ export class TableService extends TableBaseService {
 
   group(columns?: TableColumn[]) {
     if (columns) {
-      this.tableColumnService.groupingColumns.clear();
+      this.tableColumnService.groupedColumns.clear();
       this.tableGroupService.collapsedGroupState.clear();
 
       for (const column of columns) {
-        this.tableColumnService.groupingColumns.set(column.id, column);
+        this.tableColumnService.groupedColumns.set(column.id, column);
       }
-    } else if (this.tableColumnService.groupingColumns.size) {
-      columns = [...this.tableColumnService.groupingColumns.values()];
+    } else if (this.tableColumnService.groupedColumns.size) {
+      columns = [...this.tableColumnService.groupedColumns.values()];
     }
 
     if (this.isDataStreaming || !columns?.length) {
@@ -414,11 +414,11 @@ export class TableService extends TableBaseService {
   ungroup() {
     this.tableGroupService.rootGroup = null;
 
-    for (const column of this.tableColumnService.groupingColumns.values()) {
-      delete column.groupingType;
+    for (const column of this.tableColumnService.groupedColumns.values()) {
+      delete column.groupSortType;
     }
 
-    this.tableColumnService.groupingColumns.clear();
+    this.tableColumnService.groupedColumns.clear();
     this.tableGroupService.collapsedGroupState.clear();
 
     this.tableGroupService.disableAddRowInGroup = false;
@@ -429,13 +429,13 @@ export class TableService extends TableBaseService {
 
   sort(columns?: TableColumn[]) {
     if (columns) {
-      this.tableColumnService.sortingColumns.clear();
+      this.tableColumnService.sortedColumns.clear();
 
       for (const column of columns) {
-        this.tableColumnService.sortingColumns.set(column.id, column);
+        this.tableColumnService.sortedColumns.set(column.id, column);
       }
-    } else if (this.tableColumnService.sortingColumns.size) {
-      columns = [...this.tableColumnService.sortingColumns.values()];
+    } else if (this.tableColumnService.sortedColumns.size) {
+      columns = [...this.tableColumnService.sortedColumns.values()];
     }
 
     if (this.isDataStreaming || !columns?.length) {
@@ -454,11 +454,11 @@ export class TableService extends TableBaseService {
   }
 
   unsort() {
-    for (const column of this.tableColumnService.sortingColumns.values()) {
-      delete column.sortingType;
+    for (const column of this.tableColumnService.sortedColumns.values()) {
+      delete column.sortType;
     }
 
-    this.tableColumnService.sortingColumns.clear();
+    this.tableColumnService.sortedColumns.clear();
 
     if (this.tableGroupService.isGrouping) {
       this.tableGroupService.unsortInGroup();

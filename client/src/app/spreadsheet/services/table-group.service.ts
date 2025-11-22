@@ -108,7 +108,7 @@ export class TableGroupService extends TableBaseService {
   private readonly _cdRef = inject(ChangeDetectorRef);
 
   get groupDepth() {
-    return this.tableColumnService.groupingColumns?.size;
+    return this.tableColumnService.groupedColumns?.size;
   }
 
   get isGrouping() {
@@ -305,17 +305,17 @@ export class TableGroupService extends TableBaseService {
 
   checkCanAddRowInGroup() {
     let disableAddRowInGroup = true;
-    if (this.tableColumnService.groupingColumns.size) {
-      disableAddRowInGroup = _.some([...this.tableColumnService.groupingColumns.values()], (c) =>
+    if (this.tableColumnService.groupedColumns.size) {
+      disableAddRowInGroup = _.some([...this.tableColumnService.groupedColumns.values()], (c) =>
         FIELD_READONLY.has(c.field.dataType),
       );
     }
     this.disableAddRowInGroup = disableAddRowInGroup;
   }
 
-  parseGroupMetadataPredicate(groupingColumns: TableColumn[], group: TableGroup) {
-    const idx = groupingColumns.length - (group.totalChildrenDepth + 1);
-    const column = groupingColumns[idx];
+  parseGroupMetadataPredicate(groupedColumns: TableColumn[], group: TableGroup) {
+    const idx = groupedColumns.length - (group.totalChildrenDepth + 1);
+    const column = groupedColumns[idx];
     let data: any;
     let parsed: string = '';
     if (column) {

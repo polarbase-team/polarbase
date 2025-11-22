@@ -65,7 +65,7 @@ export function sortPredicate(
 ): SortPredicateReturnType {
   const column = columns[columnIndex];
   if (!column) return null;
-  return [row.data?.[column.id] ?? '', column.sortingType === 'desc'];
+  return [row.data?.[column.id] ?? '', column.sortType === 'desc'];
 }
 
 export function sortBy(rows: TableRow[], sortByColumns: TableColumn[]) {

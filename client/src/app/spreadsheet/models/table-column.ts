@@ -1,6 +1,6 @@
 import { Field } from '../field/objects';
 import { CalculateType } from '../utils/calculate';
-import { GroupType } from '../utils/group';
+import { GroupSortType } from '../utils/group';
 import { SortType } from '../utils/sort';
 
 export interface TableColumn {
@@ -11,6 +11,6 @@ export interface TableColumn {
   deletable?: boolean;
   hidden?: boolean;
   calculateType?: CalculateType;
-  groupingType?: GroupType;
-  sortingType?: SortType;
+  groupSortType?: GroupSortType;
+  sortType?: SortType;
 }

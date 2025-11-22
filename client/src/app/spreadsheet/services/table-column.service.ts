@@ -11,7 +11,7 @@ import { MenuItem } from 'primeng/api';
 
 import { DataType } from '../field/interfaces';
 import { CalculateType } from '../utils/calculate';
-import { GroupType } from '../utils/group';
+import { GroupSortType } from '../utils/group';
 import { SortType } from '../utils/sort';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { Dimension } from './table.service';
@@ -117,9 +117,9 @@ export class TableColumnService extends TableBaseService {
   columnActionItems: MenuItem[] | undefined;
   leftColumns: TableColumn[];
   rightColumns: TableColumn[];
-  calculatingColumns = new Map<TableColumn['id'], TableColumn>();
-  groupingColumns = new Map<TableColumn['id'], TableColumn>();
-  sortingColumns = new Map<TableColumn['id'], TableColumn>();
+  calculatedColumns = new Map<TableColumn['id'], TableColumn>();
+  groupedColumns = new Map<TableColumn['id'], TableColumn>();
+  sortedColumns = new Map<TableColumn['id'], TableColumn>();
 
   private readonly _cdRef = inject(ChangeDetectorRef);
   private _displayingColumns: TableColumn[];
@@ -152,28 +152,28 @@ export class TableColumnService extends TableBaseService {
 
   override onChanges(changes: SimpleChanges) {
     if ('config' in changes && changes['config'].isFirstChange) {
-      if (this.host.config.calculating) {
-        for (const [c, t] of this.host.config.calculating) {
+      if (this.host.config.calculateBy) {
+        for (const [c, t] of this.host.config.calculateBy) {
           const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
           column.calculateType = t;
-          this.calculatingColumns.set(column.id, column);
+          this.calculatedColumns.set(column.id, column);
         }
       }
-      if (this.host.config.grouping) {
-        for (const [c, t] of this.host.config.grouping) {
+      if (this.host.config.groupBy) {
+        for (const [c, t] of this.host.config.groupBy) {
           const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
-          column.groupingType = t;
-          this.groupingColumns.set(column.id, column);
+          column.groupSortType = t;
+          this.groupedColumns.set(column.id, column);
         }
       }
-      if (this.host.config.sorting) {
-        for (const [c, t] of this.host.config.sorting) {
+      if (this.host.config.sortBy) {
+        for (const [c, t] of this.host.config.sortBy) {
           const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
-          column.sortingType = t;
-          this.sortingColumns.set(column.id, column);
+          column.sortType = t;
+          this.sortedColumns.set(column.id, column);
         }
       }
     }
@@ -216,7 +216,7 @@ export class TableColumnService extends TableBaseService {
       this.host.columns,
       (column) =>
         !UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType) &&
-        (includeColumn === column || !this.groupingColumns.has(column.id)),
+        (includeColumn === column || !this.groupedColumns.has(column.id)),
     );
   }
 
@@ -225,7 +225,7 @@ export class TableColumnService extends TableBaseService {
       this.host.columns,
       (column) =>
         !UNSORTABLE_FIELD_DATA_TYPES.has(column.field.dataType) &&
-        (includeColumn === column || !this.sortingColumns.has(column.id)),
+        (includeColumn === column || !this.sortedColumns.has(column.id)),
     );
   }
 
@@ -271,7 +271,7 @@ export class TableColumnService extends TableBaseService {
     if (!column || !calculateType || column.calculateType === calculateType) return;
 
     column.calculateType = calculateType;
-    this.calculatingColumns.set(column.id, column);
+    this.calculatedColumns.set(column.id, column);
     this.tableService.calculate();
     this._cdRef.markForCheck();
     this.host.columnAction.emit({
@@ -281,10 +281,10 @@ export class TableColumnService extends TableBaseService {
   }
 
   uncalculateByColumn(column: TableColumn) {
-    if (!column || !this.calculatingColumns.has(column.id)) return;
+    if (!column || !this.calculatedColumns.has(column.id)) return;
 
     delete column.calculateType;
-    this.calculatingColumns.delete(column.id);
+    this.calculatedColumns.delete(column.id);
     this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Uncalculate,
@@ -292,23 +292,23 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  groupByColumn(column: TableColumn, groupingType: GroupType = 'asc', replaceColumn?: TableColumn) {
-    if (!column?.id || !groupingType || column.groupingType === groupingType) return;
+  groupByColumn(column: TableColumn, sortType: GroupSortType = 'asc', replaceColumn?: TableColumn) {
+    if (!column?.id || !sortType || column.groupSortType === sortType) return;
 
-    column.groupingType = groupingType;
+    column.groupSortType = sortType;
     if (replaceColumn) {
-      delete replaceColumn.groupingType;
-      const groupingColumns = new Map<TableColumn['id'], TableColumn>();
-      for (const [key, value] of this.groupingColumns) {
+      delete replaceColumn.groupSortType;
+      const groupedColumns = new Map<TableColumn['id'], TableColumn>();
+      for (const [key, value] of this.groupedColumns) {
         if (key === replaceColumn.id) {
-          groupingColumns.set(column.id, column);
+          groupedColumns.set(column.id, column);
           continue;
         }
-        groupingColumns.set(key, value);
+        groupedColumns.set(key, value);
       }
-      this.groupingColumns = groupingColumns;
+      this.groupedColumns = groupedColumns;
     } else {
-      this.groupingColumns.set(column.id, column);
+      this.groupedColumns.set(column.id, column);
     }
     this.tableService.group();
     this._cdRef.markForCheck();
@@ -319,11 +319,11 @@ export class TableColumnService extends TableBaseService {
   }
 
   ungroupByColumn(column: TableColumn) {
-    if (!column?.id || !this.groupingColumns.has(column.id)) return;
+    if (!column?.id || !this.groupedColumns.has(column.id)) return;
 
-    delete column.groupingType;
-    this.groupingColumns.delete(column.id);
-    this.groupingColumns.size ? this.tableService.group() : this.tableService.ungroup();
+    delete column.groupSortType;
+    this.groupedColumns.delete(column.id);
+    this.groupedColumns.size ? this.tableService.group() : this.tableService.ungroup();
     this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Ungroup,
@@ -331,23 +331,23 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  sortByColumn(column: TableColumn, sortingType: SortType = 'asc', replaceColumn?: TableColumn) {
-    if (!column?.id || !sortingType || column.sortingType === sortingType) return;
+  sortByColumn(column: TableColumn, sortType: SortType = 'asc', replaceColumn?: TableColumn) {
+    if (!column?.id || !sortType || column.sortType === sortType) return;
 
-    column.sortingType = sortingType;
+    column.sortType = sortType;
     if (replaceColumn) {
-      delete replaceColumn.sortingType;
-      const sortingColumns = new Map<TableColumn['id'], TableColumn>();
-      for (const [key, value] of this.sortingColumns) {
+      delete replaceColumn.sortType;
+      const sortedColumns = new Map<TableColumn['id'], TableColumn>();
+      for (const [key, value] of this.sortedColumns) {
         if (key === replaceColumn.id) {
-          sortingColumns.set(column.id, column);
+          sortedColumns.set(column.id, column);
           continue;
         }
-        sortingColumns.set(key, value);
+        sortedColumns.set(key, value);
       }
-      this.sortingColumns = sortingColumns;
+      this.sortedColumns = sortedColumns;
     } else {
-      this.sortingColumns.set(column.id, column);
+      this.sortedColumns.set(column.id, column);
     }
     this.tableService.sort();
     this._cdRef.markForCheck();
@@ -358,12 +358,12 @@ export class TableColumnService extends TableBaseService {
   }
 
   unsortByColumn(column: TableColumn) {
-    if (!column?.id || !this.sortingColumns.has(column.id)) return;
+    if (!column?.id || !this.sortedColumns.has(column.id)) return;
 
-    delete column.sortingType;
-    this.sortingColumns.delete(column.id);
+    delete column.sortType;
+    this.sortedColumns.delete(column.id);
     this._cdRef.markForCheck();
-    this.sortingColumns.size ? this.tableService.sort() : this.tableService.unsort();
+    this.sortedColumns.size ? this.tableService.sort() : this.tableService.unsort();
     this.host.columnAction.emit({
       type: TableColumnActionType.Unsort,
       payload: column,
@@ -376,14 +376,14 @@ export class TableColumnService extends TableBaseService {
       row.data[column.id] = null;
     }
     if (this.tableService.shouldGroup) {
-      if (column.groupingType) {
+      if (column.groupSortType) {
         this.tableService.group();
       }
     } else {
       if (column.calculateType) {
         this.tableService.calculate();
       }
-      if (column.sortingType) {
+      if (column.sortType) {
         this.tableService.sort();
       }
     }

@@ -185,11 +185,11 @@ export class TableCellService extends TableBaseService {
             shouldReCalculate = true;
           }
 
-          if (column.groupingType) {
+          if (column.groupSortType) {
             shouldReGroup = true;
           }
 
-          if (column.sortingType) {
+          if (column.sortType) {
             shouldReSort = true;
           }
         }
