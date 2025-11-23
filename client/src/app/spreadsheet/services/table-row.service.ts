@@ -1,5 +1,13 @@
 import _ from 'lodash';
-import { Injectable, ChangeDetectorRef, DestroyRef, inject, signal, effect } from '@angular/core';
+import {
+  Injectable,
+  ChangeDetectorRef,
+  DestroyRef,
+  inject,
+  signal,
+  effect,
+  computed,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CdkDragStart, CdkDragMove, CdkDragEnd, type Point } from '@angular/cdk/drag-drop';
 import { debounceTime, distinctUntilChanged, filter, map, pairwise } from 'rxjs';
@@ -53,9 +61,14 @@ type FoundRow = {
 @Injectable()
 export class TableRowService extends TableBaseService {
   rows = signal<TableRow[]>([]);
+  rowSize = signal<RowSize>('S');
   draftRow: TableRow;
   selectedRows = new Set<TableRow>();
   rowActionItems: MenuItem[] | undefined;
+
+  rowHeight = computed(() => {
+    return RowSize[this.rowSize()];
+  });
 
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
@@ -68,10 +81,6 @@ export class TableRowService extends TableBaseService {
         this.host.rowAction.emit({ type: TableRowActionType.Add, payload: events });
       },
     });
-
-  get rowHeight(): number {
-    return RowSize[this.tableService.config().row.size];
-  }
 
   get canAddRow(): boolean {
     return (
@@ -86,6 +95,10 @@ export class TableRowService extends TableBaseService {
 
   constructor() {
     super();
+
+    effect(() => {
+      this.rowSize.update(() => this.tableService.config().row.size);
+    });
 
     effect(() => {
       const rows = this.host.sourceRows();
@@ -147,7 +160,6 @@ export class TableRowService extends TableBaseService {
   }
 
   override updateStates() {
-    this.state.rowHeight = this.rowHeight;
     this.state.canAddRow = this.canAddRow;
     this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
   }
@@ -179,9 +191,9 @@ export class TableRowService extends TableBaseService {
   //   this.cdr.markForCheck();
   // }
 
-  flushAddedEEC() {
-    this.addedEEC.flush();
-  }
+  // flushAddedEEC() {
+  //   this.addedEEC.flush();
+  // }
 
   onRowDragStarted(e: CdkDragStart<TableRow>) {
     this.tableCellService.deselectAllCells();
@@ -237,7 +249,7 @@ export class TableRowService extends TableBaseService {
   }
 
   setRowSize(size: RowSize) {
-    this.tableService.config().row.size = size;
+    this.rowSize.update(() => size);
     if (this.tableGroupService.isGrouping) {
       this.tableGroupService.markGroupAsChanged();
     }
@@ -262,10 +274,10 @@ export class TableRowService extends TableBaseService {
   }
 
   createRow(data?: any, position?: number, onBeforeInsert?: (r: TableRow, p: number) => void) {
-    const newRow = this._generateRow({ data });
+    const newRow = this.generateRow({ data });
     onBeforeInsert?.(newRow, position);
 
-    this._insertRow(newRow, position, true);
+    this.insertRow(newRow, position);
     this.addedEEC.addEvent(newRow.id, { row: newRow, insertedIndex: position });
     return newRow;
   }
@@ -280,14 +292,14 @@ export class TableRowService extends TableBaseService {
       this.tableCellService.deselectAllCells();
     }
 
-    this._removeRows(canDeleteRows);
+    this.removeRows(canDeleteRows);
     this.host.rowAction.emit({ type: TableRowActionType.Delete, payload: canDeleteRows });
     this.tableService.calculate();
   }
 
   deleteRow(row: TableRow) {
     this.tableCellService.deselectAllCells();
-    this._removeRows([row]);
+    this.removeRows([row]);
     this.host.rowAction.emit({ type: TableRowActionType.Delete, payload: [row] });
     this.tableService.calculate();
   }
@@ -306,32 +318,23 @@ export class TableRowService extends TableBaseService {
 
   flushDraftRow() {
     if (!this.draftRow) return;
-
     this.tableCellService.deselectAllCells();
-
     this.addedEEC.emitEvent(this.draftRow.id);
-
     this.draftRow = null;
   }
 
   cancelDraftRow() {
     if (!this.draftRow) return;
-
     this.tableCellService.deselectAllCells();
-
-    this._removeRows([this.draftRow]);
-
+    this.removeRows([this.draftRow]);
     this.addedEEC.removeEvent(this.draftRow.id);
-
     this.draftRow = null;
   }
 
   selectAllRows() {
     this.tableCellService.deselectAllCells();
     this.tableColumnService.deselectAllColumns();
-
     this.selectedRows.clear();
-
     for (const row of this.rows()) {
       row.selected = true;
       this.selectedRows.add(row);
@@ -412,17 +415,17 @@ export class TableRowService extends TableBaseService {
     }
 
     const startOffset = 0;
-    const endOffset = startOffset + this.rows().length * this.rowHeight;
+    const endOffset = startOffset + this.rows().length * this.rowHeight();
 
     if (pointerOffsetY < startOffset || pointerOffsetY > endOffset) {
       return null;
     }
 
-    const index = Math.round((pointerOffsetY - startOffset) / this.rowHeight);
+    const index = Math.round((pointerOffsetY - startOffset) / this.rowHeight());
 
     return {
       rowIndex: index,
-      rowOffset: startOffset + index * this.rowHeight,
+      rowOffset: startOffset + index * this.rowHeight(),
     };
   }
 
@@ -549,7 +552,7 @@ export class TableRowService extends TableBaseService {
     this.host.rowActionMenu.show(e);
   }
 
-  private _generateRow(extra?: Partial<TableRow>) {
+  private generateRow(extra?: Partial<TableRow>) {
     return _.cloneDeep({
       ...extra,
       id: _.uniqueId(),
@@ -557,11 +560,12 @@ export class TableRowService extends TableBaseService {
     }) as TableRow;
   }
 
-  private _insertRow(row: any, position = this.rows()?.length, slient = false) {
+  private insertRow(row: any, position = this.rows()?.length) {
     this.draftRow = row;
-
-    this.rows().splice(position, 0, row);
-    // this.markRowsAsChanged(this.rows(), slient);
+    this.rows.update((value) => {
+      value.splice(position, 0, row);
+      return [...value];
+    });
 
     // Resets the current selecting state
     // before select the inserted row.
@@ -578,20 +582,20 @@ export class TableRowService extends TableBaseService {
       this.cdr.detectChanges();
 
       setTimeout(() => {
-        this._focusToFieldCellTouchable(true);
+        this.focusToFieldCellTouchable(true);
       }, 17);
     });
   }
 
-  private _removeRows(rows: TableRow[]) {
-    this.rows.update((arr) => _.pull(arr, ...rows));
+  private removeRows(rows: TableRow[]) {
+    this.rows.update((arr) => _.without(arr, ...rows));
 
     if (this.tableGroupService.isGrouping) {
       this.tableGroupService.deleteRowsInGroup(rows);
     }
   }
 
-  private _focusToFieldCellTouchable(retry: boolean = false) {
+  private focusToFieldCellTouchable(retry: boolean = false) {
     if (!this.tableService.layoutProps.cell.selection) return;
 
     const fieldCell = this.tableCellService.findCellElementByIndex(
@@ -606,7 +610,7 @@ export class TableRowService extends TableBaseService {
     if (!retry) return;
 
     setTimeout(() => {
-      this._focusToFieldCellTouchable();
+      this.focusToFieldCellTouchable();
     }, 500);
   }
 }

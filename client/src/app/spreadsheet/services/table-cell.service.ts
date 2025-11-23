@@ -932,7 +932,7 @@ export class TableCellService extends TableBaseService {
     }
 
     const left = _getColumnOffset(this.tableColumnService.findColumnByIndex(index.columnIndex));
-    const top = index.rowIndex * this.tableRowService.rowHeight;
+    const top = index.rowIndex * this.tableRowService.rowHeight();
 
     return { left, top };
   }
@@ -1165,7 +1165,7 @@ export class TableCellService extends TableBaseService {
     }
 
     const verticalTrackOffsetY = scrollLayout.vertical.track.offset.y;
-    const cellHeight = this.tableRowService.rowHeight;
+    const cellHeight = this.tableRowService.rowHeight();
     let top = scrollTop;
 
     if (cellOffsetTop >= verticalTrackOffsetY) {

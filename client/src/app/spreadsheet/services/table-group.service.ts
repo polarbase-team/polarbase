@@ -238,7 +238,7 @@ export class TableGroupService extends TableBaseService {
     const top =
       _viewProps.rect.top +
       Dimension.GroupHeaderHeight +
-      (rowIndex - _viewProps.startItemIndex) * this.tableRowService.rowHeight;
+      (rowIndex - _viewProps.startItemIndex) * this.tableRowService.rowHeight();
 
     return { left, top };
   }
@@ -276,12 +276,12 @@ export class TableGroupService extends TableBaseService {
 
     if (pointerOffsetY < startOffset || pointerOffsetY > endOffset) return null;
 
-    const index = Math.floor((pointerOffsetY - startOffset) / this.tableRowService.rowHeight);
+    const index = Math.floor((pointerOffsetY - startOffset) / this.tableRowService.rowHeight());
 
     return {
       group,
       rowIndex: index,
-      rowOffset: startOffset + index * this.tableRowService.rowHeight,
+      rowOffset: startOffset + index * this.tableRowService.rowHeight(),
     };
   }
 

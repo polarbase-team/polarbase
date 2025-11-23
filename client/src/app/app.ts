@@ -47,7 +47,7 @@ export class App {
     },
   ];
   rows: TableRow[] = _.map(_.range(1, 100), (index: number) => {
-    return { id: _.uniqueId() } as TableRow;
+    return { id: _.uniqueId(), data: { [this.columns[0].id]: index } } as TableRow;
   });
   config: TableConfig = {
     sideSpacing: 20,

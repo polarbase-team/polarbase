@@ -188,7 +188,7 @@
     [rightColumns]="tableColumnService.rightColumns()"
     [rows]="tableRowService.rows()"
     [rootGroup]="tableGroupService.rootGroup"
-    [rowHeight]="tableRowService.state.rowHeight"
+    [rowHeight]="tableRowService.rowHeight()"
   >
     <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset">
       <div
