@@ -160,36 +160,31 @@ export class SpreadsheetComponent
   @Output() rowAction = new EventEmitter<TableRowAction>();
   @Output() cellAction = new EventEmitter<TableCellAction>();
 
-  @ViewChild('columnActionMenu', { static: true })
-  readonly columnActionMenu: ContextMenu;
-  @ViewChild('rowActionMenu', { static: true })
-  readonly rowActionMenu: ContextMenu;
-  @ViewChild('groupActionMenu', { static: true })
-  readonly groupActionMenu: ContextMenu;
+  @ViewChild('columnActionMenu', { static: true }) columnActionMenu: ContextMenu;
+  @ViewChild('rowActionMenu', { static: true }) rowActionMenu: ContextMenu;
+  @ViewChild('groupActionMenu', { static: true }) groupActionMenu: ContextMenu;
+  @ViewChild('fillHanlder') fillHander: ElementRef<HTMLElement>;
+  @ViewChild(VirtualScrollComponent, { static: true }) virtualScroll: VirtualScrollComponent;
 
-  readonly tableService = inject(TableService);
-  readonly tableColumnService = inject(TableColumnService);
-  readonly tableRowService = inject(TableRowService);
-  readonly tableCellService = inject(TableCellService);
-  readonly tableGroupService = inject(TableGroupService);
-
-  protected readonly destroyRef = inject(DestroyRef);
-  protected readonly cdRef = inject(ChangeDetectorRef);
-  protected readonly renderer = inject(Renderer2);
-  protected readonly ngZone = inject(NgZone);
-  protected readonly fieldCellService = inject(FieldCellService);
-  @ViewChild(VirtualScrollComponent, { static: true })
-  readonly virtualScroll: VirtualScrollComponent;
-  @ViewChild('fillHanlder')
-  protected readonly fillHander: ElementRef<HTMLElement>;
-  protected readonly Dimension = Dimension;
-  protected isHideSummaryLabel = false;
+  tableService = inject(TableService);
+  tableColumnService = inject(TableColumnService);
+  tableRowService = inject(TableRowService);
+  tableCellService = inject(TableCellService);
+  tableGroupService = inject(TableGroupService);
   isMouseHolding = false;
   isMouseHiding = false;
 
-  private _keyboard: Keyboard;
-  private _clipboard: Clipboard<TableCell>;
-  private _scrollAnimationFrame: number;
+  protected Dimension = Dimension;
+  protected isHideSummaryLabel = false;
+
+  private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
+  private renderer = inject(Renderer2);
+  private ngZone = inject(NgZone);
+  private fieldCellService = inject(FieldCellService);
+  private keyboard: Keyboard;
+  private clipboard: Clipboard<TableCell>;
+  private scrollAnimationFrame: number;
 
   @HostBinding('class')
   get class() {
@@ -271,13 +266,13 @@ export class SpreadsheetComponent
           )
           .subscribe((isContinue) => {
             if (!isContinue) {
-              this._keyboard.pause();
-              this._clipboard.pause();
+              this.keyboard.pause();
+              this.clipboard.pause();
               return;
             }
 
-            this._keyboard.continue();
-            this._clipboard.continue();
+            this.keyboard.continue();
+            this.clipboard.continue();
           });
       }),
     );
@@ -322,8 +317,8 @@ export class SpreadsheetComponent
     this.tableRowService.onDestroy();
     this.tableGroupService.onDestroy();
     this.fieldCellService.destroy();
-    this._keyboard.stop();
-    this._clipboard.stop();
+    this.keyboard.stop();
+    this.clipboard.stop();
   }
 
   updateStates() {
@@ -335,11 +330,11 @@ export class SpreadsheetComponent
   }
 
   detectChanges() {
-    this.cdRef.detectChanges();
+    this.cdr.detectChanges();
   }
 
   markForCheck() {
-    this.cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   @HostListener('window:beforeunload', ['$event'])
@@ -361,11 +356,11 @@ export class SpreadsheetComponent
   }
 
   protected onScrolling() {
-    if (this._scrollAnimationFrame) {
-      cancelAnimationFrame(this._scrollAnimationFrame);
+    if (this.scrollAnimationFrame) {
+      cancelAnimationFrame(this.scrollAnimationFrame);
     }
 
-    this._scrollAnimationFrame = requestAnimationFrame(() => {
+    this.scrollAnimationFrame = requestAnimationFrame(() => {
       if (this.tableService.layoutProps.fillHandler.index) {
         this.tableService.updateFillHandlerPosition(undefined, true);
       }
@@ -584,7 +579,7 @@ export class SpreadsheetComponent
   }
 
   private _handleKeyboardEvents() {
-    this._keyboard = new Keyboard({
+    this.keyboard = new Keyboard({
       pause: true,
       shouldPause: (e) =>
         this._shouldPauseEvent(e, (shouldPause) => {
@@ -621,7 +616,7 @@ export class SpreadsheetComponent
       });
     };
 
-    this._keyboard.keydown$
+    this.keyboard.keydown$
       .pipe(
         filter((e) => !e.isComposing),
         takeUntilDestroyed(this.destroyRef),
@@ -712,30 +707,30 @@ export class SpreadsheetComponent
         e.preventDefault();
       });
 
-    this._keyboard.keyup$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+    this.keyboard.keyup$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.isMouseHiding = false;
     });
   }
 
   private _handleClipboardEvents() {
-    this._clipboard = new Clipboard({
+    this.clipboard = new Clipboard({
       pause: true,
       shouldPause: (e) => this._shouldPauseEvent(e),
     });
 
-    this._clipboard.copy$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+    this.clipboard.copy$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.ngZone.run(() => {
-        this.tableCellService.copyInteractiveCells(this._clipboard);
+        this.tableCellService.copyInteractiveCells(this.clipboard);
       });
     });
 
-    this._clipboard.cut$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([_e, data]) => {
+    this.clipboard.cut$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([_e, data]) => {
       this.ngZone.run(() => {
         this.tableCellService.cutCells(data);
       });
     });
 
-    this._clipboard.paste$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([_e, data]) => {
+    this.clipboard.paste$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([_e, data]) => {
       this.ngZone.run(() => {
         this.tableCellService.pasteCells(data);
 
