@@ -70,12 +70,12 @@ export class TableRowService extends TableBaseService {
     });
 
   get rowHeight(): number {
-    return RowSize[this.host.config.row.size];
+    return RowSize[this.tableService.config().row.size];
   }
 
   get canAddRow(): boolean {
     return (
-      this.host.config.row.creatable &&
+      this.tableService.config().row.creatable &&
       (!this.tableGroupService.isGrouping || !this.tableGroupService.disableAddRowInGroup)
     );
   }
@@ -186,7 +186,7 @@ export class TableRowService extends TableBaseService {
   }
 
   setRowSize(size: RowSize) {
-    this.host.config.row.size = size;
+    this.tableService.config().row.size = size;
     if (this.tableGroupService.isGrouping) {
       this.tableGroupService.markGroupAsChanged();
     }
@@ -251,7 +251,7 @@ export class TableRowService extends TableBaseService {
         },
         { separator: true },
       );
-      if (this.host.config.row.expandable) {
+      if (this.tableService.config().row.expandable) {
         items.push(
           {
             label: 'Expand',
@@ -263,7 +263,7 @@ export class TableRowService extends TableBaseService {
           { separator: true },
         );
       }
-      if (this.host.config.row.insertable) {
+      if (this.tableService.config().row.insertable) {
         items.push(
           {
             label: 'Insert row above',
@@ -282,7 +282,7 @@ export class TableRowService extends TableBaseService {
           { separator: true },
         );
       }
-      if (this.host.config.row.deletable) {
+      if (this.tableService.config().row.deletable) {
         items.push({
           label: 'Delete',
           icon: 'pi pi-trash',

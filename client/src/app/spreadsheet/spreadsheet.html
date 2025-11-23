@@ -4,7 +4,7 @@
 <p-contextmenu #groupActionMenu [model]="tableGroupService.groupActionItems" appendTo="body" />
 
 <virtual-scroll
-  [sideSpacing]="config.sideSpacing"
+  [sideSpacing]="tableService.config().sideSpacing"
   [disable]="disableScroll"
   (scrolling)="onScrolling()"
 >
@@ -35,7 +35,7 @@
         [style.width.px]="column.width"
         [style.minWidth.px]="column.width"
         [style.maxWidth.px]="column.width"
-        [style.zIndex]="tableColumnService.state.displayingColumns?.length - columnIndex"
+        [style.zIndex]="tableColumnService.columns()?.length - columnIndex"
         [class.cdk-drag-placeholder]="column._isDragging"
         [class.cell--active]="tableService.layoutProps.column.selection?.has(columnIndex)"
         [class.header-cell--grouping]="!tableService.isDataStreaming && column.groupingType"
@@ -45,7 +45,7 @@
         cdkDragLockAxis="x"
         cdkDragPreviewClass="column-drag-preview"
         [cdkDragBoundary]="dragBoundary"
-        [cdkDragDisabled]="!config.column.arrangeable"
+        [cdkDragDisabled]="!tableService.config().column.arrangeable"
         (cdkDragStarted)="tableColumnService.onColumnDragStarted($event, column)"
         (cdkDragEnded)="tableColumnService.onColumnDragEnded($event, column)"
         (cdkDragMoved)="tableColumnService.onColumnDragMoved($event)"
@@ -108,16 +108,16 @@
             tooltipPosition="bottom"
           ></i>
         }
-        @if (config.column.resizable) {
+        @if (tableService.config().column.resizable) {
           <div
             class="header-cell__resize-handle"
             mwlResizeHandle
-            [resizeEdges]="{ right: config.column.resizable }"
+            [resizeEdges]="{ right: tableService.config().column.resizable }"
             pTooltip="Resize column"
             (mousedown)="$event.stopPropagation()"
             (mouseenter)="
               tableService.layoutProps.frozenDivider.isHideHeadLine =
-                columnIndex === tableColumnService.state.frozenIndex
+                columnIndex === tableColumnService.frozenIndex()
             "
             (mouseleave)="tableService.layoutProps.frozenDivider.isHideHeadLine = false"
           ></div>
@@ -127,7 +127,7 @@
     <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset">
       <div
         class="pane-content box box-left box--radius flex flex-row"
-        [style.left.px]="config.sideSpacing"
+        [style.left.px]="tableService.config().sideSpacing"
         [style.width.px]="virtualScroll.viewport.leftWidth"
       >
         <div class="header-cell cell index-cell">
@@ -145,7 +145,7 @@
             ></p-checkbox>
           </div>
         </div>
-        @for (column of tableColumnService.leftColumns; let columnIndex = $index; track column) {
+        @for (column of tableColumnService.leftColumns(); let columnIndex = $index; track column) {
           <ng-container
             *ngTemplateOutlet="headerCellTemplate; context: { column, columnIndex }"
           ></ng-container>
@@ -162,18 +162,18 @@
         [style.width.px]="virtualScroll.viewport.rightWidth"
         [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
       >
-        @for (column of tableColumnService.rightColumns; let columnIndex = $index; track column) {
+        @for (column of tableColumnService.rightColumns(); let columnIndex = $index; track column) {
           <ng-container
             *ngTemplateOutlet="
               headerCellTemplate;
               context: {
                 column,
-                columnIndex: tableColumnService.state.frozenIndex + columnIndex + 1,
+                columnIndex: tableColumnService.frozenIndex() + columnIndex + 1,
               }
             "
           ></ng-container>
         }
-        @if (config.column.creatable) {
+        @if (tableService.config().column.creatable) {
           <div class="header-cell cell header-action-cell cursor">
             <i class="pi pi-plus-circle"></i>
           </div>
@@ -186,8 +186,8 @@
   <div
     class="spreadsheet__body"
     virtualScrollViewport
-    [leftColumns]="tableColumnService.leftColumns"
-    [rightColumns]="tableColumnService.rightColumns"
+    [leftColumns]="tableColumnService.leftColumns()"
+    [rightColumns]="tableColumnService.rightColumns()"
     [rows]="rows"
     [rootGroup]="tableGroupService.rootGroup"
     [rowHeight]="tableRowService.state.rowHeight"
@@ -195,7 +195,7 @@
     <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset">
       <div
         class="pane-content"
-        [style.left.px]="config.sideSpacing"
+        [style.left.px]="tableService.config().sideSpacing"
         [style.width.px]="virtualScroll.viewport.leftWidth"
         [style.height.px]="virtualScroll.viewport.contentHeight"
         [style.transform]="'translate3d(0,' + -virtualScroll.scrollTop + 'px, 0)'"
@@ -249,14 +249,14 @@
                     let columnRect = rect
                   "
                 >
-                  @if (columnIndex === 0 && tableColumnService.state.frozenIndex >= 0) {
+                  @if (columnIndex === 0 && tableColumnService.frozenIndex() >= 0) {
                     <div
                       class="group-cell cell"
                       cell-type="group"
                       [style.left.px]="columnRect.left"
-                      [style.width.px]="columnRect.width - config.column.minWidth"
-                      [style.minWidth.px]="columnRect.width - config.column.minWidth"
-                      [style.maxWidth.px]="columnRect.width - config.column.minWidth"
+                      [style.width.px]="columnRect.width - tableService.config().column.minWidth"
+                      [style.minWidth.px]="columnRect.width - tableService.config().column.minWidth"
+                      [style.maxWidth.px]="columnRect.width - tableService.config().column.minWidth"
                     >
                       @if (group.label) {
                         {{ group.label }}
@@ -267,10 +267,10 @@
                     <div
                       class="group-cell cell"
                       cell-type="group"
-                      [style.left.px]="columnRect.left + columnRect.width - config.column.minWidth"
-                      [style.width.px]="config.column.minWidth"
-                      [style.minWidth.px]="config.column.minWidth"
-                      [style.maxWidth.px]="config.column.minWidth"
+                      [style.left.px]="columnRect.left + columnRect.width - tableService.config().column.minWidth"
+                      [style.width.px]="tableService.config().column.minWidth"
+                      [style.minWidth.px]="tableService.config().column.minWidth"
+                      [style.maxWidth.px]="tableService.config().column.minWidth"
                     >
                       @if (!virtualScroll.isLongScrollingY) {
                         <ng-container
@@ -341,7 +341,7 @@
               virtualScrollAutoScrollHolder="vertical"
               [attr.data-row-index]="rowIndex"
               [attr.data-row-id]="row.id"
-              [attr.row-size]="config.row.size"
+              [attr.row-size]="tableService.config().row.size"
               [style.top.px]="rowRect.top"
               [style.height.px]="rowRect.height"
               [class.row--selecting]="row.selected"
@@ -352,7 +352,7 @@
               cdkDragLockAxis="y"
               cdkDragPreviewClass="row-drag-preview"
               [cdkDragData]="row"
-              [cdkDragDisabled]="!config.row.arrangeable"
+              [cdkDragDisabled]="!tableService.config().row.arrangeable"
               (cdkDragStarted)="tableRowService.onRowDragStarted($event)"
               (cdkDragMoved)="tableRowService.onRowDragMoved($event)"
               (cdkDragEnded)="tableRowService.onRowDragEnded($event)"
@@ -386,7 +386,7 @@
                     class="flex flex-row align-items-start justify-content-center h-fit-content"
                     style="height: fit-content"
                   >
-                    @if (config.row.arrangeable) {
+                    @if (tableService.config().row.arrangeable) {
                       <div class="row__drag-handle" cdkDragHandle>
                         <img src="/icons/drag-dots.svg" />
                       </div>
@@ -401,7 +401,7 @@
                           {{ rowIndex + 1 }}
                         </div>
                       }
-                      @if (config.row.selectable) {
+                      @if (tableService.config().row.selectable) {
                         <div class="row__select-handle">
                           <p-checkbox
                             [binary]="true"
@@ -498,7 +498,7 @@
                       [readonly]="
                         row !== tableRowService.draftRow &&
                         ((tableService.isDataStreaming && !$any(row)._isStreamed) ||
-                          (!config.column.editable &&
+                          (!tableService.config().column.editable &&
                             !column.editable &&
                             row.editable !== true &&
                             row.editable?.[column.id] !== true))
@@ -635,7 +635,7 @@
               virtualScrollAutoScrollHolder="vertical"
               [attr.data-row-index]="rowIndex"
               [attr.data-row-id]="row.id"
-              [attr.row-size]="config.row.size"
+              [attr.row-size]="tableService.config().row.size"
               [style.top.px]="rowRect.top"
               [style.height.px]="rowRect.height"
               [class.row--selecting]="row.selected"
@@ -645,7 +645,7 @@
               <ng-container
                 *virtualScrollColumnRepeater="
                   virtualScroll.viewport.rightWrapper.columns;
-                  startIndex: tableColumnService.state.frozenIndex + 1;
+                  startIndex: tableColumnService.frozenIndex() + 1;
                   let column;
                   let columnIndex = index;
                   let columnRect = rect
@@ -726,7 +726,7 @@
                       [readonly]="
                         row !== tableRowService.draftRow &&
                         ((tableService.isDataStreaming && !$any(row)._isStreamed) ||
-                          (!config.column.editable &&
+                          (!tableService.config().column.editable &&
                             !column.editable &&
                             row.editable !== true &&
                             row.editable?.[column.id] !== true))
@@ -759,7 +759,7 @@
   </div>
 
   <!-- Footer -->
-  @if (config.column.calculable) {
+  @if (tableService.config().column.calculable) {
     <div class="spreadsheet__footer">
       <ng-template #footerCellTempTemplate let-column="column" let-columnIndex="columnIndex">
         <div
@@ -788,7 +788,7 @@
         <div
           class="pane-content flex flex-row full-height"
           style="height: 100%"
-          [style.left.px]="config.sideSpacing"
+          [style.left.px]="tableService.config().sideSpacing"
           [style.width.px]="virtualScroll.viewport.leftWidth"
         >
           <div class="footer-cell cell index-cell">
@@ -821,7 +821,7 @@
               </div>
             }
           </div>
-          @for (column of tableColumnService.leftColumns; let columnIndex = $index; track column) {
+          @for (column of tableColumnService.leftColumns(); let columnIndex = $index; track column) {
             <ng-container
               *ngTemplateOutlet="footerCellTempTemplate; context: { column, columnIndex }"
             ></ng-container>
@@ -839,13 +839,13 @@
           [style.width.px]="virtualScroll.viewport.rightWidth"
           [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
         >
-          @for (column of tableColumnService.rightColumns; let columnIndex = $index; track column) {
+          @for (column of tableColumnService.rightColumns(); let columnIndex = $index; track column) {
             <ng-container
               *ngTemplateOutlet="
                 footerCellTempTemplate;
                 context: {
                   column,
-                  columnIndex: tableColumnService.state.frozenIndex + columnIndex + 1,
+                  columnIndex: tableColumnService.frozenIndex() + columnIndex + 1,
                 }
               "
             ></ng-container>
@@ -856,10 +856,10 @@
   }
 
   <!-- Frozen divider -->
-  @if (config.column.freezable || tableColumnService.state.frozenIndex !== null) {
+  @if (tableService.config().column.freezable || tableColumnService.frozenIndex() !== null) {
     @let isHideHeadLine =
       tableService.layoutProps.frozenDivider.isHideHeadLine ||
-      $any(tableColumnService.displayingColumns?.[tableColumnService.state.frozenIndex])
+      $any(tableColumnService.columns()?.[tableColumnService.frozenIndex()])
         ?._isResizing;
     @let bodyLineHeight =
       virtualScroll.viewport.height + virtualScroll.scrollTop > virtualScroll.viewport.contentHeight
@@ -874,8 +874,8 @@
       [style.left.px]="virtualScroll.scrollDivideOffset"
       [class.frozen-divider--hover]="tableService.layoutProps.frozenDivider.isHover"
       [class.frozen-divider--dragging]="tableService.layoutProps.frozenDivider.dragging"
-      [class.frozen-divider--disabled]="!config.column.freezable || isHideHeadLine"
-      [cdkDragDisabled]="!config.column.freezable"
+      [class.frozen-divider--disabled]="!tableService.config().column.freezable || isHideHeadLine"
+      [cdkDragDisabled]="!tableService.config().column.freezable"
       (cdkDragStarted)="tableColumnService.onFreezeDividerDragStarted()"
       (cdkDragMoved)="tableColumnService.onFreezeDividerDragMoved($event)"
       (cdkDragEnded)="tableColumnService.onFreezeDividerDragEnded($event)"
@@ -899,7 +899,7 @@
           "
         ></span>
       </div>
-      @if (config.column.calculable) {
+      @if (tableService.config().column.calculable) {
         <div class="frozen-divider__line frozen-divider__foot-line"></div>
       }
     </div>
@@ -978,7 +978,7 @@
 
 <!-- Calculation -->
 <ng-template #calculationBlockTemplate let-column="column" let-calculatedResult="calculatedResult">
-  @if (config.column.calculable) {
+  @if (tableService.config().column.calculable) {
     <div class="calculation-block" [class.calculation-block--active]="column.calculateType">
       <i class="pi pi-calculator text-sm"></i>
       @if (column.calculateType) {
@@ -1002,7 +1002,7 @@
       }
     </div>
   }
-  @if (!config.column.calculable && column.calculateType) {
+  @if (!tableService.config().column.calculable && column.calculateType) {
     <div class="calculation-block calculation-block--viewonly">
       <div
         class="white-space-nowrap overflow-hidden text-overflow-ellipsis"

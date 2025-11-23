@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import {
   ChangeDetectorRef,
+  computed,
   DestroyRef,
   ElementRef,
   inject,
@@ -122,6 +123,15 @@ const DEFAULT_CONFIG: TableConfig = {
 
 @Injectable()
 export class TableService extends TableBaseService {
+  config = computed<TableConfig>(() => {
+    const config = _.defaultsDeep({
+      ...DEFAULT_CONFIG,
+      ...this.host.sourceConfig(),
+    });
+    this.isDataStreaming ??= config.streamData;
+    return config;
+  });
+
   readonly layoutProps: LayoutProps = {
     frozenDivider: {},
     fillHandler: {},
@@ -141,19 +151,19 @@ export class TableService extends TableBaseService {
   private readonly _fieldCellService = inject(FieldCellService);
 
   get shouldCalculate() {
-    return !!this.host.config.calculateBy || this.tableColumnService.calculatedColumns.size > 0;
+    return !!this.config().calculateBy || this.tableColumnService.calculatedColumns.size > 0;
   }
 
   get shouldGroup() {
-    return !!this.host.config.groupBy || this.tableColumnService.groupedColumns.size > 0;
+    return !!this.config().groupBy || this.tableColumnService.groupedColumns.size > 0;
   }
 
   get shouldSort() {
-    return !!this.host.config.sortBy || this.tableColumnService.sortedColumns.size > 0;
+    return !!this.config().sortBy || this.tableColumnService.sortedColumns.size > 0;
   }
 
   get actionBoxOffset() {
-    return (this.host.config.column.calculable ? Dimension.FooterHeight : 0) + 16;
+    return (this.config().column.calculable ? Dimension.FooterHeight : 0) + 16;
   }
 
   get searchInfo(): TableSearchInfo {
@@ -162,17 +172,6 @@ export class TableService extends TableBaseService {
     const current = total > 0 ? searching?.resultIndex + 1 : 0;
 
     return { current, total };
-  }
-
-  get selectedRowsArr(): TableRow[] {
-    return [...this.tableRowService.selectedRows];
-  }
-
-  override onChanges(changes: SimpleChanges) {
-    if ('config' in changes) {
-      this.host.config = _.defaultsDeep(this.host.config, DEFAULT_CONFIG);
-      this.isDataStreaming ??= this.host.config.streamData;
-    }
   }
 
   override onInit() {
@@ -240,7 +239,7 @@ export class TableService extends TableBaseService {
     if (searchQuery) {
       const data: [TableRow, TableColumn][] = [];
 
-      const searchColumns = _.filter(this.tableColumnService.displayingColumns, (c) =>
+      const searchColumns = _.filter(this.tableColumnService.columns(), (c) =>
         _.includes([DataType.Text, DataType.Date, DataType.Number], c.field.dataType),
       );
 

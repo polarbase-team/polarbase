@@ -213,7 +213,7 @@ export class TableCellService extends TableBaseService {
   private _interactedColumns: Set<TableColumn>;
 
   get canFillCell() {
-    return this.host.config.cell.fillable;
+    return this.tableService.config().cell.fillable;
   }
 
   get isFocusedInputInCellEditor() {
@@ -998,7 +998,7 @@ export class TableCellService extends TableBaseService {
     if (this.tableRowService.selectedRows.size) {
       const cells: TableCell[] = [];
       for (const row of this.tableRowService.selectedRows) {
-        for (const column of this.tableColumnService.displayingColumns) {
+        for (const column of this.tableColumnService.columns()) {
           cells.push({ row, column });
         }
       }

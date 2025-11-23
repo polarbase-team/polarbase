@@ -8,12 +8,15 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  computed,
   DestroyRef,
+  effect,
   ElementRef,
   EventEmitter,
   HostBinding,
   HostListener,
   inject,
+  input,
   Input,
   NgZone,
   OnChanges,
@@ -21,6 +24,7 @@ import {
   OnInit,
   Output,
   Renderer2,
+  signal,
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
@@ -145,8 +149,9 @@ export class SpreadsheetComponent
     AfterViewChecked,
     OnDestroy
 {
-  @Input() config: TableConfig;
-  @Input() columns: TableColumn[];
+  sourceConfig = input<TableConfig>({}, { alias: 'config' });
+  sourceColumns = input<TableColumn[]>([], { alias: 'columns' });
+
   @Input('rows') rawRows: TableRow[];
   rows: TableRow[];
 
@@ -860,10 +865,10 @@ export class SpreadsheetComponent
 
     this.tableGroupService.openActionMenu(e);
   }
-  
+
   private _closeGroupActionMenu() {
     if (!this.groupActionMenu.visible()) return;
-  
+
     this.groupActionMenu.hide();
   }
 }
