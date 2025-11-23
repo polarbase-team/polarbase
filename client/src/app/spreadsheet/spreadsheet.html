@@ -1,5 +1,5 @@
 <p-toast />
-<p-contextmenu #columnActionMenu [model]="tableColumnService.actionItems" appendTo="body" />
+<p-contextmenu #columnActionMenu [model]="tableColumnService.columnActionItems" appendTo="body" />
 <p-contextmenu #rowActionMenu [model]="tableRowService.rowActionItems" appendTo="body" />
 <p-contextmenu #groupActionMenu [model]="tableGroupService.groupActionItems" appendTo="body" />
 
@@ -132,13 +132,11 @@
       >
         <div class="header-cell cell index-cell">
           <div class="index-block">
+            @let rowLength = tableRowService.rows().length;
+            @let selectedRowLength = tableRowService.selectedRows.size;
             <p-checkbox
               [binary]="true"
-              [ngModel]="
-                tableRowService.selectedRows.size > 0 &&
-                rows?.length > 0 &&
-                tableRowService.selectedRows.size === rows.length
-              "
+              [ngModel]="rowLength > 0 && selectedRowLength > 0 && rowLength === selectedRowLength"
               (ngModelChange)="
                 $event ? tableRowService.selectAllRows() : tableRowService.deselectAllRows()
               "
@@ -188,7 +186,7 @@
     virtualScrollViewport
     [leftColumns]="tableColumnService.leftColumns()"
     [rightColumns]="tableColumnService.rightColumns()"
-    [rows]="rows"
+    [rows]="tableRowService.rows()"
     [rootGroup]="tableGroupService.rootGroup"
     [rowHeight]="tableRowService.state.rowHeight"
   >
@@ -267,7 +265,9 @@
                     <div
                       class="group-cell cell"
                       cell-type="group"
-                      [style.left.px]="columnRect.left + columnRect.width - tableService.config().column.minWidth"
+                      [style.left.px]="
+                        columnRect.left + columnRect.width - tableService.config().column.minWidth
+                      "
                       [style.width.px]="tableService.config().column.minWidth"
                       [style.minWidth.px]="tableService.config().column.minWidth"
                       [style.maxWidth.px]="tableService.config().column.minWidth"
@@ -803,7 +803,7 @@
             } @else {
               <div class="summary-block">
                 <div class="summary-block__content">
-                  {{ rows?.length || 0 }}
+                  {{ tableRowService.rows().length || 0 }}
                   @if (!isHideSummaryLabel) {
                     rows
                   }
@@ -821,7 +821,11 @@
               </div>
             }
           </div>
-          @for (column of tableColumnService.leftColumns(); let columnIndex = $index; track column) {
+          @for (
+            column of tableColumnService.leftColumns();
+            let columnIndex = $index;
+            track column
+          ) {
             <ng-container
               *ngTemplateOutlet="footerCellTempTemplate; context: { column, columnIndex }"
             ></ng-container>
@@ -839,7 +843,11 @@
           [style.width.px]="virtualScroll.viewport.rightWidth"
           [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
         >
-          @for (column of tableColumnService.rightColumns(); let columnIndex = $index; track column) {
+          @for (
+            column of tableColumnService.rightColumns();
+            let columnIndex = $index;
+            track column
+          ) {
             <ng-container
               *ngTemplateOutlet="
                 footerCellTempTemplate;
@@ -859,8 +867,7 @@
   @if (tableService.config().column.freezable || tableColumnService.frozenIndex() !== null) {
     @let isHideHeadLine =
       tableService.layoutProps.frozenDivider.isHideHeadLine ||
-      $any(tableColumnService.columns()?.[tableColumnService.frozenIndex()])
-        ?._isResizing;
+      $any(tableColumnService.columns()?.[tableColumnService.frozenIndex()])?._isResizing;
     @let bodyLineHeight =
       virtualScroll.viewport.height + virtualScroll.scrollTop > virtualScroll.viewport.contentHeight
         ? virtualScroll.viewport.contentHeight -
@@ -937,7 +944,7 @@
 </virtual-scroll>
 
 <!-- Empty block -->
-@if (!rows?.length) {
+@if (!tableRowService.rows().length) {
   <div class="empty-block">
     <ng-content select="[emptyBlock]"></ng-content>
   </div>

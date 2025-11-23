@@ -1,5 +1,4 @@
 import _ from 'lodash';
-
 import {
   AfterContentChecked,
   AfterContentInit,
@@ -8,9 +7,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  computed,
   DestroyRef,
-  effect,
   ElementRef,
   EventEmitter,
   HostBinding,
@@ -24,7 +21,6 @@ import {
   OnInit,
   Output,
   Renderer2,
-  signal,
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
@@ -41,7 +37,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ResizableModule } from 'angular-resizable-element';
 
 // RxJS
-import { fromEvent, map, merge, distinctUntilChanged, filter, Subject } from 'rxjs';
+import { fromEvent, map, merge, distinctUntilChanged, filter } from 'rxjs';
 
 // PrimeNG
 import { MessageService } from 'primeng/api';
@@ -151,9 +147,7 @@ export class SpreadsheetComponent
 {
   sourceConfig = input<TableConfig>({}, { alias: 'config' });
   sourceColumns = input<TableColumn[]>([], { alias: 'columns' });
-
-  @Input('rows') rawRows: TableRow[];
-  rows: TableRow[];
+  sourceRows = input<TableRow[]>([], { alias: 'rows' });
 
   @Output() action = new EventEmitter<TableAction>();
   @Output() columnAction = new EventEmitter<TableColumnAction>();
@@ -812,7 +806,7 @@ export class SpreadsheetComponent
 
     const { columnIndex } = index;
     const column = this.tableColumnService.findColumnByIndex(columnIndex);
-    this.tableColumnService.openContextMenu(e, column, columnIndex);
+    this.tableColumnService.openColumnContextMenu(e, column, columnIndex);
   }
 
   private _closeColumnActionMenu() {

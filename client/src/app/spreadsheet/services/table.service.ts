@@ -124,10 +124,7 @@ const DEFAULT_CONFIG: TableConfig = {
 @Injectable()
 export class TableService extends TableBaseService {
   config = computed<TableConfig>(() => {
-    const config = _.defaultsDeep({
-      ...DEFAULT_CONFIG,
-      ...this.host.sourceConfig(),
-    });
+    const config = _.defaultsDeep(this.host.sourceConfig(), DEFAULT_CONFIG);
     this.isDataStreaming ??= config.streamData;
     return config;
   });
@@ -243,7 +240,7 @@ export class TableService extends TableBaseService {
         _.includes([DataType.Text, DataType.Date, DataType.Number], c.field.dataType),
       );
 
-      for (const row of this.host.rows) {
+      for (const row of this.tableRowService.rows()) {
         for (const column of searchColumns) {
           data.push([row, column]);
         }
@@ -357,7 +354,7 @@ export class TableService extends TableBaseService {
         this.calculatedResult.set(
           column.id,
           calculateBy(
-            _.map(this.host.rows, 'data'),
+            _.map(this.tableRowService.rows(), 'data'),
             column.calculateType,
             calculateFieldPredicate.bind(this, column.field),
             column?.field,
@@ -396,9 +393,13 @@ export class TableService extends TableBaseService {
       return;
     }
 
-    this.tableGroupService.rootGroup = groupBy(this.host.rows, columns, (group: TableGroup) => {
-      group.collapsed = this.tableGroupService.collapsedState.get(group.id);
-    });
+    this.tableGroupService.rootGroup = groupBy(
+      this.host.sourceRows(),
+      columns,
+      (group: TableGroup) => {
+        group.collapsed = this.tableGroupService.collapsedState.get(group.id);
+      },
+    );
 
     this.sort();
     this.calculate();
@@ -442,8 +443,7 @@ export class TableService extends TableBaseService {
     if (this.tableGroupService.isGrouping) {
       this.tableGroupService.sortInGroup(columns);
     } else {
-      this.tableRowService.bkRows ||= [...this.host.rows];
-      this.host.rows = sortBy(this.host.rawRows, columns);
+      this.tableRowService.rows.update(() => sortBy(this.host.sourceRows(), columns));
     }
 
     this.host.updateStates();
@@ -460,11 +460,7 @@ export class TableService extends TableBaseService {
     if (this.tableGroupService.isGrouping) {
       this.tableGroupService.unsortInGroup();
     } else {
-      this.host.rows = _.chain(this.tableRowService.bkRows)
-        .without(..._.difference(this.tableRowService.bkRows, this.host.rows))
-        .concat(..._.difference(this.host.rows, this.tableRowService.bkRows))
-        .value();
-      this.tableRowService.bkRows = null;
+      this.tableRowService.rows.update(() => this.host.sourceRows());
     }
 
     this._cdRef.markForCheck();

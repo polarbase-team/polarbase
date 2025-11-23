@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Injectable, ChangeDetectorRef, DestroyRef, inject, SimpleChanges } from '@angular/core';
+import { Injectable, ChangeDetectorRef, DestroyRef, inject, signal, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CdkDragStart, CdkDragMove, CdkDragEnd, type Point } from '@angular/cdk/drag-drop';
 import { debounceTime, distinctUntilChanged, filter, map, pairwise } from 'rxjs';
@@ -52,14 +52,14 @@ type FoundRow = {
 
 @Injectable()
 export class TableRowService extends TableBaseService {
-  rowActionItems: MenuItem[] | undefined;
+  rows = signal<TableRow[]>([]);
   draftRow: TableRow;
-  bkRows: TableRow[];
   selectedRows = new Set<TableRow>();
-  draggingRows = new Set<TableRow>();
+  rowActionItems: MenuItem[] | undefined;
 
-  private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
+  private draggingRows = new Set<TableRow>();
   private rowLookup = new Map<TableRow['id'], TableRow>();
   private addedEEC: EmitEventController<TableRow['id'], TableRowAddedEvent> =
     new EmitEventController({
@@ -84,11 +84,22 @@ export class TableRowService extends TableBaseService {
     return !Array.from(this.selectedRows).find((row) => !!row.deletable === false);
   }
 
-  override onChanges(changes: SimpleChanges) {
-    if ('rawRows' in changes) {
-      this.host.rows = this.host.rawRows ? [...this.host.rawRows] : [];
-      this.initRows(this.host.rows);
-    }
+  constructor() {
+    super();
+
+    effect(() => {
+      const rows = this.host.sourceRows();
+      for (const row of rows) {
+        if (!this.rowLookup.has(row.id)) {
+          row.id ||= _.uniqueId();
+        }
+        if (row.selected) this.selectedRows.add(row);
+        this.rowLookup.set(row.id, row);
+      }
+
+      this.tableService.handleDataUpdate();
+      this.rows.update(() => rows);
+    });
   }
 
   override onInit() {
@@ -126,7 +137,7 @@ export class TableRowService extends TableBaseService {
             break;
           }
         }
-        this.markRowsAsChanged();
+        // this.markRowsAsChanged();
         this.tableService.handleDataUpdate();
       });
   }
@@ -141,48 +152,88 @@ export class TableRowService extends TableBaseService {
     this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
   }
 
-  initRows(rows: TableRow[]) {
-    this.selectedRows.clear();
-    this.rowLookup.clear();
+  // pushRows(rows: TableRow[]) {
+  //   this.host.rawRows = this.host.rawRows ? [...this.host.rawRows, ...rows] : rows;
+  //   this.rows() = [...this.host.rawRows];
 
-    for (const row of rows) {
-      if (!('_isInit' in row && (row as any)._isInit)) {
-        (row as any)._isInit = true;
-        row.id ||= _.uniqueId();
-      }
-      if (row.selected) this.selectedRows.add(row);
-      this.rowLookup.set(row.id, row);
-    }
+  //   for (const row of rows) {
+  //     if (!('_isInit' in row && (row as any)._isInit)) {
+  //       (row as any)._isInit = true;
+  //       row.id ||= _.uniqueId();
+  //     }
+  //     if (row.selected) this.selectedRows.add(row);
+  //     this.rowLookup.set(row.id, row);
+  //   }
 
-    this.tableService.handleDataUpdate();
-    this.cdr.markForCheck();
+  //   this.tableService.handleDataUpdate();
+  //   this.cdr.markForCheck();
+  // }
+
+  // updateRows(rows: TableRow[], shouldCheckSelectedState?: boolean) {
+  //   if (shouldCheckSelectedState) {
+  //     for (const row of rows) {
+  //       row.selected ? this.selectedRows.add(row) : this.selectedRows.delete(row);
+  //     }
+  //   }
+  //   this.tableService.handleDataUpdate();
+  //   this.cdr.markForCheck();
+  // }
+
+  flushAddedEEC() {
+    this.addedEEC.flush();
   }
 
-  pushRows(rows: TableRow[]) {
-    this.host.rawRows = this.host.rawRows ? [...this.host.rawRows, ...rows] : rows;
-    this.host.rows = [...this.host.rawRows];
+  onRowDragStarted(e: CdkDragStart<TableRow>) {
+    this.tableCellService.deselectAllCells();
+    const draggingRow = e.source.data;
+    this.draggingRows.add(draggingRow);
 
-    for (const row of rows) {
-      if (!('_isInit' in row && (row as any)._isInit)) {
-        (row as any)._isInit = true;
-        row.id ||= _.uniqueId();
-      }
-      if (row.selected) this.selectedRows.add(row);
-      this.rowLookup.set(row.id, row);
+    if (!draggingRow.selected) return;
+
+    for (const row of this.selectedRows) {
+      this.draggingRows.add(row);
     }
-
-    this.tableService.handleDataUpdate();
-    this.cdr.markForCheck();
   }
 
-  updateRows(rows: TableRow[], shouldCheckSelectedState?: boolean) {
-    if (shouldCheckSelectedState) {
-      for (const row of rows) {
-        row.selected ? this.selectedRows.add(row) : this.selectedRows.delete(row);
+  onRowDragMoved(e: CdkDragMove<TableRow>) {
+    const foundRow = this.findRowAtPointerPosition(e.pointerPosition);
+    let group;
+    let rowIndex;
+    let rowOffset;
+    if (foundRow) {
+      group = foundRow.group;
+      rowIndex = foundRow.rowIndex;
+      rowOffset =
+        foundRow.rowOffset +
+        Dimension.HeaderHeight +
+        Dimension.BodyVerticalPadding -
+        this.host.virtualScroll.scrollTop -
+        2;
+    }
+    this.tableService.layoutProps.row.dragOverGroup = group;
+    this.tableService.layoutProps.row.dragPlaceholderIndex = rowIndex;
+    this.tableService.layoutProps.row.dragPlaceholderOffset = rowOffset;
+  }
+
+  onRowDragEnded(e: CdkDragEnd<TableRow>) {
+    const { dragPlaceholderIndex } = this.tableService.layoutProps.row;
+    if (dragPlaceholderIndex === null) return;
+    const currentIndex = dragPlaceholderIndex;
+
+    if (_.isFinite(currentIndex)) {
+      const droppedRows = [...this.draggingRows];
+      this.moveRows(droppedRows, currentIndex);
+      if (this.tableGroupService.isGrouping) {
+        const targetGroup = this.tableService.layoutProps.row.dragOverGroup;
+        this.tableGroupService.moveRowsInGroup(droppedRows, currentIndex, targetGroup);
       }
     }
-    this.tableService.handleDataUpdate();
-    this.cdr.markForCheck();
+
+    e.source.reset();
+
+    this.tableService.layoutProps.row.dragPlaceholderIndex =
+      this.tableService.layoutProps.row.dragOverGroup = null;
+    this.draggingRows.clear();
   }
 
   setRowSize(size: RowSize) {
@@ -190,8 +241,16 @@ export class TableRowService extends TableBaseService {
     if (this.tableGroupService.isGrouping) {
       this.tableGroupService.markGroupAsChanged();
     }
-    this.host.updateStates();
-    this.cdr.markForCheck();
+  }
+
+  expandRow(row: TableRow) {
+    this.host.rowAction.emit({ type: TableRowActionType.Expand, payload: row });
+  }
+
+  expandSelectingRow() {
+    const selecting = this.tableService.layoutProps.cell.selection?.primary;
+    if (!selecting) return;
+    this.expandRow(this.findRowByIndex(selecting.rowIndex));
   }
 
   addRow(group?: TableGroup) {
@@ -202,8 +261,201 @@ export class TableRowService extends TableBaseService {
     this.cdr.markForCheck();
   }
 
-  flushAddedEEC() {
-    this.addedEEC.flush();
+  createRow(data?: any, position?: number, onBeforeInsert?: (r: TableRow, p: number) => void) {
+    const newRow = this._generateRow({ data });
+    onBeforeInsert?.(newRow, position);
+
+    this._insertRow(newRow, position, true);
+    this.addedEEC.addEvent(newRow.id, { row: newRow, insertedIndex: position });
+    return newRow;
+  }
+
+  deleteSelectedRows() {
+    let canDeleteRows = this.getSelectedRows();
+    if (!canDeleteRows.length) return;
+
+    if (this.selectedRows.size) {
+      this.selectedRows = new Set(_.pull([...this.selectedRows], ...canDeleteRows));
+    } else {
+      this.tableCellService.deselectAllCells();
+    }
+
+    this._removeRows(canDeleteRows);
+    this.host.rowAction.emit({ type: TableRowActionType.Delete, payload: canDeleteRows });
+    this.tableService.calculate();
+  }
+
+  deleteRow(row: TableRow) {
+    this.tableCellService.deselectAllCells();
+    this._removeRows([row]);
+    this.host.rowAction.emit({ type: TableRowActionType.Delete, payload: [row] });
+    this.tableService.calculate();
+  }
+
+  toggleRow(row: TableRow) {
+    this.tableCellService.deselectAllCells();
+    this.tableColumnService.deselectAllColumns();
+
+    row.selected = !row.selected;
+
+    this.selectedRows.has(row) ? this.selectedRows.delete(row) : this.selectedRows.add(row);
+
+    this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
+    this.host.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
+  }
+
+  flushDraftRow() {
+    if (!this.draftRow) return;
+
+    this.tableCellService.deselectAllCells();
+
+    this.addedEEC.emitEvent(this.draftRow.id);
+
+    this.draftRow = null;
+  }
+
+  cancelDraftRow() {
+    if (!this.draftRow) return;
+
+    this.tableCellService.deselectAllCells();
+
+    this._removeRows([this.draftRow]);
+
+    this.addedEEC.removeEvent(this.draftRow.id);
+
+    this.draftRow = null;
+  }
+
+  selectAllRows() {
+    this.tableCellService.deselectAllCells();
+    this.tableColumnService.deselectAllColumns();
+
+    this.selectedRows.clear();
+
+    for (const row of this.rows()) {
+      row.selected = true;
+      this.selectedRows.add(row);
+    }
+
+    this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
+    this.host.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
+  }
+
+  deselectAllRows() {
+    this.host.rowActionMenu.hide();
+
+    if (!this.selectedRows.size) return;
+
+    for (const row of this.selectedRows) {
+      row.selected = false;
+    }
+
+    this.selectedRows.clear();
+
+    this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
+    this.host.rowAction.emit({ type: TableRowActionType.Select, payload: null });
+  }
+
+  moveRows(movedRows: TableRow[], movedIndex: number) {
+    let newMovedIndex = movedIndex;
+    for (const movedRow of movedRows) {
+      const idx = this.findRowIndex(movedRow);
+      if (idx < 0 || idx >= movedIndex) {
+        continue;
+      }
+      newMovedIndex--;
+    }
+
+    _.pull(this.rows(), ...movedRows);
+    this.rows().splice(newMovedIndex, 0, ...movedRows);
+
+    // this.markRowsAsChanged();
+
+    this.host.rowAction.emit({
+      type: TableRowActionType.Move,
+      payload: movedRows.map((movedRow) => ({ row: movedRow, movedIndex })),
+    });
+  }
+
+  getSelectedRows(): TableRow[] {
+    const selectedRows = [...this.selectedRows];
+
+    if (!selectedRows.length) {
+      const { selection } = this.tableService.layoutProps.cell;
+      const startIndex = selection.start.rowIndex;
+      const endIndex = startIndex + selection.rowCount;
+
+      for (let i = startIndex; i < endIndex; i++) {
+        selectedRows.push(this.findRowByIndex(i));
+      }
+    }
+
+    return selectedRows;
+  }
+
+  getLastRowIndex(): number {
+    return this.tableGroupService.isGrouping
+      ? this.tableGroupService.getLastRowIndexInGroup()
+      : this.rows().length - 1;
+  }
+
+  findRowAtPointerPosition(pointerPosition: Point): FoundRow {
+    if (this.tableGroupService.isGrouping) {
+      return this.tableGroupService.findRowInGroupAtPointerPosition(pointerPosition);
+    }
+
+    let { y: pointerOffsetY } = this.host.virtualScroll.measurePointerOffset(pointerPosition);
+    pointerOffsetY -= Dimension.BodyVerticalPadding;
+
+    if (!_.isFinite(pointerOffsetY) || pointerOffsetY < 0) {
+      return null;
+    }
+
+    const startOffset = 0;
+    const endOffset = startOffset + this.rows().length * this.rowHeight;
+
+    if (pointerOffsetY < startOffset || pointerOffsetY > endOffset) {
+      return null;
+    }
+
+    const index = Math.round((pointerOffsetY - startOffset) / this.rowHeight);
+
+    return {
+      rowIndex: index,
+      rowOffset: startOffset + index * this.rowHeight,
+    };
+  }
+
+  findRowByIndex(index: number): TableRow {
+    return this.tableGroupService.isGrouping
+      ? this.tableGroupService.findRowInGroupByIndex(index)
+      : this.rows()[index];
+  }
+
+  findRowByID(id: TableRow['id']): TableRow {
+    return this.rowLookup.has(id) ? this.rowLookup.get(id) : _.find(this.rows(), { id });
+  }
+
+  findRowIndex(row: TableRow): number {
+    return this.tableGroupService.isGrouping
+      ? this.tableGroupService.findRowIndexInGroup(row)
+      : _.indexOf(this.rows(), row);
+  }
+
+  findRowIndexByID(id: TableRow['id']): number {
+    return this.tableGroupService.isGrouping
+      ? this.tableGroupService.findRowIndexInGroupByID(id)
+      : _.findIndex(this.rows(), { id });
+  }
+
+  markRowsAsStreamed(rows: TableRow[]) {
+    for (const row of rows) {
+      (row as any)._isStreamed = true;
+    }
+  }
+
+  checkRowIsDraft(row: TableRow): boolean {
+    return this.draftRow === row;
   }
 
   openRowActionMenu(e: Event, row: TableRow, rowIndex: number) {
@@ -297,280 +549,6 @@ export class TableRowService extends TableBaseService {
     this.host.rowActionMenu.show(e);
   }
 
-  onRowDragStarted(e: CdkDragStart<TableRow>) {
-    this.tableCellService.deselectAllCells();
-    const draggingRow = e.source.data;
-    this.draggingRows.add(draggingRow);
-
-    if (!draggingRow.selected) return;
-
-    for (const row of this.selectedRows) {
-      this.draggingRows.add(row);
-    }
-  }
-
-  onRowDragMoved(e: CdkDragMove<TableRow>) {
-    const foundRow = this.findRowAtPointerPosition(e.pointerPosition);
-    let group;
-    let rowIndex;
-    let rowOffset;
-    if (foundRow) {
-      group = foundRow.group;
-      rowIndex = foundRow.rowIndex;
-      rowOffset =
-        foundRow.rowOffset +
-        Dimension.HeaderHeight +
-        Dimension.BodyVerticalPadding -
-        this.host.virtualScroll.scrollTop -
-        2;
-    }
-    this.tableService.layoutProps.row.dragOverGroup = group;
-    this.tableService.layoutProps.row.dragPlaceholderIndex = rowIndex;
-    this.tableService.layoutProps.row.dragPlaceholderOffset = rowOffset;
-  }
-
-  onRowDragEnded(e: CdkDragEnd<TableRow>) {
-    const { dragPlaceholderIndex } = this.tableService.layoutProps.row;
-    if (dragPlaceholderIndex === null) return;
-    const currentIndex = dragPlaceholderIndex;
-
-    if (_.isFinite(currentIndex)) {
-      const droppedRows = [...this.draggingRows];
-      this.moveRows(droppedRows, currentIndex);
-      if (this.tableGroupService.isGrouping) {
-        const targetGroup = this.tableService.layoutProps.row.dragOverGroup;
-        this.tableGroupService.moveRowsInGroup(droppedRows, currentIndex, targetGroup);
-      }
-    }
-
-    e.source.reset();
-
-    this.tableService.layoutProps.row.dragPlaceholderIndex =
-      this.tableService.layoutProps.row.dragOverGroup = null;
-    this.draggingRows.clear();
-  }
-
-  expandRow(row: TableRow) {
-    this.host.rowAction.emit({ type: TableRowActionType.Expand, payload: row });
-  }
-
-  expandSelectingRow() {
-    const selecting = this.tableService.layoutProps.cell.selection?.primary;
-    if (!selecting) return;
-    this.expandRow(this.findRowByIndex(selecting.rowIndex));
-  }
-
-  createRow(data?: any, position?: number, onBeforeInsert?: (r: TableRow, p: number) => void) {
-    const newRow = this._generateRow({ data });
-    onBeforeInsert?.(newRow, position);
-
-    this._insertRow(newRow, position, true);
-    this.addedEEC.addEvent(newRow.id, { row: newRow, insertedIndex: position });
-    return newRow;
-  }
-
-  deleteSelectedRows() {
-    let canDeleteRows = this.getSelectedRows();
-    if (!canDeleteRows.length) return;
-
-    if (this.selectedRows.size) {
-      this.selectedRows = new Set(_.pull([...this.selectedRows], ...canDeleteRows));
-    } else {
-      this.tableCellService.deselectAllCells();
-    }
-
-    this._removeRows(canDeleteRows);
-    this.host.rowAction.emit({ type: TableRowActionType.Delete, payload: canDeleteRows });
-    this.tableService.calculate();
-  }
-
-  deleteRow(row: TableRow) {
-    this.tableCellService.deselectAllCells();
-    this._removeRows([row]);
-    this.host.rowAction.emit({ type: TableRowActionType.Delete, payload: [row] });
-    this.tableService.calculate();
-  }
-
-  toggleRow(row: TableRow) {
-    this.tableCellService.deselectAllCells();
-    this.tableColumnService.deselectAllColumns();
-
-    row.selected = !row.selected;
-
-    this.selectedRows.has(row) ? this.selectedRows.delete(row) : this.selectedRows.add(row);
-
-    this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
-    this.host.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
-  }
-
-  flushDraftRow() {
-    if (!this.draftRow) return;
-
-    this.tableCellService.deselectAllCells();
-
-    this.addedEEC.emitEvent(this.draftRow.id);
-
-    this.draftRow = null;
-  }
-
-  cancelDraftRow() {
-    if (!this.draftRow) return;
-
-    this.tableCellService.deselectAllCells();
-
-    this._removeRows([this.draftRow], true);
-
-    this.addedEEC.removeEvent(this.draftRow.id);
-
-    this.draftRow = null;
-  }
-
-  selectAllRows() {
-    this.tableCellService.deselectAllCells();
-    this.tableColumnService.deselectAllColumns();
-
-    this.selectedRows.clear();
-
-    for (const row of this.host.rows) {
-      row.selected = true;
-      this.selectedRows.add(row);
-    }
-
-    this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
-    this.host.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
-  }
-
-  deselectAllRows() {
-    this.host.rowActionMenu.hide();
-
-    if (!this.selectedRows.size) return;
-
-    for (const row of this.selectedRows) {
-      row.selected = false;
-    }
-
-    this.selectedRows.clear();
-
-    this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
-    this.host.rowAction.emit({ type: TableRowActionType.Select, payload: null });
-  }
-
-  moveRows(movedRows: TableRow[], movedIndex: number) {
-    let newMovedIndex = movedIndex;
-    for (const movedRow of movedRows) {
-      const idx = this.findRowIndex(movedRow);
-      if (idx < 0 || idx >= movedIndex) {
-        continue;
-      }
-      newMovedIndex--;
-    }
-
-    _.pull(this.host.rows, ...movedRows);
-    this.host.rows.splice(newMovedIndex, 0, ...movedRows);
-
-    this.markRowsAsChanged();
-
-    this.host.rowAction.emit({
-      type: TableRowActionType.Move,
-      payload: movedRows.map((movedRow) => ({ row: movedRow, movedIndex })),
-    });
-  }
-
-  getSelectedRows(): TableRow[] {
-    const selectedRows = [...this.selectedRows];
-
-    if (!selectedRows.length) {
-      const { selection } = this.tableService.layoutProps.cell;
-      const startIndex = selection.start.rowIndex;
-      const endIndex = startIndex + selection.rowCount;
-
-      for (let i = startIndex; i < endIndex; i++) {
-        selectedRows.push(this.findRowByIndex(i));
-      }
-    }
-
-    return selectedRows;
-  }
-
-  getLastRowIndex(): number {
-    return this.tableGroupService.isGrouping
-      ? this.tableGroupService.getLastRowIndexInGroup()
-      : this.host.rows.length - 1;
-  }
-
-  findRowAtPointerPosition(pointerPosition: Point): FoundRow {
-    if (this.tableGroupService.isGrouping) {
-      return this.tableGroupService.findRowInGroupAtPointerPosition(pointerPosition);
-    }
-
-    let { y: pointerOffsetY } = this.host.virtualScroll.measurePointerOffset(pointerPosition);
-    pointerOffsetY -= Dimension.BodyVerticalPadding;
-
-    if (!_.isFinite(pointerOffsetY) || pointerOffsetY < 0) {
-      return null;
-    }
-
-    const startOffset = 0;
-    const endOffset = startOffset + this.host.rows.length * this.rowHeight;
-
-    if (pointerOffsetY < startOffset || pointerOffsetY > endOffset) {
-      return null;
-    }
-
-    const index = Math.round((pointerOffsetY - startOffset) / this.rowHeight);
-
-    return {
-      rowIndex: index,
-      rowOffset: startOffset + index * this.rowHeight,
-    };
-  }
-
-  findRowByIndex(index: number): TableRow {
-    return this.tableGroupService.isGrouping
-      ? this.tableGroupService.findRowInGroupByIndex(index)
-      : this.host.rows[index];
-  }
-
-  findRowByID(id: TableRow['id']): TableRow {
-    return this.rowLookup.has(id) ? this.rowLookup.get(id) : _.find(this.host.rows, { id });
-  }
-
-  findRowIndex(row: TableRow): number {
-    return this.tableGroupService.isGrouping
-      ? this.tableGroupService.findRowIndexInGroup(row)
-      : _.indexOf(this.host.rows, row);
-  }
-
-  findRowIndexByID(id: TableRow['id']): number {
-    return this.tableGroupService.isGrouping
-      ? this.tableGroupService.findRowIndexInGroupByID(id)
-      : _.findIndex(this.host.rows, { id });
-  }
-
-  markRowsAsChanged(rows: TableRow[] = this.host.rows, slient: boolean = false) {
-    this.host.rows = [...rows];
-
-    if (slient) return;
-
-    if (this.host.rawRows) {
-      this.host.rawRows.length = 0;
-      this.host.rawRows.push(...rows);
-      rows = this.host.rawRows;
-    } else {
-      rows = this.host.rows;
-    }
-  }
-
-  markRowsAsStreamed(rows: TableRow[]) {
-    for (const row of rows) {
-      (row as any)._isStreamed = true;
-    }
-  }
-
-  checkRowIsDraft(row: TableRow): boolean {
-    return this.draftRow === row;
-  }
-
   private _generateRow(extra?: Partial<TableRow>) {
     return _.cloneDeep({
       ...extra,
@@ -579,11 +557,11 @@ export class TableRowService extends TableBaseService {
     }) as TableRow;
   }
 
-  private _insertRow(row: any, position = this.host.rows?.length, slient = false) {
+  private _insertRow(row: any, position = this.rows()?.length, slient = false) {
     this.draftRow = row;
 
-    this.host.rows.splice(position, 0, row);
-    this.markRowsAsChanged(this.host.rows, slient);
+    this.rows().splice(position, 0, row);
+    // this.markRowsAsChanged(this.rows(), slient);
 
     // Resets the current selecting state
     // before select the inserted row.
@@ -605,8 +583,8 @@ export class TableRowService extends TableBaseService {
     });
   }
 
-  private _removeRows(rows: TableRow[], slient: boolean = false) {
-    this.markRowsAsChanged(_.pull(this.host.rows, ...rows), slient);
+  private _removeRows(rows: TableRow[]) {
+    this.rows.update((arr) => _.pull(arr, ...rows));
 
     if (this.tableGroupService.isGrouping) {
       this.tableGroupService.deleteRowsInGroup(rows);

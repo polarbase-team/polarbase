@@ -115,7 +115,8 @@ export class TableColumnService extends TableBaseService {
   calculatedColumns = new Map<TableColumn['id'], TableColumn>();
   groupedColumns = new Map<TableColumn['id'], TableColumn>();
   sortedColumns = new Map<TableColumn['id'], TableColumn>();
-  actionItems: MenuItem[] | undefined;
+  columnActionItems: MenuItem[] | undefined;
+
   frozenIndex = computed(() => {
     let frozenIndex = this.tableService.config().column.frozenIndex;
     if (this.columns() && frozenIndex > this.columns().length - 1) {
@@ -124,7 +125,7 @@ export class TableColumnService extends TableBaseService {
     return frozenIndex;
   });
 
-  private columnLookup: Map<TableColumn['id'], TableColumn>;
+  private columnLookup = new Map<TableColumn['id'], TableColumn>();
 
   constructor() {
     super();
@@ -158,7 +159,6 @@ export class TableColumnService extends TableBaseService {
     });
 
     effect(() => {
-      this.columnLookup ||= new Map();
       const columns = this.host.sourceColumns();
       for (const column of columns) {
         if (!this.columnLookup.has(column.id)) {
@@ -297,7 +297,7 @@ export class TableColumnService extends TableBaseService {
   }
 
   clearColumn(column: TableColumn) {
-    for (const row of this.host.rows) {
+    for (const row of this.tableRowService.rows()) {
       row.data ||= {};
       row.data[column.id] = null;
     }
@@ -545,30 +545,30 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  getLastColumnIndex(): number {
+  getLastColumnIndex() {
     return this.columns().length - 1;
   }
 
-  findColumnByIndex(index: number): TableColumn {
+  findColumnByIndex(index: number) {
     return this.columns()[index];
   }
 
-  findColumnByID(id: TableColumn['id']): TableColumn {
+  findColumnByID(id: TableColumn['id']) {
     return this.columnLookup?.has(id)
       ? this.columnLookup.get(id)
       : _.find(this.host.sourceColumns(), { id });
   }
 
-  findColumnIndex(column: TableColumn): number {
+  findColumnIndex(column: TableColumn) {
     const idx = _.indexOf(this.columns(), column);
     return idx === -1 ? this.findColumnIndexByID(column.id) : idx;
   }
 
-  findColumnIndexByID(id: TableColumn['id']): number {
+  findColumnIndexByID(id: TableColumn['id']) {
     return _.findIndex(this.columns(), { id });
   }
 
-  openContextMenu(e: Event, column: TableColumn, columnIndex: number) {
+  openColumnContextMenu(e: Event, column: TableColumn, columnIndex: number) {
     const items: MenuItem[] = [];
     const { column: config } = this.tableService.config();
 
@@ -667,11 +667,11 @@ export class TableColumnService extends TableBaseService {
       }
     }
 
-    this.actionItems = items;
+    this.columnActionItems = items;
     this.host.columnActionMenu.show(e);
   }
 
-  private getSelectedColumns(): TableColumn[] {
+  private getSelectedColumns() {
     const { selection } = this.tableService.layoutProps.column;
     const columns: TableColumn[] = [];
     if (selection) {

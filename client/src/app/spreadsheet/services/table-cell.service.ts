@@ -1005,7 +1005,7 @@ export class TableCellService extends TableBaseService {
       matrix = new MatrixCell(cells);
     } else if (this.tableService.layoutProps.column.selection) {
       const cells: TableCell[] = [];
-      for (const row of this.host.rows) {
+      for (const row of this.tableRowService.rows()) {
         for (const columnIdx of this.tableService.layoutProps.column.selection) {
           const column = this.tableColumnService.findColumnByIndex(columnIdx);
           cells.push({ row, column });
