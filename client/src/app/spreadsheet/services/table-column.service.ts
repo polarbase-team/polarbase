@@ -1,13 +1,5 @@
 import _ from 'lodash';
-import {
-  Injectable,
-  ChangeDetectorRef,
-  inject,
-  SimpleChanges,
-  effect,
-  signal,
-  computed,
-} from '@angular/core';
+import { Injectable, effect, signal, computed } from '@angular/core';
 import {
   CdkDragDrop,
   CdkDragEnd,
@@ -17,7 +9,6 @@ import {
 } from '@angular/cdk/drag-drop';
 import { MenuItem } from 'primeng/api';
 
-import { DataType } from '../field/interfaces';
 import { CalculateType } from '../utils/calculate';
 import { SortType } from '../utils/sort';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
@@ -34,15 +25,12 @@ interface TableColumnExtra extends TableColumn {
   _isResizing?: boolean;
 }
 
-const UNGROUPABLE_FIELD_DATA_TYPES: ReadonlySet<DataType> = new Set();
-const UNSORTABLE_FIELD_DATA_TYPES: ReadonlySet<DataType> = new Set();
-
 function calculateColumnDragPlaceholderIndex(
   columns: TableColumn[],
   offsetX: number,
   scrollLeft: number,
   frozenIndex: number,
-): number {
+) {
   let dragPlaceholderIndex = 0;
   const length = columns.length;
 
@@ -87,7 +75,7 @@ function calculateFreezeDividerDragPlaceholderIndex(
   offsetX: number,
   scrollLeft: number,
   frozenIndex: number,
-): number {
+) {
   let dragPlaceholderIndex = 0;
 
   for (let i = 0; i < columns.length; i++) {
@@ -121,25 +109,13 @@ function calculateFreezeDividerDragPlaceholderIndex(
 
 @Injectable()
 export class TableColumnService extends TableBaseService {
-  columnActionItems: MenuItem[] | undefined;
   columns = signal<TableColumn[]>([]);
   leftColumns = signal<TableColumn[]>([]);
   rightColumns = signal<TableColumn[]>([]);
   calculatedColumns = new Map<TableColumn['id'], TableColumn>();
   groupedColumns = new Map<TableColumn['id'], TableColumn>();
   sortedColumns = new Map<TableColumn['id'], TableColumn>();
-
-  private readonly _cdRef = inject(ChangeDetectorRef);
-  private _columnLookup: Map<TableColumn['id'], TableColumn>;
-
-  get canHideSelectedColumns(): boolean {
-    return true;
-  }
-
-  get canDeleteSelectedColumns(): boolean {
-    return !_.find(this.getSelectedColumns(), (column) => !column.deletable);
-  }
-
+  actionItems: MenuItem[] | undefined;
   frozenIndex = computed(() => {
     let frozenIndex = this.tableService.config().column.frozenIndex;
     if (this.columns() && frozenIndex > this.columns().length - 1) {
@@ -148,92 +124,57 @@ export class TableColumnService extends TableBaseService {
     return frozenIndex;
   });
 
+  private columnLookup: Map<TableColumn['id'], TableColumn>;
+
   constructor() {
     super();
 
     effect(() => {
-      const columns = this.host.sourceColumns();
-
-      this._columnLookup ||= new Map();
-
-      for (const column of columns) {
-        if (!this._columnLookup.has(column.id)) {
-          column.id ||= _.uniqueId();
-          column.width ||= this.tableService.config().column.defaultWidth;
-          this._columnLookup.set(column.id, column);
-        }
-      }
-
-      this.columns.update(() => _.filter(columns, (c) => !c.hidden));
-      this.leftColumns.update(() => columns.slice(0, this.frozenIndex() + 1));
-      this.rightColumns.update(() => columns.slice(this.frozenIndex() + 1));
-    });
-  }
-
-  override onChanges(changes: SimpleChanges) {
-    if ('config' in changes && changes['config'].isFirstChange) {
-      if (this.tableService.config().calculateBy) {
-        for (const [c, t] of this.tableService.config().calculateBy) {
+      const config = this.tableService.config();
+      if (config.calculateBy) {
+        for (const [c, t] of config.calculateBy) {
           const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
           column.calculateType = t;
           this.calculatedColumns.set(column.id, column);
         }
       }
-      if (this.tableService.config().groupBy) {
-        for (const [c, t] of this.tableService.config().groupBy) {
+      if (config.groupBy) {
+        for (const [c, t] of config.groupBy) {
           const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
           column.groupSortType = t;
           this.groupedColumns.set(column.id, column);
         }
       }
-      if (this.tableService.config().sortBy) {
-        for (const [c, t] of this.tableService.config().sortBy) {
+      if (config.sortBy) {
+        for (const [c, t] of config.sortBy) {
           const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
           column.sortType = t;
           this.sortedColumns.set(column.id, column);
         }
       }
-    }
-  }
+    });
 
-  override updateStates() {
-    this.state.canHideSelectedColumns = this.canHideSelectedColumns;
-    this.state.canDeleteSelectedColumns = this.canDeleteSelectedColumns;
-  }
+    effect(() => {
+      this.columnLookup ||= new Map();
+      const columns = this.host.sourceColumns();
+      for (const column of columns) {
+        if (!this.columnLookup.has(column.id)) {
+          column.id ||= _.uniqueId();
+          column.width ||= this.tableService.config().column.defaultWidth;
+          this.columnLookup.set(column.id, column);
+        }
+      }
+      this.columns.update(() => _.filter(columns, (c) => !c.hidden));
+    });
 
-  getGroupableColumns(includeColumn?: TableColumn): TableColumn[] {
-    return _.filter(
-      this.host.sourceColumns(),
-      (column) =>
-        !UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType) &&
-        (includeColumn === column || !this.groupedColumns.has(column.id)),
-    );
-  }
-
-  getSortableColumns(includeColumn?: TableColumn): TableColumn[] {
-    return _.filter(
-      this.host.sourceColumns(),
-      (column) =>
-        !UNSORTABLE_FIELD_DATA_TYPES.has(column.field.dataType) &&
-        (includeColumn === column || !this.sortedColumns.has(column.id)),
-    );
-  }
-
-  setColumnWidth(column: TableColumn, width: number) {
-    if (!column) return;
-    column.width = width;
-    this._cdRef.markForCheck();
-  }
-
-  moveColumn(column: TableColumn, newIndex: number) {
-    const currentIndex = this.findColumnRawIndex(column);
-    // moveItemInArray(this.host.columns(), currentIndex, newIndex);
-    if (column.hidden) return;
-    // this.markDisplayingColumnsAsChanged(_.filter(this.host.columns(), (c) => !c.hidden));
-    this._cdRef.markForCheck();
+    effect(() => {
+      const columns = this.columns();
+      this.leftColumns.update(() => columns.slice(0, this.frozenIndex() + 1));
+      this.rightColumns.update(() => columns.slice(this.frozenIndex() + 1));
+    });
   }
 
   hideColumn(column: TableColumn) {
@@ -241,7 +182,6 @@ export class TableColumnService extends TableBaseService {
 
     column.hidden = true;
     this.columns.update((arr) => _.without(arr, column));
-    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Hide,
       payload: [column],
@@ -253,7 +193,6 @@ export class TableColumnService extends TableBaseService {
 
     column.hidden = false;
     this.columns.update(() => _.filter(this.host.sourceColumns(), (c) => !c.hidden));
-    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Unhide,
       payload: [column],
@@ -266,7 +205,6 @@ export class TableColumnService extends TableBaseService {
     column.calculateType = calculateType;
     this.calculatedColumns.set(column.id, column);
     this.tableService.calculate();
-    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Calculate,
       payload: column,
@@ -278,7 +216,6 @@ export class TableColumnService extends TableBaseService {
 
     delete column.calculateType;
     this.calculatedColumns.delete(column.id);
-    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Uncalculate,
       payload: column,
@@ -304,7 +241,6 @@ export class TableColumnService extends TableBaseService {
       this.groupedColumns.set(column.id, column);
     }
     this.tableService.group();
-    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Group,
       payload: column,
@@ -317,7 +253,6 @@ export class TableColumnService extends TableBaseService {
     delete column.groupSortType;
     this.groupedColumns.delete(column.id);
     this.groupedColumns.size ? this.tableService.group() : this.tableService.ungroup();
-    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Ungroup,
       payload: column,
@@ -343,7 +278,6 @@ export class TableColumnService extends TableBaseService {
       this.sortedColumns.set(column.id, column);
     }
     this.tableService.sort();
-    this._cdRef.markForCheck();
     this.host.columnAction.emit({
       type: TableColumnActionType.Sort,
       payload: column,
@@ -355,7 +289,6 @@ export class TableColumnService extends TableBaseService {
 
     delete column.sortType;
     this.sortedColumns.delete(column.id);
-    this._cdRef.markForCheck();
     this.sortedColumns.size ? this.tableService.sort() : this.tableService.unsort();
     this.host.columnAction.emit({
       type: TableColumnActionType.Unsort,
@@ -384,112 +317,6 @@ export class TableColumnService extends TableBaseService {
       type: TableColumnActionType.Clear,
       payload: column,
     });
-  }
-
-  openColumnActionMenu(e: Event, column: TableColumn, columnIndex: number) {
-    const items: MenuItem[] = [];
-    const { column: config } = this.tableService.config();
-
-    if (this.tableService.layoutProps.column.selection?.size > 1) {
-      items.push({
-        label: 'Hide selected columns',
-        icon: 'pi pi-eye-slash',
-        command: () => {
-          this.hideSelectedColumns();
-        },
-      });
-      if (config.deletable) {
-        items.push({
-          label: 'Delete selected columns',
-          icon: 'pi pi-trash',
-          command: () => {
-            this.deleteSelectedColumns();
-          },
-        });
-      }
-    } else {
-      if (config.freezable) {
-        items.push(
-          {
-            label: 'Freeze up to This Column',
-            icon: 'pi pi-sign-in',
-            command: () => {
-              this.freezeUpToColumnIndex(columnIndex);
-            },
-          },
-          { separator: true },
-        );
-      }
-      if (config.sortable) {
-        items.push(
-          {
-            label: 'Sort up',
-            icon: 'pi pi-sort-amount-up',
-            disabled: UNSORTABLE_FIELD_DATA_TYPES.has(column.field.dataType),
-            command: () => {
-              this.sortByColumn(column, 'asc');
-            },
-          },
-          {
-            label: 'Sort down',
-            icon: 'pi pi-sort-amount-down',
-            disabled: UNSORTABLE_FIELD_DATA_TYPES.has(column.field.dataType),
-            command: () => {
-              this.sortByColumn(column, 'desc');
-            },
-          },
-          { separator: true },
-        );
-      }
-      if (config.groupable) {
-        items.push(
-          {
-            label: 'Group',
-            icon: 'pi pi-list',
-            disabled: UNGROUPABLE_FIELD_DATA_TYPES.has(column.field.dataType),
-            items: [
-              {
-                label: 'Ascending',
-                command: () => {
-                  this.groupByColumn(column, 'asc');
-                },
-              },
-              {
-                label: 'Descending',
-                command: () => {
-                  this.groupByColumn(column, 'desc');
-                },
-              },
-            ],
-          },
-          { separator: true },
-        );
-      }
-      if (config.hideable) {
-        items.push(
-          {
-            label: 'Hide',
-            icon: 'pi pi-eye-slash',
-            command: () => {
-              this.hideColumn(column);
-            },
-          },
-          { separator: true },
-        );
-      }
-      if (config.deletable) {
-        items.push({
-          label: 'Delete',
-          icon: 'pi pi-trash',
-          command: () => {
-            this.deleteColumn(column);
-          },
-        });
-      }
-    }
-
-    this.columnActionItems = items;
-    this.host.columnActionMenu.show(e);
   }
 
   onFreezeDividerMousemove(e: MouseEvent) {
@@ -587,54 +414,36 @@ export class TableColumnService extends TableBaseService {
   onColumnDropped(e: CdkDragDrop<TableColumn[]>) {
     const { dragPlaceholderIndex } = this.tableService.layoutProps.column;
     if (dragPlaceholderIndex === null) return;
+
     const previousIndex = e.previousIndex;
     const currentIndex =
       dragPlaceholderIndex > previousIndex ? dragPlaceholderIndex - 1 : dragPlaceholderIndex;
     this.tableService.layoutProps.column.dragPlaceholderIndex =
       this.tableService.layoutProps.column.dragPlaceholderOffset = null;
     if (previousIndex === currentIndex) return;
+
     moveItemInArray(this.columns(), previousIndex, currentIndex);
-    const column = this.findColumnByIndex(currentIndex);
-    // const cIdx = _.indexOf(this.host.columns(), column);
-    // const indexColumnBefore = _.indexOf(
-    //   this.host.columns(),
-    //   this.displayingColumns()[currentIndex - 1],
-    // );
-    // moveItemInArray(
-    //   this.host.columns(),
-    //   cIdx,
-    //   cIdx < indexColumnBefore ? indexColumnBefore : indexColumnBefore + 1,
-    // );
-    // this.markDisplayingColumnsAsChanged();
+    this.columns.update((arr) => [...arr]);
     this.host.columnAction.emit({
       type: TableColumnActionType.Move,
       payload: {
-        column,
+        column: this.findColumnByIndex(currentIndex),
         position: currentIndex,
       },
     });
   }
 
-  onColumnResizing(event: ResizeEvent, column: TableColumnExtra, _idx: number) {
+  onColumnResizing(event: ResizeEvent, column: TableColumnExtra) {
     let newWidth = event.rectangle.width;
-
     const minWidth = this.tableService.config().column.minWidth;
-    if (newWidth < minWidth) {
-      newWidth = minWidth;
-    }
-
+    if (newWidth < minWidth) newWidth = minWidth;
     const maxWidth = this.tableService.config().column.maxWidth;
-    if (newWidth > maxWidth) {
-      newWidth = maxWidth;
-    }
+    if (newWidth > maxWidth) newWidth = maxWidth;
 
-    if (!column._bkWidth) {
-      column._bkWidth = column.width;
-    }
-
+    if (!column._bkWidth) column._bkWidth = column.width;
     column.width = newWidth;
     column._isResizing = true;
-    // this.markDisplayingColumnsAsChanged();
+    this.columns.update((arr) => [...arr]);
 
     if (
       this.tableService.layoutProps.fillHandler.index &&
@@ -644,19 +453,7 @@ export class TableColumnService extends TableBaseService {
     }
   }
 
-  onColumnResized(event: ResizeEvent, column: TableColumnExtra) {
-    let newWidth = event.rectangle.width;
-
-    const minWidth = this.tableService.config().column.minWidth;
-    if (newWidth < minWidth) {
-      newWidth = minWidth;
-    }
-
-    const maxWidth = this.tableService.config().column.maxWidth;
-    if (newWidth > maxWidth) {
-      newWidth = maxWidth;
-    }
-
+  onColumnResized(_event: ResizeEvent, column: TableColumnExtra) {
     column._bkWidth = undefined;
     setTimeout(() => (column._isResizing = false));
     this.host.columnAction.emit({
@@ -665,10 +462,10 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  protected freezeUpToColumnIndex(columnIndex: number) {
+  freezeUpToColumnIndex(columnIndex: number) {
     if (columnIndex === this.frozenIndex()) return;
     this.tableService.config().column.frozenIndex = columnIndex;
-    // this.markDisplayingColumnsAsChanged();
+    this.columns.update((arr) => [...arr]);
     this.host.action.emit({
       type: TableActionType.Freeze,
       payload: columnIndex,
@@ -714,8 +511,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  protected async deleteColumn(column: TableColumn) {
-    // _.remove(this.host.columns(), column);
+  deleteColumn(column: TableColumn) {
     this.columns.update((arr) => _.without(arr, column));
     this.tableCellService.deselectAllCells();
     this.deselectAllColumns();
@@ -725,11 +521,10 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  protected async deleteSelectedColumns() {
+  deleteSelectedColumns() {
     let canDeleteColumns = this.getSelectedColumns();
     if (!canDeleteColumns.length) return;
     this.columns.update((arr) => _.without(arr, ...canDeleteColumns));
-    // _.pull(this.host.columns(), ...canDeleteColumns);
     this.tableCellService.deselectAllCells();
     this.deselectAllColumns();
     this.host.columnAction.emit({
@@ -738,7 +533,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  protected hideSelectedColumns() {
+  hideSelectedColumns() {
     const columns = this.getSelectedColumns();
     for (const c of columns) {
       c.hidden = true;
@@ -754,28 +549,13 @@ export class TableColumnService extends TableBaseService {
     return this.columns().length - 1;
   }
 
-  protected getSelectedColumns(): TableColumn[] {
-    const { selection } = this.tableService.layoutProps.column;
-    const columns: TableColumn[] = [];
-    if (selection) {
-      for (const idx of selection) {
-        columns.push(this.findColumnByIndex(idx));
-      }
-    }
-    return columns;
-  }
-
   findColumnByIndex(index: number): TableColumn {
     return this.columns()[index];
   }
 
-  findColumnByRawIndex(index: number): TableColumn {
-    return this.host.sourceColumns()[index];
-  }
-
   findColumnByID(id: TableColumn['id']): TableColumn {
-    return this._columnLookup?.has(id)
-      ? this._columnLookup.get(id)
+    return this.columnLookup?.has(id)
+      ? this.columnLookup.get(id)
       : _.find(this.host.sourceColumns(), { id });
   }
 
@@ -788,12 +568,117 @@ export class TableColumnService extends TableBaseService {
     return _.findIndex(this.columns(), { id });
   }
 
-  findColumnRawIndex(column: TableColumn): number {
-    const idx = _.indexOf(this.host.sourceColumns(), column);
-    return idx === -1 ? this.findColumnRawIndexByID(column.id) : idx;
+  openContextMenu(e: Event, column: TableColumn, columnIndex: number) {
+    const items: MenuItem[] = [];
+    const { column: config } = this.tableService.config();
+
+    if (this.tableService.layoutProps.column.selection?.size > 1) {
+      items.push({
+        label: 'Hide selected columns',
+        icon: 'pi pi-eye-slash',
+        command: () => {
+          this.hideSelectedColumns();
+        },
+      });
+      if (config.deletable) {
+        items.push({
+          label: 'Delete selected columns',
+          icon: 'pi pi-trash',
+          command: () => {
+            this.deleteSelectedColumns();
+          },
+        });
+      }
+    } else {
+      if (config.freezable) {
+        items.push(
+          {
+            label: 'Freeze up to This Column',
+            icon: 'pi pi-sign-in',
+            command: () => {
+              this.freezeUpToColumnIndex(columnIndex);
+            },
+          },
+          { separator: true },
+        );
+      }
+      if (config.sortable) {
+        items.push(
+          {
+            label: 'Sort up',
+            icon: 'pi pi-sort-amount-up',
+            command: () => {
+              this.sortByColumn(column, 'asc');
+            },
+          },
+          {
+            label: 'Sort down',
+            icon: 'pi pi-sort-amount-down',
+            command: () => {
+              this.sortByColumn(column, 'desc');
+            },
+          },
+          { separator: true },
+        );
+      }
+      if (config.groupable) {
+        items.push(
+          {
+            label: 'Group',
+            icon: 'pi pi-list',
+            items: [
+              {
+                label: 'Ascending',
+                command: () => {
+                  this.groupByColumn(column, 'asc');
+                },
+              },
+              {
+                label: 'Descending',
+                command: () => {
+                  this.groupByColumn(column, 'desc');
+                },
+              },
+            ],
+          },
+          { separator: true },
+        );
+      }
+      if (config.hideable) {
+        items.push(
+          {
+            label: 'Hide',
+            icon: 'pi pi-eye-slash',
+            command: () => {
+              this.hideColumn(column);
+            },
+          },
+          { separator: true },
+        );
+      }
+      if (config.deletable) {
+        items.push({
+          label: 'Delete',
+          icon: 'pi pi-trash',
+          command: () => {
+            this.deleteColumn(column);
+          },
+        });
+      }
+    }
+
+    this.actionItems = items;
+    this.host.columnActionMenu.show(e);
   }
 
-  findColumnRawIndexByID(id: TableColumn['id']): number {
-    return _.findIndex(this.host.sourceColumns(), { id });
+  private getSelectedColumns(): TableColumn[] {
+    const { selection } = this.tableService.layoutProps.column;
+    const columns: TableColumn[] = [];
+    if (selection) {
+      for (const idx of selection) {
+        columns.push(this.findColumnByIndex(idx));
+      }
+    }
+    return columns;
   }
 }

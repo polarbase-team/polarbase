@@ -817,7 +817,7 @@ export class SpreadsheetComponent
 
     const { columnIndex } = index;
     const column = this.tableColumnService.findColumnByIndex(columnIndex);
-    this.tableColumnService.openColumnActionMenu(e, column, columnIndex);
+    this.tableColumnService.openContextMenu(e, column, columnIndex);
   }
 
   private _closeColumnActionMenu() {

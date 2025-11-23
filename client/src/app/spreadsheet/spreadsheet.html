@@ -1,5 +1,5 @@
 <p-toast />
-<p-contextmenu #columnActionMenu [model]="tableColumnService.columnActionItems" appendTo="body" />
+<p-contextmenu #columnActionMenu [model]="tableColumnService.actionItems" appendTo="body" />
 <p-contextmenu #rowActionMenu [model]="tableRowService.rowActionItems" appendTo="body" />
 <p-contextmenu #groupActionMenu [model]="tableGroupService.groupActionItems" appendTo="body" />
 
@@ -50,7 +50,7 @@
         (cdkDragEnded)="tableColumnService.onColumnDragEnded($event, column)"
         (cdkDragMoved)="tableColumnService.onColumnDragMoved($event)"
         mwlResizable
-        (resizing)="tableColumnService.onColumnResizing($event, column, columnIndex)"
+        (resizing)="tableColumnService.onColumnResizing($event, column)"
         (resizeEnd)="tableColumnService.onColumnResized($event, column)"
         (click)="!column._isResizing && tableColumnService.selectColumn($event, columnIndex)"
       >
