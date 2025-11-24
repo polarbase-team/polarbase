@@ -102,6 +102,7 @@ const stack: SpreadsheetComponent[] = [];
   templateUrl: './spreadsheet.html',
   styleUrls: ['./spreadsheet.scss'],
   host: { class: 'spreadsheet' },
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
