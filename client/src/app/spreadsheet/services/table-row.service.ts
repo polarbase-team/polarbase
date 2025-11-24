@@ -1,13 +1,5 @@
 import _ from 'lodash';
-import {
-  Injectable,
-  ChangeDetectorRef,
-  DestroyRef,
-  inject,
-  signal,
-  effect,
-  computed,
-} from '@angular/core';
+import { Injectable, DestroyRef, inject, signal, effect, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CdkDragStart, CdkDragMove, CdkDragEnd, type Point } from '@angular/cdk/drag-drop';
 import { debounceTime, distinctUntilChanged, filter, map, pairwise } from 'rxjs';
@@ -68,7 +60,6 @@ export class TableRowService extends TableBaseService {
     return this.tableService.config().row.creatable;
   });
 
-  private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
   private draggingRows = new Set<TableRow>();
   private rowLookup = new Map<TableRow['id'], TableRow>();
@@ -567,7 +558,6 @@ export class TableRowService extends TableBaseService {
       };
 
       this.tableCellService.selectCells(cellIndex, cellIndex, true);
-      this.cdr.detectChanges();
 
       requestAnimationFrame(() => {
         this.focusToFieldCellTouchable(true);

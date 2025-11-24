@@ -1,14 +1,7 @@
 import _ from 'lodash';
 import dayjs, { isDayjs } from 'dayjs';
 import { FORECAST } from '@formulajs/formulajs';
-import {
-  Injectable,
-  ChangeDetectorRef,
-  ElementRef,
-  Renderer2,
-  inject,
-  computed,
-} from '@angular/core';
+import { Injectable, ElementRef, Renderer2, inject, computed } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
 import { Clipboard, ClipboardData, ClipboardItem } from '../utils/clipboard';
@@ -114,7 +107,6 @@ export class MatrixCell {
 @Injectable()
 export class TableCellService extends TableBaseService {
   private renderer = inject(Renderer2);
-  private cdRef = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);
   private toastService = inject(MessageService);
   private fieldCellService = inject(FieldCellService);
@@ -247,12 +239,10 @@ export class TableCellService extends TableBaseService {
     }
 
     this.tableService.layoutProps.cell.hovering = index;
-    this.cdRef.detectChanges();
 
     const unlisten = this.renderer.listen(e.target, 'pointerleave', () => {
       unlisten();
       this.tableService.layoutProps.cell.hovering = null;
-      this.cdRef.detectChanges();
     });
   }
 
@@ -462,7 +452,6 @@ export class TableCellService extends TableBaseService {
       }
 
       if (this.canFillCell()) {
-        this.cdRef.detectChanges();
         this.tableService.updateFillHandlerPosition(end);
       }
     });
