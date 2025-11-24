@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Injectable, ChangeDetectorRef, inject } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { Point } from '@angular/cdk/drag-drop';
 
 import { calculateBy, calculateFieldPredicate } from '../utils/calculate';
@@ -73,7 +73,7 @@ function findGroupAtPointerOffset(group: TableGroup, pointerOffsetY: number) {
   return group;
 }
 
-function findGroupByItemIndex(itemIndex: number, group?: TableGroup) {
+function findGroupByItemIndex(itemIndex: number, group?: TableGroup): TableGroup {
   if (group?.children) {
     let start = 0;
     let end = group.children.length - 1;
@@ -102,35 +102,26 @@ function findGroupByItemIndex(itemIndex: number, group?: TableGroup) {
 
 @Injectable()
 export class TableGroupService extends TableBaseService {
-  groupActionItems: MenuItem[] | undefined;
-  collapsedState = new Map<number, boolean>();
-  rootGroup: TableGroup;
+  rootGroup = signal<TableGroup>(null);
   disableAddRowInGroup: boolean;
+  collapsedState = new Map<number, boolean>();
+  groupActionItems: MenuItem[] | undefined;
 
-  private readonly _cdRef = inject(ChangeDetectorRef);
+  groupDepth = computed(() => {
+    return this.rootGroup().totalChildrenDepth;
+  });
 
-  get groupDepth() {
-    return this.tableColumnService.groupedColumns?.size;
-  }
+  isGrouping = computed(() => {
+    return !!this.rootGroup();
+  });
 
-  get isGrouping() {
-    return !!this.rootGroup;
-  }
+  isGroupingWithoutGroup = computed(() => {
+    return this.isGrouping() && !this.rootGroup()?.children?.length;
+  });
 
-  get isGroupingWithoutGroup() {
-    return this.isGrouping && !this.rootGroup?.children?.length;
-  }
-
-  override updateStates() {
-    this.state.groupDepth = this.groupDepth;
-    this.state.isGrouping = this.isGrouping;
-    this.state.isGroupingWithoutGroup = this.isGroupingWithoutGroup;
-  }
-
-  protected toggleAllGroup(collapsed: boolean, group = this.rootGroup) {
+  protected toggleAllGroup(collapsed: boolean, group = this.rootGroup()) {
     this._toggleGroupRecursive(group, collapsed);
     this.markGroupAsChanged();
-    this._cdRef.detectChanges();
   }
 
   toggleGroup(group: TableGroup) {
@@ -140,23 +131,22 @@ export class TableGroupService extends TableBaseService {
 
   calculateInGroup(columns: TableColumn[]) {
     if (!columns?.length) return;
-    calculateInGroup(this.rootGroup, columns, calculateFieldPredicate);
+    calculateInGroup(this.rootGroup(), columns, calculateFieldPredicate);
   }
 
   sortInGroup(columns: TableColumn[]) {
     if (!columns?.length) return;
-    this.rootGroup.sortRows(columns);
+    this.rootGroup().sortRows(columns);
     this.markGroupAsChanged();
   }
 
   unsortInGroup() {
-    this.rootGroup.unsortRows();
-    this.markGroupAsChanged();
+    this.rootGroup().unsortRows();
   }
 
   createRowInGroup(group = this.getSelectingGroup() || this.getFirstGroup(), position?: number) {
     let newRow: TableRow;
-    if (group !== this.rootGroup) {
+    if (group !== this.rootGroup()) {
       let g = group;
       const data: any = {};
       do {
@@ -164,7 +154,7 @@ export class TableGroupService extends TableBaseService {
         g = g.parent;
       } while (g?.depth > 0);
       newRow = this.tableRowService.createRow(data, position, (row: TableRow) => {
-        group.addItems([row], position);
+        group.addRows([row], position);
         this.markGroupAsChanged();
       });
     } else {
@@ -183,7 +173,7 @@ export class TableGroupService extends TableBaseService {
   }
 
   deleteRowsInGroup(deletedRows: TableRow[]) {
-    this.rootGroup.removeRows(deletedRows);
+    this.rootGroup().removeRows(deletedRows);
     this.markGroupAsChanged();
   }
 
@@ -208,7 +198,7 @@ export class TableGroupService extends TableBaseService {
       newMovedIndex--;
     }
 
-    this.rootGroup.removeRows(movedRows);
+    this.rootGroup().removeRows(movedRows);
     targetGroup.rows.splice(newMovedIndex, 0, ...movedRows);
 
     this.tableCellService.updateCellsData(movedRows, rowDataNeedUpdate);
@@ -216,7 +206,7 @@ export class TableGroupService extends TableBaseService {
   }
 
   protected getFirstGroup() {
-    let group = this.rootGroup;
+    let group = this.rootGroup();
     while (group.children?.length) {
       group = group.children[0];
     }
@@ -225,13 +215,13 @@ export class TableGroupService extends TableBaseService {
 
   protected getSelectingGroup() {
     const rowIndex = this.tableService.layoutProps.cell.selection?.primary.rowIndex;
-    if (!_.isFinite(rowIndex)) return null;
+    if (!_.isFinite(rowIndex)) return void 0;
     return this.findGroupByRowIndex(rowIndex);
   }
 
   getRowCellOffsetInGroup({ rowIndex, columnIndex }: CellIndex) {
     const group = this.findGroupByRowIndex(rowIndex);
-    if (!group || group.depth < this.groupDepth) return null;
+    if (!group || group.depth < this.groupDepth()) return null;
 
     const { _viewProps } = group as _GroupView;
     const left = _getColumnOffset(this.tableColumnService.findColumnByIndex(columnIndex));
@@ -244,22 +234,22 @@ export class TableGroupService extends TableBaseService {
   }
 
   getLastRowIndexInGroup() {
-    return this.rootGroup.rows.length - 1;
+    return this.rootGroup().rows.length - 1;
   }
 
   findGroupAtPointerPosition(pointerPosition: Point) {
     let { y: pointerOffsetY } = this.host.virtualScroll.measurePointerOffset(pointerPosition);
     pointerOffsetY -= Dimension.BodyVerticalPadding;
     if (!_.isFinite(pointerOffsetY) || pointerOffsetY < 0) return null;
-    return findGroupAtPointerOffset(this.rootGroup, pointerOffsetY);
+    return findGroupAtPointerOffset(this.rootGroup(), pointerOffsetY);
   }
 
   findGroupAtPointerOffset(pointerOffsetY: number) {
-    return findGroupAtPointerOffset(this.rootGroup, pointerOffsetY);
+    return findGroupAtPointerOffset(this.rootGroup(), pointerOffsetY);
   }
 
   findGroupByRowIndex(rowIndex: number) {
-    return findGroupByItemIndex(rowIndex, this.rootGroup);
+    return findGroupByItemIndex(rowIndex, this.rootGroup());
   }
 
   findRowInGroupAtPointerPosition(pointerPosition: Point) {
@@ -268,7 +258,7 @@ export class TableGroupService extends TableBaseService {
     if (!_.isFinite(pointerOffsetY) || pointerOffsetY < 0) return null;
 
     const group = this.findGroupAtPointerOffset(pointerOffsetY);
-    if (!group || group.depth < this.groupDepth) return null;
+    if (!group || group.depth < this.groupDepth()) return null;
 
     const { _viewProps: groupViewProps } = group as _GroupView;
     const startOffset = groupViewProps.rect.top + Dimension.GroupHeaderHeight;
@@ -290,19 +280,19 @@ export class TableGroupService extends TableBaseService {
   }
 
   findRowIndexInGroup(row: TableRow) {
-    return _.indexOf(this.rootGroup.rows, row);
+    return _.indexOf(this.rootGroup().rows, row);
   }
 
   findRowIndexInGroupByID(id: TableRow['id']) {
-    return _.findIndex(this.rootGroup.rows, { id });
+    return _.findIndex(this.rootGroup().rows, { id });
   }
 
   findRowInGroupByIndex(index: number) {
-    return this.rootGroup.rows[index];
+    return this.rootGroup().rows[index];
   }
 
   markGroupAsChanged() {
-    this.rootGroup = this.rootGroup.clone();
+    this.rootGroup.update(() => this.rootGroup().clone());
   }
 
   checkCanAddRowInGroup() {

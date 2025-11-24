@@ -187,7 +187,7 @@
     [leftColumns]="tableColumnService.leftColumns()"
     [rightColumns]="tableColumnService.rightColumns()"
     [rows]="tableRowService.rows()"
-    [rootGroup]="tableGroupService.rootGroup"
+    [rootGroup]="tableGroupService.rootGroup()"
     [rowHeight]="tableRowService.rowHeight()"
   >
     <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset">
@@ -203,7 +203,7 @@
           [style.height.px]="virtualScroll.viewport.contentHeight"
           [ngClass]="{
             'box box-left box--radius':
-              !tableGroupService.isGrouping || tableGroupService.state.isGroupingWithoutGroup,
+              !tableGroupService.isGrouping() || tableGroupService.isGroupingWithoutGroup(),
           }"
         >
           <!-- group-left -->
@@ -223,7 +223,7 @@
               [style.top.px]="groupRect.top"
               [style.height.px]="groupRect.height"
               [class.group-first-depth]="group.depth === 1"
-              [class.group-last-depth]="group.depth === tableGroupService.state.groupDepth"
+              [class.group-last-depth]="group.depth === tableGroupService.groupDepth()"
               [class.group--collapsed]="group.collapsed"
               [class.box--radius]="group.depth === 1"
             >
@@ -514,9 +514,7 @@
               </ng-container>
             </div>
           </ng-container>
-          @if (
-            !tableGroupService.state.isGrouping || tableGroupService.state.isGroupingWithoutGroup
-          ) {
+          @if (!tableGroupService.isGrouping() || tableGroupService.isGroupingWithoutGroup()) {
             @if (tableRowService.state.canAddRow) {
               <div class="row blank-row">
                 <div
@@ -554,7 +552,7 @@
           [style.height.px]="virtualScroll.viewport.contentHeight"
           [ngClass]="{
             'box box-right box--radius':
-              !tableGroupService.state.isGrouping || tableGroupService.state.isGroupingWithoutGroup,
+              !tableGroupService.isGrouping() || tableGroupService.isGroupingWithoutGroup(),
           }"
         >
           <!-- group-right -->
@@ -574,7 +572,7 @@
               [style.top.px]="groupRect.top"
               [style.height.px]="groupRect.height"
               [class.group-first-depth]="group.depth === 1"
-              [class.group-last-depth]="group.depth === tableGroupService.state.groupDepth"
+              [class.group-last-depth]="group.depth === tableGroupService.groupDepth()"
               [class.group--collapsed]="group.collapsed"
               [class.box--radius]="group.depth === 1"
             >
@@ -742,9 +740,7 @@
               </ng-container>
             </div>
           </ng-container>
-          @if (
-            !tableGroupService.state.isGrouping || tableGroupService.state.isGroupingWithoutGroup
-          ) {
+          @if (!tableGroupService.isGrouping() || tableGroupService.isGroupingWithoutGroup()) {
             @if (tableRowService.state.canAddRow) {
               <div class="row blank-row">
                 <div class="row-cell cell" cell-type="row"></div>
@@ -775,8 +771,8 @@
               calculationBlockTemplate;
               context: {
                 column,
-                calculatedResult: (tableGroupService.state.isGrouping
-                  ? tableGroupService.rootGroup.calculatedResult
+                calculatedResult: (tableGroupService.isGrouping()
+                  ? tableGroupService.rootGroup().calculatedResult
                   : tableService.calculatedResult
                 )?.get(column.id),
               }

@@ -835,7 +835,7 @@ export class SpreadsheetComponent
     let group: TableGroup;
     let rowGroupIndex: number;
 
-    if (this.tableGroupService.isGrouping) {
+    if (this.tableGroupService.isGrouping()) {
       group = this.tableGroupService.findGroupByRowIndex(rowIndex);
       rowGroupIndex = this.tableGroupService.findRowGroupIndex(group, row);
     }

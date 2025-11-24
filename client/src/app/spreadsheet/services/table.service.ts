@@ -340,9 +340,9 @@ export class TableService extends TableBaseService {
       return;
     }
 
-    if (this.tableGroupService.isGrouping) {
+    if (this.tableGroupService.isGrouping()) {
       this.tableGroupService.calculateInGroup(columns);
-      this.calculatedResult = this.tableGroupService.rootGroup.calculatedResult;
+      this.calculatedResult = this.tableGroupService.rootGroup().calculatedResult;
     } else {
       if (this.calculatedResult) {
         this.calculatedResult.clear();
@@ -393,13 +393,10 @@ export class TableService extends TableBaseService {
       return;
     }
 
-    this.tableGroupService.rootGroup = groupBy(
-      this.host.sourceRows(),
-      columns,
-      (group: TableGroup) => {
-        group.collapsed = this.tableGroupService.collapsedState.get(group.id);
-      },
-    );
+    const rootGroup = groupBy(this.host.sourceRows(), columns, (group: TableGroup) => {
+      group.collapsed = this.tableGroupService.collapsedState.get(group.id);
+    });
+    this.tableGroupService.rootGroup.update(() => rootGroup);
 
     this.sort();
     this.calculate();
@@ -410,7 +407,7 @@ export class TableService extends TableBaseService {
   }
 
   ungroup() {
-    this.tableGroupService.rootGroup = null;
+    this.tableGroupService.rootGroup.update(() => null);
 
     for (const column of this.tableColumnService.groupedColumns.values()) {
       delete column.groupSortType;
@@ -440,7 +437,7 @@ export class TableService extends TableBaseService {
       return;
     }
 
-    if (this.tableGroupService.isGrouping) {
+    if (this.tableGroupService.isGrouping()) {
       this.tableGroupService.sortInGroup(columns);
     } else {
       this.tableRowService.rows.update(() => sortBy(this.host.sourceRows(), columns));
@@ -457,7 +454,7 @@ export class TableService extends TableBaseService {
 
     this.tableColumnService.sortedColumns.clear();
 
-    if (this.tableGroupService.isGrouping) {
+    if (this.tableGroupService.isGrouping()) {
       this.tableGroupService.unsortInGroup();
     } else {
       this.tableRowService.rows.update(() => this.host.sourceRows());
