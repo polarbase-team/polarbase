@@ -216,9 +216,9 @@ export class SpreadsheetComponent
     this.tableGroupService.onInit();
 
     Promise.resolve().then(() => {
-      this._handlePointerEvents();
-      this._handleKeyboardEvents();
-      this._handleClipboardEvents();
+      this.handlePointerEvents();
+      this.handleKeyboardEvents();
+      this.handleClipboardEvents();
 
       merge(
         this.cellAction.pipe(
@@ -300,6 +300,7 @@ export class SpreadsheetComponent
     this.tableColumnService.onDestroy();
     this.tableRowService.onDestroy();
     this.tableGroupService.onDestroy();
+
     this.fieldCellService.destroy();
     this.keyboard.stop();
     this.clipboard.stop();
@@ -349,7 +350,7 @@ export class SpreadsheetComponent
     return !!this.fieldCellService.getSelectingState()?.isEditing;
   };
 
-  private _handlePointerEvents() {
+  private handlePointerEvents() {
     fromEvent<PointerEvent>(document, 'pointerdown', { capture: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((e1) => {
@@ -443,10 +444,10 @@ export class SpreadsheetComponent
 
           if (isTouchEvent) {
             delayEditCellFn = setTimeout(() => {
-              this._selectCellInZone(startCellIdx);
+              this.selectCell(startCellIdx);
             }, 50);
           } else {
-            this._selectCellInZone(startCellIdx);
+            this.selectCell(startCellIdx);
           }
         }
 
@@ -549,7 +550,7 @@ export class SpreadsheetComponent
       });
   }
 
-  private _handleKeyboardEvents() {
+  private handleKeyboardEvents() {
     this.keyboard = new Keyboard({
       pause: true,
       shouldPause: (e) =>
@@ -680,7 +681,7 @@ export class SpreadsheetComponent
     });
   }
 
-  private _handleClipboardEvents() {
+  private handleClipboardEvents() {
     this.clipboard = new Clipboard({
       pause: true,
       shouldPause: (e) => this.shouldPauseEvent(e),
@@ -699,7 +700,7 @@ export class SpreadsheetComponent
     });
   }
 
-  private _selectCellInZone(index: CellIndex) {
+  private selectCell(index: CellIndex) {
     if (
       this.tableService.layoutProps.cell.selection &&
       this.tableCellService.compareCellIndex(
@@ -783,7 +784,7 @@ export class SpreadsheetComponent
     const row = this.tableRowService.findRowByIndex(rowIndex);
 
     if (row && !row.selected) {
-      this._selectCellInZone(index);
+      this.selectCell(index);
     }
 
     if (this.isMouseHolding || this.tableRowService.isDraftRow(row)) {
