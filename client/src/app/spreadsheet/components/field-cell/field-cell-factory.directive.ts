@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import {
   afterNextRender,
   ChangeDetectorRef,
@@ -14,7 +15,6 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
-import _ from 'lodash';
 
 import { DataType } from '../../field/interfaces';
 import { Field } from '../../field/objects';
@@ -50,84 +50,80 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
   @Input() readonly: boolean;
   @Input() selecting: boolean;
 
-  private readonly _destroyRef = inject(DestroyRef);
-  private readonly _cdRef = inject(ChangeDetectorRef);
-  private readonly _vcRef = inject(ViewContainerRef);
-  private readonly _fieldCellService = inject(FieldCellService);
-  private _cmpRef: ComponentRef<FieldCell>;
-  private _isCreated: boolean;
-  private _revert$$: Subscription;
+  private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
+  private vcr = inject(ViewContainerRef);
+  private fieldCellService = inject(FieldCellService);
+  private cmpRef: ComponentRef<FieldCell>;
+  private isCreated: boolean;
+  private revert$$: Subscription;
 
   constructor() {
-    this._cdRef.detach();
+    this.cdr.detach();
 
     afterNextRender(() => {
-      this._createCmp();
-
-      this._cdRef.reattach();
+      this.createCmp();
+      this.cdr.reattach();
     });
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (!this._isCreated) return;
+    if (!this.isCreated) return;
 
     if (
       'field' in changes &&
       !changes['field'].firstChange &&
       changes['field'].previousValue?.dataType !== changes['field'].currentValue?.dataType
     ) {
-      this._createCmp(true);
+      this.createCmp(true);
       return;
     }
 
     if ('field' in changes) {
-      this._forwardCmpInput('field');
+      this.forwardCmpInput('field');
     }
 
     if ('data' in changes) {
-      this._forwardCmpInput('data');
+      this.forwardCmpInput('data');
     }
 
     if ('readonly' in changes) {
-      this._forwardCmpInput('readonly');
+      this.forwardCmpInput('readonly');
     }
 
     if ('selecting' in changes) {
-      this._forwardCmpInput('selecting');
+      this.forwardCmpInput('selecting');
 
       if (this.selecting) {
-        this._keepSelectingState();
+        this.keepSelectingState();
       } else {
-        this._resetSelectingState();
+        this.resetSelectingState();
       }
     }
   }
 
   ngOnDestroy() {
-    this._revert$$?.unsubscribe();
-    this._clean();
+    this.revert$$?.unsubscribe();
+    this.clean();
   }
 
   /**
    * Cleans up the container.
    */
-  private _clean() {
-    this._storeCmp();
-    this._vcRef.detach();
-    this._cmpRef = null;
+  private clean() {
+    this.storeCmp();
+    this.vcr.detach();
+    this.cmpRef = null;
   }
 
   /**
    * Creates a field component.
    * @param isRecreate Re-creates the component when the field type is changed.
    */
-  private _createCmp(isRecreate = false) {
-    if (isRecreate) {
-      this._clean();
-    }
-
-    this._insertCmp();
-    this._isCreated = true;
+  private createCmp(isRecreate = false) {
+    if (isRecreate) this.clean();
+    this.insertCmp();
+    this.isCreated = true;
   }
 
   /**
@@ -135,40 +131,40 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
    * @param cmp A reference of created component or a component type.
    * @returns The ComponentRef<FieldCell> of the created component.
    */
-  private _insertCmp() {
-    if (!this._cmpRef) {
+  private insertCmp() {
+    if (!this.cmpRef) {
       const dataType = this.field.dataType;
       if (!dataType || !FIELD_CELL_CMP_MAP.has(dataType)) {
         throw new Error(`FieldCellFactoryDirective: Unsupported field data type: ${dataType}`);
       }
 
-      let cmp = this._fieldCellService.get(dataType);
+      let cmp = this.fieldCellService.get(dataType);
       if (cmp) {
-        this._vcRef.insert(cmp.hostView);
+        this.vcr.insert(cmp.hostView);
       } else {
-        cmp = this._vcRef.createComponent(FIELD_CELL_CMP_MAP.get(dataType));
+        cmp = this.vcr.createComponent(FIELD_CELL_CMP_MAP.get(dataType));
       }
-      this._cmpRef = cmp;
+      this.cmpRef = cmp;
 
-      this._forwardCmpInput('field');
-      this._forwardCmpInput('data');
-      this._forwardCmpInput('readonly');
-      this._forwardCmpInput('selecting');
+      this.forwardCmpInput('field');
+      this.forwardCmpInput('data');
+      this.forwardCmpInput('readonly');
+      this.forwardCmpInput('selecting');
       cmp.changeDetectorRef.detectChanges();
     }
 
-    return this._cmpRef;
+    return this.cmpRef;
   }
 
   /**
    * Stores the lite component reference in the cache,
    * if it is valid and not destroyed.
    */
-  private _storeCmp() {
-    if (!this._cmpRef || this._cmpRef.hostView.destroyed) {
+  private storeCmp() {
+    if (!this.cmpRef || this.cmpRef.hostView.destroyed) {
       return;
     }
-    this._fieldCellService.set(this.field.dataType, this._cmpRef);
+    this.fieldCellService.set(this.field.dataType, this.cmpRef);
   }
 
   /**
@@ -178,8 +174,8 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
    * @param inputData The data to forward to the input property.
    * Defaults to the value of the input property from the current context.
    */
-  private _forwardCmpInput(inputName: string, inputData = this[inputName]) {
-    const cmpRef = this._cmpRef;
+  private forwardCmpInput(inputName: string, inputData = this[inputName]) {
+    const cmpRef = this.cmpRef;
     if (!cmpRef || cmpRef.hostView.destroyed || !(cmpRef as any)._tNode.inputs[inputName]) {
       return;
     }
@@ -189,23 +185,24 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
   /**
    * Preserves the selecting state of the full component reference if it exists.
    * - Ensures the instance is of `FieldCellEditable` before proceeding.
-   * - Retrieves the current selecting state from `_fieldCellService`.
+   * - Retrieves the current selecting state from `fieldCellService`.
    * - If the retrieved state matches the current row and column context,
    *   it restores the `data` from the state instance.
-   * - Registers the instance with `_fieldCellService` to maintain the selecting state.
+   * - Registers the instance with `fieldCellService` to maintain the selecting state.
    * - Adds a cleanup function on component destruction:
    *   - If the instance is invalid, it skips further actions.
    *   - Otherwise, it clones the instance’s data and triggers necessary updates.
    *   - Calls `_onDataChanges()` to propagate changes.
    *   - Forwards the updated data to the lightweight component reference (`_liteCmpRef`).
    */
-  private _keepSelectingState() {
-    if (!this._cmpRef) return;
-    const { instance } = this._cmpRef;
+  private keepSelectingState() {
+    if (!this.cmpRef) return;
+
+    const { instance } = this.cmpRef;
     if (!(instance instanceof FieldCellEditable)) return;
 
     const cell: TableCell = { row: this.row, column: this.column };
-    let state = this._fieldCellService.getSelectingState();
+    let state = this.fieldCellService.getSelectingState();
     let data = this.data;
 
     if (state?.matchCell(cell)) {
@@ -216,7 +213,7 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
         data: _.cloneDeep(this.data),
         savedData: undefined,
       } as FieldCellSelectingState;
-      this._fieldCellService.setSelectingState(state);
+      this.fieldCellService.setSelectingState(state);
     }
 
     instance.setData(_.cloneDeep(data));
@@ -228,18 +225,20 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
       if (isEditing) state.validate$.next(null);
     };
 
-    this._revert$$?.unsubscribe();
-    this._revert$$ = state.revert$.pipe(takeUntilDestroyed(this._destroyRef)).subscribe(() => {
+    this.revert$$?.unsubscribe();
+    this.revert$$ = state.revert$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       if (!state.matchCell(cell)) return;
       instance.setData(_.cloneDeep(state.data));
     });
   }
 
-  private _resetSelectingState() {
-    if (!this._cmpRef) return;
-    const { instance } = this._cmpRef;
+  private resetSelectingState() {
+    if (!this.cmpRef) return;
+
+    const { instance } = this.cmpRef;
     if (!(instance instanceof FieldCellEditable)) return;
+
     instance.setData(_.cloneDeep(this.data));
-    this._revert$$?.unsubscribe();
+    this.revert$$?.unsubscribe();
   }
 }

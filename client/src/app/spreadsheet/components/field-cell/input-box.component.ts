@@ -1,5 +1,5 @@
+import _ from 'lodash';
 import {
-  // AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
@@ -12,9 +12,6 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import _ from 'lodash';
-
-// import { omitNonNumericChars } from '@core/number-parser';
 
 const NUMBER_REPLACER: RegExp = /^(-)|^e|^([0-9]+)([.e])[.e]*([0-9]*)[.e]*|[^0-9.e\n]+/gm;
 const INTEGER_REPLACER: RegExp = /^(-)|^e|^([0-9]+)(e)e*([0-9]*)e*|[^0-9e\n]+/gm;
@@ -64,12 +61,12 @@ export class InputBoxComponent implements OnChanges {
   @Output() edited: EventEmitter<InputBoxContent> = new EventEmitter<InputBoxContent>();
   @Output() contentChange: EventEmitter<string> = new EventEmitter<string>();
 
-  private readonly _elementRef: ElementRef = inject(ElementRef);
+  private eleRef: ElementRef = inject(ElementRef);
 
-  private _bkContent: InputBoxContent;
+  private bkContent: InputBoxContent;
 
   get editor(): HTMLElement {
-    return this._elementRef.nativeElement;
+    return this.eleRef.nativeElement;
   }
 
   get textContent(): string {
@@ -94,25 +91,23 @@ export class InputBoxComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['content']) {
-      this._writeContent((this._bkContent = this.content), false);
+      this.writeContent((this.bkContent = this.content), false);
     }
   }
 
   revert() {
-    this._writeContent(this._bkContent);
+    this.writeContent(this.bkContent);
   }
 
   keypress(e: KeyboardEvent) {
-    if (!this._validateKeyPress(e)) return;
-
-    this._writeContent(e.key);
-    this._markAsEdited();
+    if (!this.validateKeyPress(e)) return;
+    this.writeContent(e.key);
+    this.markAsEdited();
   }
 
   focus() {
     this.editor.focus({ preventScroll: false });
-
-    this._setCaretAtEnd();
+    this.setCaretAtEnd();
   }
 
   blur() {
@@ -134,8 +129,8 @@ export class InputBoxComponent implements OnChanges {
     e.stopPropagation();
     e.preventDefault();
 
-    this._writeContent(this.textContent);
-    this._markAsEdited();
+    this.writeContent(this.textContent);
+    this.markAsEdited();
   }
 
   @HostListener('keydown', ['$event'])
@@ -151,27 +146,25 @@ export class InputBoxComponent implements OnChanges {
       return;
     }
 
-    this._validateKeyPress(e) ? e.stopPropagation() : e.preventDefault();
+    this.validateKeyPress(e) ? e.stopPropagation() : e.preventDefault();
   }
 
-  private _markAsEdited() {
+  private markAsEdited() {
     let content: InputBoxContent = this.textContent;
-
     if (this.isGenericNumberType) {
       content = content ? parseFloat(content) : null;
     } else if (_.isString(content)) {
       content = content.trim();
     }
-
     this.edited.emit(content);
   }
 
-  private _validateKeyPress(e: KeyboardEvent) {
+  private validateKeyPress(e: KeyboardEvent) {
     return !e.shiftKey || e.code !== 'Enter';
   }
 
-  private _writeContent(content: InputBoxContent, emitEvent: boolean = true) {
-    let text: string = String(content ?? '');
+  private writeContent(content: InputBoxContent, emitEvent = true) {
+    let text = String(content ?? '');
 
     if (text) {
       switch (this.type) {
@@ -192,23 +185,19 @@ export class InputBoxComponent implements OnChanges {
 
     if (this.textContent !== text) {
       this.textContent = text;
-
-      this._setCaretAtEnd();
+      this.setCaretAtEnd();
     }
 
     if (!emitEvent) return;
-
     this.contentChange.emit(text);
   }
 
-  private _setCaretAtEnd() {
+  private setCaretAtEnd() {
     const range: Range = document.createRange();
-
     range.selectNodeContents(this.editor);
     range.collapse(false);
 
     const selection: Selection = window.getSelection();
-
     selection.removeAllRanges();
     selection.addRange(range);
   }

@@ -17,13 +17,7 @@ import { CellTouchEvent } from '../field-cell-touchable';
 export class CheckboxFieldCellComponent extends FieldCellEditable<CheckboxData> {
   protected override onTouch(e: CellTouchEvent) {
     if ('touches' in e) return;
-
-    this._toggle();
-  }
-
-  private _toggle() {
     if (this.readonly) return;
-
     this.save(!this.data);
   }
 }

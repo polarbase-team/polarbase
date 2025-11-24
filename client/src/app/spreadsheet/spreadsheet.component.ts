@@ -380,7 +380,7 @@ export class SpreadsheetComponent
               this.openColumnActionMenu(e1);
               break;
             case 'row':
-              this._openRowActionMenu(e1);
+              this.openRowActionMenu(e1);
               break;
             case 'group':
               this.openGroupActionMenu(e1);
@@ -774,7 +774,7 @@ export class SpreadsheetComponent
     this.columnActionMenu.hide();
   }
 
-  private _openRowActionMenu(e: MouseEvent) {
+  private openRowActionMenu(e: MouseEvent) {
     if (this.rowActionMenu.visible()) return;
 
     const index = this.tableCellService.findCellByElement(e.target as HTMLElement);

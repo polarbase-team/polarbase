@@ -29,9 +29,7 @@ export class FieldCellEditable<T = any> extends FieldCellTouchable<T> {
 
   setData(data: T) {
     this.data = data;
-
     this.cdRef.markForCheck();
-
     this.onDataChange();
   }
 
@@ -50,14 +48,12 @@ export class FieldCellEditable<T = any> extends FieldCellTouchable<T> {
 
   protected markAsEditStarted() {
     this._isEditing = true;
-
     this.onEditStarted();
     this.onEditCallback?.(true);
   }
 
   protected markAsEditEnded() {
     this._isEditing = false;
-
     this.onEditEnded();
     this.onEditCallback?.(false);
   }

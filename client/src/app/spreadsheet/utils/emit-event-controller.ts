@@ -14,91 +14,79 @@ export class EmitEventController<K, T> {
     throttleTime: 2000,
   };
 
-  private _config: Config<T>;
-  private _eventStack: Map<K, T>;
-  private _emitThrottledFn: _.DebouncedFunc<(keys?: K[], cb?: CallbackFn<T>) => void>;
+  private config: Config<T>;
+  private eventStack: Map<K, T>;
+  private emitThrottledFn: _.DebouncedFunc<(keys?: K[], cb?: CallbackFn<T>) => void>;
 
   constructor(config?: Partial<Config<T>>) {
-    this._config = _.defaults(config, EmitEventController.DEFAULT_CONFIG) as Config<T>;
+    this.config = _.defaults(config, EmitEventController.DEFAULT_CONFIG) as Config<T>;
 
-    this._eventStack = new Map();
-    this._emitThrottledFn = _.throttle((keys?: K[], cb?: CallbackFn<T>) => {
+    this.eventStack = new Map();
+    this.emitThrottledFn = _.throttle((keys?: K[], cb?: CallbackFn<T>) => {
       return this._emit(keys, cb);
-    }, this._config.throttleTime);
+    }, this.config.throttleTime);
   }
 
   emit(keys?: K[], cb?: CallbackFn<T>) {
-    this._emitThrottledFn(keys, cb);
+    this.emitThrottledFn(keys, cb);
   }
 
   flush() {
-    this._emitThrottledFn.cancel();
+    this.emitThrottledFn.cancel();
     this._emit();
   }
 
-  getLength(): number {
-    return this._eventStack.size;
+  getLength() {
+    return this.eventStack.size;
   }
 
-  getEvents(): T[] {
-    return [...this._eventStack.values()];
+  getEvents() {
+    return [...this.eventStack.values()];
   }
 
-  getEvent(key: K): T {
-    return this._eventStack.get(key);
+  getEvent(key: K) {
+    return this.eventStack.get(key);
   }
 
   addEvent(key: K, event: T) {
-    this._eventStack.set(key, event);
-
-    if (!this._config.autoEmit) return;
-
-    this._emitThrottledFn();
+    this.eventStack.set(key, event);
+    if (!this.config.autoEmit) return;
+    this.emitThrottledFn();
   }
 
   removeEvent(key: K) {
-    this._eventStack.delete(key);
+    this.eventStack.delete(key);
   }
 
   emitEvent(key: K, cb?: CallbackFn<T>) {
-    const event: T = this._eventStack.get(key);
-
+    const event: T = this.eventStack.get(key);
     if (!event) return;
 
-    this._eventStack.delete(key);
+    this.eventStack.delete(key);
 
     const events: T[] = [event];
-
-    this._config.onEmitted?.(events);
-
+    this.config.onEmitted?.(events);
     cb?.(events);
   }
 
   private _emit(keys?: K[], cb?: CallbackFn<T>) {
-    if (!this._eventStack.size) return;
+    if (!this.eventStack.size) return;
 
     let events: T[];
-
     if (keys === undefined) {
-      events = [...this._eventStack.values()];
-
-      this._eventStack.clear();
+      events = [...this.eventStack.values()];
+      this.eventStack.clear();
     } else {
       events = [];
-
       for (const key of keys) {
-        if (!this._eventStack.has(key)) continue;
+        if (!this.eventStack.has(key)) continue;
 
-        events.push(this._eventStack.get(key));
-
-        this._eventStack.delete(key);
+        events.push(this.eventStack.get(key));
+        this.eventStack.delete(key);
       }
     }
-
     if (!events.length) return;
-
-    this._config.onEmitted?.(events);
-
+    this.config.onEmitted?.(events);
     cb?.(events);
   }
 }
