@@ -117,7 +117,7 @@ const DEFAULT_CONFIG: TableConfig = {
     deletable: true,
   },
   cell: {
-    fillable: false,
+    fillable: true,
   },
 };
 
