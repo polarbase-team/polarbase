@@ -52,12 +52,6 @@ export const RowSize = {
 } as const;
 export type RowSize = keyof typeof RowSize;
 
-type FoundRow = {
-  rowIndex: number;
-  rowOffset: number;
-  group?: TableGroup;
-};
-
 @Injectable()
 export class TableRowService extends TableBaseService {
   rows = signal<TableRow[]>([]);
@@ -145,7 +139,7 @@ export class TableRowService extends TableBaseService {
       )
       .subscribe((rows) => {
         for (const row of rows) {
-          if (this.checkRowIsDraft(row)) {
+          if (this.isDraftRow(row)) {
             this.draftRow = null;
             break;
           }
@@ -209,9 +203,9 @@ export class TableRowService extends TableBaseService {
 
   onRowDragMoved(e: CdkDragMove<TableRow>) {
     const foundRow = this.findRowAtPointerPosition(e.pointerPosition);
-    let group;
-    let rowIndex;
-    let rowOffset;
+    let group: TableGroup;
+    let rowIndex: number;
+    let rowOffset: number;
     if (foundRow) {
       group = foundRow.group;
       rowIndex = foundRow.rowIndex;
@@ -270,11 +264,13 @@ export class TableRowService extends TableBaseService {
     this.tableGroupService.isGrouping
       ? this.tableGroupService.createRowInGroup(group)
       : this.createRow();
-    this.cdr.markForCheck();
   }
 
   createRow(data?: any, position?: number, onBeforeInsert?: (r: TableRow, p: number) => void) {
-    const newRow = this.generateRow({ data });
+    const newRow = {
+      id: _.uniqueId(),
+      data: _.cloneDeep(data),
+    } as TableRow;
     onBeforeInsert?.(newRow, position);
 
     this.insertRow(newRow, position);
@@ -369,10 +365,10 @@ export class TableRowService extends TableBaseService {
       newMovedIndex--;
     }
 
-    _.pull(this.rows(), ...movedRows);
-    this.rows().splice(newMovedIndex, 0, ...movedRows);
-
-    // this.markRowsAsChanged();
+    const rows = this.rows();
+    _.pull(rows, ...movedRows);
+    rows.splice(newMovedIndex, 0, ...movedRows);
+    this.rows.update(() => [...rows]);
 
     this.host.rowAction.emit({
       type: TableRowActionType.Move,
@@ -380,7 +376,7 @@ export class TableRowService extends TableBaseService {
     });
   }
 
-  getSelectedRows(): TableRow[] {
+  getSelectedRows() {
     const selectedRows = [...this.selectedRows];
 
     if (!selectedRows.length) {
@@ -396,13 +392,13 @@ export class TableRowService extends TableBaseService {
     return selectedRows;
   }
 
-  getLastRowIndex(): number {
+  getLastRowIndex() {
     return this.tableGroupService.isGrouping
       ? this.tableGroupService.getLastRowIndexInGroup()
       : this.rows().length - 1;
   }
 
-  findRowAtPointerPosition(pointerPosition: Point): FoundRow {
+  findRowAtPointerPosition(pointerPosition: Point) {
     if (this.tableGroupService.isGrouping) {
       return this.tableGroupService.findRowInGroupAtPointerPosition(pointerPosition);
     }
@@ -424,28 +420,29 @@ export class TableRowService extends TableBaseService {
     const index = Math.round((pointerOffsetY - startOffset) / this.rowHeight());
 
     return {
+      group: null,
       rowIndex: index,
       rowOffset: startOffset + index * this.rowHeight(),
     };
   }
 
-  findRowByIndex(index: number): TableRow {
+  findRowByIndex(index: number) {
     return this.tableGroupService.isGrouping
       ? this.tableGroupService.findRowInGroupByIndex(index)
       : this.rows()[index];
   }
 
-  findRowByID(id: TableRow['id']): TableRow {
+  findRowByID(id: TableRow['id']) {
     return this.rowLookup.has(id) ? this.rowLookup.get(id) : _.find(this.rows(), { id });
   }
 
-  findRowIndex(row: TableRow): number {
+  findRowIndex(row: TableRow) {
     return this.tableGroupService.isGrouping
       ? this.tableGroupService.findRowIndexInGroup(row)
       : _.indexOf(this.rows(), row);
   }
 
-  findRowIndexByID(id: TableRow['id']): number {
+  findRowIndexByID(id: TableRow['id']) {
     return this.tableGroupService.isGrouping
       ? this.tableGroupService.findRowIndexInGroupByID(id)
       : _.findIndex(this.rows(), { id });
@@ -457,7 +454,7 @@ export class TableRowService extends TableBaseService {
     }
   }
 
-  checkRowIsDraft(row: TableRow): boolean {
+  isDraftRow(row: TableRow) {
     return this.draftRow === row;
   }
 
@@ -550,14 +547,6 @@ export class TableRowService extends TableBaseService {
 
     this.rowActionItems = items;
     this.host.rowActionMenu.show(e);
-  }
-
-  private generateRow(extra?: Partial<TableRow>) {
-    return _.cloneDeep({
-      ...extra,
-      id: _.uniqueId(),
-      selected: false,
-    }) as TableRow;
   }
 
   private insertRow(row: any, position = this.rows()?.length) {

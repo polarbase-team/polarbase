@@ -371,7 +371,7 @@ export class TableCellService extends TableBaseService {
 
     state.reset();
 
-    if (this.tableRowService.checkRowIsDraft(selectingCell.row)) {
+    if (this.tableRowService.isDraftRow(selectingCell.row)) {
       this.tableRowService.cancelDraftRow();
       this.deselectAllCells();
     }
@@ -1225,7 +1225,7 @@ export class TableCellService extends TableBaseService {
   ) {
     row.data = { ...row.data, ...rawData };
 
-    if (this.tableRowService.checkRowIsDraft(row)) {
+    if (this.tableRowService.isDraftRow(row)) {
       this._interactedColumns?.clear();
       return;
     }

@@ -828,7 +828,7 @@ export class SpreadsheetComponent
       this._selectCellInZone(index);
     }
 
-    if (this.isMouseHolding || this.tableRowService.checkRowIsDraft(row)) {
+    if (this.isMouseHolding || this.tableRowService.isDraftRow(row)) {
       return;
     }
 
