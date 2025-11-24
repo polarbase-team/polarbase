@@ -16,25 +16,23 @@ export class FieldCellInputable<T = any> extends FieldCellEditable<T> {
   protected isInputting: boolean;
 
   input(e?: CellTouchEvent) {
-    this.ngZone.run(() => {
-      this.isInputting = true;
+    this.isInputting = true;
 
-      this.cdRef.detectChanges();
+    this.cdRef.detectChanges();
 
-      if (e instanceof KeyboardEvent) {
-        e.preventDefault(); // Prevent double key
+    if (e instanceof KeyboardEvent) {
+      e.preventDefault(); // Prevent double key
 
-        this.inputBox.keypress(e);
+      this.inputBox.keypress(e);
+    }
+
+    setTimeout(() => {
+      if (!this.inputBox.isFocusing) {
+        this.inputBox.focus();
       }
+    }, 17);
 
-      setTimeout(() => {
-        if (!this.inputBox.isFocusing) {
-          this.inputBox.focus();
-        }
-      }, 17);
-
-      this.onInput(e);
-    });
+    this.onInput(e);
   }
 
   protected override onTouch(e: CellTouchEvent) {

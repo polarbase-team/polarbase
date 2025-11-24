@@ -12,7 +12,6 @@ import {
   IterableChanges,
   IterableDiffer,
   IterableDiffers,
-  NgZone,
   OnDestroy,
   Output,
 } from '@angular/core';
@@ -74,7 +73,6 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
 
   private readonly _cdRef: ChangeDetectorRef = inject(ChangeDetectorRef);
   private readonly _elementRef: ElementRef = inject(ElementRef);
-  private readonly _ngZone: NgZone = inject(NgZone);
   private readonly _iterableDiffers: IterableDiffers = inject(IterableDiffers);
   private readonly _resizeObserve: ResizeObserver = new ResizeObserver(this._onResized.bind(this));
 
@@ -477,12 +475,10 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   }
 
   private _updateColumnRange(leftColumnRange: TableColumn[], rightColumnRange: TableColumn[]) {
-    this._ngZone.run(() => {
-      this.leftWrapper.columns = leftColumnRange;
-      this.rightWrapper.columns = rightColumnRange;
+    this.leftWrapper.columns = leftColumnRange;
+    this.rightWrapper.columns = rightColumnRange;
 
-      this._cdRef.markForCheck();
-    });
+    this._cdRef.markForCheck();
   }
 
   private _updateRowRange(rowRange: TableRow[]) {
@@ -490,12 +486,10 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
 
     if (!changes) return;
 
-    this._ngZone.run(() => {
-      this.leftWrapper.rowRepeater.applyChanges(changes);
-      this.rightWrapper.rowRepeater.applyChanges(changes);
+    this.leftWrapper.rowRepeater.applyChanges(changes);
+    this.rightWrapper.rowRepeater.applyChanges(changes);
 
-      this._cdRef.markForCheck();
-    });
+    this._cdRef.markForCheck();
   }
 
   private _updateGroupRange(groupRange: TableGroup[]) {
@@ -503,33 +497,27 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
 
     if (!changes) return;
 
-    this._ngZone.run(() => {
-      this.leftWrapper.groupRepeater.applyChanges(changes);
-      this.rightWrapper.groupRepeater.applyChanges(changes);
+    this.leftWrapper.groupRepeater.applyChanges(changes);
+    this.rightWrapper.groupRepeater.applyChanges(changes);
 
-      this._cdRef.markForCheck();
-    });
+    this._cdRef.markForCheck();
   }
 
   private _clearCurrentRowRange() {
     this._rowRangeDiffer.diff(null);
 
-    this._ngZone.run(() => {
-      this.leftWrapper.rowRepeater.clear();
-      this.rightWrapper.rowRepeater.clear();
+    this.leftWrapper.rowRepeater.clear();
+    this.rightWrapper.rowRepeater.clear();
 
-      this._cdRef.markForCheck();
-    });
+    this._cdRef.markForCheck();
   }
 
   private _clearCurrentGroupRange() {
     this._groupRangeDiffer.diff(null);
 
-    this._ngZone.run(() => {
-      this.leftWrapper.groupRepeater.clear();
-      this.rightWrapper.groupRepeater.clear();
+    this.leftWrapper.groupRepeater.clear();
+    this.rightWrapper.groupRepeater.clear();
 
-      this._cdRef.markForCheck();
-    });
+    this._cdRef.markForCheck();
   }
 }

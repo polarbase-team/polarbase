@@ -6,7 +6,6 @@ import {
   HostListener,
   inject,
   Input,
-  NgZone,
   SimpleChanges,
 } from '@angular/core';
 
@@ -25,7 +24,6 @@ export class FieldCell<T = any> {
 
   @HostBinding('class.field-cell')
   protected readonly hostClass: boolean = true;
-  protected readonly ngZone = inject(NgZone);
   protected readonly cdRef = inject(ChangeDetectorRef);
   protected readonly elementRef = inject(ElementRef);
   protected isDetached: boolean;

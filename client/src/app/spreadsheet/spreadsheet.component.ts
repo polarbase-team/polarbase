@@ -14,8 +14,6 @@ import {
   HostListener,
   inject,
   input,
-  Input,
-  NgZone,
   OnChanges,
   OnDestroy,
   OnInit,
@@ -175,7 +173,6 @@ export class SpreadsheetComponent
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   private renderer = inject(Renderer2);
-  private ngZone = inject(NgZone);
   private fieldCellService = inject(FieldCellService);
   private keyboard: Keyboard;
   private clipboard: Clipboard<TableCell>;
@@ -218,57 +215,51 @@ export class SpreadsheetComponent
     this.tableRowService.onInit();
     this.tableGroupService.onInit();
 
-    this.ngZone.runOutsideAngular(() =>
-      Promise.resolve().then(() => {
-        this._handlePointerEvents();
-        this._handleKeyboardEvents();
-        this._handleClipboardEvents();
+    Promise.resolve().then(() => {
+      this._handlePointerEvents();
+      this._handleKeyboardEvents();
+      this._handleClipboardEvents();
 
-        merge(
-          this.cellAction.pipe(
-            filter(
-              (
-                event,
-              ): event is Extract<TableCellAction, { type: typeof TableCellActionType.Select }> =>
-                event.type === TableCellActionType.Select,
-            ),
+      merge(
+        this.cellAction.pipe(
+          filter(
+            (
+              event,
+            ): event is Extract<TableCellAction, { type: typeof TableCellActionType.Select }> =>
+              event.type === TableCellActionType.Select,
           ),
-          this.columnAction.pipe(
-            filter(
-              (
-                event,
-              ): event is Extract<
-                TableColumnAction,
-                { type: typeof TableColumnActionType.Select }
-              > => event.type === TableColumnActionType.Select,
-            ),
+        ),
+        this.columnAction.pipe(
+          filter(
+            (
+              event,
+            ): event is Extract<TableColumnAction, { type: typeof TableColumnActionType.Select }> =>
+              event.type === TableColumnActionType.Select,
           ),
-          this.rowAction.pipe(
-            filter(
-              (
-                event,
-              ): event is Extract<TableRowAction, { type: typeof TableRowActionType.Select }> =>
-                event.type === TableRowActionType.Select,
-            ),
+        ),
+        this.rowAction.pipe(
+          filter(
+            (event): event is Extract<TableRowAction, { type: typeof TableRowActionType.Select }> =>
+              event.type === TableRowActionType.Select,
           ),
+        ),
+      )
+        .pipe(
+          map((e) => e !== null),
+          distinctUntilChanged(),
+          takeUntilDestroyed(this.destroyRef),
         )
-          .pipe(
-            map((e) => e !== null),
-            distinctUntilChanged(),
-            takeUntilDestroyed(this.destroyRef),
-          )
-          .subscribe((isContinue) => {
-            if (!isContinue) {
-              this.keyboard.pause();
-              this.clipboard.pause();
-              return;
-            }
+        .subscribe((isContinue) => {
+          if (!isContinue) {
+            this.keyboard.pause();
+            this.clipboard.pause();
+            return;
+          }
 
-            this.keyboard.continue();
-            this.clipboard.continue();
-          });
-      }),
-    );
+          this.keyboard.continue();
+          this.clipboard.continue();
+        });
+    });
   }
 
   ngAfterContentInit() {
@@ -369,33 +360,31 @@ export class SpreadsheetComponent
             (this.columnActionMenu.visible() ||
               this.rowActionMenu.visible() ||
               this.groupActionMenu.visible())
-          ) && this._shouldPauseEvent(e1);
+          ) && this.shouldPauseEvent(e1);
         if (shouldPause) return;
 
         const target = e1.target as HTMLElement;
 
-        this._closeColumnActionMenu();
-        this._closeRowActionMenu();
-        this._closeGroupActionMenu();
+        this.closeColumnActionMenu();
+        this.closeRowActionMenu();
+        this.closeGroupActionMenu();
 
         if (isRightClick) {
-          this.ngZone.run(() => {
-            this.tableCellService.deselectAllCells();
+          this.tableCellService.deselectAllCells();
 
-            const el = target.closest('[cell-type]');
-            const type = el?.getAttribute('cell-type');
-            switch (type) {
-              case 'column':
-                this._openColumnActionMenu(e1);
-                break;
-              case 'row':
-                this._openRowActionMenu(e1);
-                break;
-              case 'group':
-                this._openGroupActionMenu(e1);
-                break;
-            }
-          });
+          const el = target.closest('[cell-type]');
+          const type = el?.getAttribute('cell-type');
+          switch (type) {
+            case 'column':
+              this.openColumnActionMenu(e1);
+              break;
+            case 'row':
+              this._openRowActionMenu(e1);
+              break;
+            case 'group':
+              this.openGroupActionMenu(e1);
+              break;
+          }
           return;
         }
 
@@ -405,11 +394,9 @@ export class SpreadsheetComponent
           !document.contains(target);
 
         if (!isSafe) {
-          this.ngZone.run(() => {
-            this.tableRowService.flushDraftRow();
-            this.tableCellService.deselectAllCells();
-            this.tableColumnService.deselectAllColumns();
-          });
+          this.tableRowService.flushDraftRow();
+          this.tableCellService.deselectAllCells();
+          this.tableColumnService.deselectAllColumns();
           return;
         }
 
@@ -437,7 +424,7 @@ export class SpreadsheetComponent
 
           if (primaryCellIdxInSelection) {
             if (e1.shiftKey) {
-              this._selectCellsInZone(primaryCellIdxInSelection, startCellIdx);
+              this.selectCells(primaryCellIdxInSelection, startCellIdx);
               return;
             }
 
@@ -495,44 +482,42 @@ export class SpreadsheetComponent
             if (compared === 0) return;
 
             if (isFillHandlerActive) {
-              this.ngZone.run(() => {
-                endCellIdx.columnIndex = currSelection.end.columnIndex;
+              endCellIdx.columnIndex = currSelection.end.columnIndex;
 
-                const isReverse = compared === 1;
+              const isReverse = compared === 1;
 
-                let start: CellIndex;
-                let end: CellIndex;
+              let start: CellIndex;
+              let end: CellIndex;
 
-                if (isReverse) {
-                  start = {
-                    rowIndex: endCellIdx.rowIndex,
-                    columnIndex: currSelection.start.columnIndex,
-                  };
-                  end = {
-                    rowIndex: currSelection.start.rowIndex - 1,
-                    columnIndex: currSelection.end.columnIndex,
-                  };
-                } else {
-                  start = {
-                    rowIndex: currSelection.end.rowIndex + 1,
-                    columnIndex: currSelection.start.columnIndex,
-                  };
-                  end = {
-                    rowIndex: endCellIdx.rowIndex,
-                    columnIndex: currSelection.end.columnIndex,
-                  };
-                }
-
-                this.tableService.layoutProps.cell.filling = {
-                  start,
-                  end,
-                  isReverse,
+              if (isReverse) {
+                start = {
+                  rowIndex: endCellIdx.rowIndex,
+                  columnIndex: currSelection.start.columnIndex,
                 };
+                end = {
+                  rowIndex: currSelection.start.rowIndex - 1,
+                  columnIndex: currSelection.end.columnIndex,
+                };
+              } else {
+                start = {
+                  rowIndex: currSelection.end.rowIndex + 1,
+                  columnIndex: currSelection.start.columnIndex,
+                };
+                end = {
+                  rowIndex: endCellIdx.rowIndex,
+                  columnIndex: currSelection.end.columnIndex,
+                };
+              }
 
-                this.detectChanges();
-              });
+              this.tableService.layoutProps.cell.filling = {
+                start,
+                end,
+                isReverse,
+              };
+
+              this.detectChanges();
             } else {
-              this._selectCellsInZone(startCellIdx, endCellIdx, true);
+              this.selectCells(startCellIdx, endCellIdx, true);
             }
           });
         });
@@ -547,8 +532,8 @@ export class SpreadsheetComponent
             const cellFilling = this.tableService.layoutProps.cell.filling;
 
             cellFilling.isReverse
-              ? this._selectCellsInZone(cellFilling.start, currSelection.end, true)
-              : this._selectCellsInZone(currSelection.start, cellFilling.end, true);
+              ? this.selectCells(cellFilling.start, currSelection.end, true)
+              : this.selectCells(currSelection.start, cellFilling.end, true);
 
             this.tableCellService.fillCells(
               [currSelection.start, currSelection.end],
@@ -568,7 +553,7 @@ export class SpreadsheetComponent
     this.keyboard = new Keyboard({
       pause: true,
       shouldPause: (e) =>
-        this._shouldPauseEvent(e, (shouldPause) => {
+        this.shouldPauseEvent(e, (shouldPause) => {
           return (
             shouldPause && (e.code !== 'Escape' || !this.tableService.layoutProps.cell.invalid)
           );
@@ -594,11 +579,8 @@ export class SpreadsheetComponent
       }
 
       currentAnimationFrame = requestAnimationFrame(() => {
-        this.ngZone.run(() => {
-          fn();
-
-          this.detectChanges();
-        });
+        fn();
+        this.detectChanges();
       });
     };
 
@@ -701,25 +683,19 @@ export class SpreadsheetComponent
   private _handleClipboardEvents() {
     this.clipboard = new Clipboard({
       pause: true,
-      shouldPause: (e) => this._shouldPauseEvent(e),
+      shouldPause: (e) => this.shouldPauseEvent(e),
     });
 
     this.clipboard.copy$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.ngZone.run(() => {
-        this.tableCellService.copyInteractiveCells(this.clipboard);
-      });
+      this.tableCellService.copyInteractiveCells(this.clipboard);
     });
 
     this.clipboard.cut$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([_e, data]) => {
-      this.ngZone.run(() => {
-        this.tableCellService.cutCells(data);
-      });
+      this.tableCellService.cutCells(data);
     });
 
     this.clipboard.paste$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([_e, data]) => {
-      this.ngZone.run(() => {
-        this.tableCellService.pasteCells(data);
-      });
+      this.tableCellService.pasteCells(data);
     });
   }
 
@@ -734,14 +710,11 @@ export class SpreadsheetComponent
       return;
     }
 
-    this.ngZone.run(() => {
-      this.tableCellService.selectCells(index, index, true);
-
-      this.detectChanges();
-    });
+    this.tableCellService.selectCells(index, index, true);
+    this.detectChanges();
   }
 
-  private _selectCellsInZone(startIdx: CellIndex, endIdx: CellIndex, extend: boolean = false) {
+  private selectCells(startIdx: CellIndex, endIdx: CellIndex, extend: boolean = false) {
     if (
       this.tableService.layoutProps.cell.selection &&
       this.tableCellService.compareCellIndex(
@@ -756,18 +729,15 @@ export class SpreadsheetComponent
       return;
     }
 
-    this.ngZone.run(() => {
-      this.tableCellService.selectCells(startIdx, endIdx, false, extend);
-
-      this.detectChanges();
-    });
+    this.tableCellService.selectCells(startIdx, endIdx, false, extend);
+    this.detectChanges();
   }
 
-  private _shouldPauseEvent(e: Event, customizer?: (shouldPause: boolean) => boolean): boolean {
+  private shouldPauseEvent(e: Event, customizer?: (shouldPause: boolean) => boolean): boolean {
     let shouldPause =
       !!this.tableService.layoutProps.cell.invalid ||
-      this._checkOverlapedByOtherSpreadsheet() ||
-      this._checkOverlapedByOverlay(e.target);
+      this.checkOverlapedByOtherSpreadsheet() ||
+      this.checkOverlapedByOverlay(e.target);
 
     if (_.isFunction(customizer)) {
       shouldPause = customizer(shouldPause);
@@ -776,11 +746,11 @@ export class SpreadsheetComponent
     return shouldPause;
   }
 
-  private _checkOverlapedByOtherSpreadsheet(): boolean {
+  private checkOverlapedByOtherSpreadsheet(): boolean {
     return stack[stack.length - 1] !== this;
   }
 
-  private _checkOverlapedByOverlay(target?: EventTarget): boolean {
+  private checkOverlapedByOverlay(target?: EventTarget): boolean {
     let isOverlaped: boolean;
     if (target) {
       isOverlaped = !!(target as HTMLElement).closest('.ng-trigger-overlayAnimation');
@@ -788,7 +758,7 @@ export class SpreadsheetComponent
     return isOverlaped;
   }
 
-  private _openColumnActionMenu(e: MouseEvent) {
+  private openColumnActionMenu(e: MouseEvent) {
     if (this.columnActionMenu.visible()) return;
 
     const index = this.tableCellService.findCellByElement(e.target as HTMLElement);
@@ -799,9 +769,7 @@ export class SpreadsheetComponent
     this.tableColumnService.openColumnContextMenu(e, column, columnIndex);
   }
 
-  private _closeColumnActionMenu() {
-    if (!this.columnActionMenu.visible()) return;
-
+  private closeColumnActionMenu() {
     this.columnActionMenu.hide();
   }
 
@@ -833,21 +801,17 @@ export class SpreadsheetComponent
     this.tableRowService.openRowActionMenu(e, row, rowIndex);
   }
 
-  private _closeRowActionMenu() {
-    if (!this.rowActionMenu.visible()) return;
-
+  private closeRowActionMenu() {
     this.rowActionMenu.hide();
   }
 
-  private _openGroupActionMenu(e: MouseEvent) {
+  private openGroupActionMenu(e: MouseEvent) {
     if (this.groupActionMenu.visible()) return;
 
     this.tableGroupService.openActionMenu(e);
   }
 
-  private _closeGroupActionMenu() {
-    if (!this.groupActionMenu.visible()) return;
-
+  private closeGroupActionMenu() {
     this.groupActionMenu.hide();
   }
 }

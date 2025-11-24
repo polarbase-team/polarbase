@@ -5,7 +5,6 @@ import {
   Injectable,
   ChangeDetectorRef,
   ElementRef,
-  NgZone,
   Renderer2,
   inject,
   computed,
@@ -114,7 +113,6 @@ export class MatrixCell {
 
 @Injectable()
 export class TableCellService extends TableBaseService {
-  private ngZone = inject(NgZone);
   private renderer = inject(Renderer2);
   private cdRef = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);
@@ -248,17 +246,13 @@ export class TableCellService extends TableBaseService {
       return;
     }
 
-    this.ngZone.run(() => {
-      this.tableService.layoutProps.cell.hovering = index;
-      this.cdRef.detectChanges();
-    });
+    this.tableService.layoutProps.cell.hovering = index;
+    this.cdRef.detectChanges();
 
     const unlisten = this.renderer.listen(e.target, 'pointerleave', () => {
       unlisten();
-      this.ngZone.run(() => {
-        this.tableService.layoutProps.cell.hovering = null;
-        this.cdRef.detectChanges();
-      });
+      this.tableService.layoutProps.cell.hovering = null;
+      this.cdRef.detectChanges();
     });
   }
 

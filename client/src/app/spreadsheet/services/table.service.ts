@@ -1,14 +1,5 @@
 import _ from 'lodash';
-import {
-  ChangeDetectorRef,
-  computed,
-  DestroyRef,
-  ElementRef,
-  inject,
-  Injectable,
-  NgZone,
-  SimpleChanges,
-} from '@angular/core';
+import { computed, DestroyRef, ElementRef, inject, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 
@@ -141,7 +132,6 @@ export class TableService extends TableBaseService {
   searchResult: [TableRow, TableColumn][];
   calculatedResult: Map<TableColumn['id'], any>;
 
-  private ngZone = inject(NgZone);
   private destroyRef = inject(DestroyRef);
   private eleRef = inject(ElementRef);
   private fieldCellService = inject(FieldCellService);
@@ -158,27 +148,24 @@ export class TableService extends TableBaseService {
     if (!this.isDataStreaming) return;
 
     this.streamData$ = new Subject();
-
-    this.ngZone.runOutsideAngular(() => {
-      this.streamData$
-        .pipe(
-          throttleTime(200),
-          mergeMap((rows) => of(rows)),
-          takeUntilDestroyed(this.destroyRef),
-        )
-        .subscribe({
-          next: (rows) => {
-            this.tableRowService.markRowsAsStreamed(rows);
-          },
-          error: () => {
-            throw new Error('Stream error');
-          },
-          complete: () => {
-            this.isDataStreaming = false;
-            this.handleDataUpdate();
-          },
-        });
-    });
+    this.streamData$
+      .pipe(
+        throttleTime(200),
+        mergeMap((rows) => of(rows)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (rows) => {
+          this.tableRowService.markRowsAsStreamed(rows);
+        },
+        error: () => {
+          throw new Error('Stream error');
+        },
+        complete: () => {
+          this.isDataStreaming = false;
+          this.handleDataUpdate();
+        },
+      });
   }
 
   handleDataUpdate = _.throttle(() => {

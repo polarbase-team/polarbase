@@ -10,7 +10,6 @@ import {
   HostBinding,
   inject,
   Input,
-  NgZone,
   OnDestroy,
   Output,
   ViewChild,
@@ -120,7 +119,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   private readonly _destroyRef = inject(DestroyRef);
   private readonly _cdRef: ChangeDetectorRef = inject(ChangeDetectorRef);
   private readonly _elementRef: ElementRef = inject(ElementRef);
-  private readonly _ngZone: NgZone = inject(NgZone);
   private readonly _stopSubEvent$: Subject<void> = new Subject<void>();
 
   private _isAutoScroll: boolean = false;
@@ -184,90 +182,82 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   }
 
   ngAfterContentInit() {
-    this._ngZone.runOutsideAngular(() =>
-      Promise.resolve().then(() => {
-        let wheelAnimationFrame: number;
-        fromEvent<WheelEvent>(this._elementRef.nativeElement, 'wheel')
-          .pipe(
-            filter((): boolean => !this.disable?.()),
-            takeUntilDestroyed(this._destroyRef),
-          )
-          .subscribe((e) => {
-            e.stopPropagation();
-            e.preventDefault();
+    Promise.resolve().then(() => {
+      let wheelAnimationFrame: number;
+      fromEvent<WheelEvent>(this._elementRef.nativeElement, 'wheel')
+        .pipe(
+          filter((): boolean => !this.disable?.()),
+          takeUntilDestroyed(this._destroyRef),
+        )
+        .subscribe((e) => {
+          e.stopPropagation();
+          e.preventDefault();
 
-            this._stopSubEvent$.next();
+          this._stopSubEvent$.next();
 
-            if (wheelAnimationFrame) {
-              cancelAnimationFrame(wheelAnimationFrame);
+          if (wheelAnimationFrame) {
+            cancelAnimationFrame(wheelAnimationFrame);
 
-              wheelAnimationFrame = null;
-            }
+            wheelAnimationFrame = null;
+          }
 
-            wheelAnimationFrame = requestAnimationFrame(() => {
-              this._onWheel(e);
-            });
+          wheelAnimationFrame = requestAnimationFrame(() => {
+            this._onWheel(e);
           });
+        });
 
-        fromEvent<PointerEvent>(this._elementRef.nativeElement, 'pointerdown')
-          .pipe(
-            filter((): boolean => !this.disable?.()),
-            takeUntilDestroyed(this._destroyRef),
-          )
-          .subscribe(this._onPointerDown.bind(this));
+      fromEvent<PointerEvent>(this._elementRef.nativeElement, 'pointerdown')
+        .pipe(
+          filter((): boolean => !this.disable?.()),
+          takeUntilDestroyed(this._destroyRef),
+        )
+        .subscribe(this._onPointerDown.bind(this));
 
-        fromEvent<PointerEvent>(this.horizontalThumb.nativeElement, 'pointerdown')
-          .pipe(
-            filter((): boolean => !this.disable?.()),
-            takeUntilDestroyed(this._destroyRef),
-          )
-          .subscribe(this._onThumbPointerdown.bind(this, 'horizontal'));
+      fromEvent<PointerEvent>(this.horizontalThumb.nativeElement, 'pointerdown')
+        .pipe(
+          filter((): boolean => !this.disable?.()),
+          takeUntilDestroyed(this._destroyRef),
+        )
+        .subscribe(this._onThumbPointerdown.bind(this, 'horizontal'));
 
-        fromEvent<PointerEvent>(this.verticalThumb.nativeElement, 'pointerdown')
-          .pipe(
-            filter((): boolean => !this.disable?.()),
-            takeUntilDestroyed(this._destroyRef),
-          )
-          .subscribe(this._onThumbPointerdown.bind(this, 'vertical'));
+      fromEvent<PointerEvent>(this.verticalThumb.nativeElement, 'pointerdown')
+        .pipe(
+          filter((): boolean => !this.disable?.()),
+          takeUntilDestroyed(this._destroyRef),
+        )
+        .subscribe(this._onThumbPointerdown.bind(this, 'vertical'));
 
-        this.scrolling
-          .pipe(
-            debounceTime(200),
-            tap(() => {
-              this._ngZone.run(() => {
-                this._scrollingX = this._scrollingY = false;
+      this.scrolling
+        .pipe(
+          debounceTime(200),
+          tap(() => {
+            this._scrollingX = this._scrollingY = false;
+            this.markForCheck();
+          }),
+          debounceTime(300),
+          tap(() => {
+            this._isLongScrollingX = this._isLongScrollingY = false;
+            this.markForCheck();
+          }),
+          takeUntilDestroyed(this._destroyRef),
+        )
+        .subscribe();
 
-                this.markForCheck();
-              });
-            }),
-            debounceTime(300),
-            tap(() => {
-              this._ngZone.run(() => {
-                this._isLongScrollingX = this._isLongScrollingY = false;
+      this.viewport.sizeUpdated
+        .pipe(
+          startWith<ViewportSizeUpdatedEvent>({} as ViewportSizeUpdatedEvent),
+          audit(() => animationFrames()),
+          takeUntilDestroyed(this._destroyRef),
+        )
+        .subscribe((e) => {
+          this._updateLayout();
 
-                this.markForCheck();
-              });
-            }),
-            takeUntilDestroyed(this._destroyRef),
-          )
-          .subscribe();
-
-        this.viewport.sizeUpdated
-          .pipe(
-            startWith<ViewportSizeUpdatedEvent>({} as ViewportSizeUpdatedEvent),
-            audit(() => animationFrames()),
-            takeUntilDestroyed(this._destroyRef),
-          )
-          .subscribe((e) => {
-            this._updateLayout();
-
-            this.viewport.measureRangeSize(
-              [this._scrollLeft, e.updateOnWidth],
-              [this._scrollTop, e.updateOnHeight],
-            );
-          });
-      }),
-    );
+          this.viewport.measureRangeSize(
+            [this._scrollLeft, e.updateOnWidth],
+            [this._scrollTop, e.updateOnHeight],
+          );
+        });
+    });
   }
 
   ngOnDestroy() {
@@ -685,16 +675,13 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       isLongScrollingY = true;
     }
 
-    this._ngZone.run(() => {
-      this._scrollLeft = scrollLeft;
-      this._scrollTop = scrollTop;
-      this._scrollingX = scrollingX;
-      this._scrollingY = scrollingY;
-      this._isLongScrollingX = isLongScrollingX;
-      this._isLongScrollingY = isLongScrollingY;
-
-      this.markForCheck();
-    });
+    this._scrollLeft = scrollLeft;
+    this._scrollTop = scrollTop;
+    this._scrollingX = scrollingX;
+    this._scrollingY = scrollingY;
+    this._isLongScrollingX = isLongScrollingX;
+    this._isLongScrollingY = isLongScrollingY;
+    this.markForCheck();
 
     this.scrolling.emit({
       scrollLeft,
