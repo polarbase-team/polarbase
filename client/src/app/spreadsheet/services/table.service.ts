@@ -401,7 +401,6 @@ export class TableService extends TableBaseService {
     this.sort();
     this.calculate();
 
-    this.tableGroupService.checkCanAddRowInGroup();
     this.host.updateStates();
     this._cdRef.markForCheck();
   }
@@ -415,8 +414,6 @@ export class TableService extends TableBaseService {
 
     this.tableColumnService.groupedColumns.clear();
     this.tableGroupService.collapsedState.clear();
-
-    this.tableGroupService.disableAddRowInGroup = false;
 
     this.host.updateStates();
     this._cdRef.markForCheck();

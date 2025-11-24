@@ -7,7 +7,6 @@ import { _GroupView } from '../components/virtual-scroll/virtual-scroll-group-re
 import { Dimension } from './table.service';
 import type { CellIndex } from './table-cell.service';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
-import { FIELD_READONLY } from '../field/resources/field';
 import { TableBaseService } from './table-base.service';
 import { TableGroup } from '../models/table-group';
 import { TableColumn } from '../models/table-column';
@@ -103,7 +102,6 @@ function findGroupByItemIndex(itemIndex: number, group?: TableGroup): TableGroup
 @Injectable()
 export class TableGroupService extends TableBaseService {
   rootGroup = signal<TableGroup>(null);
-  disableAddRowInGroup: boolean;
   collapsedState = new Map<number, boolean>();
   groupActionItems: MenuItem[] | undefined;
 
@@ -293,16 +291,6 @@ export class TableGroupService extends TableBaseService {
 
   markGroupAsChanged() {
     this.rootGroup.update(() => this.rootGroup().clone());
-  }
-
-  checkCanAddRowInGroup() {
-    let disableAddRowInGroup = true;
-    if (this.tableColumnService.groupedColumns.size) {
-      disableAddRowInGroup = _.some([...this.tableColumnService.groupedColumns.values()], (c) =>
-        FIELD_READONLY.has(c.field.dataType),
-      );
-    }
-    this.disableAddRowInGroup = disableAddRowInGroup;
   }
 
   openActionMenu(e: Event) {

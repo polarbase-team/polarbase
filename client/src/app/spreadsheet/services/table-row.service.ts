@@ -76,16 +76,9 @@ export class TableRowService extends TableBaseService {
       },
     });
 
-  get canAddRow(): boolean {
-    return (
-      this.tableService.config().row.creatable &&
-      (!this.tableGroupService.isGrouping() || !this.tableGroupService.disableAddRowInGroup)
-    );
-  }
-
-  get canDeleteSelectedRows(): boolean {
-    return !Array.from(this.selectedRows).find((row) => !!row.deletable === false);
-  }
+  canAddRow = computed(() => {
+    return this.tableService.config().row.creatable && !this.tableGroupService.isGrouping();
+  });
 
   constructor() {
     super();
@@ -151,11 +144,6 @@ export class TableRowService extends TableBaseService {
 
   override onDestroy() {
     this.addedEEC.flush();
-  }
-
-  override updateStates() {
-    this.state.canAddRow = this.canAddRow;
-    this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
   }
 
   // pushRows(rows: TableRow[]) {
@@ -307,21 +295,23 @@ export class TableRowService extends TableBaseService {
     row.selected = !row.selected;
 
     this.selectedRows.has(row) ? this.selectedRows.delete(row) : this.selectedRows.add(row);
-
-    this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
     this.host.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
   }
 
   flushDraftRow() {
     if (!this.draftRow) return;
+
     this.tableCellService.deselectAllCells();
+
     this.addedEEC.emitEvent(this.draftRow.id);
     this.draftRow = null;
   }
 
   cancelDraftRow() {
     if (!this.draftRow) return;
+
     this.tableCellService.deselectAllCells();
+
     this.removeRows([this.draftRow]);
     this.addedEEC.removeEvent(this.draftRow.id);
     this.draftRow = null;
@@ -330,13 +320,13 @@ export class TableRowService extends TableBaseService {
   selectAllRows() {
     this.tableCellService.deselectAllCells();
     this.tableColumnService.deselectAllColumns();
+
     this.selectedRows.clear();
     for (const row of this.rows()) {
       row.selected = true;
       this.selectedRows.add(row);
     }
 
-    this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
     this.host.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
   }
 
@@ -348,10 +338,8 @@ export class TableRowService extends TableBaseService {
     for (const row of this.selectedRows) {
       row.selected = false;
     }
-
     this.selectedRows.clear();
 
-    this.state.canDeleteSelectedRows = this.canDeleteSelectedRows;
     this.host.rowAction.emit({ type: TableRowActionType.Select, payload: null });
   }
 
