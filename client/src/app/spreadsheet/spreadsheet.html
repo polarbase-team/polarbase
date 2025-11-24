@@ -153,7 +153,7 @@
     <div
       class="pane pane-right"
       [style.left.px]="virtualScroll.scrollDivideOffset"
-      [class.hide]="!virtualScroll.viewport.leftWidth"
+      [class.hidden]="!virtualScroll.viewport.leftWidth"
     >
       <div
         class="pane-content box box-right box--radius flex flex-row"
@@ -530,7 +530,7 @@
     <div
       class="pane pane-right"
       [style.left.px]="virtualScroll.scrollDivideOffset"
-      [class.hide]="!virtualScroll.viewport.leftWidth"
+      [class.hidden]="!virtualScroll.viewport.leftWidth"
     >
       <div
         class="pane-content"
@@ -813,7 +813,7 @@
       <div
         class="pane pane-right"
         [style.left.px]="virtualScroll.scrollDivideOffset"
-        [class.hide]="!virtualScroll.viewport.leftWidth"
+        [class.hidden]="!virtualScroll.viewport.leftWidth"
       >
         <div
           class="pane-content flex flex-row full-height"
@@ -867,13 +867,13 @@
     >
       <div
         class="frozen-divider__line frozen-divider__head-line"
-        [class.hide]="isHideHeadLine"
+        [class.hidden]="isHideHeadLine"
       ></div>
       <div
         class="frozen-divider__line frozen-divider__body-line"
         cdkDragHandle
         [style.height.px]="bodyLineHeight"
-        [class.hide]="!virtualScroll.viewport.contentHeight"
+        [class.hidden]="!virtualScroll.viewport.contentHeight"
         (mousemove)="tableColumnService.onFreezeDividerMousemove($event)"
         (mouseleave)="tableColumnService.onFreezeDividerMouseleave()"
       >
@@ -911,7 +911,7 @@
           virtualScrollAutoScrollHolder="vertical"
           [style.left.px]="tableService.layoutProps.fillHandler.offset.left"
           [style.top.px]="tableService.layoutProps.fillHandler.offset.top"
-          [class.hide]="
+          [class.hidden]="
             tableService.layoutProps.fillHandler.hidden ||
             tableCellService.isFocusedInputInCellEditor()
           "
