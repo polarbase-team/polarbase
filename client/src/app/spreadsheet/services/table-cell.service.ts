@@ -8,6 +8,7 @@ import {
   NgZone,
   Renderer2,
   inject,
+  computed,
 } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
@@ -113,13 +114,14 @@ export class MatrixCell {
 
 @Injectable()
 export class TableCellService extends TableBaseService {
-  private readonly _ngZone = inject(NgZone);
-  private readonly _renderer = inject(Renderer2);
-  private readonly _cdRef = inject(ChangeDetectorRef);
-  private readonly _elementRef = inject(ElementRef);
-  private readonly _toastService = inject(MessageService);
-  private readonly _fieldCellService = inject(FieldCellService);
-  private readonly _dataEditedEEC: EmitEventController<
+  private ngZone = inject(NgZone);
+  private renderer = inject(Renderer2);
+  private cdRef = inject(ChangeDetectorRef);
+  private eleRef = inject(ElementRef);
+  private toastService = inject(MessageService);
+  private fieldCellService = inject(FieldCellService);
+  private interactedColumns: Set<TableColumn>;
+  private dataEditedEEC: EmitEventController<
     TableRow['id'],
     { type: TableCellActionType; payload: TableCellEditedEvent }
   > = new EmitEventController({
@@ -175,20 +177,18 @@ export class TableCellService extends TableBaseService {
         });
       }
 
-      if (this._interactedColumns?.size) {
+      if (this.interactedColumns?.size) {
         let shouldReCalculate: boolean;
         let shouldReGroup: boolean;
         let shouldReSort: boolean;
 
-        for (const column of this._interactedColumns) {
+        for (const column of this.interactedColumns) {
           if (column.calculateType) {
             shouldReCalculate = true;
           }
-
           if (column.groupSortType) {
             shouldReGroup = true;
           }
-
           if (column.sortType) {
             shouldReSort = true;
           }
@@ -197,37 +197,28 @@ export class TableCellService extends TableBaseService {
         if (shouldReCalculate) {
           this.tableService.calculate();
         }
-
         if (shouldReGroup) {
           this.tableService.group();
         }
-
         if (shouldReSort) {
           this.tableService.sort();
         }
 
-        this._interactedColumns.clear();
+        this.interactedColumns.clear();
       }
     },
   });
-  private _interactedColumns: Set<TableColumn>;
 
-  get canFillCell() {
+  canFillCell = computed(() => {
     return this.tableService.config().cell.fillable;
-  }
+  });
 
-  get isFocusedInputInCellEditor() {
+  isFocusedInputInCellEditor = computed(() => {
     return document.activeElement.tagName === 'INPUT-BOX';
-  }
+  });
 
   override onDestroy() {
-    this._fieldCellService.clear();
-    this._dataEditedEEC.flush();
-  }
-
-  override updateStates() {
-    this.state.canFillCell = this.canFillCell;
-    this.state.isFocusedInputInCellEditor = this.isFocusedInputInCellEditor;
+    this.dataEditedEEC.flush();
   }
 
   scrollToCell({ row, column }: Partial<TableCell>) {
@@ -241,7 +232,7 @@ export class TableCellService extends TableBaseService {
       idx.columnIndex = this.tableColumnService.findColumnIndex(column);
     }
 
-    this._scrollToCell(idx);
+    this.scrollToCellByIndex(idx);
   }
 
   onCellHover(e: Event, index: CellIndex) {
@@ -250,34 +241,30 @@ export class TableCellService extends TableBaseService {
         this.host.isMouseHiding ||
         !!this.tableService.layoutProps.cell.invalid ||
         !this.host.virtualScroll.isScrollCompleted ||
-        this._fieldCellService.getSelectingState()?.isEditing) &&
+        this.fieldCellService.getSelectingState()?.isEditing) &&
       (e as PointerEvent).pointerType !== 'touch'
     ) {
       e.preventDefault();
       return;
     }
 
-    this._ngZone.run(() => {
+    this.ngZone.run(() => {
       this.tableService.layoutProps.cell.hovering = index;
-      this._cdRef.detectChanges();
+      this.cdRef.detectChanges();
     });
 
-    const unlisten = this._renderer.listen(e.target, 'pointerleave', () => {
+    const unlisten = this.renderer.listen(e.target, 'pointerleave', () => {
       unlisten();
-      this._ngZone.run(() => {
+      this.ngZone.run(() => {
         this.tableService.layoutProps.cell.hovering = null;
-        this._cdRef.detectChanges();
+        this.cdRef.detectChanges();
       });
     });
   }
 
-  flushEditedEEC() {
-    this._dataEditedEEC.flush();
-  }
-
   flushSelectingCellState(callback?: () => void) {
     const _callback = () => {
-      this._fieldCellService.clearSelectingState();
+      this.fieldCellService.clearSelectingState();
       callback?.();
     };
 
@@ -286,7 +273,7 @@ export class TableCellService extends TableBaseService {
       return;
     }
 
-    const state = this._fieldCellService.getSelectingState();
+    const state = this.fieldCellService.getSelectingState();
 
     if (!state) {
       _callback();
@@ -300,9 +287,9 @@ export class TableCellService extends TableBaseService {
           const newData: TableRowCellData = { [column.id]: data };
           let rawData: TableRowCellData;
 
-          this._markColumnAsInteracted(column);
-          this._markCellDataAsEdited(row, newData, rawData);
-          this._emitCellDataAsEdited();
+          this.markColumnAsInteracted(column);
+          this.markCellDataAsEdited(row, newData, rawData);
+          this.emitCellDataAsEdited();
         }
 
         _callback();
@@ -336,23 +323,23 @@ export class TableCellService extends TableBaseService {
 
             switch (key) {
               case FieldValidationKey.Required:
-                this._openErrorTooltip(cellElement, 'REQUIRED');
+                this.openErrorTooltip(cellElement, 'REQUIRED');
                 break;
               case FieldValidationKey.Pattern:
-                this._openErrorTooltip(cellElement, 'PATTERN');
+                this.openErrorTooltip(cellElement, 'PATTERN');
                 break;
               case FieldValidationKey.Min:
-                this._openErrorTooltip(cellElement, 'CANNOT_LESS_THAN_MINIMUM');
+                this.openErrorTooltip(cellElement, 'CANNOT_LESS_THAN_MINIMUM');
                 break;
               case FieldValidationKey.Max:
-                this._openErrorTooltip(cellElement, 'CANNOT_GREATER_MAXIMUM');
+                this.openErrorTooltip(cellElement, 'CANNOT_GREATER_MAXIMUM');
                 break;
             }
           }
 
           this.tableService.layoutProps.fillHandler.hidden = true;
         } else {
-          this._closeErrorTooltip();
+          this.closeErrorTooltip();
           this.tableService.layoutProps.fillHandler.hidden = false;
         }
 
@@ -364,7 +351,7 @@ export class TableCellService extends TableBaseService {
   revertSelectingCellState() {
     if (!this.tableService.layoutProps.cell.selection) return;
 
-    const state = this._fieldCellService.getSelectingState();
+    const state = this.fieldCellService.getSelectingState();
     if (!state) return;
 
     const selectingCell = this.findCellByIndex(this.tableService.layoutProps.cell.selection.start);
@@ -379,10 +366,10 @@ export class TableCellService extends TableBaseService {
 
   scrollToFocusingCell() {
     const { rowIndex, columnIndex } = this.tableService.layoutProps.cell.focusing;
-    this._scrollToCell({ rowIndex, columnIndex });
+    this.scrollToCellByIndex({ rowIndex, columnIndex });
   }
 
-  protected getCells(
+  getCells(
     { rowIndex: startRowIdx, columnIndex: startColumnIdx }: CellIndex,
     { rowIndex: endRowIdx, columnIndex: endColumnIdx }: CellIndex,
     excludeDataTypes?: DataType[],
@@ -403,7 +390,7 @@ export class TableCellService extends TableBaseService {
     }
 
     return excludeDataTypes?.length || excludeStates?.length
-      ? this._filterExcludeCells(matrix, excludeDataTypes, excludeStates)
+      ? this.filterExcludeCells(matrix, excludeDataTypes, excludeStates)
       : matrix;
   }
 
@@ -472,16 +459,16 @@ export class TableCellService extends TableBaseService {
       };
       this.tableService.layoutProps.cell.focusing = primary;
 
-      this._emitCellAsSelected(selectedCells);
+      this.emitCellAsSelected(selectedCells);
 
       if (scrollToLastCell) {
         try {
-          this._scrollToCell(end);
+          this.scrollToCellByIndex(end);
         } catch {}
       }
 
-      if (this.canFillCell) {
-        this._cdRef.detectChanges();
+      if (this.canFillCell()) {
+        this.cdRef.detectChanges();
         this.tableService.updateFillHandlerPosition(end);
       }
     });
@@ -515,9 +502,9 @@ export class TableCellService extends TableBaseService {
       matrixCell.addRow(_.map(items, 'metadata'));
     }
 
-    const [count, total] = this._clearCells(matrixCell);
+    const [count, total] = this.clearMatrixCell(matrixCell);
 
-    this._toastService.add({
+    this.toastService.add({
       severity: 'info',
       summary: 'Cut complete',
       detail: `Cut complete ${count}/${total} cells`,
@@ -547,7 +534,7 @@ export class TableCellService extends TableBaseService {
       }
 
       if (!isSequence) {
-        this._toastService.add({
+        this.toastService.add({
           severity: 'info',
           summary: 'Paste failed',
           detail: `Not support non-sequence column paste`,
@@ -583,7 +570,7 @@ export class TableCellService extends TableBaseService {
           columnIndex: startIdx.columnIndex + columnCount - 1,
         };
 
-        matrix = this._filterExcludeCells(
+        matrix = this.filterExcludeCells(
           this.selectCells(startIdx, endIdx),
           UNPASTEABLE_DATA_TYPES,
           [ExcludeCellState.NonEditable],
@@ -634,19 +621,19 @@ export class TableCellService extends TableBaseService {
 
         count++;
 
-        this._markColumnAsInteracted(column);
+        this.markColumnAsInteracted(column);
       }
 
       if (row) {
-        this._markCellDataAsEdited(row, newData, rawData, TableCellActionType.Paste);
+        this.markCellDataAsEdited(row, newData, rawData, TableCellActionType.Paste);
       }
     }
 
     total = matrix.count;
 
-    this._emitCellDataAsEdited();
+    this.emitCellDataAsEdited();
 
-    this._toastService.add({
+    this.toastService.add({
       severity: 'info',
       summary: 'Paste complete',
       detail: `Paste complete ${count}/${total} cells`,
@@ -654,9 +641,9 @@ export class TableCellService extends TableBaseService {
     });
   }
 
-  protected async clearCells(matrixCell: MatrixCell) {
-    const [count, total] = this._clearCells(matrixCell);
-    this._toastService.add({
+  clearCells(matrixCell: MatrixCell) {
+    const [count, total] = this.clearMatrixCell(matrixCell);
+    this.toastService.add({
       severity: 'info',
       summary: 'Clear complete',
       detail: `Clear complete ${count}/${total} cells`,
@@ -664,12 +651,8 @@ export class TableCellService extends TableBaseService {
     });
   }
 
-  async fillCells(
-    source: [CellIndex, CellIndex],
-    target: [CellIndex, CellIndex],
-    isReverse: boolean,
-  ) {
-    const targetMatrixCell = this._filterExcludeCells(
+  fillCells(source: [CellIndex, CellIndex], target: [CellIndex, CellIndex], isReverse: boolean) {
+    const targetMatrixCell = this.filterExcludeCells(
       this.getCells(target[0], target[1]),
       undefined,
       [ExcludeCellState.NonEditable],
@@ -825,17 +808,17 @@ export class TableCellService extends TableBaseService {
 
         newData[column.id] = data;
 
-        this._markColumnAsInteracted(column);
+        this.markColumnAsInteracted(column);
       }
 
       if (row) {
-        this._markCellDataAsEdited(row, newData, undefined, TableCellActionType.Fill);
+        this.markCellDataAsEdited(row, newData, undefined, TableCellActionType.Fill);
       }
     }
 
-    this._emitCellDataAsEdited();
+    this.emitCellDataAsEdited();
 
-    this._toastService.add({
+    this.toastService.add({
       severity: 'info',
       summary: 'Fill complete',
       life: 3000,
@@ -866,7 +849,7 @@ export class TableCellService extends TableBaseService {
 
     const index = { rowIndex, columnIndex };
 
-    if (!this._checkCellIndexValid(index)) {
+    if (!this.checkCellIndexValid(index)) {
       return;
     }
 
@@ -919,14 +902,14 @@ export class TableCellService extends TableBaseService {
         break;
     }
 
-    if (!this._checkCellIndexValid(startIdx) || !this._checkCellIndexValid(endIdx)) {
+    if (!this.checkCellIndexValid(startIdx) || !this.checkCellIndexValid(endIdx)) {
       return;
     }
 
     this.selectCells(startIdx, endIdx, true, true);
   }
 
-  protected getCellOffset(index: CellIndex): CellOffset {
+  getCellOffset(index: CellIndex): CellOffset {
     if (this.tableGroupService.isGrouping()) {
       return this.tableGroupService.getRowCellOffsetInGroup(index);
     }
@@ -937,7 +920,7 @@ export class TableCellService extends TableBaseService {
     return { left, top };
   }
 
-  protected findCellIndex(cell: TableCell): CellIndex {
+  findCellIndex(cell: TableCell): CellIndex {
     return {
       rowIndex: this.tableRowService.findRowIndex(cell.row),
       columnIndex: this.tableColumnService.findColumnIndex(cell.column),
@@ -955,7 +938,7 @@ export class TableCellService extends TableBaseService {
     const rowIdxAttr = `[data-row-index="${index.rowIndex}"]`;
     const columnIdxAttr = `[data-column-index="${index.columnIndex}"]`;
 
-    return this._elementRef.nativeElement.querySelector(`${rowIdxAttr}${columnIdxAttr}`);
+    return this.eleRef.nativeElement.querySelector(`${rowIdxAttr}${columnIdxAttr}`);
   }
 
   findCellByElement(element: HTMLElement, cellType?: string): CellIndex {
@@ -1022,7 +1005,7 @@ export class TableCellService extends TableBaseService {
     if (!matrix) return null;
 
     return excludeDataTypes?.length || excludeStates?.length
-      ? this._filterExcludeCells(matrix, excludeDataTypes, excludeStates)
+      ? this.filterExcludeCells(matrix, excludeDataTypes, excludeStates)
       : matrix;
   }
 
@@ -1064,7 +1047,7 @@ export class TableCellService extends TableBaseService {
 
     clipboard.write(matrix as any);
 
-    this._toastService.add({
+    this.toastService.add({
       severity: 'success',
       summary: clipboard.isCutAction ? 'Cut Success' : 'Copy Success',
       detail: `Copied ${count} of ${matrixCell.count} cells`,
@@ -1082,22 +1065,22 @@ export class TableCellService extends TableBaseService {
 
   updateCellsData(rows: TableRow[], newData: TableRowCellData) {
     for (const columnID in newData) {
-      this._markColumnAsInteracted(this.tableColumnService.findColumnByID(columnID));
+      this.markColumnAsInteracted(this.tableColumnService.findColumnByID(columnID));
     }
 
     for (const row of rows) {
-      this._markCellDataAsEdited(row, newData);
+      this.markCellDataAsEdited(row, newData);
     }
 
-    this._emitCellDataAsEdited();
+    this.emitCellDataAsEdited();
   }
 
   searchCellPredicate(row: TableRow, column: TableColumn): string {
     return row.data?.[column.id] ?? '';
   }
 
-  private _clearCells(matrixCell: MatrixCell): [number, number] {
-    matrixCell = this._filterExcludeCells(matrixCell, UNCLEARABLE_DATA_TYPES, [
+  private clearMatrixCell(matrixCell: MatrixCell): [number, number] {
+    matrixCell = this.filterExcludeCells(matrixCell, UNCLEARABLE_DATA_TYPES, [
       ExcludeCellState.Required,
       ExcludeCellState.Empty,
       ExcludeCellState.NonEditable,
@@ -1127,22 +1110,22 @@ export class TableCellService extends TableBaseService {
 
         newData[column.id] = data;
 
-        this._markColumnAsInteracted(column);
+        this.markColumnAsInteracted(column);
 
         count++;
       }
 
       if (row) {
-        this._markCellDataAsEdited(row, newData, undefined, TableCellActionType.Clear);
+        this.markCellDataAsEdited(row, newData, undefined, TableCellActionType.Clear);
       }
     }
 
-    this._emitCellDataAsEdited();
+    this.emitCellDataAsEdited();
 
     return [count, matrixCell.count];
   }
 
-  private _scrollToCell(index: CellIndex) {
+  private scrollToCellByIndex(index: CellIndex) {
     const { rowIndex, columnIndex } = index;
 
     if (rowIndex === -1 || columnIndex === -1 || _.isNil(rowIndex) || _.isNil(columnIndex)) {
@@ -1183,7 +1166,7 @@ export class TableCellService extends TableBaseService {
     this.host.virtualScroll.scrollTo({ left, top });
   }
 
-  private _checkCellIndexValid({ rowIndex, columnIndex }: CellIndex): boolean {
+  private checkCellIndexValid({ rowIndex, columnIndex }: CellIndex): boolean {
     if (rowIndex < 0) {
       return false;
     } else {
@@ -1207,17 +1190,17 @@ export class TableCellService extends TableBaseService {
     return true;
   }
 
-  private _markColumnAsInteracted(column: TableColumn) {
-    this._interactedColumns ||= new Set();
+  private markColumnAsInteracted(column: TableColumn) {
+    this.interactedColumns ||= new Set();
 
-    if (this._interactedColumns.has(column)) {
+    if (this.interactedColumns.has(column)) {
       return;
     }
 
-    this._interactedColumns.add(column);
+    this.interactedColumns.add(column);
   }
 
-  private _markCellDataAsEdited(
+  private markCellDataAsEdited(
     row: TableRow,
     newData: TableRowCellData,
     rawData: TableRowCellData = newData,
@@ -1226,11 +1209,11 @@ export class TableCellService extends TableBaseService {
     row.data = { ...row.data, ...rawData };
 
     if (this.tableRowService.isDraftRow(row)) {
-      this._interactedColumns?.clear();
+      this.interactedColumns?.clear();
       return;
     }
 
-    let event = this._dataEditedEEC.getEvent(row.id);
+    let event = this.dataEditedEEC.getEvent(row.id);
 
     if (event) {
       event.payload.newData = { ...event.payload.newData, ...newData };
@@ -1238,21 +1221,21 @@ export class TableCellService extends TableBaseService {
       event = { type, payload: { row, newData } };
     }
 
-    this._dataEditedEEC.addEvent(row.id, event);
+    this.dataEditedEEC.addEvent(row.id, event);
   }
 
-  private _emitCellDataAsEdited() {
-    this._dataEditedEEC.emit();
+  private emitCellDataAsEdited() {
+    this.dataEditedEEC.emit();
   }
 
-  private _emitCellAsSelected = _.debounce((selectedCells: TableCell[]) => {
+  private emitCellAsSelected = _.debounce((selectedCells: TableCell[]) => {
     this.host.cellAction.emit({
       type: TableCellActionType.Select,
       payload: selectedCells,
     });
   }, 200);
 
-  private _filterExcludeCells(
+  private filterExcludeCells(
     matrix: MatrixCell,
     excludeDataTypes: DataType[],
     excludeStates: ExcludeCellState[],
@@ -1285,7 +1268,7 @@ export class TableCellService extends TableBaseService {
     return matrix;
   }
 
-  private _openErrorTooltip(cellElement: HTMLElement, key: string) {
+  private openErrorTooltip(cellElement: HTMLElement, key: string) {
     // if (this._tooltipRef?.isOpened) return;
     // this._tooltipRef = this._tooltipService.open(
     //   cellElement,
@@ -1295,7 +1278,7 @@ export class TableCellService extends TableBaseService {
     // );
   }
 
-  private _closeErrorTooltip() {
+  private closeErrorTooltip() {
     // this._tooltipRef?.close();
   }
 }

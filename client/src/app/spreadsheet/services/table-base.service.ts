@@ -45,6 +45,4 @@ export class TableBaseService {
   afterViewChecked(): void {}
 
   onDestroy(): void {}
-
-  updateStates(): void {}
 }

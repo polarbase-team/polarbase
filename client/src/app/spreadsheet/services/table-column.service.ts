@@ -357,10 +357,10 @@ export class TableColumnService extends TableBaseService {
   onFreezeDividerDragEnded(e: CdkDragEnd) {
     const { index } = this.tableService.layoutProps.frozenDivider.dragging;
     if (index === null) return;
+
     this.freezeUpToColumnIndex(index - 1);
     this.tableService.layoutProps.frozenDivider.dragging = null;
     e.source._dragRef.reset();
-    this.host.updateStates();
   }
 
   onColumnDragStarted(_e: CdkDragStart, column: TableColumnExtra) {

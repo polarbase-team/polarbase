@@ -208,7 +208,6 @@ export class SpreadsheetComponent
     this.tableColumnService.onChanges(changes);
     this.tableRowService.onChanges(changes);
     this.tableGroupService.onChanges(changes);
-    this.updateStates();
   }
 
   ngOnInit() {
@@ -217,7 +216,6 @@ export class SpreadsheetComponent
     this.tableColumnService.onInit();
     this.tableRowService.onInit();
     this.tableGroupService.onInit();
-    this.updateStates();
 
     this.ngZone.runOutsideAngular(() =>
       Promise.resolve().then(() => {
@@ -315,14 +313,6 @@ export class SpreadsheetComponent
     this.clipboard.stop();
   }
 
-  updateStates() {
-    this.tableCellService.updateStates();
-    this.tableColumnService.updateStates();
-    this.tableRowService.updateStates();
-    this.tableGroupService.updateStates();
-    this.tableService.updateStates();
-  }
-
   detectChanges() {
     this.cdr.detectChanges();
   }
@@ -373,8 +363,12 @@ export class SpreadsheetComponent
       .subscribe((e1) => {
         const isRightClick = e1.button === 2;
         const shouldPause: boolean =
-          !(isRightClick && (this.columnActionMenu.visible() || this.rowActionMenu.visible())) &&
-          this._shouldPauseEvent(e1);
+          !(
+            isRightClick &&
+            (this.columnActionMenu.visible() ||
+              this.rowActionMenu.visible() ||
+              this.groupActionMenu.visible())
+          ) && this._shouldPauseEvent(e1);
         if (shouldPause) return;
 
         const target = e1.target as HTMLElement;
@@ -386,7 +380,6 @@ export class SpreadsheetComponent
         if (isRightClick) {
           this.ngZone.run(() => {
             this.tableCellService.deselectAllCells();
-            this.detectChanges();
 
             const el = target.closest('[cell-type]');
             const type = el?.getAttribute('cell-type');
@@ -415,8 +408,6 @@ export class SpreadsheetComponent
             this.tableRowService.flushDraftRow();
             this.tableCellService.deselectAllCells();
             this.tableColumnService.deselectAllColumns();
-
-            this.detectChanges();
           });
           return;
         }
@@ -727,8 +718,6 @@ export class SpreadsheetComponent
     this.clipboard.paste$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([_e, data]) => {
       this.ngZone.run(() => {
         this.tableCellService.pasteCells(data);
-
-        this.markForCheck();
       });
     });
   }

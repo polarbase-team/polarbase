@@ -85,25 +85,26 @@ export class FieldCellService {
   cacheSize: number = 40;
 
   // A private map to store cached component references categorized by DataType.
-  private readonly _cacheStore: Map<DataType, ComponentRef<FieldCell>[]> = new Map<
+  private cacheStore: Map<DataType, ComponentRef<FieldCell>[]> = new Map<
     DataType,
     ComponentRef<FieldCell>[]
   >();
 
-  private readonly _revert$: Subject<void> = new Subject<void>();
-  private readonly _validate$: Subject<FieldValidationErrors | null> =
+  private revert$: Subject<void> = new Subject<void>();
+  private validate$: Subject<FieldValidationErrors | null> =
     new Subject<FieldValidationErrors | null>();
 
   // Holds the current selecting state for FieldCell components.
-  private _selectingState: FieldCellSelectingState;
+  private selectingState: FieldCellSelectingState;
 
   /**
    * Cleans up resources used by the service by completing internal observables.
-   * This ensures that no further emissions or subscriptions occur on `_revert$` and `_validate$`.
+   * This ensures that no further emissions or subscriptions occur on `revert$` and `validate$`.
    */
   destroy() {
-    this._revert$.complete();
-    this._validate$.complete();
+    this.clear();
+    this.revert$.complete();
+    this.validate$.complete();
   }
 
   /**
@@ -114,10 +115,10 @@ export class FieldCellService {
    */
   set(dataType: DataType, cmpRef: ComponentRef<FieldCell>) {
     // Get or initialize an array for the given dataType in the cache store.
-    let arr = this._cacheStore.get(dataType);
+    let arr = this.cacheStore.get(dataType);
     if (!arr) {
       arr = [];
-      this._cacheStore.set(dataType, arr);
+      this.cacheStore.set(dataType, arr);
     }
 
     // If cache size is exceeded, destroy the component reference instead of caching it.
@@ -137,7 +138,7 @@ export class FieldCellService {
    * @returns The last component reference added to the cache for the given data type, or undefined if none exist.
    */
   get(dataType: DataType): ComponentRef<FieldCell> | null {
-    const arr = this._cacheStore.get(dataType);
+    const arr = this.cacheStore.get(dataType);
     const cmpRef: ComponentRef<FieldCell> | undefined = arr?.pop();
 
     return cmpRef && !cmpRef.hostView.destroyed ? cmpRef : null;
@@ -149,7 +150,7 @@ export class FieldCellService {
    */
   clear() {
     // Iterate over each array of component references in the cache store.
-    for (const compRefs of this._cacheStore.values()) {
+    for (const compRefs of this.cacheStore.values()) {
       // Destroy each component reference in the array.
       for (const compRef of compRefs) {
         compRef.destroy();
@@ -162,7 +163,7 @@ export class FieldCellService {
    * @returns The stored selecting state, or null if no state is set.
    */
   getSelectingState() {
-    return this._selectingState;
+    return this.selectingState;
   }
 
   /**
@@ -170,14 +171,14 @@ export class FieldCellService {
    * @param state The selecting state to store.
    */
   setSelectingState(state: FieldCellSelectingState) {
-    state.revert$ = this._revert$;
-    state.validate$ = this._validate$;
+    state.revert$ = this.revert$;
+    state.validate$ = this.validate$;
     state.matchCell = matchCell;
     state.detectChange = detectChange;
     state.flush = flush;
     state.reset = reset;
 
-    this._selectingState = state;
+    this.selectingState = state;
   }
 
   /**
@@ -185,6 +186,6 @@ export class FieldCellService {
    * This is useful when the selecting session is completed or reset.
    */
   clearSelectingState() {
-    this._selectingState = null;
+    this.selectingState = null;
   }
 }

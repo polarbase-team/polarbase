@@ -901,7 +901,7 @@
   }
 
   <!-- Fill handler -->
-  @if (tableCellService.canFillCell) {
+  @if (tableCellService.canFillCell()) {
     <div class="fill-handler-wrapper">
       @if (tableService.layoutProps.fillHandler?.offset) {
         <div
@@ -913,7 +913,7 @@
           [style.top.px]="tableService.layoutProps.fillHandler.offset.top"
           [class.hide]="
             tableService.layoutProps.fillHandler.hidden ||
-            tableCellService.state.isFocusedInputInCellEditor
+            tableCellService.isFocusedInputInCellEditor()
           "
         ></div>
       }

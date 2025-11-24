@@ -143,7 +143,6 @@ export class TableService extends TableBaseService {
 
   private ngZone = inject(NgZone);
   private destroyRef = inject(DestroyRef);
-  private cdr = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);
   private fieldCellService = inject(FieldCellService);
 
@@ -170,7 +169,6 @@ export class TableService extends TableBaseService {
         .subscribe({
           next: (rows) => {
             this.tableRowService.markRowsAsStreamed(rows);
-            this.cdr.detectChanges();
           },
           error: () => {
             throw new Error('Stream error');
@@ -178,7 +176,6 @@ export class TableService extends TableBaseService {
           complete: () => {
             this.isDataStreaming = false;
             this.handleDataUpdate();
-            this.cdr.detectChanges();
           },
         });
     });
@@ -281,8 +278,6 @@ export class TableService extends TableBaseService {
     if (focusing) {
       this.tableCellService.scrollToFocusingCell();
     }
-
-    this.cdr.markForCheck();
   }
 
   searchPrevious(previousIndex: number) {
@@ -298,7 +293,6 @@ export class TableService extends TableBaseService {
     };
 
     this.tableCellService.scrollToFocusingCell();
-    this.cdr.markForCheck();
   }
 
   searchNext(nextIndex: number) {
@@ -314,7 +308,6 @@ export class TableService extends TableBaseService {
     };
 
     this.tableCellService.scrollToFocusingCell();
-    this.cdr.markForCheck();
   }
 
   calculate(columns?: TableColumn[]) {
@@ -354,8 +347,6 @@ export class TableService extends TableBaseService {
         );
       }
     }
-
-    this.cdr.markForCheck();
   }
 
   uncalculate() {
@@ -365,8 +356,6 @@ export class TableService extends TableBaseService {
 
     this.tableColumnService.calculatedColumns.clear();
     this.calculatedResult.clear();
-
-    this.cdr.markForCheck();
   }
 
   group(columns?: TableColumn[]) {
@@ -392,9 +381,6 @@ export class TableService extends TableBaseService {
 
     this.sort();
     this.calculate();
-
-    this.host.updateStates();
-    this.cdr.markForCheck();
   }
 
   ungroup() {
@@ -406,9 +392,6 @@ export class TableService extends TableBaseService {
 
     this.tableColumnService.groupedColumns.clear();
     this.tableGroupService.collapsedState.clear();
-
-    this.host.updateStates();
-    this.cdr.markForCheck();
   }
 
   sort(columns?: TableColumn[]) {
@@ -431,9 +414,6 @@ export class TableService extends TableBaseService {
     } else {
       this.tableRowService.rows.update(() => sortBy(this.host.sourceRows(), columns));
     }
-
-    this.host.updateStates();
-    this.cdr.markForCheck();
   }
 
   unsort() {
@@ -448,8 +428,6 @@ export class TableService extends TableBaseService {
     } else {
       this.tableRowService.rows.update(() => this.host.sourceRows());
     }
-
-    this.cdr.markForCheck();
   }
 
   updateFillHandlerPosition(
@@ -460,7 +438,6 @@ export class TableService extends TableBaseService {
 
     if (!ele) {
       this.layoutProps.fillHandler.hidden = true;
-
       if (shouldRetryOnMissingCell) {
         of([1, 2, 3])
           .pipe(delay(500), take(1))
@@ -468,7 +445,6 @@ export class TableService extends TableBaseService {
             this.updateFillHandlerPosition(index);
           });
       }
-
       return;
     }
 
@@ -487,7 +463,5 @@ export class TableService extends TableBaseService {
     this.layoutProps.fillHandler.index = index;
     this.layoutProps.fillHandler.offset = offset;
     this.layoutProps.fillHandler.hidden = false;
-
-    this.cdr.detectChanges();
   }
 }
