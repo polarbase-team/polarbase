@@ -129,7 +129,7 @@ export class TableService extends TableBaseService {
     return config;
   });
 
-  readonly layoutProps: LayoutProps = {
+  layoutProps: LayoutProps = {
     frozenDivider: {},
     fillHandler: {},
     column: {},
@@ -141,27 +141,11 @@ export class TableService extends TableBaseService {
   searchResult: [TableRow, TableColumn][];
   calculatedResult: Map<TableColumn['id'], any>;
 
-  private readonly _ngZone = inject(NgZone);
-  private readonly _destroyRef = inject(DestroyRef);
-  private readonly _cdRef = inject(ChangeDetectorRef);
-  private readonly _elementRef = inject(ElementRef);
-  private readonly _fieldCellService = inject(FieldCellService);
-
-  get shouldCalculate() {
-    return !!this.config().calculateBy || this.tableColumnService.calculatedColumns.size > 0;
-  }
-
-  get shouldGroup() {
-    return !!this.config().groupBy || this.tableColumnService.groupedColumns.size > 0;
-  }
-
-  get shouldSort() {
-    return !!this.config().sortBy || this.tableColumnService.sortedColumns.size > 0;
-  }
-
-  get actionBoxOffset() {
-    return (this.config().column.calculable ? Dimension.FooterHeight : 0) + 16;
-  }
+  private ngZone = inject(NgZone);
+  private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
+  private eleRef = inject(ElementRef);
+  private fieldCellService = inject(FieldCellService);
 
   get searchInfo(): TableSearchInfo {
     const total = this.searchResult?.length || 0;
@@ -176,17 +160,17 @@ export class TableService extends TableBaseService {
 
     this.streamData$ = new Subject();
 
-    this._ngZone.runOutsideAngular(() => {
+    this.ngZone.runOutsideAngular(() => {
       this.streamData$
         .pipe(
           throttleTime(200),
           mergeMap((rows) => of(rows)),
-          takeUntilDestroyed(this._destroyRef),
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe({
           next: (rows) => {
             this.tableRowService.markRowsAsStreamed(rows);
-            this._cdRef.detectChanges();
+            this.cdr.detectChanges();
           },
           error: () => {
             throw new Error('Stream error');
@@ -194,20 +178,16 @@ export class TableService extends TableBaseService {
           complete: () => {
             this.isDataStreaming = false;
             this.handleDataUpdate();
-            this._cdRef.detectChanges();
+            this.cdr.detectChanges();
           },
         });
     });
   }
 
-  override updateStates() {
-    this.state.actionBoxOffset = this.actionBoxOffset;
-  }
-
   handleDataUpdate = _.throttle(() => {
     if (this.isDataStreaming) return;
 
-    if (this.shouldGroup) {
+    if (this.shouldGroup()) {
       this.group();
     } else {
       this.sort();
@@ -219,7 +199,7 @@ export class TableService extends TableBaseService {
     const currSelection = this.layoutProps.cell.selection;
     if (!currSelection?.primary) return;
 
-    const state = this._fieldCellService.getSelectingState();
+    const state = this.fieldCellService.getSelectingState();
     if (!state?.detectChange()) return;
 
     const cell = this.tableCellService.findCellByIndex(currSelection.primary);
@@ -227,6 +207,18 @@ export class TableService extends TableBaseService {
 
     this.tableCellService.flushSelectingCellState();
   }, 1000);
+
+  shouldCalculate() {
+    return !!this.config().calculateBy || this.tableColumnService.calculatedColumns.size > 0;
+  }
+
+  shouldGroup() {
+    return !!this.config().groupBy || this.tableColumnService.groupedColumns.size > 0;
+  }
+
+  shouldSort() {
+    return !!this.config().sortBy || this.tableColumnService.sortedColumns.size > 0;
+  }
 
   search(searchQuery: string) {
     let searchResult: [TableRow, TableColumn][];
@@ -290,7 +282,7 @@ export class TableService extends TableBaseService {
       this.tableCellService.scrollToFocusingCell();
     }
 
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   searchPrevious(previousIndex: number) {
@@ -306,7 +298,7 @@ export class TableService extends TableBaseService {
     };
 
     this.tableCellService.scrollToFocusingCell();
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   searchNext(nextIndex: number) {
@@ -322,7 +314,7 @@ export class TableService extends TableBaseService {
     };
 
     this.tableCellService.scrollToFocusingCell();
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   calculate(columns?: TableColumn[]) {
@@ -363,7 +355,7 @@ export class TableService extends TableBaseService {
       }
     }
 
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   uncalculate() {
@@ -374,7 +366,7 @@ export class TableService extends TableBaseService {
     this.tableColumnService.calculatedColumns.clear();
     this.calculatedResult.clear();
 
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   group(columns?: TableColumn[]) {
@@ -402,7 +394,7 @@ export class TableService extends TableBaseService {
     this.calculate();
 
     this.host.updateStates();
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   ungroup() {
@@ -416,7 +408,7 @@ export class TableService extends TableBaseService {
     this.tableGroupService.collapsedState.clear();
 
     this.host.updateStates();
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   sort(columns?: TableColumn[]) {
@@ -441,7 +433,7 @@ export class TableService extends TableBaseService {
     }
 
     this.host.updateStates();
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   unsort() {
@@ -457,7 +449,7 @@ export class TableService extends TableBaseService {
       this.tableRowService.rows.update(() => this.host.sourceRows());
     }
 
-    this._cdRef.markForCheck();
+    this.cdr.markForCheck();
   }
 
   updateFillHandlerPosition(
@@ -481,7 +473,7 @@ export class TableService extends TableBaseService {
     }
 
     const eleDOMRect = ele.getBoundingClientRect();
-    const containerDOMRect = this._elementRef.nativeElement.getBoundingClientRect();
+    const containerDOMRect = this.eleRef.nativeElement.getBoundingClientRect();
     const offset: CellOffset = {
       left: eleDOMRect.width + eleDOMRect.left - containerDOMRect.left,
       top:
@@ -496,6 +488,6 @@ export class TableService extends TableBaseService {
     this.layoutProps.fillHandler.offset = offset;
     this.layoutProps.fillHandler.hidden = false;
 
-    this._cdRef.detectChanges();
+    this.cdr.detectChanges();
   }
 }
