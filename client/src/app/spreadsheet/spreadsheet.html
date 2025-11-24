@@ -202,8 +202,7 @@
           virtualScrollLeftContentWrapper
           [style.height.px]="virtualScroll.viewport.contentHeight"
           [ngClass]="{
-            'box box-left box--radius':
-              !tableGroupService.isGrouping() || tableGroupService.isGroupingWithoutGroup(),
+            'box box-left box--radius': tableGroupService.hasNoGroups(),
           }"
         >
           <!-- group-left -->
@@ -311,15 +310,15 @@
               @if (!group.children) {
                 <div class="group__body">
                   <div class="row blank-row">
-                    <div
-                      class="row-cell cell index-cell"
-                      cell-type="row"
-                      [attr.disabled]="tableService.isDataStreaming"
-                      (click)="tableRowService.addRow(group)"
-                    >
-                      <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
-                    </div>
-                    <div class="row-cell cell" cell-type="row"></div>
+                    @if (tableRowService.canAddRow()) {
+                      <div
+                        class="row-cell cell index-cell"
+                        [attr.disabled]="tableService.isDataStreaming"
+                        (click)="tableRowService.addNewRow(group)"
+                      >
+                        <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
+                      </div>
+                    }
                   </div>
                 </div>
               }
@@ -514,23 +513,17 @@
               </ng-container>
             </div>
           </ng-container>
-          @if (!tableGroupService.isGrouping() || tableGroupService.isGroupingWithoutGroup()) {
-            @if (tableRowService.state.canAddRow) {
-              <div class="row blank-row">
-                <div
-                  class="row-cell cell index-cell"
-                  cell-type="row"
-                  [attr.disabled]="tableService.isDataStreaming"
-                  (click)="tableRowService.addRow()"
-                >
-                  <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
-                </div>
-                <div class="row-cell cell" cell-type="row"></div>
+          <div class="row blank-row">
+            @if (tableRowService.canAddRow() && tableGroupService.hasNoGroups()) {
+              <div
+                class="row-cell cell index-cell"
+                [attr.disabled]="tableService.isDataStreaming"
+                (click)="tableRowService.addNewRow()"
+              >
+                <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
               </div>
-            } @else {
-              <div class="row blank-row"></div>
             }
-          }
+          </div>
         </div>
       </div>
     </div>
@@ -551,8 +544,7 @@
           virtualScrollRightContentWrapper
           [style.height.px]="virtualScroll.viewport.contentHeight"
           [ngClass]="{
-            'box box-right box--radius':
-              !tableGroupService.isGrouping() || tableGroupService.isGroupingWithoutGroup(),
+            'box box-right box--radius': tableGroupService.hasNoGroups(),
           }"
         >
           <!-- group-right -->
@@ -609,9 +601,7 @@
               </div>
               @if (!group.children) {
                 <div class="group__body">
-                  <div class="row blank-row">
-                    <div class="row-cell cell" cell-type="row"></div>
-                  </div>
+                  <div class="row blank-row"></div>
                 </div>
               }
             </div>
@@ -740,15 +730,7 @@
               </ng-container>
             </div>
           </ng-container>
-          @if (!tableGroupService.isGrouping() || tableGroupService.isGroupingWithoutGroup()) {
-            @if (tableRowService.state.canAddRow) {
-              <div class="row blank-row">
-                <div class="row-cell cell" cell-type="row"></div>
-              </div>
-            } @else {
-              <div class="row blank-row"></div>
-            }
-          }
+          <div class="row blank-row"></div>
         </div>
       </div>
     </div>

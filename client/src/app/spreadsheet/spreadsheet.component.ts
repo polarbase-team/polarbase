@@ -666,7 +666,7 @@ export class SpreadsheetComponent
             break;
           case 'Shift.Enter':
             processAfterKeyMatch(() => {
-              this.tableRowService.addRow();
+              this.tableRowService.addNewRow();
             });
             break;
           case 'Backspace':

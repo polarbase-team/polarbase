@@ -113,8 +113,8 @@ export class TableGroupService extends TableBaseService {
     return !!this.rootGroup();
   });
 
-  isGroupingWithoutGroup = computed(() => {
-    return this.isGrouping() && !this.rootGroup()?.children?.length;
+  hasNoGroups = computed(() => {
+    return !this.isGrouping() || !this.rootGroup()?.children.length;
   });
 
   protected toggleAllGroup(collapsed: boolean, group = this.rootGroup()) {
@@ -142,7 +142,7 @@ export class TableGroupService extends TableBaseService {
     this.rootGroup().unsortRows();
   }
 
-  createRowInGroup(group = this.getSelectingGroup() || this.getFirstGroup(), position?: number) {
+  insertRowInGroup(group = this.getSelectingGroup() || this.getFirstGroup(), position?: number) {
     let newRow: TableRow;
     if (group !== this.rootGroup()) {
       let g = group;
@@ -151,12 +151,12 @@ export class TableGroupService extends TableBaseService {
         data[g.column.id] = g.data;
         g = g.parent;
       } while (g?.depth > 0);
-      newRow = this.tableRowService.createRow(data, position, (row: TableRow) => {
+      newRow = this.tableRowService.insertRow(data, position, (row: TableRow) => {
         group.addRows([row], position);
         this.markGroupAsChanged();
       });
     } else {
-      newRow = this.tableRowService.createRow(undefined, position);
+      newRow = this.tableRowService.insertRow(undefined, position);
       this.tableService.group();
     }
 

@@ -64,6 +64,10 @@ export class TableRowService extends TableBaseService {
     return RowSize[this.rowSize()];
   });
 
+  canAddRow = computed(() => {
+    return this.tableService.config().row.creatable;
+  });
+
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
   private draggingRows = new Set<TableRow>();
@@ -75,10 +79,6 @@ export class TableRowService extends TableBaseService {
         this.host.rowAction.emit({ type: TableRowActionType.Add, payload: events });
       },
     });
-
-  canAddRow = computed(() => {
-    return this.tableService.config().row.creatable && !this.tableGroupService.isGrouping();
-  });
 
   constructor() {
     super();
@@ -247,21 +247,29 @@ export class TableRowService extends TableBaseService {
     this.expandRow(this.findRowByIndex(selecting.rowIndex));
   }
 
-  addRow(group?: TableGroup) {
-    if (!this.canAddRow) return;
+  addNewRow(group?: TableGroup) {
+    if (!this.canAddRow()) return;
+
     this.tableGroupService.isGrouping()
-      ? this.tableGroupService.createRowInGroup(group)
-      : this.createRow();
+      ? this.tableGroupService.insertRowInGroup(group)
+      : this.insertRow();
   }
 
-  createRow(data?: any, position?: number, onBeforeInsert?: (r: TableRow, p: number) => void) {
+  insertRow(data?: any, position?: number, onBeforeInsert?: (r: TableRow, p: number) => void) {
     const newRow = {
       id: _.uniqueId(),
       data: _.cloneDeep(data),
     } as TableRow;
+
     onBeforeInsert?.(newRow, position);
 
-    this.insertRow(newRow, position);
+    this.draftRow = newRow;
+    this.rows.update((value) => {
+      value.splice(position, 0, newRow);
+      return [...value];
+    });
+
+    this.selectAndFocusInsertedRow(newRow, position);
     this.addedEEC.addEvent(newRow.id, { row: newRow, insertedIndex: position });
     return newRow;
   }
@@ -509,14 +517,14 @@ export class TableRowService extends TableBaseService {
             label: 'Insert row above',
             icon: 'pi pi-arrow-up',
             command: () => {
-              this.createRow(null, rowIndex);
+              this.insertRow(null, rowIndex);
             },
           },
           {
             label: 'Insert row below',
             icon: 'pi pi-arrow-down',
             command: () => {
-              this.createRow(null, rowIndex + 1);
+              this.insertRow(null, rowIndex + 1);
             },
           },
           { separator: true },
@@ -537,39 +545,30 @@ export class TableRowService extends TableBaseService {
     this.host.rowActionMenu.show(e);
   }
 
-  private insertRow(row: any, position = this.rows()?.length) {
-    this.draftRow = row;
-    this.rows.update((value) => {
-      value.splice(position, 0, row);
-      return [...value];
-    });
-
-    // Resets the current selecting state
-    // before select the inserted row.
-    this.tableService.layoutProps.cell.selection = null;
-
-    setTimeout(() => {
-      const cellIndex: CellIndex = {
-        rowIndex: this.findRowIndex(row),
-        columnIndex: 0,
-      };
-
-      this.tableCellService.selectCells(cellIndex, cellIndex, true);
-
-      this.cdr.detectChanges();
-
-      setTimeout(() => {
-        this.focusToFieldCellTouchable(true);
-      }, 17);
-    });
-  }
-
   private removeRows(rows: TableRow[]) {
     this.rows.update((arr) => _.without(arr, ...rows));
 
     if (this.tableGroupService.isGrouping()) {
       this.tableGroupService.deleteRowsInGroup(rows);
     }
+  }
+
+  private selectAndFocusInsertedRow(row: TableRow, insertedIndex: number) {
+    this.tableService.layoutProps.cell.selection = null;
+
+    queueMicrotask(() => {
+      const cellIndex: CellIndex = {
+        rowIndex: insertedIndex,
+        columnIndex: 0,
+      };
+
+      this.tableCellService.selectCells(cellIndex, cellIndex, true);
+      this.cdr.detectChanges();
+
+      requestAnimationFrame(() => {
+        this.focusToFieldCellTouchable(true);
+      });
+    });
   }
 
   private focusToFieldCellTouchable(retry: boolean = false) {
