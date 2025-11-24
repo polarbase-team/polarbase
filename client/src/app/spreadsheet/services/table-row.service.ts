@@ -255,7 +255,11 @@ export class TableRowService extends TableBaseService {
       : this.insertRow();
   }
 
-  insertRow(data?: any, position?: number, onBeforeInsert?: (r: TableRow, p: number) => void) {
+  insertRow(
+    data?: any,
+    position: number = this.rows()?.length,
+    onBeforeInsert?: (r: TableRow, p: number) => void,
+  ) {
     const newRow = {
       id: _.uniqueId(),
       data: _.cloneDeep(data),
