@@ -203,10 +203,6 @@ export class TableCellService extends TableBaseService {
     return this.tableService.config().cell.fillable;
   });
 
-  isFocusedInputInCellEditor = computed(() => {
-    return document.activeElement.tagName === 'INPUT-BOX';
-  });
-
   override onDestroy() {
     this.dataEditedEEC.flush();
   }

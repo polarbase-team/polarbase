@@ -911,10 +911,7 @@
           virtualScrollAutoScrollHolder="vertical"
           [style.left.px]="tableService.layoutProps.fillHandler.offset.left"
           [style.top.px]="tableService.layoutProps.fillHandler.offset.top"
-          [class.hidden]="
-            tableService.layoutProps.fillHandler.hidden ||
-            tableCellService.isFocusedInputInCellEditor()
-          "
+          [class.hidden]="tableService.layoutProps.fillHandler.hidden"
         ></div>
       }
     </div>

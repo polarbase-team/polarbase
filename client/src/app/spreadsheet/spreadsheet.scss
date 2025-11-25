@@ -90,6 +90,12 @@ $blank-row-height: 32px;
           background-color: $color-surface-c !important;
         }
       }
+
+      &:has(input-box:focus) {
+        .fill-handler {
+          display: none;
+        }
+      }
     }
   }
 
