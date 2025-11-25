@@ -1,4 +1,5 @@
 import * as formula from '@formulajs/formulajs';
+import dayjs from 'dayjs';
 
 export const CalculateType = {
   Empty: 'Empty',
@@ -13,6 +14,9 @@ export const CalculateType = {
   Min: 'Min',
   Max: 'Max',
   Range: 'Range',
+  EarliestDate: 'EarliestDate',
+  LatestDate: 'LatestDate',
+  DateRange: 'DateRange',
 } as const;
 export type CalculateType = (typeof CalculateType)[keyof typeof CalculateType];
 
@@ -76,6 +80,19 @@ function range(data: any[]) {
   return maxVal - minVal;
 }
 
+export function makeUpCalculatedData(data: any, type: CalculateType) {
+  if (data !== undefined && data !== null) {
+    if (
+      type === CalculateType.EarliestDate ||
+      type === CalculateType.LatestDate ||
+      type === CalculateType.DateRange
+    ) {
+      data = dayjs(data).startOf('d').valueOf();
+    }
+  }
+  return data;
+}
+
 export function calculateBy(data: any[], type: CalculateType) {
   let fn: Function;
   switch (type) {
@@ -107,12 +124,15 @@ export function calculateBy(data: any[], type: CalculateType) {
       fn = median;
       break;
     case CalculateType.Min:
+    case CalculateType.EarliestDate:
       fn = min;
       break;
     case CalculateType.Max:
+    case CalculateType.LatestDate:
       fn = max;
       break;
     case CalculateType.Range:
+    case CalculateType.DateRange:
       fn = range;
       break;
   }

@@ -1,4 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
+import dayjs from 'dayjs';
 
 import { CalculateType } from '../utils/calculate';
 
@@ -15,6 +16,13 @@ export class ParseCalculatedResultPipe implements PipeTransform {
       case CalculateType.PercentFilled:
       case CalculateType.PercentUnique:
         data = (data * 100).toFixed(2) + '%';
+        break;
+      case CalculateType.EarliestDate:
+      case CalculateType.LatestDate:
+        data = dayjs(data).format('DD/MM/YYYY');
+        break;
+      case CalculateType.DateRange:
+        data = data / (1000 * 60 * 60 * 24);
         break;
     }
 

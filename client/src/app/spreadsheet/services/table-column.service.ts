@@ -7,13 +7,13 @@ import {
   CdkDragStart,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
+import { ResizeEvent } from 'angular-resizable-element';
 import { MenuItem } from 'primeng/api';
 
 import { CalculateType } from '../utils/calculate';
 import { SortType } from '../utils/sort';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { Dimension } from './table.service';
-import { ResizeEvent } from 'angular-resizable-element';
 import { TableBaseService } from './table-base.service';
 import { TableColumn } from '../models/table-column';
 import { TableColumnActionType } from '../events/table-column';
@@ -33,6 +33,9 @@ const LABELS: Record<CalculateType, string> = {
   [CalculateType.Min]: 'Min',
   [CalculateType.Max]: 'Max',
   [CalculateType.Range]: 'Range',
+  [CalculateType.EarliestDate]: 'Earliest Date',
+  [CalculateType.LatestDate]: 'Latest Date',
+  [CalculateType.DateRange]: 'Date Range',
 };
 
 export function getAggregateMenuItems(
@@ -52,14 +55,16 @@ export function getAggregateMenuItems(
   common.forEach((t) => allowed.add(t));
 
   const dataType = column.field.dataType;
-  if (dataType === DataType.Number || dataType === DataType.Date) {
-    allowed.add(CalculateType.Min);
-    allowed.add(CalculateType.Max);
-  }
-  if (dataType === DataType.Number) {
+  if (dataType === DataType.Date) {
+    allowed.add(CalculateType.EarliestDate);
+    allowed.add(CalculateType.LatestDate);
+    allowed.add(CalculateType.DateRange);
+  } else if (dataType === DataType.Number) {
     allowed.add(CalculateType.Sum);
     allowed.add(CalculateType.Average);
     allowed.add(CalculateType.Median);
+    allowed.add(CalculateType.Min);
+    allowed.add(CalculateType.Max);
     allowed.add(CalculateType.Range);
   }
 

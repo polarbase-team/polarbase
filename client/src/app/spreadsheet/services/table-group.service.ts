@@ -1,17 +1,17 @@
 import _ from 'lodash';
 import { Injectable, signal, computed } from '@angular/core';
 import { Point } from '@angular/cdk/drag-drop';
+import { MenuItem } from 'primeng/api';
 
-import { calculateBy } from '../utils/calculate';
+import { calculateBy, makeUpCalculatedData } from '../utils/calculate';
 import { _GroupView } from '../components/virtual-scroll/virtual-scroll-group-repeater.directive';
+import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { Dimension } from './table.service';
 import type { CellIndex } from './table-cell.service';
-import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { TableBaseService } from './table-base.service';
 import { TableGroup } from '../models/table-group';
 import { TableColumn } from '../models/table-column';
 import { TableRow, TableRowCellData } from '../models/table-row';
-import { MenuItem } from 'primeng/api';
 
 function calculateInGroup(
   group: TableGroup,
@@ -27,12 +27,9 @@ function calculateInGroup(
   for (const column of columns) {
     const data = [];
     for (const row of group.rows) {
-      data.push(row.data[column.id]);
+      data.push(makeUpCalculatedData(row.data[column.id], column.calculateType));
     }
-    group.calculatedResult.set(
-      column.id,
-      calculateBy(data, column.calculateType),
-    );
+    group.calculatedResult.set(column.id, calculateBy(data, column.calculateType));
   }
 
   if (!group.children) return;
