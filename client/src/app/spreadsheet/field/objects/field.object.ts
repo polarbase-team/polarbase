@@ -39,7 +39,6 @@ export abstract class Field<T = any> {
     if (!isAllowEmpty && this.required && isEmpty(data)) {
       return { [FieldValidationKey.Required]: true };
     }
-
     return null;
   }
 
@@ -47,15 +46,15 @@ export abstract class Field<T = any> {
     return undefined;
   }
 
-  compareData(source: T, destination: T = this.data!): boolean {
+  compareData(source: T, destination = this.data!) {
     return _.isEqual(source, destination);
   }
 
-  toJson(): any {
+  toJson() {
     return { data: _.cloneDeep(this.data) };
   }
 
-  toString(data: T = this.data!): string {
+  toString(data = this.data!) {
     return _.toString(data);
   }
 }
