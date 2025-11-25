@@ -32,7 +32,14 @@ export class DropdownFieldCellComponent extends FieldCellEditable<DropdownData> 
 
   protected override onTouch(e: CellTouchEvent) {
     if (this.readonly) return;
-
     this.menu.show(e);
+  }
+
+  protected onMenuOpened() {
+    this.markAsEditStarted();
+  }
+
+  protected onMenuClosed() {
+    this.markAsEditEnded();
   }
 }

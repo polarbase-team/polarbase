@@ -4,6 +4,8 @@
     appendTo="body"
     [ngModel]="data"
     (ngModelChange)="onDatePicked($event)"
+    (onShow)="onMenuOpened()"
+    (onHide)="onMenuClosed()"
   ></p-datepicker>
 }
 @if (data !== undefined && data !== null) {

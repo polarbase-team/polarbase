@@ -28,7 +28,14 @@ export class DateFieldCellComponent extends FieldCellEditable<DateData> {
 
   protected onDatePicked(date) {
     this.data = dayjs(date).toISOString();
-
     this.save();
+  }
+
+  protected onMenuOpened() {
+    this.markAsEditStarted();
+  }
+
+  protected onMenuClosed() {
+    this.markAsEditEnded();
   }
 }

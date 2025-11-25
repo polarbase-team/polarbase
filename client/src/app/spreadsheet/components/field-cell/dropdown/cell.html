@@ -1,5 +1,12 @@
 @if (selecting) {
-  <p-menu #menu [model]="items" appendTo="body" [popup]="true" />
+  <p-menu
+    #menu
+    [model]="items"
+    appendTo="body"
+    [popup]="true"
+    (onShow)="onMenuOpened()"
+    (onHide)="onMenuClosed()"
+  />
 }
 @if (data !== undefined && data !== null) {
   <div class="field-cell__block-content">
