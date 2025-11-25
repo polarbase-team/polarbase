@@ -1,5 +1,6 @@
 import _ from 'lodash';
 
+import { isEmpty } from '../../utils/is-empty';
 import { DataType, FieldConfig } from '../interfaces/field.interface';
 
 export const FieldValidationKey = {
@@ -35,7 +36,7 @@ export abstract class Field<T = any> {
   }
 
   validate(data: T = this.data!, isAllowEmpty?: boolean): FieldValidationErrors | null {
-    if (!isAllowEmpty && this.required && (data === undefined || data === null)) {
+    if (!isAllowEmpty && this.required && isEmpty(data)) {
       return { [FieldValidationKey.Required]: true };
     }
 
