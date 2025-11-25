@@ -3,7 +3,7 @@ import { computed, DestroyRef, ElementRef, inject, Injectable } from '@angular/c
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 
-import { calculateBy, calculateFieldPredicate } from '../utils/calculate';
+import { calculateBy } from '../utils/calculate';
 import { groupBy } from '../utils/group';
 import { sortBy } from '../utils/sort';
 import { searchBy } from '../utils/search';
@@ -323,14 +323,13 @@ export class TableService extends TableBaseService {
       }
 
       for (const column of columns) {
+        const data = [];
+        for (const row of this.tableRowService.rows()) {
+          data.push(row.data[column.id]);
+        }
         this.calculatedResult.set(
           column.id,
-          calculateBy(
-            _.map(this.tableRowService.rows(), 'data'),
-            column.calculateType,
-            calculateFieldPredicate.bind(this, column.field),
-            column?.field,
-          ),
+          calculateBy(data, column.calculateType),
         );
       }
     }

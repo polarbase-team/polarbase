@@ -18,6 +18,56 @@ import { TableBaseService } from './table-base.service';
 import { TableColumn } from '../models/table-column';
 import { TableColumnActionType } from '../events/table-column';
 import { TableActionType } from '../events/table';
+import { DataType } from '../field/interfaces/field.interface';
+
+const LABELS: Record<CalculateType, string> = {
+  [CalculateType.Empty]: 'Count Empty',
+  [CalculateType.Filled]: 'Count Filled',
+  [CalculateType.Unique]: 'Count Unique',
+  [CalculateType.PercentEmpty]: '% Empty',
+  [CalculateType.PercentFilled]: '% Filled',
+  [CalculateType.PercentUnique]: '% Unique',
+  [CalculateType.Sum]: 'Sum',
+  [CalculateType.Average]: 'Average',
+  [CalculateType.Median]: 'Median',
+  [CalculateType.Min]: 'Min',
+  [CalculateType.Max]: 'Max',
+  [CalculateType.Range]: 'Range',
+};
+
+export function getAggregateMenuItems(
+  column: TableColumn,
+  onCalculate: (column: TableColumn, type: CalculateType) => void,
+): MenuItem[] {
+  const allowed = new Set<CalculateType>();
+
+  const common = [
+    CalculateType.Empty,
+    CalculateType.Filled,
+    CalculateType.Unique,
+    CalculateType.PercentEmpty,
+    CalculateType.PercentFilled,
+    CalculateType.PercentUnique,
+  ];
+  common.forEach((t) => allowed.add(t));
+
+  const dataType = column.field.dataType;
+  if (dataType === DataType.Number || dataType === DataType.Date) {
+    allowed.add(CalculateType.Min);
+    allowed.add(CalculateType.Max);
+  }
+  if (dataType === DataType.Number) {
+    allowed.add(CalculateType.Sum);
+    allowed.add(CalculateType.Average);
+    allowed.add(CalculateType.Median);
+    allowed.add(CalculateType.Range);
+  }
+
+  return Array.from(allowed).map((type) => ({
+    label: LABELS[type],
+    command: () => onCalculate(column, type),
+  }));
+}
 
 interface TableColumnExtra extends TableColumn {
   _bkWidth?: number;
@@ -116,6 +166,7 @@ export class TableColumnService extends TableBaseService {
   groupedColumns = new Map<TableColumn['id'], TableColumn>();
   sortedColumns = new Map<TableColumn['id'], TableColumn>();
   columnActionItems: MenuItem[] | undefined;
+  aggregateMenuItems: MenuItem[] | undefined;
 
   frozenIndex = computed(() => {
     let frozenIndex = this.tableService.config().column.frozenIndex;
@@ -669,6 +720,13 @@ export class TableColumnService extends TableBaseService {
 
     this.columnActionItems = items;
     this.host.columnActionMenu.show(e);
+  }
+
+  openCalculateContextMenu(e: Event, column: TableColumn) {
+    this.aggregateMenuItems = getAggregateMenuItems(column, (col, type) => {
+      this.calculateByColumn(col, type);
+    });
+    this.host.aggregateMenu.show(e);
   }
 
   private getSelectedColumns() {

@@ -57,7 +57,6 @@ import {
   _ScrollEvent,
 } from './components/virtual-scroll/virtual-scroll.component';
 import { VirtualScrollViewportComponent } from './components/virtual-scroll/virtual-scroll-viewport.component';
-import { CalculatingResultPipe } from './pipes/calculating-result.pipe';
 
 import {
   VirtualScrollGroupRepeaterDirective,
@@ -92,6 +91,7 @@ import { TableConfig } from './models/table';
 import { TableColumn } from './models/table-column';
 import { TableRow } from './models/table-row';
 import { TableGroup } from './models/table-group';
+import { ParseCalculatedResultPipe } from './pipes/parse-calculated-result.pipe';
 
 const stack: SpreadsheetComponent[] = [];
 
@@ -122,7 +122,7 @@ const stack: SpreadsheetComponent[] = [];
     VirtualScrollLeftContentWrapperComponent,
     VirtualScrollRightContentWrapperComponent,
     FieldCellFactoryDirective,
-    CalculatingResultPipe,
+    ParseCalculatedResultPipe,
   ],
   providers: [
     MessageService,
@@ -156,6 +156,7 @@ export class SpreadsheetComponent
   @ViewChild('columnActionMenu', { static: true }) columnActionMenu: ContextMenu;
   @ViewChild('rowActionMenu', { static: true }) rowActionMenu: ContextMenu;
   @ViewChild('groupActionMenu', { static: true }) groupActionMenu: ContextMenu;
+  @ViewChild('aggregateMenu', { static: true }) aggregateMenu: ContextMenu;
   @ViewChild('fillHanlder') fillHander: ElementRef<HTMLElement>;
   @ViewChild(VirtualScrollComponent, { static: true }) virtualScroll: VirtualScrollComponent;
 

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { Injectable, signal, computed } from '@angular/core';
 import { Point } from '@angular/cdk/drag-drop';
 
-import { calculateBy, calculateFieldPredicate } from '../utils/calculate';
+import { calculateBy } from '../utils/calculate';
 import { _GroupView } from '../components/virtual-scroll/virtual-scroll-group-repeater.directive';
 import { Dimension } from './table.service';
 import type { CellIndex } from './table-cell.service';
@@ -25,14 +25,13 @@ function calculateInGroup(
   }
 
   for (const column of columns) {
+    const data = [];
+    for (const row of group.rows) {
+      data.push(row.data[column.id]);
+    }
     group.calculatedResult.set(
       column.id,
-      calculateBy(
-        _.map(group.rows, 'data'),
-        column.calculateType,
-        calculatePredicate?.bind(this, column.field),
-        column?.field,
-      ),
+      calculateBy(data, column.calculateType),
     );
   }
 
@@ -129,7 +128,7 @@ export class TableGroupService extends TableBaseService {
 
   calculateInGroup(columns: TableColumn[]) {
     if (!columns?.length) return;
-    calculateInGroup(this.rootGroup(), columns, calculateFieldPredicate);
+    calculateInGroup(this.rootGroup(), columns);
   }
 
   sortInGroup(columns: TableColumn[]) {

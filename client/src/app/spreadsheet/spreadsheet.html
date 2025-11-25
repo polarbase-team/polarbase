@@ -2,6 +2,7 @@
 <p-contextmenu #columnActionMenu [model]="tableColumnService.columnActionItems" appendTo="body" />
 <p-contextmenu #rowActionMenu [model]="tableRowService.rowActionItems" appendTo="body" />
 <p-contextmenu #groupActionMenu [model]="tableGroupService.groupActionItems" appendTo="body" />
+<p-contextmenu #aggregateMenu [model]="tableColumnService.aggregateMenuItems" appendTo="body" />
 
 <virtual-scroll
   [sideSpacing]="tableService.config().sideSpacing"
@@ -961,8 +962,11 @@
 <!-- Calculation -->
 <ng-template #calculationBlockTemplate let-column="column" let-calculatedResult="calculatedResult">
   @if (tableService.config().column.calculable) {
-    <div class="calculation-block" [class.calculation-block--active]="column.calculateType">
-      <i class="pi pi-calculator text-sm"></i>
+    <div
+      class="calculation-block"
+      [class.calculation-block--active]="column.calculateType"
+      (click)="tableColumnService.openCalculateContextMenu($event, column)"
+    >
       @if (column.calculateType) {
         <div
           class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
@@ -976,15 +980,14 @@
               >Calculating...</span
             >
           } @else {
-            {{ calculatedResult | calculatingResult: column.calculateType : column.field }}
+            {{ calculatedResult | parseCalculatedResult: column.calculateType }}
           }
         </b>
       } @else {
         Calculate
       }
     </div>
-  }
-  @if (!tableService.config().column.calculable && column.calculateType) {
+  } @else if (column.calculateType) {
     <div class="calculation-block calculation-block--viewonly">
       <div
         class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
@@ -998,7 +1001,7 @@
             >Calculating...</span
           >
         } @else {
-          {{ calculatedResult | calculatingResult: column.calculateType : column.field }}
+          {{ calculatedResult | parseCalculatedResult: column.calculateType }}
         }
       </b>
     </div>
