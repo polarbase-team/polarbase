@@ -579,14 +579,17 @@ export class TableColumnService extends TableBaseService {
   }
 
   deleteSelectedColumns() {
-    let canDeleteColumns = this.getSelectedColumns();
-    if (!canDeleteColumns.length) return;
-    this.columns.update((arr) => _.without(arr, ...canDeleteColumns));
+    let selectedColumns = this.getSelectedColumns();
+    if (!selectedColumns.length) return;
+
+    this.columns.update((arr) => _.without(arr, ...selectedColumns));
+
     this.tableCellService.deselectAllCells();
     this.deselectAllColumns();
+
     this.host.columnAction.emit({
       type: TableColumnActionType.Delete,
-      payload: canDeleteColumns,
+      payload: selectedColumns,
     });
   }
 
@@ -642,7 +645,12 @@ export class TableColumnService extends TableBaseService {
           label: 'Delete selected columns',
           icon: 'pi pi-trash',
           command: () => {
-            this.deleteSelectedColumns();
+            this.host.deleteConfirmation(
+              'Do you want to delete the selected columns?',
+              'Delete columns',
+              () => this.deleteSelectedColumns(),
+              void 0,
+            );
           },
         });
       }
@@ -718,7 +726,12 @@ export class TableColumnService extends TableBaseService {
           label: 'Delete',
           icon: 'pi pi-trash',
           command: () => {
-            this.deleteColumn(column);
+            this.host.deleteConfirmation(
+              'Do you want to delete this column?',
+              'Delete column',
+              () => this.deleteColumn(column),
+              void 0,
+            );
           },
         });
       }

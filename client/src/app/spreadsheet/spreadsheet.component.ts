@@ -37,7 +37,7 @@ import { ResizableModule } from 'angular-resizable-element';
 import { fromEvent, map, merge, distinctUntilChanged, filter } from 'rxjs';
 
 // PrimeNG
-import { MenuItem, MessageService } from 'primeng/api';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { Chip } from 'primeng/chip';
 import { Toast } from 'primeng/toast';
 import { Tooltip } from 'primeng/tooltip';
@@ -46,6 +46,7 @@ import { Checkbox } from 'primeng/checkbox';
 import { Menu } from 'primeng/menu';
 import { ContextMenu } from 'primeng/contextmenu';
 import { Popover } from 'primeng/popover';
+import { ConfirmDialog } from 'primeng/confirmdialog';
 
 // Utils
 import { Clipboard } from './utils/clipboard';
@@ -117,6 +118,7 @@ const stack: SpreadsheetComponent[] = [];
     Menu,
     ContextMenu,
     Popover,
+    ConfirmDialog,
     VirtualScrollComponent,
     VirtualScrollViewportComponent,
     VirtualScrollGroupRepeaterDirective,
@@ -129,6 +131,7 @@ const stack: SpreadsheetComponent[] = [];
   ],
   providers: [
     MessageService,
+    ConfirmationService,
     FieldCellService,
     TableService,
     TableColumnService,
@@ -178,6 +181,7 @@ export class SpreadsheetComponent
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   private renderer = inject(Renderer2);
+  private confirmationService = inject(ConfirmationService);
   private fieldCellService = inject(FieldCellService);
   private keyboard: Keyboard;
   private clipboard: Clipboard<TableCell>;
@@ -317,6 +321,27 @@ export class SpreadsheetComponent
 
   markForCheck() {
     this.cdr.markForCheck();
+  }
+
+  deleteConfirmation(message: string, header: string, onAccept: () => void, onReject: () => void) {
+    this.confirmationService.confirm({
+      target: null,
+      message,
+      header,
+      rejectLabel: 'Cancel',
+      rejectButtonProps: {
+        label: 'Cancel',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        label: 'Delete',
+        severity: 'danger',
+      },
+
+      accept: onAccept,
+      reject: onReject,
+    });
   }
 
   @HostListener('window:beforeunload', ['$event'])
@@ -754,7 +779,9 @@ export class SpreadsheetComponent
   private checkOverlapedByOverlay(target?: EventTarget): boolean {
     let isOverlaped: boolean;
     if (target) {
-      isOverlaped = !!(target as HTMLElement).closest('.ng-trigger-overlayAnimation');
+      isOverlaped = !!(target as HTMLElement).closest(
+        '.ng-trigger-overlayAnimation, .p-dialog-mask',
+      );
     }
     return isOverlaped;
   }

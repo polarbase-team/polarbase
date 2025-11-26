@@ -457,7 +457,12 @@ export class TableRowService extends TableBaseService {
         label: 'Delete selected rows',
         icon: 'pi pi-trash',
         command: () => {
-          this.deleteSelectedRows();
+          this.host.deleteConfirmation(
+            'Do you want to delete the selected rows?',
+            'Delete rows',
+            () => this.deleteSelectedRows(),
+            void 0,
+          );
         },
       });
     } else {
@@ -530,7 +535,12 @@ export class TableRowService extends TableBaseService {
           label: 'Delete',
           icon: 'pi pi-trash',
           command: () => {
-            this.deleteRow(row);
+            this.host.deleteConfirmation(
+              'Do you want to delete this row?',
+              'Delete row',
+              () => this.deleteRow(row),
+              void 0,
+            );
           },
         });
       }
