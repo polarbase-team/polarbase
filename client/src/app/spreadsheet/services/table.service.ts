@@ -446,5 +446,6 @@ export class TableService extends TableBaseService {
     this.layoutProps.fillHandler.index = index;
     this.layoutProps.fillHandler.offset = offset;
     this.layoutProps.fillHandler.hidden = false;
+    this.host.detectChanges();
   }
 }
