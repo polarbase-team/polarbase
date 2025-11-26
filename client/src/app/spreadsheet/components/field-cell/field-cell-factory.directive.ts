@@ -16,8 +16,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 
-import { DataType } from '../../field/interfaces';
-import { Field } from '../../field/objects';
+import { DataType } from '../../field/interfaces/field.interface';
+import { Field } from '../../field/objects/field.object';
 import { FieldCell } from './field-cell';
 import { FieldCellEditable } from './field-cell-editable';
 import { CheckboxFieldCellComponent } from './checkbox/cell.component';

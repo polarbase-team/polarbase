@@ -1,5 +1,3 @@
-import { Observable } from 'rxjs';
-
 export const DataType = {
   Text: 1,
   Checkbox: 2,
@@ -17,25 +15,3 @@ export interface FieldConfig<T = any> {
   initialData?: T;
   params?: any;
 }
-
-export const Operator = {
-  NotApply: 'not-apply',
-  CountAll: 'count-all',
-  CountValues: 'count-values',
-  CountUnique: 'count-unique',
-  CountEmpty: 'count-empty',
-  CountNotEmpty: 'count-not-empty',
-  Sum: 'sum',
-  Average: 'average',
-  Min: 'min',
-  Max: 'max',
-  Med: 'med',
-  Range: 'range',
-  CountChecked: 'count-checked',
-  CountUnchecked: 'count-unchecked',
-  DayRange: 'day-range',
-  MonthRange: 'month-range',
-  EarliestDate: 'earliest-date',
-  LatestDate: 'latest-date',
-} as const;
-export type Operator = (typeof Operator)[keyof typeof Operator];

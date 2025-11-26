@@ -1,17 +1,16 @@
+import _ from 'lodash';
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import {
-  TextField,
-  NumberField,
-  CheckboxField,
-  DropdownField,
-  DateField,
-} from './spreadsheet/field/objects';
-import { SpreadsheetComponent } from './spreadsheet/spreadsheet.component';
+
 import { TableColumn } from './spreadsheet/models/table-column';
-import _ from 'lodash';
+import { TextField } from './spreadsheet/field/objects/text-field.object';
+import { NumberField } from './spreadsheet/field/objects/number-field.object';
+import { CheckboxField } from './spreadsheet/field/objects/checkbox-field.object';
+import { DropdownField } from './spreadsheet/field/objects/dropdown-field.object';
+import { DateField } from './spreadsheet/field/objects/date-field.object';
 import { TableRow } from './spreadsheet/models/table-row';
 import { TableConfig } from './spreadsheet/models/table';
+import { SpreadsheetComponent } from './spreadsheet/spreadsheet.component';
 
 @Component({
   selector: 'app-root',

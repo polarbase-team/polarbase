@@ -2,8 +2,8 @@ import { ComponentRef, Injectable } from '@angular/core';
 import { startWith, Subject, takeUntil } from 'rxjs';
 import _ from 'lodash';
 
-import { DataType } from '../../field/interfaces';
-import { FieldValidationErrors } from '../../field/objects';
+import { DataType } from '../../field/interfaces/field.interface';
+import { FieldValidationErrors } from '../../field/objects/field.object';
 import { FieldCell } from './field-cell';
 import { TableCell } from '../../models/table-cell';
 import { TableColumn } from '../../models/table-column';

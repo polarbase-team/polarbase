@@ -6,23 +6,20 @@ import { InputBoxComponent, InputBoxContent } from './input-box.component';
 
 @Directive()
 export class FieldCellInputable<T = any> extends FieldCellEditable<T> {
-  @ViewChild(InputBoxComponent)
-  readonly inputBox: InputBoxComponent;
+  @ViewChild(InputBoxComponent) inputBox: InputBoxComponent;
 
   @HostBinding('class.field-cell-inputable')
-  protected override readonly hostClass: boolean = true;
+  protected override readonly hostClass = true;
 
   @HostBinding('class.field-cell-inputable--inputting')
   protected isInputting: boolean;
 
   input(e?: CellTouchEvent) {
     this.isInputting = true;
-
     this.cdRef.detectChanges();
 
     if (e instanceof KeyboardEvent) {
       e.preventDefault(); // Prevent double key
-
       this.inputBox.keypress(e);
     }
 
@@ -37,29 +34,25 @@ export class FieldCellInputable<T = any> extends FieldCellEditable<T> {
 
   protected override onTouch(e: CellTouchEvent) {
     if (this.readonly) return;
-
     this.input(e);
   }
 
   protected override onDataChange() {
     this.markAsEditEnded();
-
     this.isInputting = false;
-
-    this.cdRef.markForCheck();
   }
 
-  protected onInput(_e: CellTouchEvent) {}
+  protected onInput(e: CellTouchEvent) {}
 
   protected onInputBoxEdited(content: InputBoxContent) {
     this.save(content as T);
   }
 
-  protected onInputBoxChange(_content: string) {}
+  protected onInputBoxChange(content: string) {}
 
-  protected onInputBoxInput(_e: Event) {}
+  protected onInputBoxInput(e: Event) {}
 
-  protected onInputBoxFocus(_e: FocusEvent) {
+  protected onInputBoxFocus(e: FocusEvent) {
     this.markAsEditStarted();
 
     const el: HTMLElement = this.elementRef.nativeElement;
@@ -68,5 +61,5 @@ export class FieldCellInputable<T = any> extends FieldCellEditable<T> {
     el.scrollTop = el.scrollHeight;
   }
 
-  protected onInputBoxBlur(_e: FocusEvent) {}
+  protected onInputBoxBlur(e: FocusEvent) {}
 }

@@ -7,7 +7,7 @@ import { calculateBy, makeUpCalculatedData } from '../utils/calculate';
 import { groupBy } from '../utils/group';
 import { sortBy } from '../utils/sort';
 import { searchBy } from '../utils/search';
-import { DataType } from '../field/interfaces';
+import { DataType } from '../field/interfaces/field.interface';
 import type { CellIndex, CellOffset } from './table-cell.service';
 import { TableBaseService } from './table-base.service';
 import { FieldCellService } from '../components/field-cell/field-cell.service';

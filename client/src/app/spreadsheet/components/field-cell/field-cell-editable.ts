@@ -1,7 +1,5 @@
-import { Directive, HostBinding, booleanAttribute, Input } from '@angular/core';
 import _ from 'lodash';
-
-import { DataType } from '../../field/interfaces';
+import { Directive, HostBinding, booleanAttribute, Input } from '@angular/core';
 
 import { FieldCellTouchable } from './field-cell-touchable';
 
@@ -13,17 +11,16 @@ export class FieldCellEditable<T = any> extends FieldCellTouchable<T> {
   onEditCallback: (isEditing: boolean) => void;
 
   @HostBinding('class.field-cell-editable')
-  protected override readonly hostClass: boolean = true;
-  protected readonly DATA_TYPE: typeof DataType = DataType;
+  protected override readonly hostClass = true;
 
   private _isEditing: boolean;
   private _isInvalid: boolean;
 
-  get isEditing(): boolean {
+  get isEditing() {
     return this._isEditing;
   }
 
-  get isInvalid(): boolean {
+  get isInvalid() {
     return this._isInvalid;
   }
 

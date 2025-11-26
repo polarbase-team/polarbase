@@ -13,10 +13,10 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-const NUMBER_REPLACER: RegExp = /^(-)|^e|^([0-9]+)([.e])[.e]*([0-9]*)[.e]*|[^0-9.e\n]+/gm;
-const INTEGER_REPLACER: RegExp = /^(-)|^e|^([0-9]+)(e)e*([0-9]*)e*|[^0-9e\n]+/gm;
-const POSITIVE_NUMBER_REPLACER: RegExp = /^e|^([0-9]+)([.e])[.e]*([0-9]*)[.e]*|[^0-9.e\n]+/gm;
-const POSITIVE_INTEGER_REPLACER: RegExp = /^e|^([0-9]+)(e)e*([0-9]*)e*|[^0-9e\n]+/gm;
+const NUMBER_REPLACER = /^(-)|^e|^([0-9]+)([.e])[.e]*([0-9]*)[.e]*|[^0-9.e\n]+/gm;
+const INTEGER_REPLACER = /^(-)|^e|^([0-9]+)(e)e*([0-9]*)e*|[^0-9e\n]+/gm;
+const POSITIVE_NUMBER_REPLACER = /^e|^([0-9]+)([.e])[.e]*([0-9]*)[.e]*|[^0-9.e\n]+/gm;
+const POSITIVE_INTEGER_REPLACER = /^e|^([0-9]+)(e)e*([0-9]*)e*|[^0-9e\n]+/gm;
 
 function omitNonNumericChars(
   text: string,
@@ -47,21 +47,19 @@ export type InputBoxContent = string | number;
 })
 // export class InputBoxComponent implements AfterViewInit {
 export class InputBoxComponent implements OnChanges {
-  @HostBinding('attr.contenteditable')
-  protected readonly attrContentEditable: string = 'plaintext-only';
-
   @HostBinding('attr.type')
-  @Input()
-  type: InputBoxType | string = InputBoxType.Text;
+  @Input() type: InputBoxType | string = InputBoxType.Text;
   @Input() content: InputBoxContent;
   @HostBinding('attr.placeholder')
-  @Input()
-  placeholder: string;
+  @Input() placeholder: string;
 
-  @Output() edited: EventEmitter<InputBoxContent> = new EventEmitter<InputBoxContent>();
-  @Output() contentChange: EventEmitter<string> = new EventEmitter<string>();
+  @Output() edited = new EventEmitter<InputBoxContent>();
+  @Output() contentChange = new EventEmitter<string>();
 
-  private eleRef: ElementRef = inject(ElementRef);
+  @HostBinding('attr.contenteditable')
+  protected readonly attrContentEditable = 'plaintext-only';
+
+  private eleRef = inject(ElementRef);
 
   private bkContent: InputBoxContent;
 
@@ -69,14 +67,14 @@ export class InputBoxComponent implements OnChanges {
     return this.eleRef.nativeElement;
   }
 
-  get textContent(): string {
+  get textContent() {
     return this.editor.textContent;
   }
   set textContent(content: string) {
     this.editor.textContent = content;
   }
 
-  get isFocusing(): boolean {
+  get isFocusing() {
     return document.activeElement === this.editor;
   }
 
@@ -165,7 +163,6 @@ export class InputBoxComponent implements OnChanges {
 
   private writeContent(content: InputBoxContent, emitEvent = true) {
     let text = String(content ?? '');
-
     if (text) {
       switch (this.type) {
         case InputBoxType.Number:
@@ -182,7 +179,6 @@ export class InputBoxComponent implements OnChanges {
           break;
       }
     }
-
     if (this.textContent !== text) {
       this.textContent = text;
       this.setCaretAtEnd();

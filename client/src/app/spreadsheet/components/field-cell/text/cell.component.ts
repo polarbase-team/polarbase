@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { TextData } from '../../../field/interfaces';
+import { TextData } from '../../../field/interfaces/text-field.interface';
 import { FieldCellInputable } from '../field-cell-inputable';
 import { InputBoxComponent } from '../input-box.component';
 

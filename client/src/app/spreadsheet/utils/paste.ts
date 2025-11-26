@@ -1,4 +1,4 @@
-import { Field } from '../field/objects';
+import { Field } from '../field/objects/field.object';
 import { TableCell } from '../models/table-cell';
 import { TableColumn } from '../models/table-column';
 import { ClipboardItem } from './clipboard';

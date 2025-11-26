@@ -33,13 +33,11 @@ export class FieldCellTouchable<T = any> extends FieldCell<T> {
 
   protected override onSelect() {
     super.onSelect();
-
     setTimeout(() => this.focus());
   }
 
   protected override onDeselect() {
     super.onDeselect();
-
     this.blur();
   }
 
@@ -57,7 +55,7 @@ export class FieldCellTouchable<T = any> extends FieldCell<T> {
       return;
     }
 
-    const keyCode: number = e.keyCode;
+    const keyCode = e.keyCode;
 
     // https://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes
     if (

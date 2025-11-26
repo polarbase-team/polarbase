@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import _ from 'lodash';
 
-import { DateField } from '../field/objects';
+import { DateField } from '../field/objects/date-field.object';
 import { TableColumn } from '../models/table-column';
 
 function search(str: string, match: string): boolean {
