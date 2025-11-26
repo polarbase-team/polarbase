@@ -8,6 +8,7 @@ import { NumberField } from './spreadsheet/field/objects/number-field.object';
 import { CheckboxField } from './spreadsheet/field/objects/checkbox-field.object';
 import { DropdownField } from './spreadsheet/field/objects/dropdown-field.object';
 import { DateField } from './spreadsheet/field/objects/date-field.object';
+// import { CalculateType } from './spreadsheet/utils/calculate';
 import { TableRow } from './spreadsheet/models/table-row';
 import { TableConfig } from './spreadsheet/models/table';
 import { SpreadsheetComponent } from './spreadsheet/spreadsheet.component';
@@ -49,21 +50,15 @@ export class App {
     return { id: _.uniqueId(), data: { [this.columns[0].id]: index } } as TableRow;
   });
   config: TableConfig = {
-    sideSpacing: 20,
-    row: {
-      size: 'S',
-    },
     // streamData: true,
-    // calculating: [
-    // 	[ this.columns[ 0 ], CalculateType.Empty ],
-    // 	[ this.columns[ 2 ], CalculateType.Sum ],
-    // 	[ this.columns[ 3 ], CalculateType.Empty ],
+    sideSpacing: 20,
+    row: { size: 'S', },
+    // calculateBy: [
+    //   [this.columns[0], CalculateType.Empty],
+    //   [this.columns[2], CalculateType.Sum],
+    //   [this.columns[3], CalculateType.Empty],
     // ],
-    // grouping: [
-    // 	[ this.columns[ 2 ], 'asc' ],
-    // ],
-    // sorting: [
-    // 	[ this.columns[ 5 ], 'asc' ],
-    // ],
+    // groupBy: [[this.columns[2], 'asc']],
+    // sortBy: [[this.columns[3], 'asc']],
   };
 }
