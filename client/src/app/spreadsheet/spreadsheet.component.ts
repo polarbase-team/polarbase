@@ -9,7 +9,6 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  EventEmitter,
   HostBinding,
   HostListener,
   inject,
@@ -17,7 +16,7 @@ import {
   OnChanges,
   OnDestroy,
   OnInit,
-  Output,
+  output,
   Renderer2,
   SimpleChanges,
   ViewChild,
@@ -29,7 +28,7 @@ import { FormsModule } from '@angular/forms';
 // Angular CDK
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { outputToObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // Angular Third Party Modules
 import { ResizableModule } from 'angular-resizable-element';
@@ -152,10 +151,10 @@ export class SpreadsheetComponent
   sourceColumns = input<TableColumn[]>([], { alias: 'columns' });
   sourceRows = input<TableRow[]>([], { alias: 'rows' });
 
-  @Output() action = new EventEmitter<TableAction>();
-  @Output() columnAction = new EventEmitter<TableColumnAction>();
-  @Output() rowAction = new EventEmitter<TableRowAction>();
-  @Output() cellAction = new EventEmitter<TableCellAction>();
+  action = output<TableAction>();
+  columnAction = output<TableColumnAction>();
+  rowAction = output<TableRowAction>();
+  cellAction = output<TableCellAction>();
 
   @ViewChild('menu', { static: true }) menu: Menu;
   @ViewChild('contextMenu', { static: true }) contextMenu: ContextMenu;
@@ -227,15 +226,7 @@ export class SpreadsheetComponent
       this.handleClipboardEvents();
 
       merge(
-        this.cellAction.pipe(
-          filter(
-            (
-              event,
-            ): event is Extract<TableCellAction, { type: typeof TableCellActionType.Select }> =>
-              event.type === TableCellActionType.Select,
-          ),
-        ),
-        this.columnAction.pipe(
+        outputToObservable(this.columnAction).pipe(
           filter(
             (
               event,
@@ -243,10 +234,18 @@ export class SpreadsheetComponent
               event.type === TableColumnActionType.Select,
           ),
         ),
-        this.rowAction.pipe(
+        outputToObservable(this.rowAction).pipe(
           filter(
             (event): event is Extract<TableRowAction, { type: typeof TableRowActionType.Select }> =>
               event.type === TableRowActionType.Select,
+          ),
+        ),
+        outputToObservable(this.cellAction).pipe(
+          filter(
+            (
+              event,
+            ): event is Extract<TableCellAction, { type: typeof TableCellActionType.Select }> =>
+              event.type === TableCellActionType.Select,
           ),
         ),
       )

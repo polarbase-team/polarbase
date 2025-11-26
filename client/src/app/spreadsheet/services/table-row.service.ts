@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { Injectable, DestroyRef, inject, signal, effect, computed } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { outputToObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CdkDragStart, CdkDragMove, CdkDragEnd, type Point } from '@angular/cdk/drag-drop';
 import { debounceTime, distinctUntilChanged, filter, map, pairwise } from 'rxjs';
 import { MenuItem } from 'primeng/api';
@@ -93,23 +93,7 @@ export class TableRowService extends TableBaseService {
   }
 
   override onInit() {
-    this.host.cellAction
-      .pipe(
-        filter(
-          (event): event is Extract<TableCellAction, { type: typeof TableCellActionType.Select }> =>
-            event.type === TableCellActionType.Select,
-        ),
-        map(({ payload }: { payload: TableRow[] }) => payload?.[0] || null),
-        distinctUntilChanged(),
-        pairwise(),
-        debounceTime(0),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(([_oldRow, newRow]) => {
-        flushEEC(this.addedEEC, newRow, ({ row }) => row.id);
-      });
-
-    this.host.rowAction
+    outputToObservable(this.host.rowAction)
       .pipe(
         filter(
           (event): event is Extract<TableRowAction, { type: typeof TableRowActionType.Add }> =>
@@ -129,6 +113,22 @@ export class TableRowService extends TableBaseService {
         }
         // this.markRowsAsChanged();
         this.tableService.handleDataUpdate();
+      });
+
+    outputToObservable(this.host.cellAction)
+      .pipe(
+        filter(
+          (event): event is Extract<TableCellAction, { type: typeof TableCellActionType.Select }> =>
+            event.type === TableCellActionType.Select,
+        ),
+        map(({ payload }: { payload: TableRow[] }) => payload?.[0] || null),
+        distinctUntilChanged(),
+        pairwise(),
+        debounceTime(0),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(([_oldRow, newRow]) => {
+        flushEEC(this.addedEEC, newRow, ({ row }) => row.id);
       });
   }
 
