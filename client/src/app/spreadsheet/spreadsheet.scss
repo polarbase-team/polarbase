@@ -96,6 +96,22 @@ $blank-row-height: 32px;
           display: none;
         }
       }
+
+      .p-popover.cell-error-tooltip {
+        margin: 0;
+
+        &::before,
+        &::after {
+          display: none;
+        }
+
+        .p-popover-content {
+          padding: 8px;
+          background: color-mix(in srgb,var(--p-red-50),transparent 5%);
+          outline-color: var(--p-red-200);
+          color: var(--p-red-600);
+        }
+      }
     }
   }
 

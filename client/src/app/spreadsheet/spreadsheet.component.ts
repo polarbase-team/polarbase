@@ -46,6 +46,7 @@ import { Skeleton } from 'primeng/skeleton';
 import { Checkbox } from 'primeng/checkbox';
 import { Menu } from 'primeng/menu';
 import { ContextMenu } from 'primeng/contextmenu';
+import { Popover } from 'primeng/popover';
 
 // Utils
 import { Clipboard } from './utils/clipboard';
@@ -116,6 +117,7 @@ const stack: SpreadsheetComponent[] = [];
     Toast,
     Menu,
     ContextMenu,
+    Popover,
     VirtualScrollComponent,
     VirtualScrollViewportComponent,
     VirtualScrollGroupRepeaterDirective,
@@ -157,6 +159,7 @@ export class SpreadsheetComponent
 
   @ViewChild('menu', { static: true }) menu: Menu;
   @ViewChild('contextMenu', { static: true }) contextMenu: ContextMenu;
+  @ViewChild('cellErrorTooltip', { static: true }) cellErrorTooltip: Popover;
   @ViewChild('fillHanlder') fillHander: ElementRef<HTMLElement>;
   @ViewChild(VirtualScrollComponent, { static: true }) virtualScroll: VirtualScrollComponent;
 
@@ -167,6 +170,7 @@ export class SpreadsheetComponent
   tableGroupService = inject(TableGroupService);
   isMouseHolding = false;
   isMouseHiding = false;
+  cellErrorMessage: string;
   menuItems: MenuItem[] | undefined;
 
   protected Dimension = Dimension;

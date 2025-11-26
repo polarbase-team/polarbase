@@ -301,21 +301,7 @@ export class TableCellService extends TableBaseService {
             if (!errors.hasOwnProperty(key)) {
               continue;
             }
-
-            switch (key) {
-              case FieldValidationKey.Required:
-                this.openErrorTooltip(cellElement, 'REQUIRED');
-                break;
-              case FieldValidationKey.Pattern:
-                this.openErrorTooltip(cellElement, 'PATTERN');
-                break;
-              case FieldValidationKey.Min:
-                this.openErrorTooltip(cellElement, 'CANNOT_LESS_THAN_MINIMUM');
-                break;
-              case FieldValidationKey.Max:
-                this.openErrorTooltip(cellElement, 'CANNOT_GREATER_MAXIMUM');
-                break;
-            }
+            this.openErrorTooltip(cellElement, key);
           }
 
           this.tableService.layoutProps.fillHandler.hidden = true;
@@ -1249,16 +1235,28 @@ export class TableCellService extends TableBaseService {
   }
 
   private openErrorTooltip(cellElement: HTMLElement, key: string) {
-    // if (this._tooltipRef?.isOpened) return;
-    // this._tooltipRef = this._tooltipService.open(
-    //   cellElement,
-    //   this.translateService.instant(`SPREADSHEET.MESSAGE.${key}`),
-    //   undefined,
-    //   { position: 'start-above', type: 'error', disableClose: true }
-    // );
+    let message: string;
+    switch (key) {
+      case FieldValidationKey.Required:
+        message = 'This field is required.';
+        break;
+      case FieldValidationKey.Pattern:
+        message = 'The value does not match the required format.';
+        break;
+      case FieldValidationKey.Min:
+        message = 'The value is too small.';
+        break;
+      case FieldValidationKey.Max:
+        message = 'The value is too large.';
+        break;
+      default:
+        message = 'An error has occurred.';
+    }
+    this.host.cellErrorMessage = message;
+    this.host.cellErrorTooltip.show(null, cellElement);
   }
 
   private closeErrorTooltip() {
-    // this._tooltipRef?.close();
+    this.host.cellErrorTooltip.hide();
   }
 }
