@@ -225,14 +225,9 @@ export class TableRowService extends TableBaseService {
     if (this.tableGroupService.isGrouping()) {
       this.tableGroupService.markGroupAsChanged();
     }
-    setTimeout(
-      () => {
-        this.tableService.updateFillHandlerPosition();
-      },
-      // row-transition: 100ms
-      // buffer: 10ms
-      110,
-    );
+    setTimeout(() => {
+      this.tableService.updateFillHandlerPosition();
+    });
   }
 
   expandRow(row: TableRow) {

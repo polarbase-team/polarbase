@@ -107,7 +107,7 @@ $blank-row-height: 32px;
 
         .p-popover-content {
           padding: 8px;
-          background: color-mix(in srgb,var(--p-red-50),transparent 5%);
+          background: color-mix(in srgb, var(--p-red-50), transparent 5%);
           outline-color: var(--p-red-200);
           color: var(--p-red-600);
         }
@@ -547,7 +547,6 @@ $blank-row-height: 32px;
       left: 0;
       right: 0;
       display: flex;
-      transition: height 100ms ease-out;
       transform: none !important;
       will-change: height;
 
