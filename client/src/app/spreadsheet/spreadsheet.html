@@ -394,7 +394,10 @@
                     }
                     <div class="index-block">
                       @if (row === tableRowService.draftRow) {
-                        <a safe-area class="text-xs" (click)="tableRowService.cancelDraftRow()"
+                        <a
+                          safe-area
+                          class="text-xs text-blue-500 pointer-events-auto"
+                          (click)="tableRowService.cancelDraftRow()"
                           >Cancel</a
                         >
                       } @else {

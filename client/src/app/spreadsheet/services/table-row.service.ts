@@ -11,6 +11,7 @@ import type { CellIndex } from './table-cell.service';
 import { TableBaseService } from './table-base.service';
 import { TableRow } from '../models/table-row';
 import { TableGroup } from '../models/table-group';
+import { TableCell } from '../models/table-cell';
 import { TableRowAction, TableRowActionType, TableRowAddedEvent } from '../events/table-row';
 import { TableCellAction, TableCellActionType } from '../events/table-cell';
 
@@ -111,7 +112,6 @@ export class TableRowService extends TableBaseService {
             break;
           }
         }
-        // this.markRowsAsChanged();
         this.tableService.handleDataUpdate();
       });
 
@@ -121,7 +121,7 @@ export class TableRowService extends TableBaseService {
           (event): event is Extract<TableCellAction, { type: typeof TableCellActionType.Select }> =>
             event.type === TableCellActionType.Select,
         ),
-        map(({ payload }: { payload: TableRow[] }) => payload?.[0] || null),
+        map(({ payload }: { payload: TableCell[] }) => payload?.[0].row || null),
         distinctUntilChanged(),
         pairwise(),
         debounceTime(0),
