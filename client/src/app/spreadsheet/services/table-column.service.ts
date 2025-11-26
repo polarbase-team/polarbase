@@ -170,8 +170,6 @@ export class TableColumnService extends TableBaseService {
   calculatedColumns = new Map<TableColumn['id'], TableColumn>();
   groupedColumns = new Map<TableColumn['id'], TableColumn>();
   sortedColumns = new Map<TableColumn['id'], TableColumn>();
-  columnActionItems: MenuItem[] | undefined;
-  aggregateMenuItems: MenuItem[] | undefined;
 
   frozenIndex = computed(() => {
     let frozenIndex = this.tableService.config().column.frozenIndex;
@@ -558,9 +556,12 @@ export class TableColumnService extends TableBaseService {
   }
 
   deselectAllColumns() {
-    this.host.columnActionMenu.hide();
+    this.host.menu.hide();
+    this.host.contextMenu.hide();
+
     if (!this.tableService.layoutProps.column.selection) return;
     this.tableService.layoutProps.column.selection = null;
+
     this.host.columnAction.emit({
       type: TableColumnActionType.Select,
       payload: [],
@@ -723,15 +724,15 @@ export class TableColumnService extends TableBaseService {
       }
     }
 
-    this.columnActionItems = items;
-    this.host.columnActionMenu.show(e);
+    this.host.menuItems = items;
+    this.host.contextMenu.show(e);
   }
 
   openCalculateContextMenu(e: Event, column: TableColumn) {
-    this.aggregateMenuItems = getAggregateMenuItems(column, (col, type) => {
+    this.host.menuItems = getAggregateMenuItems(column, (col, type) => {
       this.calculateByColumn(col, type);
     });
-    this.host.aggregateMenu.show(e);
+    this.host.menu.toggle(e);
   }
 
   private getSelectedColumns() {

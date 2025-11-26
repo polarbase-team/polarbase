@@ -38,12 +38,13 @@ import { ResizableModule } from 'angular-resizable-element';
 import { fromEvent, map, merge, distinctUntilChanged, filter } from 'rxjs';
 
 // PrimeNG
-import { MessageService } from 'primeng/api';
+import { MenuItem, MessageService } from 'primeng/api';
 import { Chip } from 'primeng/chip';
 import { Toast } from 'primeng/toast';
 import { Tooltip } from 'primeng/tooltip';
 import { Skeleton } from 'primeng/skeleton';
 import { Checkbox } from 'primeng/checkbox';
+import { Menu } from 'primeng/menu';
 import { ContextMenu } from 'primeng/contextmenu';
 
 // Utils
@@ -113,6 +114,7 @@ const stack: SpreadsheetComponent[] = [];
     Checkbox,
     Chip,
     Toast,
+    Menu,
     ContextMenu,
     VirtualScrollComponent,
     VirtualScrollViewportComponent,
@@ -153,10 +155,8 @@ export class SpreadsheetComponent
   @Output() rowAction = new EventEmitter<TableRowAction>();
   @Output() cellAction = new EventEmitter<TableCellAction>();
 
-  @ViewChild('columnActionMenu', { static: true }) columnActionMenu: ContextMenu;
-  @ViewChild('rowActionMenu', { static: true }) rowActionMenu: ContextMenu;
-  @ViewChild('groupActionMenu', { static: true }) groupActionMenu: ContextMenu;
-  @ViewChild('aggregateMenu', { static: true }) aggregateMenu: ContextMenu;
+  @ViewChild('menu', { static: true }) menu: Menu;
+  @ViewChild('contextMenu', { static: true }) contextMenu: ContextMenu;
   @ViewChild('fillHanlder') fillHander: ElementRef<HTMLElement>;
   @ViewChild(VirtualScrollComponent, { static: true }) virtualScroll: VirtualScrollComponent;
 
@@ -167,6 +167,7 @@ export class SpreadsheetComponent
   tableGroupService = inject(TableGroupService);
   isMouseHolding = false;
   isMouseHiding = false;
+  menuItems: MenuItem[] | undefined;
 
   protected Dimension = Dimension;
   protected isHideSummaryLabel = false;
@@ -357,19 +358,14 @@ export class SpreadsheetComponent
       .subscribe((e1) => {
         const isRightClick = e1.button === 2;
         const shouldPause: boolean =
-          !(
-            isRightClick &&
-            (this.columnActionMenu.visible() ||
-              this.rowActionMenu.visible() ||
-              this.groupActionMenu.visible())
-          ) && this.shouldPauseEvent(e1);
+          !(isRightClick && (this.menu.visible || this.contextMenu.visible())) &&
+          this.shouldPauseEvent(e1);
         if (shouldPause) return;
 
         const target = e1.target as HTMLElement;
 
-        this.closeColumnActionMenu();
-        this.closeRowActionMenu();
-        this.closeGroupActionMenu();
+        this.menu.hide();
+        this.contextMenu.hide();
 
         if (isRightClick) {
           this.tableCellService.deselectAllCells();
@@ -761,23 +757,17 @@ export class SpreadsheetComponent
   }
 
   private openColumnActionMenu(e: MouseEvent) {
-    if (this.columnActionMenu.visible()) return;
-
     const index = this.tableCellService.findCellByElement(e.target as HTMLElement);
     if (!index) return;
 
     const { columnIndex } = index;
     const column = this.tableColumnService.findColumnByIndex(columnIndex);
-    this.tableColumnService.openColumnContextMenu(e, column, columnIndex);
-  }
-
-  private closeColumnActionMenu() {
-    this.columnActionMenu.hide();
+    setTimeout(() => {
+      this.tableColumnService.openColumnContextMenu(e, column, columnIndex);
+    });
   }
 
   private openRowActionMenu(e: MouseEvent) {
-    if (this.rowActionMenu.visible()) return;
-
     const index = this.tableCellService.findCellByElement(e.target as HTMLElement);
     if (!index) return;
 
@@ -794,26 +784,19 @@ export class SpreadsheetComponent
 
     let group: TableGroup;
     let rowGroupIndex: number;
-
     if (this.tableGroupService.isGrouping()) {
       group = this.tableGroupService.findGroupByRowIndex(rowIndex);
       rowGroupIndex = this.tableGroupService.findRowGroupIndex(group, row);
     }
 
-    this.tableRowService.openRowActionMenu(e, row, rowIndex);
-  }
-
-  private closeRowActionMenu() {
-    this.rowActionMenu.hide();
+    setTimeout(() => {
+      this.tableRowService.openRowActionMenu(e, row, rowIndex);
+    });
   }
 
   private openGroupActionMenu(e: MouseEvent) {
-    if (this.groupActionMenu.visible()) return;
-
-    this.tableGroupService.openActionMenu(e);
-  }
-
-  private closeGroupActionMenu() {
-    this.groupActionMenu.hide();
+    setTimeout(() => {
+      this.tableGroupService.openActionMenu(e);
+    });
   }
 }

@@ -99,7 +99,6 @@ function findGroupByItemIndex(itemIndex: number, group?: TableGroup): TableGroup
 export class TableGroupService extends TableBaseService {
   rootGroup = signal<TableGroup>(null);
   collapsedState = new Map<number, boolean>();
-  groupActionItems: MenuItem[] | undefined;
 
   groupDepth = computed(() => {
     return this.rootGroup().totalChildrenDepth;
@@ -306,8 +305,8 @@ export class TableGroupService extends TableBaseService {
         },
       },
     ];
-    this.groupActionItems = items;
-    this.host.groupActionMenu.show(e);
+    this.host.menuItems = items;
+    this.host.contextMenu.show(e);
   }
 
   private _toggleGroup(group: TableGroup, collapsed: boolean) {

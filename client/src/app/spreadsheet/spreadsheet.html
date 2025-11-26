@@ -1,8 +1,6 @@
 <p-toast />
-<p-contextmenu #columnActionMenu [model]="tableColumnService.columnActionItems" appendTo="body" />
-<p-contextmenu #rowActionMenu [model]="tableRowService.rowActionItems" appendTo="body" />
-<p-contextmenu #groupActionMenu [model]="tableGroupService.groupActionItems" appendTo="body" />
-<p-contextmenu #aggregateMenu [model]="tableColumnService.aggregateMenuItems" appendTo="body" />
+<p-menu #menu [model]="menuItems" popup="true" appendTo="body" />
+<p-contextmenu #contextMenu [model]="menuItems" appendTo="body" />
 
 <virtual-scroll
   [sideSpacing]="tableService.config().sideSpacing"

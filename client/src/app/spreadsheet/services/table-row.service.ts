@@ -50,7 +50,6 @@ export class TableRowService extends TableBaseService {
   rowSize = signal<RowSize>('S');
   draftRow: TableRow;
   selectedRows = new Set<TableRow>();
-  rowActionItems: MenuItem[] | undefined;
 
   rowHeight = computed(() => {
     return RowSize[this.rowSize()];
@@ -334,7 +333,8 @@ export class TableRowService extends TableBaseService {
   }
 
   deselectAllRows() {
-    this.host.rowActionMenu.hide();
+    this.host.menu.hide();
+    this.host.contextMenu.hide();
 
     if (!this.selectedRows.size) return;
 
@@ -536,8 +536,8 @@ export class TableRowService extends TableBaseService {
       }
     }
 
-    this.rowActionItems = items;
-    this.host.rowActionMenu.show(e);
+    this.host.menuItems = items;
+    this.host.contextMenu.show(e);
   }
 
   private removeRows(rows: TableRow[]) {
