@@ -311,8 +311,8 @@
               </div>
               @if (!group.children) {
                 <div class="group__body">
-                  <div class="row blank-row">
-                    @if (tableRowService.canAddRow()) {
+                  @if (tableRowService.canAddRow()) {
+                    <div class="row blank-row">
                       <div
                         class="row-cell cell index-cell"
                         [attr.disabled]="tableService.isDataStreaming"
@@ -320,8 +320,8 @@
                       >
                         <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
                       </div>
-                    }
-                  </div>
+                    </div>
+                  }
                 </div>
               }
             </div>
@@ -518,8 +518,11 @@
               </ng-container>
             </div>
           </ng-container>
-          <div class="row blank-row">
-            @if (tableRowService.canAddRow() && tableGroupService.hasNoGroups()) {
+          @if (
+            tableRowService.canAddRow() &&
+            (!tableGroupService.isGrouping() || tableGroupService.hasNoGroups())
+          ) {
+            <div class="row blank-row">
               <div
                 class="row-cell cell index-cell"
                 [attr.disabled]="tableService.isDataStreaming"
@@ -527,8 +530,8 @@
               >
                 <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
               </div>
-            }
-          </div>
+            </div>
+          }
         </div>
       </div>
     </div>
@@ -606,7 +609,9 @@
               </div>
               @if (!group.children) {
                 <div class="group__body">
-                  <div class="row blank-row"></div>
+                  @if (tableRowService.canAddRow()) {
+                    <div class="row blank-row"></div>
+                  }
                 </div>
               }
             </div>
@@ -735,7 +740,12 @@
               </ng-container>
             </div>
           </ng-container>
-          <div class="row blank-row"></div>
+          @if (
+            tableRowService.canAddRow() &&
+            (!tableGroupService.isGrouping() || tableGroupService.hasNoGroups())
+          ) {
+            <div class="row blank-row"></div>
+          }
         </div>
       </div>
     </div>
