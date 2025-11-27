@@ -102,7 +102,7 @@ export class TableRowService extends TableBaseService {
             event.type === TableRowActionType.Add,
         ),
         map(({ payload }) => {
-          return (payload as { row: TableRow }[]).map((e) => e.row);
+          return _.map(payload as { row: TableRow }[], 'row');
         }),
         takeUntilDestroyed(this.destroyRef),
       )
@@ -367,7 +367,7 @@ export class TableRowService extends TableBaseService {
 
     this.host.rowAction.emit({
       type: TableRowActionType.Move,
-      payload: movedRows.map((movedRow) => ({ row: movedRow, movedIndex })),
+      payload: _.map(movedRows, (movedRow) => ({ row: movedRow, movedIndex })),
     });
   }
 

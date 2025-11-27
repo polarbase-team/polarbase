@@ -31,17 +31,13 @@ function splitTextIntoMatrix(text: string) {
   }
 
   const matrix: ClipboardItem[][] = [];
-
   for (const line of text.split(NEWLINE_CHAR)) {
     const arr: ClipboardItem[] = [];
-
     for (const t of line.split(TAB_CHAR)) {
       arr.push({ text: t });
     }
-
     matrix.push(arr);
   }
-
   return matrix;
 }
 
@@ -98,18 +94,16 @@ export class Clipboard<T = any> {
         const isPaused = this.isPaused || shouldPause?.(e);
         if (isPaused) return;
 
-        const nativePastedText: string = e.clipboardData
-          .getData('text')
-          .replace(/\r\n/g, NEWLINE_CHAR);
+        const nativePastedText = e.clipboardData.getData('text').replace(/\r\n/g, NEWLINE_CHAR);
         if (this.nativeText !== nativePastedText) {
           this.nativeText = nativePastedText;
 
-          const matrix: ClipboardItem[][] = splitTextIntoMatrix(this.nativeText);
+          const matrix = splitTextIntoMatrix(this.nativeText);
           this.matrix = [...matrix];
           this._isCutAction = false;
         }
 
-        const data: ClipboardData<T> = this.read();
+        const data = this.read();
         if (this.isCutAction) {
           this.cut$.next([e, data]);
           this._isCutAction = false;

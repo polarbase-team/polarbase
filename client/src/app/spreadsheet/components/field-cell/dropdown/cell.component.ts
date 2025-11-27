@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
@@ -24,7 +25,7 @@ export class DropdownFieldCellComponent extends FieldCellEditable<DropdownData> 
   items: MenuItem[] | undefined;
 
   ngOnInit() {
-    this.items = this.field.options.map((option) => ({
+    this.items = _.map(this.field.options, (option) => ({
       label: option,
       command: ({ item }) => this.save(item.label),
     }));
