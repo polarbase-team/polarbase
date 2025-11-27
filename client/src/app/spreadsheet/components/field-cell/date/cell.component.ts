@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Overlay } from 'primeng/overlay';
 import { DatePicker } from 'primeng/datepicker';
 import dayjs from 'dayjs';
 
@@ -12,18 +13,20 @@ import { DatePipe } from '@angular/common';
 @Component({
   selector: 'date-field-cell',
   templateUrl: './cell.html',
-  styleUrls: ['../field-cell.scss', './cell.scss'],
+  styleUrls: ['../field-cell.scss'],
   host: { class: 'date-field-cell' },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePicker, DatePipe],
+  imports: [FormsModule, Overlay, DatePicker, DatePipe],
 })
 export class DateFieldCellComponent extends FieldCellEditable<DateData> {
   declare field: DateField;
 
-  @ViewChild('calendar') calendar: DatePicker;
+  @ViewChild('calendar') calendar: Overlay;
 
-  protected override onTouch(_e: CellTouchEvent): void {
-    this.calendar.toggle();
+  protected calendarVisible: boolean;
+
+  protected override onTouch(e: CellTouchEvent) {
+    this.calendarVisible = true;
   }
 
   protected onDatePicked(date) {

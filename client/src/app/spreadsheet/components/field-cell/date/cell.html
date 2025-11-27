@@ -1,15 +1,22 @@
-@if (selecting) {
-  <p-datepicker
-    #calendar
-    appendTo="body"
-    [ngModel]="data"
-    (ngModelChange)="onDatePicked($event)"
-    (onShow)="onMenuOpened()"
-    (onHide)="onMenuClosed()"
-  ></p-datepicker>
-}
 @if (data !== undefined && data !== null) {
   <div class="field-cell__text-content">
     {{ data | date }}
   </div>
+}
+@if (selecting) {
+  <p-overlay
+    #calendar
+    appendTo="body"
+    [(visible)]="calendarVisible"
+    [target]="eleRef.nativeElement"
+    (onShow)="onMenuOpened()"
+    (onHide)="onMenuClosed()"
+  >
+    <p-datepicker
+      class="max-w-full"
+      [inline]="true"
+      [ngModel]="data"
+      (ngModelChange)="onDatePicked($event)"
+    />
+  </p-overlay>
 }
