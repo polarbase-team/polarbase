@@ -246,7 +246,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
           takeUntilDestroyed(this.destroyRef),
         )
         .subscribe((e) => {
-          this._updateLayout();
+          this.updateLayout();
           this.viewport.measureRangeSize(
             [this._scrollLeft, e.updateOnWidth],
             [this._scrollTop, e.updateOnHeight],
@@ -605,14 +605,14 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   }
 
   private _scrollTo(scrollLeft: number, scrollTop: number) {
-    this._updateScroll(scrollLeft, scrollTop);
+    this.updateScroll(scrollLeft, scrollTop);
     this.viewport.measureRangeSize(
       [this._scrollLeft, this._scrollingX],
       [this._scrollTop, this._scrollingY],
     );
   }
 
-  private _updateScroll(scrollLeft = this._scrollLeft, scrollTop = this._scrollTop) {
+  private updateScroll(scrollLeft = this._scrollLeft, scrollTop = this._scrollTop) {
     scrollLeft = this.layout.horizontal.available
       ? Math.min(Math.max(scrollLeft, 0), this.layout.horizontal.max)
       : 0;
@@ -666,7 +666,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     this.updateThumbPosition();
   }
 
-  private _updateLayout() {
+  private updateLayout() {
     let needsUpdateScroll = false;
 
     if (this.computeHorizontalLayout()) {
@@ -683,7 +683,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
     if (!needsUpdateScroll) return;
 
-    this._updateScroll();
+    this.updateScroll();
   }
 
   private computeHorizontalLayout() {

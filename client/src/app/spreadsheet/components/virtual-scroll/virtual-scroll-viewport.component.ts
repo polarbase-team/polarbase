@@ -71,7 +71,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   private cdRef = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);
   private iterableDiffers = inject(IterableDiffers);
-  private resizeObserve = new ResizeObserver(this._onResized.bind(this));
+  private resizeObserve = new ResizeObserver(this.onResized.bind(this));
   private _leftColumns: TableColumn[];
   private _rightColumns: TableColumn[];
   private leftColumnDs: TableColumn[];
@@ -400,13 +400,13 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
 
     this._contentWidth = this._leftWidth + this._rightWidth;
 
-    this._onSizeUpdated(
+    this.onSizeUpdated(
       shouldMakeUpColumnViewProps,
       shouldMakeUpRowViewProps || shouldMakeUpGroupViewProps,
     );
   }
 
-  private _onResized(entries: ResizeObserverEntry[]) {
+  private onResized(entries: ResizeObserverEntry[]) {
     let updateOnWidth = false;
     let updateOnHeight = false;
 
@@ -425,10 +425,10 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       }
     }
 
-    this._onSizeUpdated(updateOnWidth, updateOnHeight);
+    this.onSizeUpdated(updateOnWidth, updateOnHeight);
   }
 
-  private _onSizeUpdated(updateOnWidth: boolean, updateOnHeight: boolean) {
+  private onSizeUpdated(updateOnWidth: boolean, updateOnHeight: boolean) {
     this.sizeUpdated.emit({
       updateOnWidth,
       updateOnHeight,
