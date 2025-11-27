@@ -119,6 +119,7 @@ const DEFAULT_CONFIG: TableConfig = {
   },
   cell: {
     fillable: true,
+    clearable: true,
   },
 };
 

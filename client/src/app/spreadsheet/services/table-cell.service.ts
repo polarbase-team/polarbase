@@ -203,10 +203,6 @@ export class TableCellService extends TableBaseService {
     },
   });
 
-  canFillCell = computed(() => {
-    return this.tableService.config().cell.fillable;
-  });
-
   override onDestroy() {
     this.dataEditedEEC.flush();
   }
@@ -437,9 +433,7 @@ export class TableCellService extends TableBaseService {
         } catch {}
       }
 
-      if (this.canFillCell()) {
-        this.tableService.updateFillHandlerPosition(end);
-      }
+      this.tableService.updateFillHandlerPosition(end);
     });
 
     return this.getCells(start, end);
@@ -611,6 +605,8 @@ export class TableCellService extends TableBaseService {
   }
 
   clearCells(matrixCell: MatrixCell) {
+    if (!this.tableService.config().cell.clearable) return;
+
     const [count, total] = this.clearMatrixCell(matrixCell);
     this.toastService.add({
       severity: 'info',
@@ -1019,9 +1015,7 @@ export class TableCellService extends TableBaseService {
 
   clearInteractiveCells() {
     const matrix = this.getInteractiveCells();
-
     if (!matrix?.count) return;
-
     this.clearCells(matrix);
   }
 

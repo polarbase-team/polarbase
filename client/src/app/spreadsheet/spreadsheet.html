@@ -924,7 +924,7 @@
   }
 
   <!-- Fill handler -->
-  @if (tableCellService.canFillCell()) {
+  @if (tableService.config().cell.fillable) {
     <div class="fill-handler-wrapper">
       @if (tableService.layoutProps.fillHandler?.offset) {
         <div

@@ -45,5 +45,6 @@ export interface TableConfig {
   };
   cell?: {
     fillable?: boolean;
+    clearable?: boolean;
   };
 }
