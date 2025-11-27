@@ -112,7 +112,7 @@ export class TableGroupService extends TableBaseService {
     return !this.isGrouping() || !this.rootGroup()?.children.length;
   });
 
-  protected toggleAllGroup(collapsed: boolean, group = this.rootGroup()) {
+  toggleAllGroup(collapsed: boolean, group = this.rootGroup()) {
     this._toggleGroupRecursive(group, collapsed);
     this.markGroupAsChanged();
   }
@@ -149,7 +149,7 @@ export class TableGroupService extends TableBaseService {
         g = g.parent;
       } while (g?.depth > 0);
 
-      newRow = this.tableRowService.insertRow(data, position, (row: TableRow) => {
+      newRow = this.tableRowService.insertRow(data, position, (row) => {
         group.addRows([row], position);
         this.markGroupAsChanged();
       });
@@ -202,7 +202,7 @@ export class TableGroupService extends TableBaseService {
     this.markGroupAsChanged();
   }
 
-  protected getFirstGroup() {
+  getFirstGroup() {
     let group = this.rootGroup();
     while (group.children?.length) {
       group = group.children[0];
@@ -210,7 +210,7 @@ export class TableGroupService extends TableBaseService {
     return group;
   }
 
-  protected getSelectingGroup() {
+  getSelectingGroup() {
     const rowIndex = this.tableService.layoutProps.cell.selection?.primary.rowIndex;
     if (!_.isFinite(rowIndex)) return void 0;
     return this.findGroupByRowIndex(rowIndex);
@@ -292,7 +292,7 @@ export class TableGroupService extends TableBaseService {
     this.rootGroup.update(() => this.rootGroup().clone());
   }
 
-  openActionMenu(e: Event) {
+  openGroupActionMenu(e: Event) {
     const items: MenuItem[] = [
       {
         label: 'Expand all',

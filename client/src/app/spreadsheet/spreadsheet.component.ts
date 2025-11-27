@@ -377,13 +377,11 @@ export class SpreadsheetComponent
       .subscribe((e1) => {
         const isRightClick = e1.button === 2;
         const shouldPause: boolean =
-          !(isRightClick && (this.menu.visible || this.contextMenu.visible())) &&
-          this.shouldPauseEvent(e1);
+          !(isRightClick && this.contextMenu.visible()) && this.shouldPauseEvent(e1);
         if (shouldPause) return;
 
         const target = e1.target as HTMLElement;
 
-        this.menu.hide();
         this.contextMenu.hide();
 
         if (isRightClick) {
@@ -731,7 +729,7 @@ export class SpreadsheetComponent
     this.detectChanges();
   }
 
-  private selectCells(startIdx: CellIndex, endIdx: CellIndex, extend: boolean = false) {
+  private selectCells(startIdx: CellIndex, endIdx: CellIndex, extend = false) {
     if (
       this.tableService.layoutProps.cell.selection &&
       this.tableCellService.compareCellIndex(
@@ -817,7 +815,7 @@ export class SpreadsheetComponent
 
   private openGroupActionMenu(e: MouseEvent) {
     setTimeout(() => {
-      this.tableGroupService.openActionMenu(e);
+      this.tableGroupService.openGroupActionMenu(e);
     });
   }
 }

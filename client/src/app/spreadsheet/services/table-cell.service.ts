@@ -941,7 +941,7 @@ export class TableCellService extends TableBaseService {
     return 0;
   }
 
-  protected getInteractiveCells(
+  private getInteractiveCells(
     excludeDataTypes?: DataType[],
     excludeStates?: ExcludeCellState[],
   ): MatrixCell | null {
