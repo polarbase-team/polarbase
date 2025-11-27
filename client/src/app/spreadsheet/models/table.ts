@@ -10,7 +10,7 @@ export const TableRowSize = {
 } as const;
 export type TableRowSize = keyof typeof TableRowSize;
 
-export type TableConfig = {
+export interface TableConfig {
   sideSpacing?: number;
   streamData?: boolean;
   calculateBy?: [TableColumn | TableColumn['id'], CalculateType][];
@@ -46,4 +46,4 @@ export type TableConfig = {
   cell?: {
     fillable?: boolean;
   };
-};
+}

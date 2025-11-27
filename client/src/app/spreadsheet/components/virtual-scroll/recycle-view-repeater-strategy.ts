@@ -52,8 +52,8 @@ export type ViewRepeaterOperation =
   (typeof ViewRepeaterOperation)[keyof typeof ViewRepeaterOperation];
 
 export class RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
-  private vcr: ViewContainerRef;
-  private tmplr: TemplateRef<any>;
+  private vcRef: ViewContainerRef;
+  private tmplRef: TemplateRef<any>;
   private viewCache: EmbeddedViewRef<C>[] = [];
   private _viewCacheSize: number;
 
@@ -64,9 +64,9 @@ export class RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
     this._viewCacheSize = size;
   }
 
-  constructor(vcr: ViewContainerRef, tmplr: TemplateRef<C>, viewCacheSize = 40) {
-    this.vcr = vcr;
-    this.tmplr = tmplr;
+  constructor(vcRef: ViewContainerRef, tmplRef: TemplateRef<C>, viewCacheSize = 40) {
+    this.vcRef = vcRef;
+    this.tmplRef = tmplRef;
     this.viewCacheSize = viewCacheSize;
   }
 
@@ -104,7 +104,7 @@ export class RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
   }
 
   clear() {
-    this.vcr.clear();
+    this.vcRef.clear();
   }
 
   private insertView(currentIndex: number, context: C) {
@@ -116,17 +116,17 @@ export class RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
       return void 0;
     }
 
-    return this.vcr.createEmbeddedView(this.tmplr, context, currentIndex);
+    return this.vcRef.createEmbeddedView(this.tmplRef, context, currentIndex);
   }
 
   private detachAndCacheView(index: number) {
-    const detachedView = this.vcr.detach(index) as EmbeddedViewRef<C>;
+    const detachedView = this.vcRef.detach(index) as EmbeddedViewRef<C>;
     this.maybeCacheView(detachedView);
   }
 
   private moveView(adjustedPreviousIndex: number, currentIndex: number, context: C) {
-    const view = this.vcr.get(adjustedPreviousIndex) as EmbeddedViewRef<C>;
-    this.vcr.move(view, currentIndex);
+    const view = this.vcRef.get(adjustedPreviousIndex) as EmbeddedViewRef<C>;
+    this.vcRef.move(view, currentIndex);
     view.context.$implicit = context.$implicit;
     view.context.index = context.index;
     view.context.rect = context.rect;
@@ -141,7 +141,7 @@ export class RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
     if (this.viewCache.length < this.viewCacheSize) {
       this.viewCache.push(view);
     } else {
-      const idx = this.vcr.indexOf(view);
+      const idx = this.vcRef.indexOf(view);
       // The host component could remove views from the container outside of
       // the view repeater. It's unlikely this will occur, but just in case,
       // destroy the view on its own, otherwise destroy it through the
@@ -149,7 +149,7 @@ export class RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
       if (idx === -1) {
         view.destroy();
       } else {
-        this.vcr.remove(idx);
+        this.vcRef.remove(idx);
       }
     }
   }
@@ -157,7 +157,7 @@ export class RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
   private insertViewFromCache(index: number) {
     const cachedView = this.viewCache.pop();
     if (cachedView) {
-      this.vcr.insert(cachedView, index);
+      this.vcRef.insert(cachedView, index);
     }
     return cachedView || null;
   }
@@ -165,10 +165,10 @@ export class RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
 
 @Directive()
 export class ViewRepeater<R, C extends ViewContext<R>> implements DoCheck {
-  protected tmplr = inject(TemplateRef);
-  protected vcr = inject(ViewContainerRef);
+  protected tmplRef = inject(TemplateRef);
+  protected vcRef = inject(ViewContainerRef);
   protected differs = inject(IterableDiffers);
-  protected repeater = new RecycleViewRepeaterStrategy<R, C>(this.vcr, this.tmplr);
+  protected repeater = new RecycleViewRepeaterStrategy<R, C>(this.vcRef, this.tmplRef);
 
   protected dataSourceDiffer: IterableDiffer<R>;
   protected dataSourceStartIndex = 0;
@@ -208,22 +208,22 @@ export class ViewRepeater<R, C extends ViewContext<R>> implements DoCheck {
 
     // Update $implicit for any records that had an identity change.
     changes.forEachIdentityChange((record) => {
-      const view = this.vcr.get(record.currentIndex) as EmbeddedViewRef<C>;
+      const view = this.vcRef.get(record.currentIndex) as EmbeddedViewRef<C>;
       view.context.$implicit = record.item as ViewContext<R>['$implicit'];
     });
 
     // Update the context variables on all records.
-    let i = this.vcr.length;
+    let i = this.vcRef.length;
     while (i--) {
-      const view = this.vcr.get(i) as EmbeddedViewRef<C>;
+      const view = this.vcRef.get(i) as EmbeddedViewRef<C>;
       this.updateContextProperties(view.context);
     }
   }
 
   updateContext(onViewUpdated?: ViewUpdated<R, C>) {
-    let i = this.vcr.length;
+    let i = this.vcRef.length;
     while (i--) {
-      const view = this.vcr.get(i) as EmbeddedViewRef<C>;
+      const view = this.vcRef.get(i) as EmbeddedViewRef<C>;
       this.updateContextProperties(view.context);
       onViewUpdated?.(view);
       view.detectChanges();

@@ -50,20 +50,20 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
   @Input() readonly: boolean;
   @Input() selecting: boolean;
 
+  private cdRef = inject(ChangeDetectorRef);
+  private vcRef = inject(ViewContainerRef);
   private destroyRef = inject(DestroyRef);
-  private cdr = inject(ChangeDetectorRef);
-  private vcr = inject(ViewContainerRef);
   private fieldCellService = inject(FieldCellService);
   private cmpRef: ComponentRef<FieldCell>;
   private isCreated: boolean;
   private revert$$: Subscription;
 
   constructor() {
-    this.cdr.detach();
+    this.cdRef.detach();
 
     afterNextRender(() => {
       this.createCmp();
-      this.cdr.reattach();
+      this.cdRef.reattach();
     });
   }
 
@@ -112,7 +112,7 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
    */
   private clean() {
     this.storeCmp();
-    this.vcr.detach();
+    this.vcRef.detach();
     this.cmpRef = null;
   }
 
@@ -140,9 +140,9 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
 
       let cmp = this.fieldCellService.get(dataType);
       if (cmp) {
-        this.vcr.insert(cmp.hostView);
+        this.vcRef.insert(cmp.hostView);
       } else {
-        cmp = this.vcr.createComponent(FIELD_CELL_CMP_MAP.get(dataType));
+        cmp = this.vcRef.createComponent(FIELD_CELL_CMP_MAP.get(dataType));
       }
       this.cmpRef = cmp;
 

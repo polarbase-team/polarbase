@@ -2,11 +2,11 @@ import _ from 'lodash';
 
 type CallbackFn<T> = (events: T[]) => void;
 
-type Config<T = any> = {
+interface Config<T = any> {
   autoEmit: boolean;
   throttleTime: number;
   onEmitted: CallbackFn<T>;
-};
+}
 
 export class EmitEventController<K, T> {
   static DEFAULT_CONFIG: Partial<Config> = {

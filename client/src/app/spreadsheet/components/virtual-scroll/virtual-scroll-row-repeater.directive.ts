@@ -3,7 +3,7 @@ import { Directive, Input, TrackByFunction } from '@angular/core';
 import { Dimension } from '../../services/table.service';
 import { TableRow } from '../../models/table-row';
 import { TableGroup } from '../../models/table-group';
-import { ViewContext, ViewProps, ViewRect, ViewRepeater } from './recycle-view-repeater-strategy';
+import { ViewContext, ViewProps, ViewRepeater } from './recycle-view-repeater-strategy';
 import type { GroupView } from './virtual-scroll-group-repeater.directive';
 
 export interface RowView extends TableRow {

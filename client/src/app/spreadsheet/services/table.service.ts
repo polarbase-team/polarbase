@@ -1,5 +1,12 @@
 import _ from 'lodash';
-import { computed, DestroyRef, ElementRef, inject, Injectable } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  Injectable,
+} from '@angular/core';
 import { CdkDragEnd, CdkDragMove } from '@angular/cdk/drag-drop';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
@@ -179,8 +186,9 @@ export class TableService extends TableBaseService {
   searchResult: [TableRow, TableColumn][];
   calculatedResult: Map<TableColumn['id'], any>;
 
-  private destroyRef = inject(DestroyRef);
+  private cdRef = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);
+  private destroyRef = inject(DestroyRef);
   private fieldCellService = inject(FieldCellService);
 
   get searchInfo(): TableSearchInfo {
@@ -543,6 +551,6 @@ export class TableService extends TableBaseService {
     this.layoutProps.fillHandler.index = index;
     this.layoutProps.fillHandler.offset = offset;
     this.layoutProps.fillHandler.hidden = false;
-    this.host.detectChanges();
+    this.cdRef.detectChanges();
   }
 }

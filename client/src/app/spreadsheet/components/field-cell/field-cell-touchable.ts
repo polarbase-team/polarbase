@@ -7,9 +7,9 @@ export type CellTouchEvent = MouseEvent | TouchEvent | KeyboardEvent;
 @Directive()
 export class FieldCellTouchable<T = any> extends FieldCell<T> {
   @HostBinding('attr.tabindex')
-  protected readonly tabindex: number = 0;
+  protected readonly tabindex = 0;
   @HostBinding('class.field-cell-touchable')
-  protected override readonly hostClass: boolean = true;
+  protected override readonly hostClass = true;
 
   constructor() {
     super();
@@ -20,11 +20,11 @@ export class FieldCellTouchable<T = any> extends FieldCell<T> {
   }
 
   focus() {
-    this.elementRef.nativeElement.focus({ preventScroll: true });
+    this.eleRef.nativeElement.focus({ preventScroll: true });
   }
 
   blur() {
-    this.elementRef.nativeElement.blur();
+    this.eleRef.nativeElement.blur();
   }
 
   touch(e: CellTouchEvent = new MouseEvent('click')) {
@@ -41,7 +41,7 @@ export class FieldCellTouchable<T = any> extends FieldCell<T> {
     this.blur();
   }
 
-  protected onTouch(_e: CellTouchEvent) {}
+  protected onTouch(e: CellTouchEvent) {}
 
   @HostListener('dblclick', ['$event'])
   @HostListener('touchend', ['$event'])
@@ -56,7 +56,6 @@ export class FieldCellTouchable<T = any> extends FieldCell<T> {
     }
 
     const keyCode = e.keyCode;
-
     // https://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes
     if (
       (keyCode >= 48 && keyCode <= 90) ||

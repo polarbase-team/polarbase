@@ -54,9 +54,7 @@ export class FieldCellInputable<T = any> extends FieldCellEditable<T> {
 
   protected onInputBoxFocus(e: FocusEvent) {
     this.markAsEditStarted();
-
-    const el: HTMLElement = this.elementRef.nativeElement;
-
+    const el = this.eleRef.nativeElement;
     el.scrollLeft = el.scrollWidth;
     el.scrollTop = el.scrollHeight;
   }

@@ -169,8 +169,8 @@ export class SpreadsheetComponent
   protected Dimension = Dimension;
   protected isHideSummaryLabel = false;
 
+  private cdRef = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
-  private cdr = inject(ChangeDetectorRef);
   private renderer = inject(Renderer2);
   private confirmationService = inject(ConfirmationService);
   private fieldCellService = inject(FieldCellService);
@@ -307,11 +307,11 @@ export class SpreadsheetComponent
   }
 
   detectChanges() {
-    this.cdr.detectChanges();
+    this.cdRef.detectChanges();
   }
 
   markForCheck() {
-    this.cdr.markForCheck();
+    this.cdRef.markForCheck();
   }
 
   deleteConfirmation(message: string, header: string, onAccept: () => void, onReject: () => void) {

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { Injectable, DestroyRef, inject, signal, effect, computed } from '@angular/core';
 import { outputToObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CdkDragStart, CdkDragMove, CdkDragEnd, type Point } from '@angular/cdk/drag-drop';
+import { CdkDragStart, CdkDragMove, CdkDragEnd, Point } from '@angular/cdk/drag-drop';
 import { debounceTime, distinctUntilChanged, filter, map, pairwise } from 'rxjs';
 import { MenuItem } from 'primeng/api';
 

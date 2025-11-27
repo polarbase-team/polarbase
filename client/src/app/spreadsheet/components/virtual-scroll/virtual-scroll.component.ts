@@ -36,37 +36,37 @@ import {
 
 type ScrollOrientation = 'horizontal' | 'vertical';
 
-type ScrollOrientationLayout = {
+interface ScrollOrientationLayout {
   ratio: number;
   max: number;
   track: { offset: Point; size: number };
   thumb: { position: number; size: number };
   available: boolean;
-};
+}
 
-type ScrollLayout = {
+interface ScrollLayout {
   horizontal: ScrollOrientationLayout;
   vertical: ScrollOrientationLayout;
-};
+}
 
-export type ScrollEvent = {
+export interface ScrollEvent {
   scrollLeft: number;
   scrollTop: number;
   scrollingX: Scrolling;
   scrollingY: Scrolling;
-};
+}
 
 export type Scrolling = 'to-start' | 'to-end' | boolean;
 
-const IS_MACOS: boolean = /Mac/i.test(navigator.userAgent);
-const SCROLLBAR_TRACK_SIZE: number = 10;
-const SCROLLBAR_THUMB_MIN_SIZE: number = 20;
-const AUTO_SCROLL_ALLOW_RANGE: number = 100;
-const AUTO_SCROLL_STEP: number = 5;
-const AUTO_SCROLL_HOLDER: string = 'virtualScrollAutoScrollHolder';
-const SCROLL_EXTRA_WIDTH: number = 80;
-const SCROLL_EXTRA_HEIGHT: number = 80;
-const SCROLL_LONG_DISTANCE: number = 1200;
+const IS_MACOS = /Mac/i.test(navigator.userAgent);
+const SCROLLBAR_TRACK_SIZE = 10;
+const SCROLLBAR_THUMB_MIN_SIZE = 20;
+const AUTO_SCROLL_ALLOW_RANGE = 100;
+const AUTO_SCROLL_STEP = 5;
+const AUTO_SCROLL_HOLDER = 'virtualScrollAutoScrollHolder';
+const SCROLL_EXTRA_WIDTH = 80;
+const SCROLL_EXTRA_HEIGHT = 80;
+const SCROLL_LONG_DISTANCE = 1200;
 
 @Component({
   selector: 'virtual-scroll, [virtualScroll]',
@@ -269,13 +269,12 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   }
 
   scrollBy(options: ScrollToOptions) {
-    let scrollLeft: number = this._scrollLeft;
-    let scrollTop: number = this._scrollTop;
-
+    let scrollLeft = this._scrollLeft;
     if (options.left) {
       scrollLeft += options.left;
     }
 
+    let scrollTop = this._scrollTop;
     if (options.top) {
       scrollTop += options.top;
     }
@@ -359,7 +358,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       .subscribe((e2) => {
         e2.stopPropagation();
         e2.preventDefault();
-
         stopScrollTimers.next();
 
         if (!this.isAutoScroll) {
@@ -370,13 +368,11 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
           dir = holder.getAttribute(AUTO_SCROLL_HOLDER);
         }
-
         this.isAutoScroll = true;
 
         if (currentAnimationFrame) {
           cancelAnimationFrame(currentAnimationFrame);
         }
-
         currentAnimationFrame = requestAnimationFrame(() => {
           let autoScrollStepX: number;
 
@@ -621,7 +617,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       ? Math.min(Math.max(scrollTop, 0), this.layout.vertical.max)
       : 0;
 
-    const offsetX: number = scrollLeft - this._scrollLeft;
+    const offsetX = scrollLeft - this._scrollLeft;
     let scrollingX: Scrolling = false;
     if (offsetX > 0) {
       scrollingX = 'to-end';
@@ -629,7 +625,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       scrollingX = 'to-start';
     }
 
-    const offsetY: number = scrollTop - this._scrollTop;
+    const offsetY = scrollTop - this._scrollTop;
     let scrollingY: Scrolling = false;
     if (offsetY > 0) {
       scrollingY = 'to-end';
@@ -639,12 +635,12 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
     if (!scrollingX && !scrollingY) return;
 
-    let isLongScrollingX: boolean = this.isLongScrollingX;
+    let isLongScrollingX = this.isLongScrollingX;
     if (!isLongScrollingX && Math.abs(this._scrollLeft - scrollLeft) > SCROLL_LONG_DISTANCE) {
       isLongScrollingX = true;
     }
 
-    let isLongScrollingY: boolean = this.isLongScrollingY;
+    let isLongScrollingY = this.isLongScrollingY;
     if (!isLongScrollingY && Math.abs(this._scrollTop - scrollTop) > SCROLL_LONG_DISTANCE) {
       isLongScrollingY = true;
     }
@@ -683,7 +679,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     this.detectChanges();
 
     if (!needsUpdateScroll) return;
-
     this.updateScroll();
   }
 
@@ -756,13 +751,11 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   private updateThumbPosition() {
     this.computeHorizontalThumbPosition();
     this.computeVerticalThumbPosition();
-
     this.detectChanges();
   }
 
   private computeHorizontalThumbPosition() {
     let position = 0;
-
     if (this.scrollWidth) {
       const trackSize = this.layout.horizontal.track.size;
       const thumbSize = this.layout.horizontal.thumb.size;
@@ -772,13 +765,11 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         position -= ((SCROLLBAR_THUMB_MIN_SIZE - thumbSize) / trackSize) * position;
       }
     }
-
     this.layout.horizontal.thumb.position = position;
   }
 
   private computeVerticalThumbPosition() {
     let position = 0;
-
     if (this.scrollHeight) {
       const trackSize = this.layout.vertical.track.size;
       const thumbSize = this.layout.vertical.thumb.size;
@@ -787,7 +778,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         position -= ((SCROLLBAR_THUMB_MIN_SIZE - thumbSize) / trackSize) * position;
       }
     }
-
     this.layout.vertical.thumb.position = position;
   }
 }

@@ -23,9 +23,9 @@ export class FieldCell<T = any> {
   @Input() data: T;
 
   @HostBinding('class.field-cell')
-  protected readonly hostClass: boolean = true;
+  protected readonly hostClass = true;
   protected readonly cdRef = inject(ChangeDetectorRef);
-  protected readonly elementRef = inject(ElementRef);
+  protected readonly eleRef = inject(ElementRef);
   protected isDetached: boolean;
   @HostBinding('class.field-cell--selecting')
   @Input()
@@ -43,9 +43,7 @@ export class FieldCell<T = any> {
 
   @HostListener('wheel', ['$event'])
   protected onWheel(e: WheelEvent) {
-    const { clientWidth, clientHeight, scrollWidth, scrollHeight }: HTMLElement =
-      this.elementRef.nativeElement;
-
+    const { clientWidth, clientHeight, scrollWidth, scrollHeight } = this.eleRef.nativeElement;
     if (clientWidth === scrollWidth && clientHeight === scrollHeight) {
       return;
     }
