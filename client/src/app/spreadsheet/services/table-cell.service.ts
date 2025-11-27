@@ -114,11 +114,11 @@ export class TableCellService extends TableBaseService {
   private eleRef = inject(ElementRef);
   private toastService = inject(MessageService);
   private fieldCellService = inject(FieldCellService);
-  private interactedColumns: Set<TableColumn>;
-  private dataEditedEEC: EmitEventController<
+  private interactedColumns = new Set<TableColumn>();
+  private dataEditedEEC = new EmitEventController<
     TableRow['id'],
     { type: TableCellActionType; payload: TableCellEditedEvent }
-  > = new EmitEventController({
+  >({
     autoEmit: false,
     onEmitted: (events) => {
       const editPayload: TableCellEditedEvent[] = [];
@@ -878,7 +878,7 @@ export class TableCellService extends TableBaseService {
     this.selectCells(startIdx, endIdx, true, true);
   }
 
-  getCellOffset(index: CellIndex): CellOffset {
+  getCellOffset(index: CellIndex) {
     if (this.tableGroupService.isGrouping()) {
       return this.tableGroupService.getRowCellOffsetInGroup(index);
     }
@@ -889,28 +889,28 @@ export class TableCellService extends TableBaseService {
     return { left, top };
   }
 
-  findCellIndex(cell: TableCell): CellIndex {
+  findCellIndex(cell: TableCell) {
     return {
       rowIndex: this.tableRowService.findRowIndex(cell.row),
       columnIndex: this.tableColumnService.findColumnIndex(cell.column),
     };
   }
 
-  findCellByIndex(index: CellIndex): TableCell {
+  findCellByIndex(index: CellIndex) {
     return {
       row: this.tableRowService.findRowByIndex(index.rowIndex),
       column: this.tableColumnService.findColumnByIndex(index.columnIndex),
     };
   }
 
-  findCellElementByIndex(index: CellIndex): HTMLElement {
+  findCellElementByIndex(index: CellIndex) {
     const rowIdxAttr = `[data-row-index="${index.rowIndex}"]`;
     const columnIdxAttr = `[data-column-index="${index.columnIndex}"]`;
 
     return this.eleRef.nativeElement.querySelector(`${rowIdxAttr}${columnIdxAttr}`);
   }
 
-  findCellByElement(element: HTMLElement, cellType?: string): CellIndex {
+  findCellByElement(element: HTMLElement, cellType?: string) {
     const cell = element.closest(cellType ? `[cell-type="${cellType}"]` : '[cell-type]');
     if (!cell) return null;
     const rowIndex = parseFloat(cell.getAttribute('data-row-index'));
@@ -918,7 +918,7 @@ export class TableCellService extends TableBaseService {
     return { rowIndex, columnIndex };
   }
 
-  compareCell(source: TableCell, destination: TableCell): boolean {
+  compareCell(source: TableCell, destination: TableCell) {
     return source.row.id === destination.row.id && source.column.id === source.column.id;
   }
 
@@ -941,10 +941,7 @@ export class TableCellService extends TableBaseService {
     return 0;
   }
 
-  private getInteractiveCells(
-    excludeDataTypes?: DataType[],
-    excludeStates?: ExcludeCellState[],
-  ): MatrixCell | null {
+  getInteractiveCells(excludeDataTypes?: DataType[], excludeStates?: ExcludeCellState[]) {
     let matrix: MatrixCell;
 
     if (this.tableRowService.selectedRows.size) {
@@ -1002,11 +999,7 @@ export class TableCellService extends TableBaseService {
           text = column.field.toString(data);
         }
 
-        items.push({
-          text,
-          data,
-          metadata: cell,
-        });
+        items.push({ text, data, metadata: cell });
 
         count++;
       }
@@ -1044,11 +1037,11 @@ export class TableCellService extends TableBaseService {
     this.emitCellDataAsEdited();
   }
 
-  searchCellPredicate(row: TableRow, column: TableColumn): string {
+  searchCellPredicate(row: TableRow, column: TableColumn) {
     return row.data?.[column.id] ?? '';
   }
 
-  private clearMatrixCell(matrixCell: MatrixCell): [number, number] {
+  private clearMatrixCell(matrixCell: MatrixCell) {
     matrixCell = this.filterExcludeCells(matrixCell, UNCLEARABLE_DATA_TYPES, [
       ExcludeCellState.Required,
       ExcludeCellState.Empty,
@@ -1059,18 +1052,15 @@ export class TableCellService extends TableBaseService {
 
     for (const cells of matrixCell.values()) {
       const newData: TableRowCellData = {};
-
       let row: TableRow;
 
       for (const cell of cells) {
         if (!cell) continue;
 
         row = cell.row;
-
         const column = cell.column;
 
         let data = null;
-
         switch (column.field.dataType) {
           case DataType.Checkbox:
             data ||= false;
@@ -1078,7 +1068,6 @@ export class TableCellService extends TableBaseService {
         }
 
         newData[column.id] = data;
-
         this.markColumnAsInteracted(column);
 
         count++;
@@ -1135,44 +1124,33 @@ export class TableCellService extends TableBaseService {
     this.host.virtualScroll.scrollTo({ left, top });
   }
 
-  private checkCellIndexValid({ rowIndex, columnIndex }: CellIndex): boolean {
+  private checkCellIndexValid({ rowIndex, columnIndex }: CellIndex) {
     if (rowIndex < 0) {
       return false;
     } else {
       const lastRowIndex = this.tableRowService.getLastRowIndex();
-
-      if (rowIndex > lastRowIndex) {
-        return false;
-      }
+      if (rowIndex > lastRowIndex) return false;
     }
 
     if (columnIndex < 0) {
       return false;
     } else {
       const lastColumnIndex = this.tableColumnService.getLastColumnIndex();
-
-      if (columnIndex > lastColumnIndex) {
-        return false;
-      }
+      if (columnIndex > lastColumnIndex) return false;
     }
 
     return true;
   }
 
   private markColumnAsInteracted(column: TableColumn) {
-    this.interactedColumns ||= new Set();
-
-    if (this.interactedColumns.has(column)) {
-      return;
-    }
-
+    if (this.interactedColumns.has(column)) return;
     this.interactedColumns.add(column);
   }
 
   private markCellDataAsEdited(
     row: TableRow,
     newData: TableRowCellData,
-    rawData: TableRowCellData = newData,
+    rawData = newData,
     type: TableCellActionType = TableCellActionType.Edit,
   ) {
     row.data = { ...row.data, ...rawData };
@@ -1208,7 +1186,7 @@ export class TableCellService extends TableBaseService {
     matrix: MatrixCell,
     excludeDataTypes: DataType[],
     excludeStates: ExcludeCellState[],
-  ): MatrixCell {
+  ) {
     const excludeDataTypeSet = new Set<DataType>(excludeDataTypes);
     const excludeRequired = _.includes(excludeStates, ExcludeCellState.Required);
     const excludeEmpty = _.includes(excludeStates, ExcludeCellState.Empty);
