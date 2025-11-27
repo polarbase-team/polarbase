@@ -50,14 +50,14 @@ type ScrollLayout = {
   vertical: ScrollOrientationLayout;
 };
 
-type ScrollEvent = {
+export type ScrollEvent = {
   scrollLeft: number;
   scrollTop: number;
   scrollingX: Scrolling;
   scrollingY: Scrolling;
 };
 
-type Scrolling = 'to-start' | 'to-end' | boolean;
+export type Scrolling = 'to-start' | 'to-end' | boolean;
 
 const IS_MACOS: boolean = /Mac/i.test(navigator.userAgent);
 const SCROLLBAR_TRACK_SIZE: number = 10;
@@ -69,9 +69,6 @@ const SCROLL_EXTRA_WIDTH: number = 80;
 const SCROLL_EXTRA_HEIGHT: number = 80;
 const SCROLL_LONG_DISTANCE: number = 1200;
 
-export type _ScrollEvent = ScrollEvent;
-export type _Scrolling = Scrolling;
-
 @Component({
   selector: 'virtual-scroll, [virtualScroll]',
   templateUrl: './virtual-scroll.html',
@@ -80,20 +77,20 @@ export type _Scrolling = Scrolling;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
-  @ContentChild(VirtualScrollViewportComponent, { static: true })
-  readonly viewport: VirtualScrollViewportComponent;
-
   @Input() sideSpacing: number;
   @Input() disable: () => boolean;
 
-  @Output() readonly scrolling: EventEmitter<ScrollEvent> = new EventEmitter<ScrollEvent>();
+  @Output() scrolling: EventEmitter<ScrollEvent> = new EventEmitter<ScrollEvent>();
+
+  @ContentChild(VirtualScrollViewportComponent, { static: true })
+  readonly viewport: VirtualScrollViewportComponent;
 
   @ViewChild('horizontalThumb', { static: true })
-  protected readonly horizontalThumb: ElementRef;
+  protected horizontalThumb: ElementRef;
   @ViewChild('verticalThumb', { static: true })
-  protected readonly verticalThumb: ElementRef;
+  protected verticalThumb: ElementRef;
 
-  protected readonly layout: ScrollLayout = {
+  protected layout: ScrollLayout = {
     horizontal: {
       ratio: 0,
       max: 0,
@@ -116,84 +113,83 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     },
   };
 
-  private readonly _destroyRef = inject(DestroyRef);
-  private readonly _cdRef: ChangeDetectorRef = inject(ChangeDetectorRef);
-  private readonly _elementRef: ElementRef = inject(ElementRef);
-  private readonly _stopSubEvent$: Subject<void> = new Subject<void>();
-
-  private _isAutoScroll: boolean = false;
-  private _scrollLeft: number = 0;
-  private _scrollTop: number = 0;
-  private _scrollingX: Scrolling = false;
-  private _scrollingY: Scrolling = false;
-  private _isLongScrollingX: boolean = false;
-  private _isLongScrollingY: boolean = false;
-  private _isScrollCompleted: boolean = true;
-  private _momentumAnimationFrame: number;
+  private cdRef = inject(ChangeDetectorRef);
+  private eleRef = inject(ElementRef);
+  private destroyRef = inject(DestroyRef);
+  private stopSubEvent$ = new Subject<void>();
+  private isAutoScroll = false;
+  private momentumAnimationFrame: number;
+  private _scrollLeft = 0;
+  private _scrollTop = 0;
+  private _scrollingX = false;
+  private _scrollingY = false;
+  private _isLongScrollingX = false;
+  private _isLongScrollingY = false;
+  private _isScrollCompleted = true;
 
   @HostBinding('class.virtual-scroll--scrolling')
   get classScrolling() {
-    return this.isScrolling && !this._isAutoScroll;
+    return this.isScrolling && !this.isAutoScroll;
   }
 
-  get isScrolling(): boolean {
+  get isScrolling() {
     return this.scrollingX || this.scrollingY;
   }
 
-  get isLongScrollingX(): boolean {
+  get isLongScrollingX() {
     return this._isLongScrollingX;
   }
 
-  get isLongScrollingY(): boolean {
+  get isLongScrollingY() {
     return this._isLongScrollingY;
   }
 
-  get isScrollCompleted(): boolean {
+  get isScrollCompleted() {
     return this._isScrollCompleted;
   }
 
-  get scrollLeft(): number {
+  get scrollLeft() {
     return this._scrollLeft;
   }
-  get scrollTop(): number {
+  get scrollTop() {
     return this._scrollTop;
   }
 
-  get scrollingX(): boolean {
+  get scrollingX() {
     return this._scrollingX !== false;
   }
-  get scrollingY(): boolean {
+  get scrollingY() {
     return this._scrollingY !== false;
   }
 
-  get scrollWidth(): number {
+  get scrollWidth() {
     return this.viewport.contentWidth + SCROLL_EXTRA_WIDTH;
   }
-  get scrollHeight(): number {
+  get scrollHeight() {
     return this.viewport.contentHeight + SCROLL_EXTRA_HEIGHT;
   }
 
-  get scrollDivideOffset(): number {
+  get scrollDivideOffset() {
     return this.viewport.leftWidth + this.sideSpacing;
   }
 
-  get scrollLayout(): ScrollLayout {
+  get scrollLayout() {
     return this.layout;
   }
 
   ngAfterContentInit() {
     Promise.resolve().then(() => {
       let wheelAnimationFrame: number;
-      fromEvent<WheelEvent>(this._elementRef.nativeElement, 'wheel')
+      fromEvent<WheelEvent>(this.eleRef.nativeElement, 'wheel')
         .pipe(
-          filter((): boolean => !this.disable?.()),
-          takeUntilDestroyed(this._destroyRef),
+          filter(() => !this.disable?.()),
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe((e) => {
           e.stopPropagation();
           e.preventDefault();
 
-          this._stopSubEvent$.next();
+          this.stopSubEvent$.next();
 
           if (wheelAnimationFrame) {
             cancelAnimationFrame(wheelAnimationFrame);
@@ -202,30 +198,30 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
           }
 
           wheelAnimationFrame = requestAnimationFrame(() => {
-            this._onWheel(e);
+            this.onWheel(e);
           });
         });
 
-      fromEvent<PointerEvent>(this._elementRef.nativeElement, 'pointerdown')
+      fromEvent<PointerEvent>(this.eleRef.nativeElement, 'pointerdown')
         .pipe(
-          filter((): boolean => !this.disable?.()),
-          takeUntilDestroyed(this._destroyRef),
+          filter(() => !this.disable?.()),
+          takeUntilDestroyed(this.destroyRef),
         )
-        .subscribe(this._onPointerDown.bind(this));
+        .subscribe(this.onPointerDown.bind(this));
 
       fromEvent<PointerEvent>(this.horizontalThumb.nativeElement, 'pointerdown')
         .pipe(
-          filter((): boolean => !this.disable?.()),
-          takeUntilDestroyed(this._destroyRef),
+          filter(() => !this.disable?.()),
+          takeUntilDestroyed(this.destroyRef),
         )
-        .subscribe(this._onThumbPointerdown.bind(this, 'horizontal'));
+        .subscribe(this.onThumbPointerdown.bind(this, 'horizontal'));
 
       fromEvent<PointerEvent>(this.verticalThumb.nativeElement, 'pointerdown')
         .pipe(
-          filter((): boolean => !this.disable?.()),
-          takeUntilDestroyed(this._destroyRef),
+          filter(() => !this.disable?.()),
+          takeUntilDestroyed(this.destroyRef),
         )
-        .subscribe(this._onThumbPointerdown.bind(this, 'vertical'));
+        .subscribe(this.onThumbPointerdown.bind(this, 'vertical'));
 
       this.scrolling
         .pipe(
@@ -239,7 +235,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
             this._isLongScrollingX = this._isLongScrollingY = false;
             this.markForCheck();
           }),
-          takeUntilDestroyed(this._destroyRef),
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe();
 
@@ -247,11 +243,10 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         .pipe(
           startWith<ViewportSizeUpdatedEvent>({} as ViewportSizeUpdatedEvent),
           audit(() => animationFrames()),
-          takeUntilDestroyed(this._destroyRef),
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe((e) => {
           this._updateLayout();
-
           this.viewport.measureRangeSize(
             [this._scrollLeft, e.updateOnWidth],
             [this._scrollTop, e.updateOnHeight],
@@ -261,15 +256,15 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this._stopSubEvent$.complete();
+    this.stopSubEvent$.complete();
   }
 
   detectChanges() {
-    this._cdRef.detectChanges();
+    this.cdRef.detectChanges();
   }
 
   markForCheck() {
-    this._cdRef.markForCheck();
+    this.cdRef.markForCheck();
   }
 
   scrollBy(options: ScrollToOptions) {
@@ -307,16 +302,16 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     this.scrollTo({ top: this.layout.vertical.max });
   }
 
-  measurePointerOffset(pointerPosition: Point): Point {
-    const { left, top, width, height }: DOMRect = this.viewport.element.getBoundingClientRect();
-    const { x, y }: Point = pointerPosition;
-    let offsetX: number = null;
-    let offsetY: number = null;
+  measurePointerOffset(pointerPosition: Point) {
+    const { left, top, width, height } = this.viewport.element.getBoundingClientRect();
+    const { x, y } = pointerPosition;
 
+    let offsetX = null;
     if (x >= left && x <= left + width) {
       offsetX = x - left + this._scrollLeft;
     }
 
+    let offsetY = null;
     if (y >= top && y <= top + height) {
       offsetY = y - top + this._scrollTop;
     }
@@ -324,9 +319,9 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     return { x: offsetX, y: offsetY };
   }
 
-  private _onWheel(e: WheelEvent) {
-    let left: number = this._scrollLeft;
-    let top: number = this._scrollTop;
+  private onWheel(e: WheelEvent) {
+    let left = this._scrollLeft;
+    let top = this._scrollTop;
 
     if (e.shiftKey) {
       if (IS_MACOS) {
@@ -342,40 +337,40 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     this.scrollTo({ left, top });
   }
 
-  private _onPointerDown(e: PointerEvent) {
-    e.pointerType === 'touch' ? this._onPointerTypeIsTouch(e) : this._onPointerTypeIsMouse(e);
+  private onPointerDown(e: PointerEvent) {
+    e.pointerType === 'touch' ? this.onPointerTypeIsTouch(e) : this.onPointerTypeIsMouse(e);
   }
 
-  private _onPointerTypeIsMouse(e1: PointerEvent) {
-    this._stopSubEvent$.next();
+  private onPointerTypeIsMouse(e1: PointerEvent) {
+    this.stopSubEvent$.next();
 
     if (e1.button === 2) return; // Right click
 
     this._isScrollCompleted = false;
 
-    const { left, top }: DOMRect = this.viewport.element.getBoundingClientRect();
-    const stopScrollTimers: Subject<void> = new Subject<void>();
+    const { left, top } = this.viewport.element.getBoundingClientRect();
+    const stopScrollTimers = new Subject<void>();
     let dir: string;
     let currentAnimationFrame: number;
 
     fromEvent<MouseEvent>(document, 'pointermove')
-      .pipe(takeUntil(this._stopSubEvent$), takeUntilDestroyed(this._destroyRef))
+      .pipe(takeUntil(this.stopSubEvent$), takeUntilDestroyed(this.destroyRef))
       .subscribe((e2) => {
         e2.stopPropagation();
         e2.preventDefault();
 
         stopScrollTimers.next();
 
-        if (!this._isAutoScroll) {
-          const target: HTMLElement = e2.target as HTMLElement;
-          const holder: HTMLElement = target.closest(`[${AUTO_SCROLL_HOLDER}]`);
+        if (!this.isAutoScroll) {
+          const target = e2.target as HTMLElement;
+          const holder = target.closest(`[${AUTO_SCROLL_HOLDER}]`);
 
           if (!holder) return;
 
           dir = holder.getAttribute(AUTO_SCROLL_HOLDER);
         }
 
-        this._isAutoScroll = true;
+        this.isAutoScroll = true;
 
         if (currentAnimationFrame) {
           cancelAnimationFrame(currentAnimationFrame);
@@ -415,8 +410,8 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
           interval(1, animationFrameScheduler)
             .pipe(
               takeUntil(stopScrollTimers),
-              takeUntil(this._stopSubEvent$),
-              takeUntilDestroyed(this._destroyRef),
+              takeUntil(this.stopSubEvent$),
+              takeUntilDestroyed(this.destroyRef),
             )
             .subscribe(() => {
               if (this._isScrollCompleted) {
@@ -433,59 +428,53 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       });
 
     fromEvent<MouseEvent>(document, 'pointerup')
-      .pipe(takeUntil(this._stopSubEvent$), takeUntilDestroyed(this._destroyRef))
+      .pipe(takeUntil(this.stopSubEvent$), takeUntilDestroyed(this.destroyRef))
       .subscribe((e2) => {
         e2.stopPropagation();
         e2.preventDefault();
-
-        this._stopSubEvent$.next();
-
+        this.stopSubEvent$.next();
         this._isScrollCompleted = true;
-
         stopScrollTimers.next();
-
-        this._isAutoScroll = false;
+        this.isAutoScroll = false;
       });
   }
 
-  private _onPointerTypeIsTouch(e1: PointerEvent) {
+  private onPointerTypeIsTouch(e1: PointerEvent) {
     e1.stopPropagation();
     e1.preventDefault();
 
-    this._stopSubEvent$.next();
+    this.stopSubEvent$.next();
 
-    if (this._momentumAnimationFrame) {
-      cancelAnimationFrame(this._momentumAnimationFrame);
+    if (this.momentumAnimationFrame) {
+      cancelAnimationFrame(this.momentumAnimationFrame);
     }
 
     this._isScrollCompleted = false;
 
-    const start: Point = { x: e1.pageX, y: e1.pageY };
-
-    let velocityX: number = 0;
-    let velocityY: number = 0;
-    let currentX: number = this._scrollLeft;
-    let currentY: number = this._scrollTop;
-
+    const start = { x: e1.pageX, y: e1.pageY };
+    let velocityX = 0;
+    let velocityY = 0;
+    let currentX = this._scrollLeft;
+    let currentY = this._scrollTop;
     let currentAnimationFrame: number;
 
     fromEvent<PointerEvent>(document, 'pointermove')
-      .pipe(takeUntil(this._stopSubEvent$), takeUntilDestroyed(this._destroyRef))
+      .pipe(takeUntil(this.stopSubEvent$), takeUntilDestroyed(this.destroyRef))
       .subscribe((e2) => {
         e2.stopPropagation();
         e2.preventDefault();
 
-        this._isAutoScroll = true;
+        this.isAutoScroll = true;
 
         if (currentAnimationFrame) {
           cancelAnimationFrame(currentAnimationFrame);
         }
 
         currentAnimationFrame = requestAnimationFrame(() => {
-          const newX: number = e2.pageX;
-          const newY: number = e2.pageY;
-          const deltaX: number = start.x - newX;
-          const deltaY: number = start.y - newY;
+          const newX = e2.pageX;
+          const newY = e2.pageY;
+          const deltaX = start.x - newX;
+          const deltaY = start.y - newY;
 
           currentX += deltaX;
           currentY += deltaY;
@@ -500,42 +489,38 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       });
 
     fromEvent<PointerEvent>(document, 'pointerup')
-      .pipe(takeUntil(this._stopSubEvent$), takeUntilDestroyed(this._destroyRef))
+      .pipe(takeUntil(this.stopSubEvent$), takeUntilDestroyed(this.destroyRef))
       .subscribe((e2) => {
         e2.stopPropagation();
         e2.preventDefault();
 
-        this._stopSubEvent$.next();
+        this.stopSubEvent$.next();
 
-        this._isAutoScroll = false;
+        this.isAutoScroll = false;
 
         const momentum: () => void = () => {
-          let isContinue: boolean = false;
+          let isContinue = false;
 
           if (Math.abs(velocityX) > 0.1) {
             currentX += velocityX;
             velocityX *= 0.95;
-
             isContinue = true;
           }
 
           if (Math.abs(velocityY) > 0.1) {
             currentY += velocityY;
             velocityY *= 0.95;
-
             isContinue = true;
           }
 
           if (isContinue) {
             this.scrollTo({ left: currentX, top: currentY });
-
-            this._momentumAnimationFrame = requestAnimationFrame(momentum);
-
+            this.momentumAnimationFrame = requestAnimationFrame(momentum);
             return;
           }
 
-          if (this._momentumAnimationFrame) {
-            cancelAnimationFrame(this._momentumAnimationFrame);
+          if (this.momentumAnimationFrame) {
+            cancelAnimationFrame(this.momentumAnimationFrame);
           }
 
           this._isScrollCompleted = true;
@@ -545,8 +530,8 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       });
   }
 
-  private _onThumbPointerdown(dir: ScrollOrientation, e1: MouseEvent) {
-    this._stopSubEvent$.next();
+  private onThumbPointerdown(dir: ScrollOrientation, e1: MouseEvent) {
+    this.stopSubEvent$.next();
 
     if (e1.button === 2) return; // Right click
 
@@ -575,7 +560,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       case 'horizontal':
         fn = (e2: MouseEvent) => {
           const dx: number = e2.clientX - currentPos.mouseX;
-
           this.scrollTo({
             left: currentPos.scrollLeft + dx / this.layout.horizontal.ratio,
           });
@@ -584,7 +568,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       case 'vertical':
         fn = (e2: MouseEvent) => {
           const dy: number = e2.clientY - currentPos.mouseY;
-
           this.scrollTo({
             top: currentPos.scrollTop + dy / this.layout.vertical.ratio,
           });
@@ -593,9 +576,8 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     }
 
     let currentAnimationFrame: number;
-
     fromEvent<MouseEvent>(document, 'pointermove')
-      .pipe(takeUntil(this._stopSubEvent$), takeUntilDestroyed(this._destroyRef))
+      .pipe(takeUntil(this.stopSubEvent$), takeUntilDestroyed(this.destroyRef))
       .subscribe((e2) => {
         if (currentAnimationFrame) {
           cancelAnimationFrame(currentAnimationFrame);
@@ -612,30 +594,25 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       });
 
     fromEvent<MouseEvent>(document, 'pointerup')
-      .pipe(takeUntil(this._stopSubEvent$), takeUntilDestroyed(this._destroyRef))
+      .pipe(takeUntil(this.stopSubEvent$), takeUntilDestroyed(this.destroyRef))
       .subscribe((e2) => {
         e2.stopPropagation();
         e2.preventDefault();
 
-        this._stopSubEvent$.next();
-
+        this.stopSubEvent$.next();
         this._isScrollCompleted = true;
       });
   }
 
   private _scrollTo(scrollLeft: number, scrollTop: number) {
     this._updateScroll(scrollLeft, scrollTop);
-
     this.viewport.measureRangeSize(
       [this._scrollLeft, this._scrollingX],
       [this._scrollTop, this._scrollingY],
     );
   }
 
-  private _updateScroll(
-    scrollLeft: number = this._scrollLeft,
-    scrollTop: number = this._scrollTop,
-  ) {
+  private _updateScroll(scrollLeft = this._scrollLeft, scrollTop = this._scrollTop) {
     scrollLeft = this.layout.horizontal.available
       ? Math.min(Math.max(scrollLeft, 0), this.layout.horizontal.max)
       : 0;
@@ -645,7 +622,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
     const offsetX: number = scrollLeft - this._scrollLeft;
     let scrollingX: Scrolling = false;
-
     if (offsetX > 0) {
       scrollingX = 'to-end';
     } else if (offsetX < 0) {
@@ -654,7 +630,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
     const offsetY: number = scrollTop - this._scrollTop;
     let scrollingY: Scrolling = false;
-
     if (offsetY > 0) {
       scrollingY = 'to-end';
     } else if (offsetY < 0) {
@@ -664,21 +639,19 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     if (!scrollingX && !scrollingY) return;
 
     let isLongScrollingX: boolean = this.isLongScrollingX;
-
     if (!isLongScrollingX && Math.abs(this._scrollLeft - scrollLeft) > SCROLL_LONG_DISTANCE) {
       isLongScrollingX = true;
     }
 
     let isLongScrollingY: boolean = this.isLongScrollingY;
-
     if (!isLongScrollingY && Math.abs(this._scrollTop - scrollTop) > SCROLL_LONG_DISTANCE) {
       isLongScrollingY = true;
     }
 
     this._scrollLeft = scrollLeft;
     this._scrollTop = scrollTop;
-    this._scrollingX = scrollingX;
-    this._scrollingY = scrollingY;
+    this._scrollingX = !!scrollingX;
+    this._scrollingY = !!scrollingY;
     this._isLongScrollingX = isLongScrollingX;
     this._isLongScrollingY = isLongScrollingY;
     this.markForCheck();
@@ -690,22 +663,20 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       scrollingY,
     });
 
-    this._updateThumbPosition();
+    this.updateThumbPosition();
   }
 
   private _updateLayout() {
-    let needsUpdateScroll: boolean = false;
+    let needsUpdateScroll = false;
 
-    if (this._computeHorizontalLayout()) {
+    if (this.computeHorizontalLayout()) {
       needsUpdateScroll = true;
-
-      this._computeHorizontalThumbPosition();
+      this.computeHorizontalThumbPosition();
     }
 
-    if (this._computeVerticalLayout()) {
+    if (this.computeVerticalLayout()) {
       needsUpdateScroll = true;
-
-      this._computeVerticalThumbPosition();
+      this.computeVerticalThumbPosition();
     }
 
     this.detectChanges();
@@ -715,26 +686,26 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     this._updateScroll();
   }
 
-  private _computeHorizontalLayout(): boolean {
-    let ratio: number = 0;
-    let max: number = 0;
-    let available: boolean = false;
-    let trackOffsetX: number = 0;
-    let trackOffsetY: number = 0;
-    let trackSize: number = 0;
-    let thumbSize: number = 0;
+  private computeHorizontalLayout() {
+    let ratio = 0;
+    let max = 0;
+    let available = false;
+    let trackOffsetX = 0;
+    let trackOffsetY = 0;
+    let trackSize = 0;
+    let thumbSize = 0;
 
     if (this.scrollWidth) {
       ratio = this.viewport.width / this.scrollWidth;
       max = this.scrollWidth - ratio * this.scrollWidth;
       available = ratio < 1;
       trackOffsetX = this.scrollDivideOffset;
-      trackOffsetY = this._elementRef.nativeElement.clientHeight - SCROLLBAR_TRACK_SIZE;
+      trackOffsetY = this.eleRef.nativeElement.clientHeight - SCROLLBAR_TRACK_SIZE;
       trackSize = this.viewport.width - this.scrollDivideOffset;
       thumbSize = ratio * trackSize;
     }
 
-    const needsUpdateScroll: boolean =
+    const needsUpdateScroll =
       max !== this.layout.horizontal.max || trackSize !== this.layout.horizontal.track.size;
 
     this.layout.horizontal.ratio = ratio;
@@ -748,26 +719,26 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     return needsUpdateScroll;
   }
 
-  private _computeVerticalLayout(): boolean {
-    let ratio: number = 0;
-    let max: number = 0;
-    let trackOffsetX: number = 0;
-    let trackOffsetY: number = 0;
-    let trackSize: number = 0;
-    let thumbSize: number = 0;
-    let available: boolean = false;
+  private computeVerticalLayout() {
+    let ratio = 0;
+    let max = 0;
+    let trackOffsetX = 0;
+    let trackOffsetY = 0;
+    let trackSize = 0;
+    let thumbSize = 0;
+    let available = false;
 
     if (this.scrollHeight) {
       ratio = this.viewport.height / this.scrollHeight;
       max = this.scrollHeight - ratio * this.scrollHeight;
       available = ratio < 1;
-      trackOffsetX = this._elementRef.nativeElement.clientWidth - SCROLLBAR_TRACK_SIZE;
+      trackOffsetX = this.eleRef.nativeElement.clientWidth - SCROLLBAR_TRACK_SIZE;
       trackOffsetY = this.viewport.offsetTop;
       trackSize = this.viewport.height;
       thumbSize = ratio * trackSize;
     }
 
-    const needsUpdateScroll: boolean =
+    const needsUpdateScroll =
       max !== this.layout.vertical.max || trackSize !== this.layout.vertical.track.size;
 
     this.layout.vertical.ratio = ratio;
@@ -781,22 +752,21 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     return needsUpdateScroll;
   }
 
-  private _updateThumbPosition() {
-    this._computeHorizontalThumbPosition();
-    this._computeVerticalThumbPosition();
+  private updateThumbPosition() {
+    this.computeHorizontalThumbPosition();
+    this.computeVerticalThumbPosition();
 
     this.detectChanges();
   }
 
-  private _computeHorizontalThumbPosition() {
-    let position: number = 0;
+  private computeHorizontalThumbPosition() {
+    let position = 0;
 
     if (this.scrollWidth) {
-      const trackSize: number = this.layout.horizontal.track.size;
-      const thumbSize: number = this.layout.horizontal.thumb.size;
+      const trackSize = this.layout.horizontal.track.size;
+      const thumbSize = this.layout.horizontal.thumb.size;
 
       position = (this._scrollLeft / this.scrollWidth) * trackSize;
-
       if (thumbSize < SCROLLBAR_THUMB_MIN_SIZE) {
         position -= ((SCROLLBAR_THUMB_MIN_SIZE - thumbSize) / trackSize) * position;
       }
@@ -805,15 +775,13 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     this.layout.horizontal.thumb.position = position;
   }
 
-  private _computeVerticalThumbPosition() {
-    let position: number = 0;
+  private computeVerticalThumbPosition() {
+    let position = 0;
 
     if (this.scrollHeight) {
-      const trackSize: number = this.layout.vertical.track.size;
-      const thumbSize: number = this.layout.vertical.thumb.size;
-
+      const trackSize = this.layout.vertical.track.size;
+      const thumbSize = this.layout.vertical.thumb.size;
       position = (this._scrollTop / this.scrollHeight) * trackSize;
-
       if (thumbSize < SCROLLBAR_THUMB_MIN_SIZE) {
         position -= ((SCROLLBAR_THUMB_MIN_SIZE - thumbSize) / trackSize) * position;
       }

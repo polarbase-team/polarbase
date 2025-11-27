@@ -4,8 +4,8 @@ import { Point } from '@angular/cdk/drag-drop';
 import { MenuItem } from 'primeng/api';
 
 import { calculateBy, makeUpCalculatedData } from '../utils/calculate';
-import { _GroupView } from '../components/virtual-scroll/virtual-scroll-group-repeater.directive';
-import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { GroupView } from '../components/virtual-scroll/virtual-scroll-group-repeater.directive';
+import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { Dimension } from './table.service';
 import type { CellIndex } from './table-cell.service';
 import { TableBaseService } from './table-base.service';
@@ -47,9 +47,9 @@ function findGroupAtPointerOffset(group: TableGroup, pointerOffsetY: number) {
     while (start <= end) {
       const mid = Math.floor((start + end) / 2);
       const childGroup = group.children[mid];
-      const { _viewProps } = childGroup as _GroupView;
-      const gs = _viewProps.rect.top;
-      const ge = _viewProps.rect.top + _viewProps.rect.height;
+      const { viewProps } = childGroup as GroupView;
+      const gs = viewProps.rect.top;
+      const ge = viewProps.rect.top + viewProps.rect.height;
 
       if (pointerOffsetY < gs) {
         end = mid - 1;
@@ -68,7 +68,7 @@ function findGroupAtPointerOffset(group: TableGroup, pointerOffsetY: number) {
   return group;
 }
 
-function findGroupByItemIndex(itemIndex: number, group?: TableGroup): TableGroup {
+function findGroupByItemIndex(itemIndex: number, group?: TableGroup) {
   if (group?.children) {
     let start = 0;
     let end = group.children.length - 1;
@@ -76,14 +76,14 @@ function findGroupByItemIndex(itemIndex: number, group?: TableGroup): TableGroup
     while (start <= end) {
       const mid = Math.floor((start + end) / 2);
       const childGroup = group.children[mid];
-      const { _viewProps } = childGroup as _GroupView;
+      const { viewProps } = childGroup as GroupView;
 
-      if (itemIndex < _viewProps.startItemIndex) {
+      if (itemIndex < viewProps.startItemIndex) {
         end = mid - 1;
         continue;
       }
 
-      if (itemIndex > _viewProps.startItemIndex + childGroup.rows.length - 1) {
+      if (itemIndex > viewProps.startItemIndex + childGroup.rows.length - 1) {
         start = mid + 1;
         continue;
       }
@@ -139,13 +139,16 @@ export class TableGroupService extends TableBaseService {
 
   insertRowInGroup(group = this.getSelectingGroup() || this.getFirstGroup(), position?: number) {
     let newRow: TableRow;
+
     if (group !== this.rootGroup()) {
-      let g = group;
       const data: any = {};
+
+      let g = group;
       do {
         data[g.column.id] = g.data;
         g = g.parent;
       } while (g?.depth > 0);
+
       newRow = this.tableRowService.insertRow(data, position, (row: TableRow) => {
         group.addRows([row], position);
         this.markGroupAsChanged();
@@ -162,6 +165,7 @@ export class TableGroupService extends TableBaseService {
         g = g.parent;
       } while (g);
     }
+
     return newRow;
   }
 
@@ -216,12 +220,12 @@ export class TableGroupService extends TableBaseService {
     const group = this.findGroupByRowIndex(rowIndex);
     if (!group || group.depth < this.groupDepth()) return null;
 
-    const { _viewProps } = group as _GroupView;
-    const left = _getColumnOffset(this.tableColumnService.findColumnByIndex(columnIndex));
+    const { viewProps } = group as GroupView;
+    const left = getColumnOffset(this.tableColumnService.findColumnByIndex(columnIndex));
     const top =
-      _viewProps.rect.top +
+      viewProps.rect.top +
       Dimension.GroupHeaderHeight +
-      (rowIndex - _viewProps.startItemIndex) * this.tableRowService.rowHeight();
+      (rowIndex - viewProps.startItemIndex) * this.tableRowService.rowHeight();
 
     return { left, top };
   }
@@ -253,7 +257,7 @@ export class TableGroupService extends TableBaseService {
     const group = this.findGroupAtPointerOffset(pointerOffsetY);
     if (!group || group.depth < this.groupDepth()) return null;
 
-    const { _viewProps: groupViewProps } = group as _GroupView;
+    const { viewProps: groupViewProps } = group as GroupView;
     const startOffset = groupViewProps.rect.top + Dimension.GroupHeaderHeight;
     const endOffset = startOffset + groupViewProps.rect.height;
 

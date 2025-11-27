@@ -9,7 +9,6 @@ import {
   EventEmitter,
   inject,
   Input,
-  IterableChanges,
   IterableDiffer,
   IterableDiffers,
   OnDestroy,
@@ -17,32 +16,31 @@ import {
 } from '@angular/core';
 
 import { Dimension } from '../../services/table.service';
-
-import type { _Scrolling } from './virtual-scroll.component';
+import { TableColumn } from '../../models/table-column';
+import { TableRow } from '../../models/table-row';
+import { TableGroup } from '../../models/table-group';
+import type { Scrolling } from './virtual-scroll.component';
 import {
-  _COLUMN_TRACK_BY_FN,
-  _findColumnInsideViewport,
-  _makeUpColumnViewProps,
+  COLUMN_TRACK_BY_FN,
+  findColumnInsideViewport,
+  makeUpColumnViewProps,
 } from './virtual-scroll-column-repeater.directive';
 import {
-  _findGroupInsideViewport,
-  _GROUP_TRACK_BY_FN,
-  _makeUpGroupViewProps,
+  findGroupInsideViewport,
+  GROUP_TRACK_BY_FN,
+  makeUpGroupViewProps,
 } from './virtual-scroll-group-repeater.directive';
 import {
-  _findRowInsideViewport,
-  _makeUpRowViewProps,
-  _ROW_TRACK_BY_FN,
+  findRowInsideViewport,
+  makeUpRowViewProps,
+  ROW_TRACK_BY_FN,
 } from './virtual-scroll-row-repeater.directive';
 import {
   VirtualScrollLeftContentWrapperComponent as VSLeftCWComponent,
   VirtualScrollRightContentWrapperComponent as VSRightCWComponent,
 } from './virtual-scroll-content-wrapper.component';
-import { TableColumn } from '../../models/table-column';
-import { TableRow } from '../../models/table-row';
-import { TableGroup } from '../../models/table-group';
 
-export type ViewportSizeUpdatedEvent = {
+export interface ViewportSizeUpdatedEvent {
   updateOnWidth: boolean;
   updateOnHeight: boolean;
   size: {
@@ -53,7 +51,7 @@ export type ViewportSizeUpdatedEvent = {
     contentWidth: number;
     contentHeight: number;
   };
-};
+}
 
 @Component({
   selector: '[virtualScrollViewport]',
@@ -68,212 +66,208 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   @ContentChild(VSRightCWComponent, { static: true })
   rightWrapper: VSRightCWComponent;
 
-  @Output() readonly sizeUpdated: EventEmitter<ViewportSizeUpdatedEvent> =
-    new EventEmitter<ViewportSizeUpdatedEvent>();
+  @Output() sizeUpdated = new EventEmitter<ViewportSizeUpdatedEvent>();
 
-  private readonly _cdRef: ChangeDetectorRef = inject(ChangeDetectorRef);
-  private readonly _elementRef: ElementRef = inject(ElementRef);
-  private readonly _iterableDiffers: IterableDiffers = inject(IterableDiffers);
-  private readonly _resizeObserve: ResizeObserver = new ResizeObserver(this._onResized.bind(this));
-
+  private cdRef = inject(ChangeDetectorRef);
+  private eleRef = inject(ElementRef);
+  private iterableDiffers = inject(IterableDiffers);
+  private resizeObserve = new ResizeObserver(this._onResized.bind(this));
   private _leftColumns: TableColumn[];
   private _rightColumns: TableColumn[];
-  private _leftColumnDs: TableColumn[];
-  private _rightColumnDs: TableColumn[];
+  private leftColumnDs: TableColumn[];
+  private rightColumnDs: TableColumn[];
   private _rows: TableRow[];
-  private _rowDs: TableRow[];
+  private rowDs: TableRow[];
   private _rootGroup: TableGroup;
-  private _groupDs: TableGroup[];
+  private groupDs: TableGroup[];
   private _rowHeight: number;
-  private _groupDepth: number;
+  private groupDepth: number;
   private _leftWidth: number;
   private _rightWidth: number;
-  private _rawLeftWidth: number;
-  private _rawRightWidth: number;
+  private rawLeftWidth: number;
+  private rawRightWidth: number;
   private _contentWidth: number;
   private _contentHeight: number;
-  private _isGrouping: boolean;
-  private _canCheckDiff: boolean;
-  private _needsUpdate: boolean;
-  private _forcesUpdate: boolean;
-  private _leftColumnDsDiffer: IterableDiffer<TableColumn>;
-  private _rightColumnDsDiffer: IterableDiffer<TableColumn>;
-  private _rowDsDiffer: IterableDiffer<TableRow>;
-  private _rowRangeDiffer: IterableDiffer<TableRow>;
-  private _groupDsDiffer: IterableDiffer<TableGroup>;
-  private _groupRangeDiffer: IterableDiffer<TableGroup>;
+  private isGrouping: boolean;
+  private canCheckDiff: boolean;
+  private needsUpdate: boolean;
+  private forcesUpdate: boolean;
+  private leftColumnDsDiffer: IterableDiffer<TableColumn>;
+  private rightColumnDsDiffer: IterableDiffer<TableColumn>;
+  private rowDsDiffer: IterableDiffer<TableRow>;
+  private rowRangeDiffer: IterableDiffer<TableRow>;
+  private groupDsDiffer: IterableDiffer<TableGroup>;
+  private groupRangeDiffer: IterableDiffer<TableGroup>;
 
   @Input()
-  get leftColumns(): TableColumn[] {
+  get leftColumns() {
     return this._leftColumns;
   }
   set leftColumns(columns: TableColumn[]) {
     const isChanged: boolean = this._leftColumns !== columns;
 
     this._leftColumns = columns;
-    this._leftColumnDs = columns || [];
+    this.leftColumnDs = columns || [];
 
-    if (!this._leftColumnDsDiffer) {
-      this._leftColumnDsDiffer = this._iterableDiffers
-        .find(this._leftColumnDs)
-        .create(_COLUMN_TRACK_BY_FN);
+    if (!this.leftColumnDsDiffer) {
+      this.leftColumnDsDiffer = this.iterableDiffers
+        .find(this.leftColumnDs)
+        .create(COLUMN_TRACK_BY_FN);
     }
 
-    if (isChanged && this._leftColumnDs.length) {
-      this._leftColumnDsDiffer.diff(null);
+    if (isChanged && this.leftColumnDs.length) {
+      this.leftColumnDsDiffer.diff(null);
     }
 
-    this._needsUpdate = true;
+    this.needsUpdate = true;
   }
 
   @Input()
-  get rightColumns(): TableColumn[] {
+  get rightColumns() {
     return this._rightColumns;
   }
   set rightColumns(columns: TableColumn[]) {
     const isChanged: boolean = this._rightColumns !== columns;
 
     this._rightColumns = columns;
-    this._rightColumnDs = columns || [];
+    this.rightColumnDs = columns || [];
 
-    if (!this._rightColumnDsDiffer) {
-      this._rightColumnDsDiffer = this._iterableDiffers
-        .find(this._rightColumnDs)
-        .create(_COLUMN_TRACK_BY_FN);
+    if (!this.rightColumnDsDiffer) {
+      this.rightColumnDsDiffer = this.iterableDiffers
+        .find(this.rightColumnDs)
+        .create(COLUMN_TRACK_BY_FN);
     }
 
-    if (isChanged && this._rightColumnDs.length) {
-      this._rightColumnDsDiffer.diff(null);
+    if (isChanged && this.rightColumnDs.length) {
+      this.rightColumnDsDiffer.diff(null);
     }
 
-    this._needsUpdate = true;
+    this.needsUpdate = true;
   }
 
   @Input()
-  get rows(): TableRow[] {
+  get rows() {
     return this._rows;
   }
   set rows(rows: TableRow[]) {
     const isChanged: boolean = this._rows !== rows;
 
     this._rows = rows;
-    this._rowDs = rows || [];
+    this.rowDs = rows || [];
 
-    if (!this._rowDsDiffer) {
-      this._rowDsDiffer = this._iterableDiffers.find(this._rowDs).create(_ROW_TRACK_BY_FN);
+    if (!this.rowDsDiffer) {
+      this.rowDsDiffer = this.iterableDiffers.find(this.rowDs).create(ROW_TRACK_BY_FN);
     }
 
-    if (!this._rowRangeDiffer) {
-      this._rowRangeDiffer = this._iterableDiffers.find([]).create(_ROW_TRACK_BY_FN);
+    if (!this.rowRangeDiffer) {
+      this.rowRangeDiffer = this.iterableDiffers.find([]).create(ROW_TRACK_BY_FN);
     }
 
-    if (isChanged && this._rowDs.length) {
-      this._rowDsDiffer.diff(null);
+    if (isChanged && this.rowDs.length) {
+      this.rowDsDiffer.diff(null);
     }
 
-    this._needsUpdate = true;
+    this.needsUpdate = true;
   }
 
   @Input()
-  get rootGroup(): TableGroup {
+  get rootGroup() {
     return this._rootGroup;
   }
   set rootGroup(group: TableGroup) {
     const isChanged: boolean = this._rootGroup !== group;
 
-    this._isGrouping = !!group;
+    this.isGrouping = !!group;
     this._rootGroup = group;
 
     let forcesUpdate: boolean;
 
-    if (this._isGrouping) {
-      forcesUpdate = this._groupDepth !== group.totalChildrenDepth;
+    if (this.isGrouping) {
+      forcesUpdate = this.groupDepth !== group.totalChildrenDepth;
 
-      this._groupDepth = group.totalChildrenDepth;
-      this._groupDs = group.children || [];
-      this._rowDs = [];
+      this.groupDepth = group.totalChildrenDepth;
+      this.groupDs = group.children || [];
+      this.rowDs = [];
     } else {
-      this._groupDepth = null;
-      this._groupDs = [];
-      this._rowDs = this._rows || [];
+      this.groupDepth = null;
+      this.groupDs = [];
+      this.rowDs = this._rows || [];
     }
 
-    if (!this._groupDsDiffer) {
-      this._groupDsDiffer = this._iterableDiffers.find(this._groupDs).create(_GROUP_TRACK_BY_FN);
+    if (!this.groupDsDiffer) {
+      this.groupDsDiffer = this.iterableDiffers.find(this.groupDs).create(GROUP_TRACK_BY_FN);
     }
 
-    if (!this._groupRangeDiffer) {
-      this._groupRangeDiffer = this._iterableDiffers.find([]).create(_GROUP_TRACK_BY_FN);
+    if (!this.groupRangeDiffer) {
+      this.groupRangeDiffer = this.iterableDiffers.find([]).create(GROUP_TRACK_BY_FN);
     }
 
-    if (isChanged && this._groupDs.length) {
-      this._groupDsDiffer.diff(null);
+    if (isChanged && this.groupDs.length) {
+      this.groupDsDiffer.diff(null);
     }
 
-    this._needsUpdate = true;
-    this._forcesUpdate ||= forcesUpdate;
+    this.needsUpdate = true;
+    this.forcesUpdate ||= forcesUpdate;
   }
 
   @Input()
-  get rowHeight(): number {
+  get rowHeight() {
     return this._rowHeight;
   }
   set rowHeight(height: number) {
     this._rowHeight = height;
 
-    this._needsUpdate = this._forcesUpdate = true;
+    this.needsUpdate = this.forcesUpdate = true;
   }
 
-  get element(): HTMLElement {
-    return this._elementRef.nativeElement;
+  get element() {
+    return this.eleRef.nativeElement;
   }
 
-  get offsetLeft(): number {
+  get offsetLeft() {
     return this.element.offsetLeft;
   }
-  get offsetTop(): number {
+  get offsetTop() {
     return this.element.offsetTop;
   }
 
-  get width(): number {
+  get width() {
     return this.element.clientWidth;
   }
-  get height(): number {
+  get height() {
     return this.element.clientHeight;
   }
 
-  get leftWidth(): number {
+  get leftWidth() {
     return this._leftWidth ?? Dimension.IndexCellWidth;
   }
 
-  get rightWidth(): number {
+  get rightWidth() {
     return this._rightWidth ?? Dimension.ActionCellWidth;
   }
 
-  get contentWidth(): number {
+  get contentWidth() {
     return this._contentWidth ?? 0;
   }
 
-  get contentHeight(): number {
+  get contentHeight() {
     return this._contentHeight ?? Dimension.BlankRowHeight;
   }
 
   ngAfterContentInit() {
-    this._canCheckDiff = this._needsUpdate = true;
-
-    this._resizeObserve.observe(this.element);
+    this.canCheckDiff = this.needsUpdate = true;
+    this.resizeObserve.observe(this.element);
   }
 
   ngDoCheck() {
-    if (this._canCheckDiff && this._needsUpdate) {
-      this._checkDiff(this._forcesUpdate);
-
-      this._needsUpdate = this._forcesUpdate = false;
+    if (this.canCheckDiff && this.needsUpdate) {
+      this.checkDiff(this.forcesUpdate);
+      this.needsUpdate = this.forcesUpdate = false;
     }
   }
 
   ngOnDestroy() {
-    this._resizeObserve.disconnect();
+    this.resizeObserve.disconnect();
   }
 
   /**
@@ -281,110 +275,85 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
    * @url https://dev.to/adamklein/build-your-own-virtual-scroll-part-ii-3j86
    */
   measureRangeSize(
-    [scrollLeft, scrollingX]: [number, _Scrolling?],
-    [scrollTop, scrollingY]: [number, _Scrolling?],
+    [scrollLeft, scrollingX]: [number, Scrolling?],
+    [scrollTop, scrollingY]: [number, Scrolling?],
   ) {
     if (scrollingX !== false) {
-      const leftColumnRange: TableColumn[] = this._leftColumnDs;
-      const rightColumnRange: TableColumn[] = _findColumnInsideViewport(this._rightColumnDs, [
+      const leftColumnRange: TableColumn[] = this.leftColumnDs;
+      const rightColumnRange: TableColumn[] = findColumnInsideViewport(this.rightColumnDs, [
         scrollLeft,
         scrollLeft + (this.width - this.leftWidth),
       ]);
-
-      // if ( scrollingX === 'to-start' ) {
-      // 	rightColumnRange.reverse();
-      // }
-
-      this._updateColumnRange(leftColumnRange, rightColumnRange);
+      this.updateColumnRange(leftColumnRange, rightColumnRange);
     }
 
     if (scrollingY !== false) {
       let rowRange: TableRow[];
 
-      if (this._isGrouping) {
-        const [groupRange, rowRangeInGroup]: [TableGroup[], TableRow[]] = _findGroupInsideViewport(
-          this._groupDs,
+      if (this.isGrouping) {
+        const [groupRange, rowRangeInGroup]: [TableGroup[], TableRow[]] = findGroupInsideViewport(
+          this.groupDs,
           this._rowHeight,
           [scrollTop, scrollTop + this.height],
         );
-
-        // if ( scrollingY === 'to-start' ) {
-        // 	groupRange.reverse();
-        // }
-
-        this._updateGroupRange(groupRange);
-
+        this.updateGroupRange(groupRange);
         rowRange = rowRangeInGroup;
       } else {
-        rowRange = _findRowInsideViewport(this._rowDs, this._rowHeight, [scrollTop, this.height]);
+        rowRange = findRowInsideViewport(this.rowDs, this._rowHeight, [scrollTop, this.height]);
       }
 
-      // if ( scrollingY === 'to-start' ) {
-      // 	rowRange.reverse();
-      // }
-
-      this._updateRowRange(rowRange);
+      this.updateRowRange(rowRange);
     }
   }
 
-  private _checkDiff(forcesUpdate: boolean = false) {
+  private checkDiff(forcesUpdate = false) {
     let shouldMakeUpColumnViewProps: boolean;
     let shouldMakeUpRowViewProps: boolean;
     let shouldMakeUpGroupViewProps: boolean;
 
-    if (this._leftColumnDsDiffer) {
-      const columnLeftDsChanges: IterableChanges<TableColumn> = this._leftColumnDsDiffer.diff(
-        this._leftColumnDs,
-      );
-
+    if (this.leftColumnDsDiffer) {
+      const columnLeftDsChanges = this.leftColumnDsDiffer.diff(this.leftColumnDs);
       if (columnLeftDsChanges) {
         shouldMakeUpColumnViewProps = true;
-      } else if (this._leftColumnDs.length) {
+      } else if (this.leftColumnDs.length) {
         shouldMakeUpColumnViewProps ||= forcesUpdate;
       }
     }
 
-    if (this._rightColumnDsDiffer) {
-      const columnRightDsChanges: IterableChanges<TableColumn> = this._rightColumnDsDiffer.diff(
-        this._rightColumnDs,
-      );
-
+    if (this.rightColumnDsDiffer) {
+      const columnRightDsChanges = this.rightColumnDsDiffer.diff(this.rightColumnDs);
       if (columnRightDsChanges) {
         shouldMakeUpColumnViewProps = true;
-      } else if (this._rightColumnDs.length) {
+      } else if (this.rightColumnDs.length) {
         shouldMakeUpColumnViewProps ||= forcesUpdate;
       }
     }
 
-    if (this._rowDsDiffer) {
-      const rowDsChanges: IterableChanges<TableRow> = this._rowDsDiffer.diff(this._rowDs);
-
-      if (!this._isGrouping) {
+    if (this.rowDsDiffer) {
+      const rowDsChanges = this.rowDsDiffer.diff(this.rowDs);
+      if (!this.isGrouping) {
         if (rowDsChanges) {
           shouldMakeUpRowViewProps = true;
-
-          if (!this._rowDs.length) {
-            this._clearCurrentRowRange();
+          if (!this.rowDs.length) {
+            this.clearCurrentRowRange();
           }
-        } else if (this._rowDs.length) {
+        } else if (this.rowDs.length) {
           shouldMakeUpRowViewProps ||= forcesUpdate;
         }
       }
     }
 
-    if (this._groupDsDiffer) {
-      const groupDsChanges: IterableChanges<TableGroup> = this._groupDsDiffer.diff(this._groupDs);
-
+    if (this.groupDsDiffer) {
+      const groupDsChanges = this.groupDsDiffer.diff(this.groupDs);
       if (groupDsChanges) {
-        if (this._groupDs.length) {
+        if (this.groupDs.length) {
           shouldMakeUpGroupViewProps = true;
         } else {
-          this._clearCurrentGroupRange();
-          this._clearCurrentRowRange();
-
+          this.clearCurrentGroupRange();
+          this.clearCurrentRowRange();
           shouldMakeUpRowViewProps = true;
         }
-      } else if (this._groupDs.length) {
+      } else if (this.groupDs.length) {
         shouldMakeUpGroupViewProps ||= forcesUpdate;
       }
     }
@@ -393,36 +362,36 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       return;
     }
 
-    const totalGroupPadding: number = this._isGrouping
+    const totalGroupPadding = this.isGrouping
       ? (this._rootGroup.totalChildrenDepth - 1) * Dimension.GroupPadding
       : 0;
 
     if (shouldMakeUpColumnViewProps) {
-      this._rawLeftWidth = _makeUpColumnViewProps(
-        this._leftColumnDs,
+      this.rawLeftWidth = makeUpColumnViewProps(
+        this.leftColumnDs,
         Dimension.IndexCellWidth,
         totalGroupPadding,
       );
-      this._rawRightWidth =
-        _makeUpColumnViewProps(this._rightColumnDs, 0, this._rawLeftWidth + totalGroupPadding) +
+      this.rawRightWidth =
+        makeUpColumnViewProps(this.rightColumnDs, 0, this.rawLeftWidth + totalGroupPadding) +
         Dimension.ActionCellWidth;
     }
 
     if (shouldMakeUpGroupViewProps) {
-      this._contentHeight = _makeUpGroupViewProps(
+      this._contentHeight = makeUpGroupViewProps(
         this._rootGroup,
         this._rowHeight,
         Dimension.BlankRowHeight,
       );
     } else if (shouldMakeUpRowViewProps) {
       this._contentHeight =
-        _makeUpRowViewProps(this._rowDs, this._rowHeight) + Dimension.BlankRowHeight;
+        makeUpRowViewProps(this.rowDs, this._rowHeight) + Dimension.BlankRowHeight;
     }
 
-    this._leftWidth = this._rawLeftWidth;
-    this._rightWidth = this._rawRightWidth;
+    this._leftWidth = this.rawLeftWidth;
+    this._rightWidth = this.rawRightWidth;
 
-    if (this._isGrouping) {
+    if (this.isGrouping) {
       this._leftWidth += totalGroupPadding;
       this._rightWidth += totalGroupPadding;
     } else if (!this._contentHeight) {
@@ -438,12 +407,12 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   }
 
   private _onResized(entries: ResizeObserverEntry[]) {
-    let updateOnWidth: boolean = false;
-    let updateOnHeight: boolean = false;
+    let updateOnWidth = false;
+    let updateOnHeight = false;
 
     for (const entry of entries) {
-      const { width, height }: DOMRectReadOnly = entry.contentRect;
-      const dataset: any = entry.target;
+      const { width, height } = entry.contentRect;
+      const dataset = entry.target as any;
 
       if (dataset._prevWidth !== width) {
         updateOnWidth = true;
@@ -474,50 +443,41 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     });
   }
 
-  private _updateColumnRange(leftColumnRange: TableColumn[], rightColumnRange: TableColumn[]) {
+  private updateColumnRange(leftColumnRange: TableColumn[], rightColumnRange: TableColumn[]) {
     this.leftWrapper.columns = leftColumnRange;
     this.rightWrapper.columns = rightColumnRange;
-
-    this._cdRef.markForCheck();
+    this.cdRef.markForCheck();
   }
 
-  private _updateRowRange(rowRange: TableRow[]) {
-    const changes: IterableChanges<TableRow> = this._rowRangeDiffer.diff(rowRange);
-
+  private updateRowRange(rowRange: TableRow[]) {
+    const changes = this.rowRangeDiffer.diff(rowRange);
     if (!changes) return;
 
     this.leftWrapper.rowRepeater.applyChanges(changes);
     this.rightWrapper.rowRepeater.applyChanges(changes);
-
-    this._cdRef.markForCheck();
+    this.cdRef.markForCheck();
   }
 
-  private _updateGroupRange(groupRange: TableGroup[]) {
-    const changes: IterableChanges<TableGroup> = this._groupRangeDiffer.diff(groupRange);
-
+  private updateGroupRange(groupRange: TableGroup[]) {
+    const changes = this.groupRangeDiffer.diff(groupRange);
     if (!changes) return;
 
     this.leftWrapper.groupRepeater.applyChanges(changes);
     this.rightWrapper.groupRepeater.applyChanges(changes);
-
-    this._cdRef.markForCheck();
+    this.cdRef.markForCheck();
   }
 
-  private _clearCurrentRowRange() {
-    this._rowRangeDiffer.diff(null);
-
+  private clearCurrentRowRange() {
+    this.rowRangeDiffer.diff(null);
     this.leftWrapper.rowRepeater.clear();
     this.rightWrapper.rowRepeater.clear();
-
-    this._cdRef.markForCheck();
+    this.cdRef.markForCheck();
   }
 
-  private _clearCurrentGroupRange() {
-    this._groupRangeDiffer.diff(null);
-
+  private clearCurrentGroupRange() {
+    this.groupRangeDiffer.diff(null);
     this.leftWrapper.groupRepeater.clear();
     this.rightWrapper.groupRepeater.clear();
-
-    this._cdRef.markForCheck();
+    this.cdRef.markForCheck();
   }
 }

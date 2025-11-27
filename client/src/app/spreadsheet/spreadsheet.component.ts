@@ -55,20 +55,11 @@ import { Keyboard } from './utils/keyboard';
 
 // Components & Directives
 import { FieldCellService } from './components/field-cell/field-cell.service';
-import {
-  VirtualScrollComponent,
-  _ScrollEvent,
-} from './components/virtual-scroll/virtual-scroll.component';
+import { VirtualScrollComponent } from './components/virtual-scroll/virtual-scroll.component';
 import { VirtualScrollViewportComponent } from './components/virtual-scroll/virtual-scroll-viewport.component';
 
-import {
-  VirtualScrollGroupRepeaterDirective,
-  _GroupView,
-} from './components/virtual-scroll/virtual-scroll-group-repeater.directive';
-import {
-  VirtualScrollColumnRepeaterDirective,
-  _getColumnOffset,
-} from './components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { VirtualScrollGroupRepeaterDirective } from './components/virtual-scroll/virtual-scroll-group-repeater.directive';
+import { VirtualScrollColumnRepeaterDirective } from './components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { VirtualScrollRowRepeaterDirective } from './components/virtual-scroll/virtual-scroll-row-repeater.directive';
 import {
   VirtualScrollLeftContentWrapperComponent,

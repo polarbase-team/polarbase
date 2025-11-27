@@ -4,7 +4,7 @@ import { CdkDragEnd, CdkDragMove } from '@angular/cdk/drag-drop';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 
-import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { calculateBy, makeUpCalculatedData } from '../utils/calculate';
 import { groupBy } from '../utils/group';
 import { sortBy } from '../utils/sort';
@@ -124,8 +124,8 @@ function calculateFreezeDividerDragPlaceholderIndex(
   let dragPlaceholderIndex = 0;
 
   for (let i = 0; i < columns.length; i++) {
-    let a = _getColumnOffset(columns[i]);
-    let b = _getColumnOffset(columns[i + 1]) || a;
+    let a = getColumnOffset(columns[i]);
+    let b = getColumnOffset(columns[i + 1]) || a;
 
     if (i <= frozenIndex) {
       a += scrollLeft;
@@ -483,7 +483,7 @@ export class TableService extends TableBaseService {
       this.host.virtualScroll.scrollLeft,
       this.frozenIndex(),
     );
-    const offset = _getColumnOffset(this.tableColumnService.findColumnByIndex(index));
+    const offset = getColumnOffset(this.tableColumnService.findColumnByIndex(index));
     if (offset / this.host.virtualScroll.viewport.width > this.config().column.maxFrozenRatio) {
       return;
     }

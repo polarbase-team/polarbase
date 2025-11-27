@@ -12,7 +12,7 @@ import { MenuItem } from 'primeng/api';
 
 import { CalculateType } from '../utils/calculate';
 import { SortType } from '../utils/sort';
-import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { TableBaseService } from './table-base.service';
 import { TableColumn } from '../models/table-column';
 import { TableColumnActionType } from '../events/table-column';
@@ -84,28 +84,23 @@ function calculateColumnDragPlaceholderIndex(
   scrollLeft: number,
   frozenIndex: number,
 ) {
-  let dragPlaceholderIndex = 0;
   const length = columns.length;
+  let dragPlaceholderIndex = 0;
 
   for (let i = 0; i <= length; i++) {
     const curr = columns[i];
     const next = columns[i + 1];
+    if (!curr && !next) return length;
 
-    if (!curr && !next) {
-      return length;
-    }
-
-    let a = _getColumnOffset(curr);
-    let b = _getColumnOffset(next) || (curr ? a + curr.width : a);
+    let a = getColumnOffset(curr);
+    let b = getColumnOffset(next) || (curr ? a + curr.width : a);
 
     if (i <= frozenIndex) {
       a += scrollLeft;
       b += scrollLeft;
     }
 
-    if (offsetX < a) {
-      break;
-    }
+    if (offsetX < a) break;
 
     if (offsetX >= a && offsetX <= b) {
       const compared = (a + b) / 2;
@@ -349,17 +344,20 @@ export class TableColumnService extends TableBaseService {
             this.tableService.frozenIndex(),
           );
     let offset = null;
+
     if (index !== null) {
       const length = this.columns().length;
       const isOutRange = index === length;
-      let column;
+
+      let column: TableColumn;
       if (isOutRange) {
         column = this.findColumnByIndex(index - 1);
       } else {
         column = this.findColumnByIndex(index);
       }
+
       if (column) {
-        offset = _getColumnOffset(column);
+        offset = getColumnOffset(column);
         if (isOutRange) {
           offset += column.width;
         }
@@ -370,6 +368,7 @@ export class TableColumnService extends TableBaseService {
         index = null;
       }
     }
+
     this.tableService.layoutProps.column.dragPlaceholderIndex = index;
     this.tableService.layoutProps.column.dragPlaceholderOffset =
       offset + this.tableService.config().sideSpacing;

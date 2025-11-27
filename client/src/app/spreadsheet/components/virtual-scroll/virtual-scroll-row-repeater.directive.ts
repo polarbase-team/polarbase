@@ -1,73 +1,57 @@
 import { Directive, Input, TrackByFunction } from '@angular/core';
 
 import { Dimension } from '../../services/table.service';
-
-import {
-  _RecycleViewRepeaterStrategy,
-  _ViewChanged,
-  _ViewContext,
-  _ViewProps,
-  _ViewRect,
-  _ViewRepeater,
-} from './recycle-view-repeater-strategy';
-import type { _GroupView } from './virtual-scroll-group-repeater.directive';
 import { TableRow } from '../../models/table-row';
 import { TableGroup } from '../../models/table-group';
+import { ViewContext, ViewProps, ViewRect, ViewRepeater } from './recycle-view-repeater-strategy';
+import type { GroupView } from './virtual-scroll-group-repeater.directive';
 
-type RowView = TableRow & {
-  _viewProps: _ViewProps & {
+export interface RowView extends TableRow {
+  viewProps?: ViewProps & {
     indexInGroup: number;
     group: TableGroup;
   };
-};
-
-type RowViewContext = _ViewContext<TableRow> & {
-  group: TableGroup;
-  indexInGroup: number;
-};
-
-const ROW_TRACK_BY_FN: TrackByFunction<TableRow> = (_i: number, row: TableRow): TableRow['id'] =>
-  row.id;
-
-export type _RowView = RowView;
-export type _RowViewContext = RowViewContext;
-
-export const _ROW_TRACK_BY_FN: TrackByFunction<TableRow> = ROW_TRACK_BY_FN;
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export function _getRowRect(row: TableRow): _ViewRect {
-  return (row as _RowView)?._viewProps.rect || null;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export function _makeUpRowViewProps(
+export interface RowViewContext extends ViewContext<TableRow> {
+  group: TableGroup;
+  indexInGroup: number;
+}
+
+export const ROW_TRACK_BY_FN: TrackByFunction<TableRow> = (
+  _i: number,
+  row: TableRow,
+): TableRow['id'] => row.id;
+
+export function getRowRect(row: RowView) {
+  return row?.viewProps.rect || null;
+}
+
+export function makeUpRowViewProps(
   rows: TableRow[],
   itemSize: number,
-  _startIndex: number = 0,
-  _group?: _GroupView,
-): number {
-  let left: number = 0;
-  let top: number = 0;
+  _startIndex = 0,
+  _group?: GroupView,
+) {
+  let left = 0;
+  let top = 0;
 
   if (_group) {
-    left = _group._viewProps.rect.left;
-    top = _group._viewProps.rect.top + Dimension.GroupHeaderHeight;
+    left = _group.viewProps.rect.left;
+    top = _group.viewProps.rect.top + Dimension.GroupHeaderHeight;
   }
 
-  for (let i: number = 0; i < rows.length; i++) {
-    const rowView: RowView = rows[i] as RowView;
-
-    rowView._viewProps ||= { rect: {} } as RowView['_viewProps'];
-
+  for (let i = 0; i < rows.length; i++) {
+    const rowView = rows[i] as RowView;
+    rowView.viewProps ||= { rect: {} } as RowView['viewProps'];
     if (_group) {
-      rowView._viewProps.indexInGroup = i;
-      rowView._viewProps.group = _group;
+      rowView.viewProps.indexInGroup = i;
+      rowView.viewProps.group = _group;
     }
-
-    rowView._viewProps.index = _startIndex + i;
-    rowView._viewProps.rect.left = left;
-    rowView._viewProps.rect.top = top;
-    rowView._viewProps.rect.height = itemSize;
+    rowView.viewProps.index = _startIndex + i;
+    rowView.viewProps.rect.left = left;
+    rowView.viewProps.rect.top = top;
+    rowView.viewProps.rect.height = itemSize;
 
     top += itemSize;
   }
@@ -75,19 +59,16 @@ export function _makeUpRowViewProps(
   return top;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export function _findRowInsideViewport(
+export function findRowInsideViewport(
   rows: TableRow[],
   rowHeight: number,
   range: [number, number],
   nodePadding: number = 1,
-): TableRow[] {
+) {
   let startIdx: number = Math.floor(range[0] / rowHeight) - nodePadding;
-
   startIdx = Math.max(0, startIdx);
 
   let length: number = Math.ceil(range[1] / rowHeight) + 2 * nodePadding;
-
   length = Math.min(rows.length - startIdx, length);
 
   return rows.slice(startIdx, startIdx + length);
@@ -97,11 +78,11 @@ export function _findRowInsideViewport(
   selector: '[virtualScrollRowRepeater]',
   exportAs: 'virtualScrollRowRepeater',
 })
-export class VirtualScrollRowRepeaterDirective extends _ViewRepeater<TableRow, RowViewContext> {
+export class VirtualScrollRowRepeaterDirective extends ViewRepeater<TableRow, RowViewContext> {
   @Input('virtualScrollRowRepeaterStartIndex')
-  override dataSourceStartIndex: number = 0;
+  override dataSourceStartIndex = 0;
   @Input('virtualScrollRowRepeaterTrackBy')
-  override dataSourceTrackByFn: TrackByFunction<TableRow> = ROW_TRACK_BY_FN;
+  override dataSourceTrackByFn = ROW_TRACK_BY_FN;
 
   @Input('virtualScrollRowRepeater')
   set rowDs(ds: TableRow[]) {
@@ -116,9 +97,8 @@ export class VirtualScrollRowRepeaterDirective extends _ViewRepeater<TableRow, R
   protected override updateContextProperties(context: RowViewContext) {
     super.updateContextProperties(context);
 
-    const { _viewProps }: RowView = context.$implicit as RowView;
-
-    context.indexInGroup = _viewProps.indexInGroup;
-    context.group = _viewProps.group;
+    const { viewProps } = context.$implicit as RowView;
+    context.indexInGroup = viewProps.indexInGroup;
+    context.group = viewProps.group;
   }
 }

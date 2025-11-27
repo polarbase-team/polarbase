@@ -1,85 +1,61 @@
 import { Directive, Input, TrackByFunction } from '@angular/core';
 
 import { Dimension } from '../../services/table.service';
-
-import {
-  _ViewContext,
-  _ViewProps,
-  _ViewRect,
-  _ViewRepeater,
-} from './recycle-view-repeater-strategy';
-import {
-  _findRowInsideViewport,
-  _makeUpRowViewProps,
-} from './virtual-scroll-row-repeater.directive';
 import { TableGroup } from '../../models/table-group';
 import { TableRow } from '../../models/table-row';
+import { ViewContext, ViewProps, ViewRepeater } from './recycle-view-repeater-strategy';
+import { findRowInsideViewport, makeUpRowViewProps } from './virtual-scroll-row-repeater.directive';
 
-type GroupView = TableGroup & {
-  _viewProps: _ViewProps & {
-    startItemIndex: number;
-  };
-};
+export interface GroupView extends TableGroup {
+  viewProps?: ViewProps & { startItemIndex: number };
+}
 
-type GroupViewContext = _ViewContext<TableGroup>;
+export interface GroupViewContext extends ViewContext<TableGroup> {}
 
-const GROUP_TRACK_BY_FN: TrackByFunction<TableGroup> = (
+export const GROUP_TRACK_BY_FN: TrackByFunction<TableGroup> = (
   _i: number,
   group: TableGroup,
 ): TableGroup['id'] => group.id;
 
-export type _GroupView = GroupView;
-export type _GroupViewContext = GroupViewContext;
-
-export const _GROUP_TRACK_BY_FN: TrackByFunction<TableGroup> = GROUP_TRACK_BY_FN;
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export function _getGroupRect(group: TableGroup): _ViewRect {
-  return group ? (group as _GroupView)._viewProps.rect : null;
+export function _getGroupRect(group: GroupView) {
+  return group?.viewProps.rect || null;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export function _makeUpGroupViewProps(
+export function makeUpGroupViewProps(
   group: TableGroup,
   itemSize: number,
-  extraSize: number = 0,
-  _index: number = 0,
-  _startItemIndex: number = 0,
-): number {
-  const groupView: GroupView = group as GroupView;
-  const isRootGroup: boolean = group.depth === 0;
-
-  groupView._viewProps ||= {
+  extraSize = 0,
+  _index = 0,
+  _startItemIndex = 0,
+) {
+  const isRootGroup = group.depth === 0;
+  const groupView: GroupView = group;
+  groupView.viewProps ||= {
     rect: {},
-  } as GroupView['_viewProps'];
+  } as GroupView['viewProps'];
 
   let height: number;
-
   if (group.collapsed && !isRootGroup) {
     height = Dimension.GroupHeaderHeight;
   } else if (group.children) {
-    let h: number = 0;
-    let t: number = groupView._viewProps.rect.top || 0;
+    let h = 0;
+    let t = groupView.viewProps.rect.top || 0;
 
     if (!isRootGroup) {
       t += Dimension.GroupHeaderHeight;
     }
 
-    const children: GroupView[] = group.children as GroupView[];
+    const children = group.children as GroupView[];
 
-    // eslint-disable-next-line @typescript-eslint/prefer-for-of
-    for (let i: number = 0; i < children.length; i++) {
-      const child: GroupView = children[i];
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      child.viewProps ||= { index: i, rect: {} } as GroupView['viewProps'];
+      child.viewProps.startItemIndex = _startItemIndex;
+      child.viewProps.rect.left = child.viewProps.rect.right = group.depth * Dimension.GroupPadding;
+      child.viewProps.rect.top = t;
 
-      child._viewProps ||= { index: i, rect: {} } as GroupView['_viewProps'];
-
-      child._viewProps.startItemIndex = _startItemIndex;
-      child._viewProps.rect.left = child._viewProps.rect.right =
-        group.depth * Dimension.GroupPadding;
-      child._viewProps.rect.top = t;
-
-      const s: number =
-        _makeUpGroupViewProps(child, itemSize, extraSize, _index, _startItemIndex) +
+      const s =
+        makeUpGroupViewProps(child, itemSize, extraSize, _index, _startItemIndex) +
         Dimension.GroupSpacing;
 
       t += s;
@@ -93,63 +69,58 @@ export function _makeUpGroupViewProps(
   } else {
     height = group.rows.length * itemSize + Dimension.GroupHeaderHeight + extraSize;
 
-    _makeUpRowViewProps(group.rows, itemSize, _startItemIndex, groupView);
+    makeUpRowViewProps(group.rows, itemSize, _startItemIndex, groupView);
   }
 
   // Removes excess height during make-up process.
   if (isRootGroup) {
     height -= Dimension.GroupHeaderHeight;
     height -= Dimension.GroupSpacing;
-
     if (height < 0) height = extraSize;
   }
 
-  groupView._viewProps.rect.height = height;
-
-  return height;
+  return (groupView.viewProps.rect.height = height);
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export function _findGroupInsideViewport(
+export function findGroupInsideViewport(
   groups: TableGroup[],
   itemSize: number,
   range: [number, number],
   memo: [TableGroup[], TableRow[]] = [[], []],
-  start: number = 0,
-  end: number = groups.length - 1,
-): [TableGroup[], TableRow[]] {
+  start = 0,
+  end = groups.length - 1,
+) {
   if (start <= end) {
-    const mid: number = Math.floor((start + end) / 2);
-    const group: GroupView = groups[mid] as GroupView;
-    const gs: number = group._viewProps.rect.top;
-    const ge: number = gs + group._viewProps.rect.height;
-    const [vs, ve]: [number, number] = range;
-    const isGroupCoverViewport: boolean = gs < vs && ge > ve;
-    const isGroupStartInsideViewport: boolean = gs >= vs && gs <= ve;
-    const isGroupEndInsideViewport: boolean = ge >= vs && ge <= ve;
+    const mid = Math.floor((start + end) / 2);
+    const group: GroupView = groups[mid];
+    const gs = group.viewProps.rect.top;
+    const ge = gs + group.viewProps.rect.height;
+    const [vs, ve] = range;
+    const isGroupCoverViewport = gs < vs && ge > ve;
+    const isGroupStartInsideViewport = gs >= vs && gs <= ve;
+    const isGroupEndInsideViewport = ge >= vs && ge <= ve;
 
     if (isGroupCoverViewport || isGroupStartInsideViewport || isGroupEndInsideViewport) {
       memo[0].push(group);
 
       if (!group.collapsed) {
         if (group.children) {
-          _findGroupInsideViewport(group.children, itemSize, range, memo);
+          findGroupInsideViewport(group.children, itemSize, range, memo);
         } else if (group.rows.length) {
-          const s: number = Math.max(gs, vs);
-          const e: number = Math.min(ge, ve);
-
-          memo[1].push(..._findRowInsideViewport(group.rows, itemSize, [s - gs, e - s]));
+          const s = Math.max(gs, vs);
+          const e = Math.min(ge, ve);
+          memo[1].push(...findRowInsideViewport(group.rows, itemSize, [s - gs, e - s]));
         }
       }
     }
 
     if (!isGroupCoverViewport) {
       if (gs > vs) {
-        _findGroupInsideViewport(groups, itemSize, range, memo, start, mid - 1);
+        findGroupInsideViewport(groups, itemSize, range, memo, start, mid - 1);
       }
 
       if (ge < ve) {
-        _findGroupInsideViewport(groups, itemSize, range, memo, mid + 1, end);
+        findGroupInsideViewport(groups, itemSize, range, memo, mid + 1, end);
       }
     }
   }
@@ -161,14 +132,14 @@ export function _findGroupInsideViewport(
   selector: '[virtualScrollGroupRepeater]',
   exportAs: 'virtualScrollGroupRepeater',
 })
-export class VirtualScrollGroupRepeaterDirective extends _ViewRepeater<
+export class VirtualScrollGroupRepeaterDirective extends ViewRepeater<
   TableGroup,
   GroupViewContext
 > {
   @Input('virtualScrollGroupRepeaterStartIndex')
-  override dataSourceStartIndex: number = 0;
+  override dataSourceStartIndex = 0;
   @Input('virtualScrollGroupRepeaterTrackBy')
-  override dataSourceTrackByFn: TrackByFunction<TableGroup> = GROUP_TRACK_BY_FN;
+  override dataSourceTrackByFn = GROUP_TRACK_BY_FN;
 
   @Input('virtualScrollGroupRepeater')
   set groupDs(ds: TableGroup[]) {

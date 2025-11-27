@@ -14,7 +14,7 @@ import { FieldCellService } from '../components/field-cell/field-cell.service';
 import { FieldValidationErrors, FieldValidationKey } from '../field/objects/field.object';
 import { DateField } from '../field/objects/date-field.object';
 import { NumberField } from '../field/objects/number-field.object';
-import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { TableBaseService } from './table-base.service';
 import { TableCell } from '../models/table-cell';
 import { TableCellActionType, TableCellEditedEvent } from '../events/table-cell';
@@ -883,7 +883,7 @@ export class TableCellService extends TableBaseService {
       return this.tableGroupService.getRowCellOffsetInGroup(index);
     }
 
-    const left = _getColumnOffset(this.tableColumnService.findColumnByIndex(index.columnIndex));
+    const left = getColumnOffset(this.tableColumnService.findColumnByIndex(index.columnIndex));
     const top = index.rowIndex * this.tableRowService.rowHeight();
 
     return { left, top };
