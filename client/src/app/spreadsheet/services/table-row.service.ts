@@ -82,7 +82,8 @@ export class TableRowService extends TableBaseService {
       const rows = this.host.sourceRows();
       for (const row of rows) {
         if (!this.rowLookup.has(row.id)) {
-          row.id ||= _.uniqueId();
+          row.id ??= _.uniqueId();
+          row.editable ??= true;
         }
         if (row.selected) this.selectedRows.add(row);
         this.rowLookup.set(row.id, row);

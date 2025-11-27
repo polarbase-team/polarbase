@@ -216,8 +216,9 @@ export class TableColumnService extends TableBaseService {
       const columns = this.host.sourceColumns();
       for (const column of columns) {
         if (!this.columnLookup.has(column.id)) {
-          column.id ||= _.uniqueId();
-          column.width ||= this.tableService.config().column.defaultWidth;
+          column.id ??= _.uniqueId();
+          column.width ??= this.tableService.config().column.defaultWidth;
+          column.editable ??= true;
           this.columnLookup.set(column.id, column);
         }
       }

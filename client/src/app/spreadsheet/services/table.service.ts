@@ -105,6 +105,7 @@ const DEFAULT_CONFIG: TableConfig = {
     expandable: true,
     creatable: true,
     insertable: true,
+    editable: true,
     deletable: true,
   },
   cell: {

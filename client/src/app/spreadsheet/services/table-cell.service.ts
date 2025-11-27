@@ -1225,7 +1225,12 @@ export class TableCellService extends TableBaseService {
             (column.field.dataType === DataType.Checkbox
               ? row.data?.[column.id] === true
               : !isEmpty(row.data?.[column.id]))) &&
-          (!excludeNonEditable || row.editable === true || row.editable?.[column.id] === true)
+          (!excludeNonEditable ||
+            this.tableService.config().column.editable ||
+            this.tableService.config().row.editable ||
+            column.editable ||
+            row.editable === true ||
+            row.editable?.[column.id] === true)
         ) {
           continue;
         }

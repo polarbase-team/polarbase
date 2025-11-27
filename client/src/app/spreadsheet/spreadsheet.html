@@ -510,6 +510,7 @@
                         row !== tableRowService.draftRow &&
                         ((tableService.isDataStreaming && !$any(row)._isStreamed) ||
                           (!tableService.config().column.editable &&
+                            !tableService.config().row.editable &&
                             !column.editable &&
                             row.editable !== true &&
                             row.editable?.[column.id] !== true))

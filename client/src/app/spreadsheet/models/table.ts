@@ -40,6 +40,7 @@ export type TableConfig = {
     expandable?: boolean;
     creatable?: boolean;
     insertable?: boolean;
+    editable?: boolean;
     deletable?: boolean;
   };
   cell?: {
