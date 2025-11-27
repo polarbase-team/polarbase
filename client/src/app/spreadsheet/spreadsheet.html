@@ -2,9 +2,15 @@
 <p-confirmdialog />
 <p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
 <p-contextmenu #contextMenu [model]="menuItems" appendTo="body" />
-<p-popover #cellErrorTooltip [dismissable]="false" appendTo="body" styleClass="cell-error-tooltip">
-  {{ cellErrorMessage }}
-</p-popover>
+<p-overlay
+  [visible]="!!tableCellService.cellError"
+  [target]="$any(tableCellService.cellError?.target)"
+  appendTo="body"
+>
+  <ng-template #content>
+    <p-message severity="error">{{ tableCellService.cellError?.message }}</p-message>
+  </ng-template>
+</p-overlay>
 
 <virtual-scroll
   [sideSpacing]="tableService.config().sideSpacing"

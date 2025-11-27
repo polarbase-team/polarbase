@@ -108,6 +108,8 @@ export class MatrixCell {
 
 @Injectable()
 export class TableCellService extends TableBaseService {
+  cellError: { target: HTMLElement; message: string };
+
   private renderer = inject(Renderer2);
   private eleRef = inject(ElementRef);
   private toastService = inject(MessageService);
@@ -1235,7 +1237,7 @@ export class TableCellService extends TableBaseService {
     return matrix;
   }
 
-  private openErrorTooltip(cellElement: HTMLElement, key: string) {
+  private openErrorTooltip(target: HTMLElement, key: string) {
     let message: string;
     switch (key) {
       case FieldValidationKey.Required:
@@ -1253,11 +1255,10 @@ export class TableCellService extends TableBaseService {
       default:
         message = 'An error has occurred.';
     }
-    this.host.cellErrorMessage = message;
-    this.host.cellErrorTooltip.show(null, cellElement);
+    this.cellError = { target, message };
   }
 
   private closeErrorTooltip() {
-    this.host.cellErrorTooltip.hide();
+    this.cellError = null;
   }
 }
