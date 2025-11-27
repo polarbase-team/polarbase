@@ -1,8 +1,10 @@
 import _ from 'lodash';
 import { computed, DestroyRef, ElementRef, inject, Injectable } from '@angular/core';
+import { CdkDragEnd, CdkDragMove } from '@angular/cdk/drag-drop';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 
+import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { calculateBy, makeUpCalculatedData } from '../utils/calculate';
 import { groupBy } from '../utils/group';
 import { sortBy } from '../utils/sort';
@@ -16,7 +18,7 @@ import { TableConfig } from '../models/table';
 import { TableRow } from '../models/table-row';
 import { TableColumn } from '../models/table-column';
 import { TableCell } from '../models/table-cell';
-import { TableSearchInfo } from '../events/table';
+import { TableActionType, TableSearchInfo } from '../events/table';
 
 export const Dimension = {
   HeaderHeight: 36,
@@ -113,12 +115,56 @@ const DEFAULT_CONFIG: TableConfig = {
   },
 };
 
+function calculateFreezeDividerDragPlaceholderIndex(
+  columns: TableColumn[],
+  offsetX: number,
+  scrollLeft: number,
+  frozenIndex: number,
+) {
+  let dragPlaceholderIndex = 0;
+
+  for (let i = 0; i < columns.length; i++) {
+    let a = _getColumnOffset(columns[i]);
+    let b = _getColumnOffset(columns[i + 1]) || a;
+
+    if (i <= frozenIndex) {
+      a += scrollLeft;
+      b += scrollLeft;
+    }
+
+    if (offsetX < a) break;
+
+    if (offsetX >= a && offsetX <= b) {
+      const compared = (a + b) / 2;
+      if (offsetX < compared) {
+        dragPlaceholderIndex = i;
+      } else {
+        dragPlaceholderIndex = i + 1;
+      }
+      break;
+    }
+
+    dragPlaceholderIndex = i;
+  }
+
+  return dragPlaceholderIndex;
+}
+
 @Injectable()
 export class TableService extends TableBaseService {
   config = computed<TableConfig>(() => {
     const config = _.defaultsDeep(this.host.sourceConfig(), DEFAULT_CONFIG);
     this.isDataStreaming ??= config.streamData;
     return config;
+  });
+
+  frozenIndex = computed(() => {
+    const columns = this.tableColumnService.columns();
+    let frozenIndex = this.config().column.frozenIndex;
+    if (columns && frozenIndex > columns.length - 1) {
+      frozenIndex = columns.length - 1;
+    }
+    return frozenIndex;
   });
 
   layoutProps: LayoutProps = {
@@ -412,6 +458,56 @@ export class TableService extends TableBaseService {
     } else {
       this.tableRowService.rows.update(() => this.host.sourceRows());
     }
+  }
+
+  onFreezeDividerMousemove(e: MouseEvent) {
+    this.layoutProps.frozenDivider.isHover = true;
+    this.layoutProps.frozenDivider.dragHandleOffset =
+      e.offsetY - Dimension.FreezeDividerDragHandleHeight / 2;
+  }
+
+  onFreezeDividerMouseleave() {
+    this.layoutProps.frozenDivider.isHover = false;
+  }
+
+  onFreezeDividerDragStarted() {
+    this.host.virtualScroll.scrollToLeft();
+    this.layoutProps.frozenDivider.dragging = {} as any;
+  }
+
+  onFreezeDividerDragMoved(e: CdkDragMove) {
+    const { x: pointerOffsetX } = this.host.virtualScroll.measurePointerOffset(e.pointerPosition);
+    const index = calculateFreezeDividerDragPlaceholderIndex(
+      this.tableColumnService.columns(),
+      pointerOffsetX,
+      this.host.virtualScroll.scrollLeft,
+      this.frozenIndex(),
+    );
+    const offset = _getColumnOffset(this.tableColumnService.findColumnByIndex(index));
+    if (offset / this.host.virtualScroll.viewport.width > this.config().column.maxFrozenRatio) {
+      return;
+    }
+    this.layoutProps.frozenDivider.dragging.index = index;
+    this.layoutProps.frozenDivider.dragging.offset = offset + this.config().sideSpacing;
+  }
+
+  onFreezeDividerDragEnded(e: CdkDragEnd) {
+    const { index } = this.layoutProps.frozenDivider.dragging;
+    if (index === null) return;
+
+    this.updateFrozenIndex(index - 1);
+    this.layoutProps.frozenDivider.dragging = null;
+    e.source._dragRef.reset();
+  }
+
+  updateFrozenIndex(index: number) {
+    if (index === this.frozenIndex()) return;
+    this.config().column.frozenIndex = index;
+    this.tableColumnService.columns.update((arr) => [...arr]);
+    this.host.action.emit({
+      type: TableActionType.Freeze,
+      payload: index,
+    });
   }
 
   updateFillHandlerPosition(

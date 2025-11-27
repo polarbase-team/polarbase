@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Injectable, effect, signal, computed } from '@angular/core';
+import { Injectable, effect, signal } from '@angular/core';
 import {
   CdkDragDrop,
   CdkDragEnd,
@@ -13,11 +13,9 @@ import { MenuItem } from 'primeng/api';
 import { CalculateType } from '../utils/calculate';
 import { SortType } from '../utils/sort';
 import { _getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
-import { Dimension } from './table.service';
 import { TableBaseService } from './table-base.service';
 import { TableColumn } from '../models/table-column';
 import { TableColumnActionType } from '../events/table-column';
-import { TableActionType } from '../events/table';
 import { DataType } from '../field/interfaces/field.interface';
 
 const LABELS: Record<CalculateType, string> = {
@@ -125,43 +123,6 @@ function calculateColumnDragPlaceholderIndex(
   return dragPlaceholderIndex;
 }
 
-function calculateFreezeDividerDragPlaceholderIndex(
-  columns: TableColumn[],
-  offsetX: number,
-  scrollLeft: number,
-  frozenIndex: number,
-) {
-  let dragPlaceholderIndex = 0;
-
-  for (let i = 0; i < columns.length; i++) {
-    let a = _getColumnOffset(columns[i]);
-    let b = _getColumnOffset(columns[i + 1]) || a;
-
-    if (i <= frozenIndex) {
-      a += scrollLeft;
-      b += scrollLeft;
-    }
-
-    if (offsetX < a) {
-      break;
-    }
-
-    if (offsetX >= a && offsetX <= b) {
-      const compared = (a + b) / 2;
-      if (offsetX < compared) {
-        dragPlaceholderIndex = i;
-      } else {
-        dragPlaceholderIndex = i + 1;
-      }
-      break;
-    }
-
-    dragPlaceholderIndex = i;
-  }
-
-  return dragPlaceholderIndex;
-}
-
 @Injectable()
 export class TableColumnService extends TableBaseService {
   columns = signal<TableColumn[]>([]);
@@ -170,14 +131,6 @@ export class TableColumnService extends TableBaseService {
   calculatedColumns = new Map<TableColumn['id'], TableColumn>();
   groupedColumns = new Map<TableColumn['id'], TableColumn>();
   sortedColumns = new Map<TableColumn['id'], TableColumn>();
-
-  frozenIndex = computed(() => {
-    let frozenIndex = this.tableService.config().column.frozenIndex;
-    if (this.columns() && frozenIndex > this.columns().length - 1) {
-      frozenIndex = this.columns().length - 1;
-    }
-    return frozenIndex;
-  });
 
   private columnLookup = new Map<TableColumn['id'], TableColumn>();
 
@@ -227,8 +180,8 @@ export class TableColumnService extends TableBaseService {
 
     effect(() => {
       const columns = this.columns();
-      this.leftColumns.update(() => columns.slice(0, this.frozenIndex() + 1));
-      this.rightColumns.update(() => columns.slice(this.frozenIndex() + 1));
+      this.leftColumns.update(() => columns.slice(0, this.tableService.frozenIndex() + 1));
+      this.rightColumns.update(() => columns.slice(this.tableService.frozenIndex() + 1));
     });
   }
 
@@ -374,50 +327,6 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  onFreezeDividerMousemove(e: MouseEvent) {
-    this.tableService.layoutProps.frozenDivider.isHover = true;
-    this.tableService.layoutProps.frozenDivider.dragHandleOffset =
-      e.offsetY - Dimension.FreezeDividerDragHandleHeight / 2;
-  }
-
-  onFreezeDividerMouseleave() {
-    this.tableService.layoutProps.frozenDivider.isHover = false;
-  }
-
-  onFreezeDividerDragStarted() {
-    this.host.virtualScroll.scrollToLeft();
-    this.tableService.layoutProps.frozenDivider.dragging = {} as any;
-  }
-
-  onFreezeDividerDragMoved(e: CdkDragMove) {
-    const { x: pointerOffsetX } = this.host.virtualScroll.measurePointerOffset(e.pointerPosition);
-    const index = calculateFreezeDividerDragPlaceholderIndex(
-      this.columns(),
-      pointerOffsetX,
-      this.host.virtualScroll.scrollLeft,
-      this.frozenIndex(),
-    );
-    const offset = _getColumnOffset(this.findColumnByIndex(index));
-    if (
-      offset / this.host.virtualScroll.viewport.width >
-      this.tableService.config().column.maxFrozenRatio
-    ) {
-      return;
-    }
-    this.tableService.layoutProps.frozenDivider.dragging.index = index;
-    this.tableService.layoutProps.frozenDivider.dragging.offset =
-      offset + this.tableService.config().sideSpacing;
-  }
-
-  onFreezeDividerDragEnded(e: CdkDragEnd) {
-    const { index } = this.tableService.layoutProps.frozenDivider.dragging;
-    if (index === null) return;
-
-    this.freezeUpToColumnIndex(index - 1);
-    this.tableService.layoutProps.frozenDivider.dragging = null;
-    e.source._dragRef.reset();
-  }
-
   onColumnDragStarted(_e: CdkDragStart, column: TableColumnExtra) {
     this.tableCellService.deselectAllCells();
     this.deselectAllColumns();
@@ -437,7 +346,7 @@ export class TableColumnService extends TableBaseService {
             this.columns(),
             pointerOffsetX,
             this.host.virtualScroll.scrollLeft,
-            this.frozenIndex(),
+            this.tableService.frozenIndex(),
           );
     let offset = null;
     if (index !== null) {
@@ -454,7 +363,7 @@ export class TableColumnService extends TableBaseService {
         if (isOutRange) {
           offset += column.width;
         }
-        if (index - 1 > this.frozenIndex()) {
+        if (index - 1 > this.tableService.frozenIndex()) {
           offset -= this.host.virtualScroll.scrollLeft;
         }
       } else {
@@ -514,16 +423,6 @@ export class TableColumnService extends TableBaseService {
     this.host.columnAction.emit({
       type: TableColumnActionType.Resize,
       payload: column,
-    });
-  }
-
-  freezeUpToColumnIndex(columnIndex: number) {
-    if (columnIndex === this.frozenIndex()) return;
-    this.tableService.config().column.frozenIndex = columnIndex;
-    this.columns.update((arr) => [...arr]);
-    this.host.action.emit({
-      type: TableActionType.Freeze,
-      payload: columnIndex,
     });
   }
 
@@ -662,7 +561,7 @@ export class TableColumnService extends TableBaseService {
             label: 'Freeze up to This Column',
             icon: 'pi pi-sign-in',
             command: () => {
-              this.freezeUpToColumnIndex(columnIndex);
+              this.tableService.updateFrozenIndex(columnIndex);
             },
           },
           { separator: true },

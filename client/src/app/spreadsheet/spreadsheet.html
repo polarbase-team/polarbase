@@ -126,7 +126,7 @@
             (mousedown)="$event.stopPropagation()"
             (mouseenter)="
               tableService.layoutProps.frozenDivider.isHideHeadLine =
-                columnIndex === tableColumnService.frozenIndex()
+                columnIndex === tableService.frozenIndex()
             "
             (mouseleave)="tableService.layoutProps.frozenDivider.isHideHeadLine = false"
           ></div>
@@ -175,7 +175,7 @@
               headerCellTemplate;
               context: {
                 column,
-                columnIndex: tableColumnService.frozenIndex() + columnIndex + 1,
+                columnIndex: tableService.frozenIndex() + columnIndex + 1,
               }
             "
           ></ng-container>
@@ -255,7 +255,7 @@
                     let columnRect = rect
                   "
                 >
-                  @if (columnIndex === 0 && tableColumnService.frozenIndex() >= 0) {
+                  @if (columnIndex === 0 && tableService.frozenIndex() >= 0) {
                     <div
                       class="group-cell cell"
                       cell-type="group"
@@ -651,7 +651,7 @@
               <ng-container
                 *virtualScrollColumnRepeater="
                   virtualScroll.viewport.rightWrapper.columns;
-                  startIndex: tableColumnService.frozenIndex() + 1;
+                  startIndex: tableService.frozenIndex() + 1;
                   let column;
                   let columnIndex = index;
                   let columnRect = rect
@@ -854,7 +854,7 @@
                 footerCellTempTemplate;
                 context: {
                   column,
-                  columnIndex: tableColumnService.frozenIndex() + columnIndex + 1,
+                  columnIndex: tableService.frozenIndex() + columnIndex + 1,
                 }
               "
             ></ng-container>
@@ -865,10 +865,10 @@
   }
 
   <!-- Frozen divider -->
-  @if (tableService.config().column.freezable || tableColumnService.frozenIndex() !== null) {
+  @if (tableService.config().column.freezable || tableService.frozenIndex() !== null) {
     @let isHideHeadLine =
       tableService.layoutProps.frozenDivider.isHideHeadLine ||
-      $any(tableColumnService.columns()?.[tableColumnService.frozenIndex()])?._isResizing;
+      $any(tableColumnService.columns()?.[tableService.frozenIndex()])?._isResizing;
     @let bodyLineHeight =
       virtualScroll.viewport.height + virtualScroll.scrollTop > virtualScroll.viewport.contentHeight
         ? virtualScroll.viewport.contentHeight -
@@ -884,9 +884,9 @@
       [class.frozen-divider--dragging]="tableService.layoutProps.frozenDivider.dragging"
       [class.frozen-divider--disabled]="!tableService.config().column.freezable || isHideHeadLine"
       [cdkDragDisabled]="!tableService.config().column.freezable"
-      (cdkDragStarted)="tableColumnService.onFreezeDividerDragStarted()"
-      (cdkDragMoved)="tableColumnService.onFreezeDividerDragMoved($event)"
-      (cdkDragEnded)="tableColumnService.onFreezeDividerDragEnded($event)"
+      (cdkDragStarted)="tableService.onFreezeDividerDragStarted()"
+      (cdkDragMoved)="tableService.onFreezeDividerDragMoved($event)"
+      (cdkDragEnded)="tableService.onFreezeDividerDragEnded($event)"
     >
       <div
         class="frozen-divider__line frozen-divider__head-line"
@@ -897,8 +897,8 @@
         cdkDragHandle
         [style.height.px]="bodyLineHeight"
         [class.hidden]="!virtualScroll.viewport.contentHeight"
-        (mousemove)="tableColumnService.onFreezeDividerMousemove($event)"
-        (mouseleave)="tableColumnService.onFreezeDividerMouseleave()"
+        (mousemove)="tableService.onFreezeDividerMousemove($event)"
+        (mouseleave)="tableService.onFreezeDividerMouseleave()"
       >
         <span
           class="frozen-divider__drag-handle"
