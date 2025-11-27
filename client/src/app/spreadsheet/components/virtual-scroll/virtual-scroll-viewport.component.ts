@@ -6,13 +6,12 @@ import {
   ContentChild,
   DoCheck,
   ElementRef,
-  EventEmitter,
   inject,
   Input,
   IterableDiffer,
   IterableDiffers,
   OnDestroy,
-  Output,
+  output,
 } from '@angular/core';
 
 import { Dimension } from '../../services/table.service';
@@ -39,6 +38,7 @@ import {
   VirtualScrollLeftContentWrapperComponent as VSLeftCWComponent,
   VirtualScrollRightContentWrapperComponent as VSRightCWComponent,
 } from './virtual-scroll-content-wrapper.component';
+import { outputToObservable } from '@angular/core/rxjs-interop';
 
 export interface ViewportSizeUpdatedEvent {
   updateOnWidth: boolean;
@@ -66,7 +66,8 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   @ContentChild(VSRightCWComponent, { static: true })
   rightWrapper: VSRightCWComponent;
 
-  @Output() sizeUpdated = new EventEmitter<ViewportSizeUpdatedEvent>();
+  sizeUpdated = output<ViewportSizeUpdatedEvent>();
+  sizeUpdated$ = outputToObservable(this.sizeUpdated);
 
   private cdRef = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);

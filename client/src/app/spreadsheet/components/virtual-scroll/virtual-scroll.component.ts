@@ -6,15 +6,14 @@ import {
   ContentChild,
   DestroyRef,
   ElementRef,
-  EventEmitter,
   HostBinding,
   inject,
-  Input,
+  input,
   OnDestroy,
-  Output,
+  output,
   ViewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { outputToObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Point } from '@angular/cdk/drag-drop';
 import {
   animationFrames,
@@ -77,10 +76,12 @@ const SCROLL_LONG_DISTANCE: number = 1200;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
-  @Input() sideSpacing: number;
-  @Input() disable: () => boolean;
+  sideSpacing = input<number>(0);
+  disable = input<() => boolean>(() => {
+    return false;
+  });
 
-  @Output() scrolling: EventEmitter<ScrollEvent> = new EventEmitter<ScrollEvent>();
+  scrolling = output<ScrollEvent>();
 
   @ContentChild(VirtualScrollViewportComponent, { static: true })
   readonly viewport: VirtualScrollViewportComponent;
@@ -170,7 +171,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   }
 
   get scrollDivideOffset() {
-    return this.viewport.leftWidth + this.sideSpacing;
+    return this.viewport.leftWidth + this.sideSpacing();
   }
 
   get scrollLayout() {
@@ -182,7 +183,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       let wheelAnimationFrame: number;
       fromEvent<WheelEvent>(this.eleRef.nativeElement, 'wheel')
         .pipe(
-          filter(() => !this.disable?.()),
+          filter(() => !this.disable()()),
           takeUntilDestroyed(this.destroyRef),
         )
         .subscribe((e) => {
@@ -204,26 +205,26 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
       fromEvent<PointerEvent>(this.eleRef.nativeElement, 'pointerdown')
         .pipe(
-          filter(() => !this.disable?.()),
+          filter(() => !this.disable()()),
           takeUntilDestroyed(this.destroyRef),
         )
         .subscribe(this.onPointerDown.bind(this));
 
       fromEvent<PointerEvent>(this.horizontalThumb.nativeElement, 'pointerdown')
         .pipe(
-          filter(() => !this.disable?.()),
+          filter(() => !this.disable()()),
           takeUntilDestroyed(this.destroyRef),
         )
         .subscribe(this.onThumbPointerdown.bind(this, 'horizontal'));
 
       fromEvent<PointerEvent>(this.verticalThumb.nativeElement, 'pointerdown')
         .pipe(
-          filter(() => !this.disable?.()),
+          filter(() => !this.disable()()),
           takeUntilDestroyed(this.destroyRef),
         )
         .subscribe(this.onThumbPointerdown.bind(this, 'vertical'));
 
-      this.scrolling
+      outputToObservable(this.scrolling)
         .pipe(
           debounceTime(200),
           tap(() => {
@@ -239,7 +240,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         )
         .subscribe();
 
-      this.viewport.sizeUpdated
+      this.viewport.sizeUpdated$
         .pipe(
           startWith<ViewportSizeUpdatedEvent>({} as ViewportSizeUpdatedEvent),
           audit(() => animationFrames()),
