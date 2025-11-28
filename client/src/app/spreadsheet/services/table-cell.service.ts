@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import dayjs, { isDayjs } from 'dayjs';
 import { FORECAST } from '@formulajs/formulajs';
-import { Injectable, ElementRef, Renderer2, inject, computed } from '@angular/core';
+import { Injectable, ElementRef, Renderer2, inject } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
 import { isEmpty } from '../utils/is-empty';
@@ -12,8 +12,6 @@ import { parseClipboardExternal, parseClipboardInternal } from '../utils/paste';
 import { Dimension } from './table.service';
 import { FieldCellService } from '../components/field-cell/field-cell.service';
 import { FieldValidationErrors, FieldValidationKey } from '../field/objects/field.object';
-import { DateField } from '../field/objects/date-field.object';
-import { NumberField } from '../field/objects/number-field.object';
 import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { TableBaseService } from './table-base.service';
 import { TableCell } from '../models/table-cell';
@@ -45,10 +43,6 @@ export const Direction = {
   After: 'after',
 } as const;
 export type Direction = (typeof Direction)[keyof typeof Direction];
-
-const UNPASTEABLE_DATA_TYPES: DataType[] = [];
-const UNCLEARABLE_DATA_TYPES: DataType[] = [];
-const UNCUTABLE_DATA_TYPES: DataType[] = [];
 
 function parseClipboardItemToData(column: TableColumn, item: ClipboardItem<TableCell>) {
   const { text, data, metadata } = item;
@@ -333,7 +327,6 @@ export class TableCellService extends TableBaseService {
   getCells(
     startCellIndex: CellIndex,
     endCellIndex: CellIndex,
-    excludeDataTypes?: DataType[],
     excludeStates?: ExcludeCellState[],
   ): MatrixCell {
     const { rowIndex: startRowIdx, columnIndex: startColumnIdx } = startCellIndex;
@@ -352,9 +345,7 @@ export class TableCellService extends TableBaseService {
       }
     }
 
-    return excludeDataTypes?.length || excludeStates?.length
-      ? this.filterExcludeCells(matrix, excludeDataTypes, excludeStates)
-      : matrix;
+    return excludeStates?.length ? this.filterExcludeCells(matrix, excludeStates) : matrix;
   }
 
   selectCells(
@@ -506,7 +497,6 @@ export class TableCellService extends TableBaseService {
       matrix = this.getCells(
         { rowIndex: 0, columnIndex: startIdx },
         { rowIndex: this.tableRowService.getLastRowIndex(), columnIndex: endIdx },
-        UNPASTEABLE_DATA_TYPES,
         [ExcludeCellState.NonEditable],
       );
     } else {
@@ -525,13 +515,11 @@ export class TableCellService extends TableBaseService {
           columnIndex: startIdx.columnIndex + columnCount - 1,
         };
 
-        matrix = this.filterExcludeCells(
-          this.selectCells(startIdx, endIdx),
-          UNPASTEABLE_DATA_TYPES,
-          [ExcludeCellState.NonEditable],
-        );
+        matrix = this.filterExcludeCells(this.selectCells(startIdx, endIdx), [
+          ExcludeCellState.NonEditable,
+        ]);
       } else {
-        matrix = this.getCells(cellSelection.start, cellSelection.end, UNPASTEABLE_DATA_TYPES, [
+        matrix = this.getCells(cellSelection.start, cellSelection.end, [
           ExcludeCellState.NonEditable,
         ]);
       }
@@ -604,11 +592,9 @@ export class TableCellService extends TableBaseService {
   }
 
   fillCells(source: [CellIndex, CellIndex], target: [CellIndex, CellIndex], isReverse: boolean) {
-    const targetMatrixCell = this.filterExcludeCells(
-      this.getCells(target[0], target[1]),
-      undefined,
-      [ExcludeCellState.NonEditable],
-    );
+    const targetMatrixCell = this.filterExcludeCells(this.getCells(target[0], target[1]), [
+      ExcludeCellState.NonEditable,
+    ]);
     const sourceMatrixCell = this.getCells(source[0], source[1]);
     const sourceValues = sourceMatrixCell.values();
     const targetValues = targetMatrixCell.values();
@@ -639,7 +625,7 @@ export class TableCellService extends TableBaseService {
           const dataType = column.field.dataType;
 
           switch (dataType) {
-            case NumberField.dataType: {
+            case DataType.Number: {
               const prev = sourceData[i - 1]?.[j];
               let metadata = prev?.metadata;
 
@@ -666,7 +652,7 @@ export class TableCellService extends TableBaseService {
               };
               break;
             }
-            case DateField.dataType: {
+            case DataType.Date: {
               const prev = sourceData[i - 1]?.[j];
               let metadata: any;
 
@@ -907,7 +893,7 @@ export class TableCellService extends TableBaseService {
     return 0;
   }
 
-  getInteractiveCells(excludeDataTypes?: DataType[], excludeStates?: ExcludeCellState[]) {
+  getInteractiveCells(excludeStates?: ExcludeCellState[]) {
     let matrix: MatrixCell;
 
     if (this.tableRowService.selectedRows.size) {
@@ -940,13 +926,11 @@ export class TableCellService extends TableBaseService {
 
     if (!matrix) return null;
 
-    return excludeDataTypes?.length || excludeStates?.length
-      ? this.filterExcludeCells(matrix, excludeDataTypes, excludeStates)
-      : matrix;
+    return excludeStates?.length ? this.filterExcludeCells(matrix, excludeStates) : matrix;
   }
 
   copyInteractiveCells(clipboard: Clipboard) {
-    const matrixCell = this.getInteractiveCells(clipboard.isCutAction && UNCUTABLE_DATA_TYPES);
+    const matrixCell = this.getInteractiveCells();
     if (!matrixCell?.count) return;
 
     const matrix: ClipboardItem[][] = [];
@@ -1007,7 +991,7 @@ export class TableCellService extends TableBaseService {
   }
 
   private clearMatrixCell(matrixCell: MatrixCell) {
-    matrixCell = this.filterExcludeCells(matrixCell, UNCLEARABLE_DATA_TYPES, [
+    matrixCell = this.filterExcludeCells(matrixCell, [
       ExcludeCellState.Required,
       ExcludeCellState.Empty,
       ExcludeCellState.NonEditable,
@@ -1024,18 +1008,9 @@ export class TableCellService extends TableBaseService {
 
         row = cell.row;
         const column = cell.column;
+        newData[column.id] = null;
 
-        let data = null;
-
-        switch (column.field.dataType) {
-          case DataType.Checkbox:
-            data ||= false;
-            break;
-        }
-
-        newData[column.id] = data;
         this.markColumnAsInteracted(column);
-
         count++;
       }
 
@@ -1148,12 +1123,7 @@ export class TableCellService extends TableBaseService {
     });
   }, 200);
 
-  private filterExcludeCells(
-    matrix: MatrixCell,
-    excludeDataTypes: DataType[],
-    excludeStates: ExcludeCellState[],
-  ) {
-    const excludeDataTypeSet = new Set<DataType>(excludeDataTypes);
+  private filterExcludeCells(matrix: MatrixCell, excludeStates: ExcludeCellState[]) {
     const excludeRequired = _.includes(excludeStates, ExcludeCellState.Required);
     const excludeEmpty = _.includes(excludeStates, ExcludeCellState.Empty);
     const excludeNonEditable = _.includes(excludeStates, ExcludeCellState.NonEditable);
@@ -1163,7 +1133,6 @@ export class TableCellService extends TableBaseService {
         const { row, column } = cells[i];
 
         if (
-          (!excludeDataTypeSet.size || !excludeDataTypeSet.has(column.field.dataType)) &&
           (!excludeRequired || !column.field.required) &&
           (!excludeEmpty ||
             (column.field.dataType === DataType.Checkbox

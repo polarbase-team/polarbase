@@ -268,12 +268,8 @@ export class TableService extends TableBaseService {
     if (searchQuery) {
       const data: [TableRow, TableColumn][] = [];
 
-      const searchColumns = _.filter(this.tableColumnService.columns(), (c) =>
-        _.includes([DataType.Text, DataType.Date, DataType.Number], c.field.dataType),
-      );
-
       for (const row of this.tableRowService.rows()) {
-        for (const column of searchColumns) {
+        for (const column of this.tableColumnService.columns()) {
           data.push([row, column]);
         }
       }

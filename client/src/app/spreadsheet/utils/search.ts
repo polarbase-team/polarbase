@@ -1,7 +1,7 @@
-import dayjs from 'dayjs';
 import _ from 'lodash';
+import dayjs from 'dayjs';
 
-import { DateField } from '../field/objects/date-field.object';
+import { DataType } from '../field/interfaces/field.interface';
 import { TableColumn } from '../models/table-column';
 
 function search(str: string, match: string): boolean {
@@ -26,7 +26,7 @@ export function parseSearchValue(data: string, column: TableColumn): string {
   if (!data) return '';
 
   switch (column.field.dataType) {
-    case DateField.dataType:
+    case DataType.Date:
       data = dayjs(data).format();
       break;
   }

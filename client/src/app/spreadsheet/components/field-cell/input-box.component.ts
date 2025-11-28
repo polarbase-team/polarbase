@@ -182,6 +182,7 @@ export class InputBoxComponent implements OnChanges {
           break;
       }
     }
+
     if (this.textContent !== text) {
       this.textContent = text;
       this.setCaretAtEnd();

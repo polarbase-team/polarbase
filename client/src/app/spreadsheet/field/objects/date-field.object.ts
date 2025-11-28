@@ -12,7 +12,7 @@ export class DateField extends Field<DateData> {
     return DateField.dataType;
   }
 
-  override compareData(source: DateData, destination: DateData = this.data!) {
+  override compareData(source: DateData, destination = this.data!) {
     if (isEmpty(source) && isEmpty(destination)) {
       return super.compareData(source, destination);
     }

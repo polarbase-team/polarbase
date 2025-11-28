@@ -19,7 +19,7 @@ export class NumberField extends Field<NumberData> {
     this.allowNegative = config.allowNegative;
   }
 
-  override validate(data: NumberData = this.data!) {
+  override validate(data = this.data!) {
     let errors = super.validate(data);
 
     if (!this.allowNegative && _.isFinite(data) && data < 0) {
