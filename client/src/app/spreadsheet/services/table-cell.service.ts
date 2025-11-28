@@ -114,7 +114,7 @@ export class TableCellService extends TableBaseService {
   private eleRef = inject(ElementRef);
   private toastService = inject(MessageService);
   private fieldCellService = inject(FieldCellService);
-  private interactedColumns = new Set<TableColumn>();
+  private interactiveColumns = new Set<TableColumn>();
   private dataEditedEEC = new EmitEventController<
     TableRow['id'],
     { type: TableCellActionType; payload: TableCellEditedEvent }
@@ -171,12 +171,12 @@ export class TableCellService extends TableBaseService {
         });
       }
 
-      if (this.interactedColumns?.size) {
+      if (this.interactiveColumns.size) {
         let shouldReCalculate: boolean;
         let shouldReGroup: boolean;
         let shouldReSort: boolean;
 
-        for (const column of this.interactedColumns) {
+        for (const column of this.interactiveColumns) {
           if (column.calculateType) {
             shouldReCalculate = true;
           }
@@ -198,7 +198,7 @@ export class TableCellService extends TableBaseService {
           this.tableService.sort();
         }
 
-        this.interactedColumns.clear();
+        this.interactiveColumns.clear();
       }
     },
   });
@@ -207,7 +207,8 @@ export class TableCellService extends TableBaseService {
     this.dataEditedEEC.flush();
   }
 
-  scrollToCell({ row, column }: Partial<TableCell>) {
+  scrollToCell(cell: TableCell) {
+    const { row, column } = cell;
     const idx: CellIndex = { rowIndex: 0, columnIndex: 0 };
 
     if (row) {
@@ -254,7 +255,6 @@ export class TableCellService extends TableBaseService {
     }
 
     const state = this.fieldCellService.getSelectingState();
-
     if (!state) {
       _callback();
       return;
@@ -266,7 +266,6 @@ export class TableCellService extends TableBaseService {
           const { row, column } = state.cell;
           const newData: TableRowCellData = { [column.id]: data };
           let rawData: TableRowCellData;
-
           this.markColumnAsInteracted(column);
           this.markCellDataAsEdited(row, newData, rawData);
           this.emitCellDataAsEdited();
@@ -276,7 +275,6 @@ export class TableCellService extends TableBaseService {
       },
       (errors: FieldValidationErrors | null) => {
         const cellIndex = this.findCellIndex(state.cell);
-
         if (!cellIndex) {
           state.reset();
           _callback();
@@ -284,7 +282,6 @@ export class TableCellService extends TableBaseService {
         }
 
         const cellElement = this.findCellElementByIndex(cellIndex);
-
         if (!cellElement) {
           state.reset();
           _callback();
@@ -297,9 +294,7 @@ export class TableCellService extends TableBaseService {
           invalid = this.findCellIndex(state.cell);
 
           for (const key in errors) {
-            if (!errors.hasOwnProperty(key)) {
-              continue;
-            }
+            if (!errors.hasOwnProperty(key)) continue;
             this.openErrorTooltip(cellElement, key);
           }
 
@@ -336,11 +331,13 @@ export class TableCellService extends TableBaseService {
   }
 
   getCells(
-    { rowIndex: startRowIdx, columnIndex: startColumnIdx }: CellIndex,
-    { rowIndex: endRowIdx, columnIndex: endColumnIdx }: CellIndex,
+    startCellIndex: CellIndex,
+    endCellIndex: CellIndex,
     excludeDataTypes?: DataType[],
     excludeStates?: ExcludeCellState[],
   ): MatrixCell {
+    const { rowIndex: startRowIdx, columnIndex: startColumnIdx } = startCellIndex;
+    const { rowIndex: endRowIdx, columnIndex: endColumnIdx } = endCellIndex;
     const matrix = new MatrixCell();
 
     for (let i = startRowIdx; i <= endRowIdx; i++) {
@@ -362,7 +359,7 @@ export class TableCellService extends TableBaseService {
 
   selectCells(
     startIndex: CellIndex,
-    endIndex: CellIndex = startIndex,
+    endIndex = startIndex,
     scrollToLastCell = false,
     extend = false,
   ): MatrixCell {
@@ -382,7 +379,6 @@ export class TableCellService extends TableBaseService {
     }
 
     const selectedCells: TableCell[] = [];
-
     for (let i = startRowIdx; i <= endRowIdx; i++) {
       const rowIndex = Math.abs(i);
       const row = this.tableRowService.findRowByIndex(rowIndex);
@@ -390,7 +386,6 @@ export class TableCellService extends TableBaseService {
       for (let j = startColumnIdx; j <= endColumnIdx; j++) {
         const columnIndex = Math.abs(j);
         const column = this.tableColumnService.findColumnByIndex(columnIndex);
-
         selectedCells.push({ row, column });
       }
     }
@@ -480,7 +475,6 @@ export class TableCellService extends TableBaseService {
 
     if (this.tableService.layoutProps.column.selection) {
       const columnSelection = this.tableService.layoutProps.column.selection;
-
       const itr = columnSelection.values();
       let currIdx = itr.next().value;
       let nextIdx = itr.next().value;
@@ -491,7 +485,6 @@ export class TableCellService extends TableBaseService {
           isSequence = false;
           break;
         }
-
         currIdx = itr.next().value;
         nextIdx = itr.next().value;
       }
@@ -518,7 +511,6 @@ export class TableCellService extends TableBaseService {
       );
     } else {
       const cellSelection = this.tableService.layoutProps.cell.selection;
-
       if (!cellSelection) return;
 
       if (
@@ -561,29 +553,24 @@ export class TableCellService extends TableBaseService {
 
       for (let j = 0; j < matrix.columnCount; j++) {
         const cell = cells[j];
-
         if (!cell) continue;
 
         const column = cell.column;
         const clipboardItem = clipboardItems[j % clipboardData.columnCount];
-
         if (!clipboardItem || (!clipboardItem?.text && column.field.required)) {
           continue;
         }
 
         const data = parseClipboardItemToData(column, clipboardItem);
-
         if (data === undefined) {
           rawData ||= {};
           rawData[column.id] = cell.row.data[column.id];
         }
 
         row = cell.row;
-
         newData[column.id] = data;
 
         count++;
-
         this.markColumnAsInteracted(column);
       }
 
@@ -654,7 +641,6 @@ export class TableCellService extends TableBaseService {
           switch (dataType) {
             case NumberField.dataType: {
               const prev = sourceData[i - 1]?.[j];
-
               let metadata = prev?.metadata;
 
               if (metadata) {
@@ -678,27 +664,20 @@ export class TableCellService extends TableBaseService {
                 metadata,
                 isNumber: true,
               };
-
               break;
             }
             case DateField.dataType: {
               const prev = sourceData[i - 1]?.[j];
-
               let metadata: any;
 
-              if (!isDayjs(data)) {
-                data = dayjs(data);
-              }
+              if (!isDayjs(data)) data = dayjs(data);
 
               if (prev) {
                 metadata = prev.metadata;
-
                 if (metadata) {
                   const prevStep = metadata.step;
-
                   if (prevStep !== undefined) {
                     metadata.step = Math.floor((data - prev.data) / 1000 / 60 / 60 / 24);
-
                     if (prevStep !== null && prevStep !== metadata.step) {
                       delete metadata.step;
                       delete metadata.last;
@@ -716,7 +695,6 @@ export class TableCellService extends TableBaseService {
                 metadata,
                 isDate: true,
               };
-
               break;
             }
             default:
@@ -734,19 +712,16 @@ export class TableCellService extends TableBaseService {
       const page = Math.ceil(pos / sourceMatrixCell.rowCount);
       const fillData = sourceData[i % sourceMatrixCell.rowCount];
       const newData: any = {};
-
       let row: TableRow;
 
       for (let j = 0; j < targetMatrixCell.columnCount; j++) {
         const targetCell = targetCells[j];
-
         if (!targetCell) continue;
 
         row = targetCell.row;
 
         const column = targetCell.column;
         const fD = fillData[j % targetMatrixCell.columnCount];
-
         let data = fD.data;
 
         if (data !== null) {
@@ -782,7 +757,6 @@ export class TableCellService extends TableBaseService {
     }
 
     this.emitCellDataAsEdited();
-
     this.toastService.add({
       severity: 'info',
       summary: 'Fill complete',
@@ -792,7 +766,6 @@ export class TableCellService extends TableBaseService {
 
   moveToCell(direction: Direction) {
     const selectingIdx = this.tableService.layoutProps.cell.selection?.primary;
-
     if (!selectingIdx) return;
 
     let { rowIndex, columnIndex } = selectingIdx;
@@ -814,16 +787,13 @@ export class TableCellService extends TableBaseService {
 
     const index = { rowIndex, columnIndex };
 
-    if (!this.checkCellIndexValid(index)) {
-      return;
-    }
+    if (!this.checkCellIndexValid(index)) return;
 
     this.selectCells(index, index, true);
   }
 
   extendSelectedCells(direction: Direction, step = 1) {
     const selectingIdx = this.tableService.layoutProps.cell.selection?.primary;
-
     if (!selectingIdx) return;
 
     let startIdx = { ...selectingIdx };
@@ -902,13 +872,13 @@ export class TableCellService extends TableBaseService {
   findCellElementByIndex(index: CellIndex) {
     const rowIdxAttr = `[data-row-index="${index.rowIndex}"]`;
     const columnIdxAttr = `[data-column-index="${index.columnIndex}"]`;
-
     return this.eleRef.nativeElement.querySelector(`${rowIdxAttr}${columnIdxAttr}`);
   }
 
   findCellByElement(element: HTMLElement, cellType?: string) {
     const cell = element.closest(cellType ? `[cell-type="${cellType}"]` : '[cell-type]');
     if (!cell) return null;
+
     const rowIndex = parseFloat(cell.getAttribute('data-row-index'));
     const columnIndex = parseFloat(cell.getAttribute('data-column-index'));
     return { rowIndex, columnIndex };
@@ -918,10 +888,10 @@ export class TableCellService extends TableBaseService {
     return source.row.id === destination.row.id && source.column.id === source.column.id;
   }
 
-  compareCellIndex(
-    { rowIndex: sRIdx, columnIndex: sCIdx }: CellIndex,
-    { rowIndex: dRIdx, columnIndex: dCIdx }: CellIndex,
-  ): -1 | 0 | 1 {
+  compareCellIndex(srcIndex: CellIndex, desIndex: CellIndex): -1 | 0 | 1 {
+    const { rowIndex: sRIdx, columnIndex: sCIdx } = srcIndex;
+    const { rowIndex: dRIdx, columnIndex: dCIdx } = desIndex;
+
     if (sRIdx < dRIdx) {
       return -1;
     } else if (sRIdx > dRIdx) {
@@ -942,20 +912,24 @@ export class TableCellService extends TableBaseService {
 
     if (this.tableRowService.selectedRows.size) {
       const cells: TableCell[] = [];
+
       for (const row of this.tableRowService.selectedRows) {
         for (const column of this.tableColumnService.columns()) {
           cells.push({ row, column });
         }
       }
+
       matrix = new MatrixCell(cells);
     } else if (this.tableService.layoutProps.column.selection) {
       const cells: TableCell[] = [];
+
       for (const row of this.tableRowService.rows()) {
         for (const columnIdx of this.tableService.layoutProps.column.selection) {
           const column = this.tableColumnService.findColumnByIndex(columnIdx);
           cells.push({ row, column });
         }
       }
+
       matrix = new MatrixCell(cells);
     } else if (this.tableService.layoutProps.cell.selection) {
       matrix = this.getCells(
@@ -973,7 +947,6 @@ export class TableCellService extends TableBaseService {
 
   copyInteractiveCells(clipboard: Clipboard) {
     const matrixCell = this.getInteractiveCells(clipboard.isCutAction && UNCUTABLE_DATA_TYPES);
-
     if (!matrixCell?.count) return;
 
     const matrix: ClipboardItem[][] = [];
@@ -986,7 +959,6 @@ export class TableCellService extends TableBaseService {
         if (!cell) continue;
 
         const { row, column } = cell;
-
         let data = row.data?.[column.id];
         let text = '';
 
@@ -996,7 +968,6 @@ export class TableCellService extends TableBaseService {
         }
 
         items.push({ text, data, metadata: cell });
-
         count++;
       }
 
@@ -1055,6 +1026,7 @@ export class TableCellService extends TableBaseService {
         const column = cell.column;
 
         let data = null;
+
         switch (column.field.dataType) {
           case DataType.Checkbox:
             data ||= false;
@@ -1090,7 +1062,6 @@ export class TableCellService extends TableBaseService {
     const horizontalTrackOffsetX = scrollLayout.horizontal.track.offset.x;
     const { width: cellWidth } = this.tableColumnService.findColumnByIndex(columnIndex);
     let left = scrollLeft;
-
     if (cellOffsetLeft >= horizontalTrackOffsetX) {
       if (cellOffsetLeft - horizontalTrackOffsetX < scrollLeft) {
         left -= scrollLeft - cellOffsetLeft + horizontalTrackOffsetX;
@@ -1102,7 +1073,6 @@ export class TableCellService extends TableBaseService {
     const verticalTrackOffsetY = scrollLayout.vertical.track.offset.y;
     const cellHeight = this.tableRowService.rowHeight();
     let top = scrollTop;
-
     if (cellOffsetTop >= verticalTrackOffsetY) {
       if (cellOffsetTop - verticalTrackOffsetY < scrollTop) {
         top -= scrollTop - cellOffsetTop + verticalTrackOffsetY - Dimension.BodyVerticalPadding;
@@ -1118,7 +1088,9 @@ export class TableCellService extends TableBaseService {
     this.host.virtualScroll.scrollTo({ left, top });
   }
 
-  private checkCellIndexValid({ rowIndex, columnIndex }: CellIndex) {
+  private checkCellIndexValid(cellIndex: CellIndex) {
+    const { rowIndex, columnIndex } = cellIndex;
+
     if (rowIndex < 0) {
       return false;
     } else {
@@ -1137,8 +1109,8 @@ export class TableCellService extends TableBaseService {
   }
 
   private markColumnAsInteracted(column: TableColumn) {
-    if (this.interactedColumns.has(column)) return;
-    this.interactedColumns.add(column);
+    if (this.interactiveColumns.has(column)) return;
+    this.interactiveColumns.add(column);
   }
 
   private markCellDataAsEdited(
@@ -1150,7 +1122,7 @@ export class TableCellService extends TableBaseService {
     row.data = { ...row.data, ...rawData };
 
     if (this.tableRowService.isDraftRow(row)) {
-      this.interactedColumns?.clear();
+      this.interactiveColumns.clear();
       return;
     }
 
