@@ -30,6 +30,7 @@ function flushEEC(
     for (const event of controller.getEvents()) {
       const rowID = predicate(event);
       if (rowID === row.id) continue;
+
       keys.push(rowID);
     }
 
@@ -251,7 +252,7 @@ export class TableRowService extends TableBaseService {
 
   insertRow(
     data?: any,
-    position: number = this.rows()?.length,
+    position = this.rows()?.length,
     onBeforeInsert?: (r: TableRow, p: number) => void,
   ) {
     const newRow = {
@@ -299,7 +300,6 @@ export class TableRowService extends TableBaseService {
     this.tableColumnService.deselectAllColumns();
 
     row.selected = !row.selected;
-
     this.selectedRows.has(row) ? this.selectedRows.delete(row) : this.selectedRows.add(row);
     this.host.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
   }
@@ -332,7 +332,6 @@ export class TableRowService extends TableBaseService {
       row.selected = true;
       this.selectedRows.add(row);
     }
-
     this.host.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
   }
 
@@ -346,7 +345,6 @@ export class TableRowService extends TableBaseService {
       row.selected = false;
     }
     this.selectedRows.clear();
-
     this.host.rowAction.emit({ type: TableRowActionType.Select, payload: null });
   }
 
@@ -354,9 +352,7 @@ export class TableRowService extends TableBaseService {
     let newMovedIndex = movedIndex;
     for (const movedRow of movedRows) {
       const idx = this.findRowIndex(movedRow);
-      if (idx < 0 || idx >= movedIndex) {
-        continue;
-      }
+      if (idx < 0 || idx >= movedIndex) continue;
       newMovedIndex--;
     }
 
@@ -364,7 +360,6 @@ export class TableRowService extends TableBaseService {
     _.pull(rows, ...movedRows);
     rows.splice(newMovedIndex, 0, ...movedRows);
     this.rows.update(() => [...rows]);
-
     this.host.rowAction.emit({
       type: TableRowActionType.Move,
       payload: _.map(movedRows, (movedRow) => ({ row: movedRow, movedIndex })),
@@ -579,13 +574,12 @@ export class TableRowService extends TableBaseService {
     });
   }
 
-  private focusToFieldCellTouchable(retry: boolean = false) {
+  private focusToFieldCellTouchable(retry = false) {
     if (!this.tableService.layoutProps.cell.selection) return;
 
     const fieldCell = this.tableCellService.findCellElementByIndex(
       this.tableService.layoutProps.cell.selection.primary,
     )?.firstElementChild;
-
     if (fieldCell) {
       fieldCell.dispatchEvent(new Event('dblclick'));
       return;
