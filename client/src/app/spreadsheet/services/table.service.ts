@@ -175,6 +175,18 @@ export class TableService extends TableBaseService {
     return frozenIndex;
   });
 
+  shouldCalculate = computed(() => {
+    return !!this.config().calculateBy || this.tableColumnService.calculatedColumns.size > 0;
+  });
+
+  shouldGroup = computed(() => {
+    return !!this.config().groupBy || this.tableColumnService.groupedColumns.size > 0;
+  });
+
+  shouldSort = computed(() => {
+    return !!this.config().sortBy || this.tableColumnService.sortedColumns.size > 0;
+  });
+
   layoutProps: LayoutProps = {
     frozenDivider: {},
     fillHandler: {},
@@ -248,18 +260,6 @@ export class TableService extends TableBaseService {
     this.tableCellService.flushSelectingCellState();
   }, 1000);
 
-  shouldCalculate() {
-    return !!this.config().calculateBy || this.tableColumnService.calculatedColumns.size > 0;
-  }
-
-  shouldGroup() {
-    return !!this.config().groupBy || this.tableColumnService.groupedColumns.size > 0;
-  }
-
-  shouldSort() {
-    return !!this.config().sortBy || this.tableColumnService.sortedColumns.size > 0;
-  }
-
   search(searchQuery: string) {
     let searchResult: [TableRow, TableColumn][];
     let searching;
@@ -296,7 +296,6 @@ export class TableService extends TableBaseService {
           const m = found.get(rowID) || new Map();
 
           m.set(columnID, { row, column });
-
           found.set(rowID, m);
 
           if (i > 0) continue;
@@ -306,7 +305,6 @@ export class TableService extends TableBaseService {
         }
 
         searching = { found, resultIndex: 0 };
-
         focusing = {
           rowIndex: focusingRowIndex,
           columnIndex: focusingColumnIndex,
@@ -326,30 +324,26 @@ export class TableService extends TableBaseService {
   searchPrevious(previousIndex: number) {
     const searchResult = this.searchResult[previousIndex];
     if (!searchResult) return;
+
     const [row, column] = searchResult;
-
     this.layoutProps.cell.searching.resultIndex = previousIndex;
-
     this.layoutProps.cell.focusing = {
       rowIndex: this.tableRowService.findRowIndex(row),
       columnIndex: this.tableColumnService.findColumnIndex(column),
     };
-
     this.tableCellService.scrollToFocusingCell();
   }
 
   searchNext(nextIndex: number) {
     const searchResult = this.searchResult[nextIndex];
     if (!searchResult) return;
+
     const [row, column] = searchResult;
-
     this.layoutProps.cell.searching.resultIndex = nextIndex;
-
     this.layoutProps.cell.focusing = {
       rowIndex: this.tableRowService.findRowIndex(row),
       columnIndex: this.tableColumnService.findColumnIndex(column),
     };
-
     this.tableCellService.scrollToFocusingCell();
   }
 
@@ -364,9 +358,7 @@ export class TableService extends TableBaseService {
       columns = [...this.tableColumnService.calculatedColumns.values()];
     }
 
-    if (this.isDataStreaming || !columns?.length) {
-      return;
-    }
+    if (this.isDataStreaming || !columns?.length) return;
 
     if (this.tableGroupService.isGrouping()) {
       this.tableGroupService.calculateInGroup(columns);
@@ -403,15 +395,14 @@ export class TableService extends TableBaseService {
       this.tableGroupService.collapsedState.clear();
 
       for (const column of columns) {
+        if (!column.groupSortType) continue;
         this.tableColumnService.groupedColumns.set(column.id, column);
       }
     } else if (this.tableColumnService.groupedColumns.size) {
       columns = [...this.tableColumnService.groupedColumns.values()];
     }
 
-    if (this.isDataStreaming || !columns?.length) {
-      return;
-    }
+    if (this.isDataStreaming || !columns?.length) return;
 
     const rootGroup = groupBy(this.host.sourceRows(), columns, (group: TableGroup) => {
       group.collapsed = this.tableGroupService.collapsedState.get(group.id);
@@ -438,15 +429,14 @@ export class TableService extends TableBaseService {
       this.tableColumnService.sortedColumns.clear();
 
       for (const column of columns) {
+        if (!column.sortType) continue;
         this.tableColumnService.sortedColumns.set(column.id, column);
       }
     } else if (this.tableColumnService.sortedColumns.size) {
       columns = [...this.tableColumnService.sortedColumns.values()];
     }
 
-    if (this.isDataStreaming || !columns?.length) {
-      return;
-    }
+    if (this.isDataStreaming || !columns?.length) return;
 
     if (this.tableGroupService.isGrouping()) {
       this.tableGroupService.sortInGroup(columns);
@@ -520,7 +510,7 @@ export class TableService extends TableBaseService {
   }
 
   updateFillHandlerPosition(
-    index: CellIndex = this.layoutProps.cell.selection.end,
+    index = this.layoutProps.cell.selection.end,
     shouldRetryOnMissingCell?: boolean,
   ) {
     const ele = this.tableCellService.findCellElementByIndex(index);
