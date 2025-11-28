@@ -163,6 +163,7 @@ $blank-row-height: 32px;
       min-width: 6px;
       margin-left: -3px;
       will-change: transform;
+      cursor: grab;
 
       &.frozen-divider--hover,
       &.frozen-divider--dragging {
