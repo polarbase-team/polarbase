@@ -232,7 +232,7 @@
               [style.height.px]="groupRect.height"
               [class.group-first-depth]="group.depth === 1"
               [class.group-last-depth]="group.depth === tableGroupService.groupDepth()"
-              [class.group--collapsed]="group.collapsed"
+              [class.group--collapsed]="group.isCollapsed"
               [class.box--radius]="group.depth === 1"
             >
               <div class="group__header">
@@ -241,7 +241,7 @@
                     <i
                       class="pi cursor-pointer"
                       style="color: var(--p-surface-500); font-size: 12px"
-                      [ngClass]="group.collapsed ? 'pi-chevron-right' : 'pi-chevron-down'"
+                      [ngClass]="group.isCollapsed ? 'pi-chevron-right' : 'pi-chevron-down'"
                       (click)="tableGroupService.toggleGroup(group)"
                     ></i>
                   </div>
@@ -581,7 +581,7 @@
               [style.height.px]="groupRect.height"
               [class.group-first-depth]="group.depth === 1"
               [class.group-last-depth]="group.depth === tableGroupService.groupDepth()"
-              [class.group--collapsed]="group.collapsed"
+              [class.group--collapsed]="group.isCollapsed"
               [class.box--radius]="group.depth === 1"
             >
               <div class="group__header">

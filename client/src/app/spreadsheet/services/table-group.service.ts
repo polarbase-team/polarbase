@@ -118,7 +118,7 @@ export class TableGroupService extends TableBaseService {
   }
 
   toggleGroup(group: TableGroup) {
-    this._toggleGroup(group, !group.collapsed);
+    this._toggleGroup(group, !group.isCollapsed);
     this.markGroupAsChanged();
   }
 
@@ -158,7 +158,7 @@ export class TableGroupService extends TableBaseService {
       this.tableService.group();
     }
 
-    if (group.collapsed) {
+    if (group.isCollapsed) {
       let g = group;
       do {
         this._toggleGroup(g, false);
@@ -313,16 +313,16 @@ export class TableGroupService extends TableBaseService {
     this.host.contextMenu.show(e);
   }
 
-  private _toggleGroup(group: TableGroup, collapsed: boolean) {
-    group.collapsed = collapsed;
-    this.collapsedState.set(group.id, collapsed);
+  private _toggleGroup(group: TableGroup, isCollapsed: boolean) {
+    group.isCollapsed = isCollapsed;
+    this.collapsedState.set(group.id, isCollapsed);
   }
 
-  private _toggleGroupRecursive(group: TableGroup, collapsed: boolean) {
-    this._toggleGroup(group, collapsed);
+  private _toggleGroupRecursive(group: TableGroup, isCollapsed: boolean) {
+    this._toggleGroup(group, isCollapsed);
     if (group.children?.length) {
       for (const child of group.children) {
-        this._toggleGroupRecursive(child, collapsed);
+        this._toggleGroupRecursive(child, isCollapsed);
       }
     }
   }

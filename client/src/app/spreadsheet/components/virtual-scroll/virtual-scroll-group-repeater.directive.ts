@@ -35,7 +35,7 @@ export function makeUpGroupViewProps(
   } as GroupView['viewProps'];
 
   let height: number;
-  if (group.collapsed && !isRootGroup) {
+  if (group.isCollapsed && !isRootGroup) {
     height = Dimension.GroupHeaderHeight;
   } else if (group.children) {
     let h = 0;
@@ -103,7 +103,7 @@ export function findGroupInsideViewport(
     if (isGroupCoverViewport || isGroupStartInsideViewport || isGroupEndInsideViewport) {
       memo[0].push(group);
 
-      if (!group.collapsed) {
+      if (!group.isCollapsed) {
         if (group.children) {
           findGroupInsideViewport(group.children, itemSize, range, memo);
         } else if (group.rows.length) {

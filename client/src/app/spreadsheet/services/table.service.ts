@@ -405,7 +405,7 @@ export class TableService extends TableBaseService {
     if (this.isDataStreaming || !columns?.length) return;
 
     const rootGroup = groupBy(this.host.sourceRows(), columns, (group: TableGroup) => {
-      group.collapsed = this.tableGroupService.collapsedState.get(group.id);
+      group.isCollapsed = this.tableGroupService.collapsedState.get(group.id);
     });
     this.tableGroupService.rootGroup.update(() => rootGroup);
 
