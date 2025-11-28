@@ -11,6 +11,7 @@ import { CellTouchEvent } from '../field-cell-touchable';
   templateUrl: './cell.html',
   styleUrls: ['../field-cell.scss', './cell.scss'],
   host: { class: 'checkbox-field-cell' },
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, Checkbox],
 })

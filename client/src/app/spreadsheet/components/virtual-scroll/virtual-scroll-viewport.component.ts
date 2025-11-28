@@ -58,6 +58,7 @@ export interface ViewportSizeUpdatedEvent {
   exportAs: 'virtualScrollViewport',
   template: '<ng-content></ng-content>',
   styles: [':host { overflow: hidden; contain: strict; }'],
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck, OnDestroy {

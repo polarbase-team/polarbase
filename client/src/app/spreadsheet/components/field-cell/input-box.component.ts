@@ -43,15 +43,18 @@ export type InputBoxContent = string | number;
   selector: 'input-box',
   template: '',
   styleUrls: ['./input-box.scss'],
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 // export class InputBoxComponent implements AfterViewInit {
 export class InputBoxComponent implements OnChanges {
   @HostBinding('attr.type')
-  @Input() type: InputBoxType | string = InputBoxType.Text;
+  @Input()
+  type: InputBoxType | string = InputBoxType.Text;
   @Input() content: InputBoxContent;
   @HostBinding('attr.placeholder')
-  @Input() placeholder: string;
+  @Input()
+  placeholder: string;
 
   @Output() edited = new EventEmitter<InputBoxContent>();
   @Output() contentChange = new EventEmitter<string>();

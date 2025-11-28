@@ -418,7 +418,7 @@ export class SpreadsheetComponent
         let startCellIdx: CellIndex;
         let endCellIdx: CellIndex;
         let isTouchEvent: boolean;
-        let delayEditCellFn: ReturnType<typeof setTimeout>;
+        let delayEditCellFn: number;
 
         const isFillHandlerActive = !!this.fillHander?.nativeElement.contains(target);
         const currSelection = this.tableService.layoutProps.cell.selection;
@@ -467,7 +467,7 @@ export class SpreadsheetComponent
 
         let currentAnimationFrame: number;
 
-        const unlisten1 = this.renderer.listen(document, 'pointermove', (e2: PointerEvent) => {
+        const unlisten1 = this.renderer.listen(document, 'pointermove', (e2) => {
           if (currentAnimationFrame) {
             cancelAnimationFrame(currentAnimationFrame);
           }
@@ -748,7 +748,7 @@ export class SpreadsheetComponent
     this.detectChanges();
   }
 
-  private shouldPauseEvent(e: Event, customizer?: (shouldPause: boolean) => boolean): boolean {
+  private shouldPauseEvent(e: Event, customizer?: (shouldPause: boolean) => boolean) {
     let shouldPause =
       !!this.tableService.layoutProps.cell.invalid ||
       this.checkOverlapedByOtherSpreadsheet() ||
@@ -761,18 +761,12 @@ export class SpreadsheetComponent
     return shouldPause;
   }
 
-  private checkOverlapedByOtherSpreadsheet(): boolean {
+  private checkOverlapedByOtherSpreadsheet() {
     return stack[stack.length - 1] !== this;
   }
 
-  private checkOverlapedByOverlay(target?: EventTarget): boolean {
-    let isOverlaped: boolean;
-    if (target) {
-      isOverlaped = !!(target as HTMLElement).closest(
-        '.ng-trigger-overlayAnimation, .p-dialog-mask',
-      );
-    }
-    return isOverlaped;
+  private checkOverlapedByOverlay(target?: EventTarget) {
+    return !!(target as HTMLElement)?.closest('.ng-trigger-overlayAnimation, .p-dialog-mask');
   }
 
   private openColumnActionMenu(e: MouseEvent) {

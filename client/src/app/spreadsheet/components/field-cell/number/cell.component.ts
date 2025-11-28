@@ -10,6 +10,7 @@ import { InputBoxComponent } from '../input-box.component';
   templateUrl: './cell.html',
   styleUrls: ['../field-cell.scss', '../field-cell-inputable.scss'],
   host: { class: 'number-field-cell' },
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [InputBoxComponent],
 })

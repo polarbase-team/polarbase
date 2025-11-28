@@ -15,6 +15,7 @@ import { DatePipe } from '@angular/common';
   templateUrl: './cell.html',
   styleUrls: ['../field-cell.scss'],
   host: { class: 'date-field-cell' },
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, Overlay, DatePicker, DatePipe],
 })

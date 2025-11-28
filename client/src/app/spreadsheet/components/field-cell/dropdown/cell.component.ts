@@ -14,6 +14,7 @@ import { FieldCellEditable } from '../field-cell-editable';
   templateUrl: './cell.html',
   styleUrls: ['../field-cell.scss'],
   host: { class: 'dropdown-field-cell' },
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Menu, Tag],
 })

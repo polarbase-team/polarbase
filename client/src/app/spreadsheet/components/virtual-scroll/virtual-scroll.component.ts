@@ -73,6 +73,7 @@ const SCROLL_LONG_DISTANCE = 1200;
   templateUrl: './virtual-scroll.html',
   styleUrls: ['./virtual-scroll.scss'],
   host: { class: 'virtual-scroll' },
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
