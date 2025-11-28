@@ -295,7 +295,7 @@ export class TableRowService extends TableBaseService {
     this.tableService.calculate();
   }
 
-  toggleRow(row: TableRow) {
+  toggleSelectRow(row: TableRow) {
     this.tableCellService.deselectAllCells();
     this.tableColumnService.deselectAllColumns();
 

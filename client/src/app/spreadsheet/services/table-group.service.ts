@@ -112,13 +112,33 @@ export class TableGroupService extends TableBaseService {
     return !this.isGrouping() || !this.rootGroup()?.children.length;
   });
 
-  toggleAllGroup(collapsed: boolean, group = this.rootGroup()) {
-    this._toggleGroupRecursive(group, collapsed);
+  expandGroup(group: TableGroup) {
+    this._expandGroup(group);
     this.markGroupAsChanged();
   }
 
-  toggleGroup(group: TableGroup) {
-    this._toggleGroup(group, !group.isCollapsed);
+  collapseGroup(group: TableGroup) {
+    this._collapseGroup(group);
+    this.markGroupAsChanged();
+  }
+
+  expandGroupRecursive(group: TableGroup) {
+    this._expandGroup(group);
+    if (group.children?.length) {
+      for (const child of group.children) {
+        this.expandGroupRecursive(child);
+      }
+    }
+    this.markGroupAsChanged();
+  }
+
+  collapseGroupRecursive(group: TableGroup) {
+    this._collapseGroup(group);
+    if (group.children?.length) {
+      for (const child of group.children) {
+        this.collapseGroupRecursive(child);
+      }
+    }
     this.markGroupAsChanged();
   }
 
@@ -161,7 +181,7 @@ export class TableGroupService extends TableBaseService {
     if (group.isCollapsed) {
       let g = group;
       do {
-        this._toggleGroup(g, false);
+        this.collapseGroup(g);
         g = g.parent;
       } while (g);
     }
@@ -298,14 +318,14 @@ export class TableGroupService extends TableBaseService {
         label: 'Expand all',
         icon: 'pi pi-arrow-up-right-and-arrow-down-left-from-center',
         command: () => {
-          this.toggleAllGroup(false);
+          this.expandGroupRecursive(this.rootGroup());
         },
       },
       {
         label: 'Collapse all',
         icon: 'pi pi-arrow-down-left-and-arrow-up-right-to-center',
         command: () => {
-          this.toggleAllGroup(true);
+          this.collapseGroupRecursive(this.rootGroup());
         },
       },
     ];
@@ -313,17 +333,11 @@ export class TableGroupService extends TableBaseService {
     this.host.contextMenu.show(e);
   }
 
-  private _toggleGroup(group: TableGroup, isCollapsed: boolean) {
-    group.isCollapsed = isCollapsed;
-    this.collapsedState.set(group.id, isCollapsed);
+  private _expandGroup(group: TableGroup) {
+    this.collapsedState.set(group.id, (group.isCollapsed = false));
   }
 
-  private _toggleGroupRecursive(group: TableGroup, isCollapsed: boolean) {
-    this._toggleGroup(group, isCollapsed);
-    if (group.children?.length) {
-      for (const child of group.children) {
-        this._toggleGroupRecursive(child, isCollapsed);
-      }
-    }
+  private _collapseGroup(group: TableGroup) {
+    this.collapsedState.set(group.id, (group.isCollapsed = true));
   }
 }

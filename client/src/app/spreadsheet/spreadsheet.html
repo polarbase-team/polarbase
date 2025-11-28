@@ -242,7 +242,11 @@
                       class="pi cursor-pointer"
                       style="color: var(--p-surface-500); font-size: 12px"
                       [ngClass]="group.isCollapsed ? 'pi-chevron-right' : 'pi-chevron-down'"
-                      (click)="tableGroupService.toggleGroup(group)"
+                      (click)="
+                        group.isCollapsed
+                          ? this.tableGroupService.collapseGroup(group)
+                          : this.tableGroupService.expandGroup(group)
+                      "
                     ></i>
                   </div>
                 </div>
@@ -417,7 +421,7 @@
                           <p-checkbox
                             [binary]="true"
                             [ngModel]="row.selected"
-                            (ngModelChange)="tableRowService.toggleRow(row)"
+                            (ngModelChange)="tableRowService.toggleSelectRow(row)"
                           ></p-checkbox>
                         </div>
                       }
