@@ -415,6 +415,7 @@ $blank-row-height: 32px;
         column-gap: 4px;
         padding: 8px;
         border-bottom: none;
+        cursor: grab;
 
         @at-root {
           .column-drag-placeholder {
@@ -497,6 +498,7 @@ $blank-row-height: 32px;
           min-width: $header-action-cell-width;
           max-width: $header-action-cell-width;
           border-right: none;
+          cursor: pointer;
         }
         .header-cell__resize-handle {
           position: absolute;
@@ -715,6 +717,7 @@ $blank-row-height: 32px;
         left: 2px;
         top: 8px;
         z-index: 2;
+        cursor: grab;
       }
     }
 
