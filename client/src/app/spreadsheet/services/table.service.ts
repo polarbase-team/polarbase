@@ -218,12 +218,12 @@ export class TableService extends TableBaseService {
         },
         complete: () => {
           this.isStreaming = false;
-          this.refreshDataView();
+          this.refreshView();
         },
       });
   }
 
-  refreshDataView = _.throttle(() => {
+  refreshView = _.throttle(() => {
     if (this.isStreaming) return;
 
     if (this.tableColumnService.groupedColumns.size > 0) {

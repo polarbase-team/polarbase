@@ -7,7 +7,7 @@ import { ViewContext, ViewProps, ViewRepeater } from './recycle-view-repeater-st
 import { findRowInsideViewport, makeUpRowViewProps } from './virtual-scroll-row-repeater.directive';
 
 export interface GroupView extends TableGroup {
-  viewProps?: ViewProps & { startItemIndex: number };
+  viewProps?: ViewProps & { startRowIndex: number };
 }
 
 export interface GroupViewContext extends ViewContext<TableGroup> {}
@@ -23,10 +23,10 @@ export function _getGroupRect(group: GroupView) {
 
 export function makeUpGroupViewProps(
   group: TableGroup,
-  itemSize: number,
+  rowSize: number,
   extraSize = 0,
   _index = 0,
-  _startItemIndex = 0,
+  _startRowIndex = 0,
 ) {
   const isRootGroup = group.depth === 0;
   const groupView: GroupView = group;
@@ -50,26 +50,26 @@ export function makeUpGroupViewProps(
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       child.viewProps ||= { index: i, rect: {} } as GroupView['viewProps'];
-      child.viewProps.startItemIndex = _startItemIndex;
+      child.viewProps.startRowIndex = _startRowIndex;
       child.viewProps.rect.left = child.viewProps.rect.right = group.depth * Dimension.GroupPadding;
       child.viewProps.rect.top = t;
 
       const s =
-        makeUpGroupViewProps(child, itemSize, extraSize, _index, _startItemIndex) +
+        makeUpGroupViewProps(child, rowSize, extraSize, _index, _startRowIndex) +
         Dimension.GroupSpacing;
 
       t += s;
       h += s;
 
       _index += 1;
-      _startItemIndex += child.rows.length;
+      _startRowIndex += child.rows.length;
     }
 
     height = h + Dimension.GroupHeaderHeight;
   } else {
-    height = group.rows.length * itemSize + Dimension.GroupHeaderHeight + extraSize;
+    height = group.rows.length * rowSize + Dimension.GroupHeaderHeight + extraSize;
 
-    makeUpRowViewProps(group.rows, itemSize, _startItemIndex, groupView);
+    makeUpRowViewProps(group.rows, rowSize, _startRowIndex, groupView);
   }
 
   // Removes excess height during make-up process.
@@ -84,7 +84,7 @@ export function makeUpGroupViewProps(
 
 export function findGroupInsideViewport(
   groups: TableGroup[],
-  itemSize: number,
+  rowSize: number,
   range: [number, number],
   memo: [TableGroup[], TableRow[]] = [[], []],
   start = 0,
@@ -105,22 +105,22 @@ export function findGroupInsideViewport(
 
       if (!group.isCollapsed) {
         if (group.children) {
-          findGroupInsideViewport(group.children, itemSize, range, memo);
+          findGroupInsideViewport(group.children, rowSize, range, memo);
         } else if (group.rows.length) {
           const s = Math.max(gs, vs);
           const e = Math.min(ge, ve);
-          memo[1].push(...findRowInsideViewport(group.rows, itemSize, [s - gs, e - s]));
+          memo[1].push(...findRowInsideViewport(group.rows, rowSize, [s - gs, e - s]));
         }
       }
     }
 
     if (!isGroupCoverViewport) {
       if (gs > vs) {
-        findGroupInsideViewport(groups, itemSize, range, memo, start, mid - 1);
+        findGroupInsideViewport(groups, rowSize, range, memo, start, mid - 1);
       }
 
       if (ge < ve) {
-        findGroupInsideViewport(groups, itemSize, range, memo, mid + 1, end);
+        findGroupInsideViewport(groups, rowSize, range, memo, mid + 1, end);
       }
     }
   }

@@ -65,7 +65,7 @@ export class TableRowService extends TableBaseService {
         this.rowById.set(row.id, row);
       }
 
-      this.tableService.refreshDataView();
+      this.tableService.refreshView();
       this.rows.update(() => rows);
     });
   }
@@ -89,7 +89,7 @@ export class TableRowService extends TableBaseService {
             break;
           }
         }
-        this.tableService.refreshDataView();
+        this.tableService.refreshView();
       });
 
     outputToObservable(this.host.cellAction)
@@ -139,7 +139,7 @@ export class TableRowService extends TableBaseService {
   //     this.rowById.set(row.id, row);
   //   }
 
-  //   this.tableService.refreshDataView();
+  //   this.tableService.refreshView();
   //   this.cdr.markForCheck();
   // }
 
@@ -149,7 +149,7 @@ export class TableRowService extends TableBaseService {
   //       row.selected ? this.selectedRows.add(row) : this.selectedRows.delete(row);
   //     }
   //   }
-  //   this.tableService.refreshDataView();
+  //   this.tableService.refreshView();
   //   this.cdr.markForCheck();
   // }
 
@@ -166,7 +166,7 @@ export class TableRowService extends TableBaseService {
   }
 
   onRowDragMoved(e: CdkDragMove<TableRow>) {
-    const foundRow = this.rowAtPoint(e.pointerPosition);
+    const foundRow = this.findRowAtPoint(e.pointerPosition);
     let group: TableGroup;
     let rowIndex: number;
     let rowOffset: number;
@@ -209,7 +209,7 @@ export class TableRowService extends TableBaseService {
   setRowSize(size: RowSize) {
     this.rowSize.update(() => size);
     if (this.tableGroupService.isGrouped()) {
-      this.tableGroupService.markGroupAsChanged();
+      this.tableGroupService.updateGroupState();
     }
     setTimeout(() => {
       this.tableService.positionFillHandle();
@@ -297,7 +297,7 @@ export class TableRowService extends TableBaseService {
     this.pendingRow = null;
   }
 
-  cancelDraftRow() {
+  cancelPendingRow() {
     if (!this.pendingRow) return;
 
     this.tableCellService.deselectAllCells();
@@ -366,15 +366,15 @@ export class TableRowService extends TableBaseService {
     return selectedRows;
   }
 
-  getLastRowIndex() {
+  rowAt(index: number) {
     return this.tableGroupService.isGrouped()
-      ? this.tableGroupService.getLastRowIndexInGroup()
-      : this.rows().length - 1;
+      ? this.tableGroupService.findRowInGroupByIndex(index)
+      : this.rows()[index];
   }
 
-  rowAtPoint(point: Point) {
+  findRowAtPoint(point: Point) {
     if (this.tableGroupService.isGrouped()) {
-      return this.tableGroupService.rowAtPoint(point);
+      return this.tableGroupService.findRowAtPoint(point);
     }
 
     let { y: pointerOffsetY } = this.host.virtualScroll.measurePointerOffset(point);
@@ -400,12 +400,6 @@ export class TableRowService extends TableBaseService {
     };
   }
 
-  rowAt(index: number) {
-    return this.tableGroupService.isGrouped()
-      ? this.tableGroupService.findRowInGroupByIndex(index)
-      : this.rows()[index];
-  }
-
   findRowByID(id: TableRow['id']) {
     return this.rowById.has(id) ? this.rowById.get(id) : _.find(this.rows(), { id });
   }
@@ -420,6 +414,12 @@ export class TableRowService extends TableBaseService {
     return this.tableGroupService.isGrouped()
       ? this.tableGroupService.findRowIndexInGroupByID(id)
       : _.findIndex(this.rows(), { id });
+  }
+
+  findLastRowIndex() {
+    return this.tableGroupService.isGrouped()
+      ? this.tableGroupService.findLastRowIndexInGroup()
+      : this.rows().length - 1;
   }
 
   markRowsAsStreamed(rows: TableRow[]) {
@@ -553,12 +553,12 @@ export class TableRowService extends TableBaseService {
       this.tableCellService.selectCells(cellIndex, cellIndex, true);
 
       requestAnimationFrame(() => {
-        this.focusToFieldCellTouchable(true);
+        this.focusFirstCellOfNewRow(true);
       });
     });
   }
 
-  private focusToFieldCellTouchable(retry = false) {
+  private focusFirstCellOfNewRow(retry = false) {
     if (!this.tableService.layout.cell.selection) return;
 
     const fieldCell = this.tableCellService.cellElementAt(
@@ -572,7 +572,7 @@ export class TableRowService extends TableBaseService {
     if (!retry) return;
 
     setTimeout(() => {
-      this.focusToFieldCellTouchable();
+      this.focusFirstCellOfNewRow();
     }, 500);
   }
 }

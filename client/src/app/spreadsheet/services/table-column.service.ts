@@ -1,10 +1,6 @@
 import _ from 'lodash';
 import { Injectable, effect, signal } from '@angular/core';
-import {
-  CdkDragDrop,
-  CdkDragMove,
-  moveItemInArray,
-} from '@angular/cdk/drag-drop';
+import { CdkDragDrop, CdkDragMove, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ResizeEvent } from 'angular-resizable-element';
 import { MenuItem } from 'primeng/api';
 
@@ -398,7 +394,7 @@ export class TableColumnService extends TableBaseService {
     }
   }
 
-  onColumnResized(column: TableColumn) {
+  onColumnResizeEnd(column: TableColumn) {
     this.host.columnAction.emit({
       type: TableColumnActionType.Resize,
       payload: column,
@@ -487,10 +483,6 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  getLastColumnIndex() {
-    return this.columns().length - 1;
-  }
-
   columnAt(index: number) {
     return this.columns()[index];
   }
@@ -508,6 +500,10 @@ export class TableColumnService extends TableBaseService {
 
   findColumnIndexByID(id: TableColumn['id']) {
     return _.findIndex(this.columns(), { id });
+  }
+
+  findLastColumnIndex() {
+    return this.columns().length - 1;
   }
 
   openContextMenu(e: Event, column: TableColumn, columnIndex: number) {
@@ -623,7 +619,7 @@ export class TableColumnService extends TableBaseService {
     this.host.contextMenu.show(e);
   }
 
-  openCalculateContextMenu(e: Event, column: TableColumn) {
+  openAggregateMenu(e: Event, column: TableColumn) {
     this.host.menuItems = getAggregateMenuItems(column, (col, type) => {
       this.calculateByColumn(col, type);
     });

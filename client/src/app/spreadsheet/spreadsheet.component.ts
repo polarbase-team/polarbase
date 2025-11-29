@@ -610,7 +610,7 @@ export class SpreadsheetComponent
         switch (key) {
           case 'ArrowUp':
             processAfterKeyMatch(() => {
-              this.tableCellService.moveToCell('above');
+              this.tableCellService.navigateToCell('above');
             });
             break;
           case 'Shift.ArrowUp':
@@ -621,7 +621,7 @@ export class SpreadsheetComponent
           case 'ArrowDown':
           case 'Enter':
             processAfterKeyMatch(() => {
-              this.tableCellService.moveToCell('below');
+              this.tableCellService.navigateToCell('below');
             });
             break;
           case 'Shift.ArrowDown':
@@ -632,7 +632,7 @@ export class SpreadsheetComponent
           case 'ArrowLeft':
           case 'Shift.Tab':
             processAfterKeyMatch(() => {
-              this.tableCellService.moveToCell('before');
+              this.tableCellService.navigateToCell('before');
             });
             break;
           case 'Shift.ArrowLeft':
@@ -643,7 +643,7 @@ export class SpreadsheetComponent
           case 'ArrowRight':
           case 'Tab':
             processAfterKeyMatch(() => {
-              this.tableCellService.moveToCell('after');
+              this.tableCellService.navigateToCell('after');
             });
             break;
           case 'Shift.ArrowRight':
@@ -807,7 +807,7 @@ export class SpreadsheetComponent
 
   private openGroupActionMenu(e: MouseEvent) {
     setTimeout(() => {
-      this.tableGroupService.openContextnMenu(e);
+      this.tableGroupService.openContextMenu(e);
     });
   }
 }

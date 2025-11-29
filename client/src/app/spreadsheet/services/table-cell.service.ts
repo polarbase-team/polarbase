@@ -313,7 +313,7 @@ export class TableCellService extends TableBaseService {
     state.reset();
 
     if (this.tableRowService.isPendingRow(selectingCell.row)) {
-      this.tableRowService.cancelDraftRow();
+      this.tableRowService.cancelPendingRow();
       this.deselectAllCells();
     }
   }
@@ -495,7 +495,7 @@ export class TableCellService extends TableBaseService {
 
       matrix = this.getCellMatrix(
         { rowIndex: 0, columnIndex: startIdx },
-        { rowIndex: this.tableRowService.getLastRowIndex(), columnIndex: endIdx },
+        { rowIndex: this.tableRowService.findLastRowIndex(), columnIndex: endIdx },
         [ExcludeCellState.NonEditable],
       );
     } else {
@@ -749,7 +749,7 @@ export class TableCellService extends TableBaseService {
     });
   }
 
-  moveToCell(direction: Direction) {
+  navigateToCell(direction: Direction) {
     const selectingIdx = this.tableService.layout.cell.selection?.anchor;
     if (!selectingIdx) return;
 
@@ -838,7 +838,7 @@ export class TableCellService extends TableBaseService {
 
   cellOffsetAt(index: CellIndex) {
     if (this.tableGroupService.isGrouped()) {
-      return this.tableGroupService.getRowCellOffsetInGroup(index);
+      return this.tableGroupService.findRowCellOffsetInGroup(index);
     }
 
     const left = getColumnOffset(this.tableColumnService.columnAt(index.columnIndex));
@@ -1068,14 +1068,14 @@ export class TableCellService extends TableBaseService {
     if (rowIndex < 0) {
       return false;
     } else {
-      const lastRowIndex = this.tableRowService.getLastRowIndex();
+      const lastRowIndex = this.tableRowService.findLastRowIndex();
       if (rowIndex > lastRowIndex) return false;
     }
 
     if (columnIndex < 0) {
       return false;
     } else {
-      const lastColumnIndex = this.tableColumnService.getLastColumnIndex();
+      const lastColumnIndex = this.tableColumnService.findLastColumnIndex();
       if (columnIndex > lastColumnIndex) return false;
     }
 

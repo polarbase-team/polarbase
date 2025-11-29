@@ -57,7 +57,7 @@
         (cdkDragMoved)="tableColumnService.onColumnDragMoved($event)"
         mwlResizable
         (resizing)="tableColumnService.onColumnResizing(column, $event)"
-        (resizeEnd)="tableColumnService.onColumnResized(column)"
+        (resizeEnd)="tableColumnService.onColumnResizeEnd(column)"
         (click)="!column._isResizing && tableColumnService.selectColumns($event, columnIndex)"
       >
         <div
@@ -413,7 +413,7 @@
                         <a
                           safe-area
                           class="text-xs text-blue-500 pointer-events-auto"
-                          (click)="tableRowService.cancelDraftRow()"
+                          (click)="tableRowService.cancelPendingRow()"
                           >Cancel</a
                         >
                       } @else {
@@ -990,7 +990,7 @@
     <div
       class="calculation-block"
       [class.calculation-block--active]="column.calculateType"
-      (click)="tableColumnService.openCalculateContextMenu($event, column)"
+      (click)="tableColumnService.openAggregateMenu($event, column)"
     >
       @if (column.calculateType) {
         <div
