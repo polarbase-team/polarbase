@@ -93,15 +93,14 @@ const DEFAULT_CONFIG: TableConfig = {
   dataStream: false,
   sideSpacing: 0,
   column: {
-    frozenIndex: 0,
+    frozenCount: 0,
     maxFrozenRatio: 0.65,
     defaultWidth: 180,
     minWidth: 100,
     maxWidth: 500,
-    arrangeable: true,
+    reorderable: true,
     calculable: true,
-    creatable: true,
-    editable: true,
+    addable: true,
     deletable: true,
     freezable: true,
     groupable: true,
@@ -112,16 +111,16 @@ const DEFAULT_CONFIG: TableConfig = {
   row: {
     size: 'M',
     selectable: true,
-    arrangeable: true,
+    reorderable: true,
     expandable: true,
-    creatable: true,
+    addable: true,
     insertable: true,
-    editable: true,
     deletable: true,
   },
   cell: {
     fillable: true,
     clearable: true,
+    editable: true,
   },
 };
 
@@ -129,7 +128,7 @@ function calculateFreezeDividerDragPlaceholderIndex(
   columns: TableColumn[],
   offsetX: number,
   scrollLeft: number,
-  frozenIndex: number,
+  frozenCount: number,
 ) {
   let dragPlaceholderIndex = 0;
 
@@ -137,7 +136,7 @@ function calculateFreezeDividerDragPlaceholderIndex(
     let a = getColumnOffset(columns[i]);
     let b = getColumnOffset(columns[i + 1]) || a;
 
-    if (i <= frozenIndex) {
+    if (i <= frozenCount) {
       a += scrollLeft;
       b += scrollLeft;
     }
@@ -168,25 +167,25 @@ export class TableService extends TableBaseService {
     return config;
   });
 
-  frozenIndex = computed(() => {
+  frozenCount = computed(() => {
     const columns = this.tableColumnService.columns();
-    let frozenIndex = this.config().column.frozenIndex;
-    if (columns && frozenIndex > columns.length - 1) {
-      frozenIndex = columns.length - 1;
+    let frozenCount = this.config().column.frozenCount;
+    if (columns && frozenCount > columns.length - 1) {
+      frozenCount = columns.length - 1;
     }
-    return frozenIndex;
+    return frozenCount;
   });
 
   shouldCalculate = computed(() => {
-    return !!this.config().calculateBy || this.tableColumnService.calculatedColumns.size > 0;
+    return !!this.config().aggregations || this.tableColumnService.calculatedColumns.size > 0;
   });
 
   shouldGroup = computed(() => {
-    return !!this.config().groupBy || this.tableColumnService.groupedColumns.size > 0;
+    return !!this.config().grouping || this.tableColumnService.groupedColumns.size > 0;
   });
 
   shouldSort = computed(() => {
-    return !!this.config().sortBy || this.tableColumnService.sortedColumns.size > 0;
+    return !!this.config().sorting || this.tableColumnService.sortedColumns.size > 0;
   });
 
   layout: Layout = {
@@ -476,7 +475,7 @@ export class TableService extends TableBaseService {
       this.tableColumnService.columns(),
       pointerOffsetX,
       this.host.virtualScroll.scrollLeft,
-      this.frozenIndex(),
+      this.frozenCount(),
     );
     const offset = getColumnOffset(this.tableColumnService.findColumnByIndex(index));
     if (offset / this.host.virtualScroll.viewport.width > this.config().column.maxFrozenRatio) {
@@ -490,16 +489,17 @@ export class TableService extends TableBaseService {
     const { dragPlaceholderIndex } = this.layout.freezeHandle;
     if (dragPlaceholderIndex === null) return;
 
-    this.updateFrozenIndex(dragPlaceholderIndex - 1);
+    this.setFrozenCount(dragPlaceholderIndex - 1);
     this.layout.freezeHandle.isDragging = false;
     this.layout.freezeHandle.dragPlaceholderIndex = null;
     this.layout.freezeHandle.dragPlaceholderOffsetX = null;
     e.source._dragRef.reset();
   }
 
-  updateFrozenIndex(index: number) {
-    if (index === this.frozenIndex()) return;
-    this.config().column.frozenIndex = index;
+  setFrozenCount(index: number) {
+    if (index === this.frozenCount()) return;
+
+    this.config().column.frozenCount = index;
     this.tableColumnService.columns.update((arr) => [...arr]);
     this.host.action.emit({
       type: TableActionType.Freeze,

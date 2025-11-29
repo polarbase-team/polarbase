@@ -82,7 +82,7 @@ function calculateColumnDragPlaceholderIndex(
   columns: TableColumn[],
   offsetX: number,
   scrollLeft: number,
-  frozenIndex: number,
+  frozenCount: number,
 ) {
   const length = columns.length;
   let dragPlaceholderIndex = 0;
@@ -95,7 +95,7 @@ function calculateColumnDragPlaceholderIndex(
     let a = getColumnOffset(curr);
     let b = getColumnOffset(next) || (curr ? a + curr.width : a);
 
-    if (i <= frozenIndex) {
+    if (i <= frozenCount) {
       a += scrollLeft;
       b += scrollLeft;
     }
@@ -134,24 +134,24 @@ export class TableColumnService extends TableBaseService {
 
     effect(() => {
       const config = this.tableService.config();
-      if (config.calculateBy) {
-        for (const [c, t] of config.calculateBy) {
+      if (config.aggregations) {
+        for (const [c, t] of config.aggregations) {
           const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
           column.calculateType = t;
           this.calculatedColumns.set(column.id, column);
         }
       }
-      if (config.groupBy) {
-        for (const [c, t] of config.groupBy) {
+      if (config.grouping) {
+        for (const [c, t] of config.grouping) {
           const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
           column.groupSortType = t;
           this.groupedColumns.set(column.id, column);
         }
       }
-      if (config.sortBy) {
-        for (const [c, t] of config.sortBy) {
+      if (config.sorting) {
+        for (const [c, t] of config.sorting) {
           const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
           if (!column) continue;
           column.sortType = t;
@@ -166,7 +166,6 @@ export class TableColumnService extends TableBaseService {
         if (!this.columnLookup.has(column.id)) {
           column.id ??= _.uniqueId();
           column.width ??= this.tableService.config().column.defaultWidth;
-          column.editable ??= true;
           this.columnLookup.set(column.id, column);
         }
       }
@@ -175,8 +174,8 @@ export class TableColumnService extends TableBaseService {
 
     effect(() => {
       const columns = this.columns();
-      this.leftColumns.update(() => columns.slice(0, this.tableService.frozenIndex() + 1));
-      this.rightColumns.update(() => columns.slice(this.tableService.frozenIndex() + 1));
+      this.leftColumns.update(() => columns.slice(0, this.tableService.frozenCount() + 1));
+      this.rightColumns.update(() => columns.slice(this.tableService.frozenCount() + 1));
     });
   }
 
@@ -341,7 +340,7 @@ export class TableColumnService extends TableBaseService {
             this.columns(),
             pointerOffsetX,
             this.host.virtualScroll.scrollLeft,
-            this.tableService.frozenIndex(),
+            this.tableService.frozenCount(),
           );
     let offset = null;
 
@@ -361,7 +360,7 @@ export class TableColumnService extends TableBaseService {
         if (isOutRange) {
           offset += column.width;
         }
-        if (index - 1 > this.tableService.frozenIndex()) {
+        if (index - 1 > this.tableService.frozenCount()) {
           offset -= this.host.virtualScroll.scrollLeft;
         }
       } else {
@@ -560,7 +559,7 @@ export class TableColumnService extends TableBaseService {
             label: 'Freeze up to This Column',
             icon: 'pi pi-sign-in',
             command: () => {
-              this.tableService.updateFrozenIndex(columnIndex);
+              this.tableService.setFrozenCount(columnIndex);
             },
           },
           { separator: true },

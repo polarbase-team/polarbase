@@ -54,7 +54,7 @@
         cdkDragLockAxis="x"
         cdkDragPreviewClass="column-drag-preview"
         [cdkDragBoundary]="dragBoundary"
-        [cdkDragDisabled]="!tableService.config().column.arrangeable"
+        [cdkDragDisabled]="!tableService.config().column.reorderable"
         (cdkDragStarted)="tableColumnService.onColumnDragStarted($event, column)"
         (cdkDragEnded)="tableColumnService.onColumnDragEnded($event, column)"
         (cdkDragMoved)="tableColumnService.onColumnDragMoved($event)"
@@ -126,7 +126,7 @@
             (mousedown)="$event.stopPropagation()"
             (mouseenter)="
               tableService.layout.freezeHandle.isHideHeadLine =
-                columnIndex === tableService.frozenIndex()
+                columnIndex === tableService.frozenCount()
             "
             (mouseleave)="tableService.layout.freezeHandle.isHideHeadLine = false"
           ></div>
@@ -175,12 +175,12 @@
               headerCellTemplate;
               context: {
                 column,
-                columnIndex: tableService.frozenIndex() + columnIndex + 1,
+                columnIndex: tableService.frozenCount() + columnIndex + 1,
               }
             "
           ></ng-container>
         }
-        @if (tableService.config().column.creatable) {
+        @if (tableService.config().column.addable) {
           <div class="header-cell cell header-action-cell">
             <i class="pi pi-plus-circle"></i>
           </div>
@@ -259,7 +259,7 @@
                     let columnRect = rect
                   "
                 >
-                  @if (columnIndex === 0 && tableService.frozenIndex() >= 0) {
+                  @if (columnIndex === 0 && tableService.frozenCount() >= 0) {
                     <div
                       class="group-cell cell"
                       cell-type="group"
@@ -364,7 +364,7 @@
               cdkDragLockAxis="y"
               cdkDragPreviewClass="row-drag-preview"
               [cdkDragData]="row"
-              [cdkDragDisabled]="!tableService.config().row.arrangeable"
+              [cdkDragDisabled]="!tableService.config().row.reorderable"
               (cdkDragStarted)="tableRowService.onRowDragStarted($event)"
               (cdkDragMoved)="tableRowService.onRowDragMoved($event)"
               (cdkDragEnded)="tableRowService.onRowDragEnded($event)"
@@ -398,7 +398,7 @@
                     class="flex flex-row align-items-start justify-content-center h-fit-content"
                     style="height: fit-content"
                   >
-                    @if (tableService.config().row.arrangeable) {
+                    @if (tableService.config().row.reorderable) {
                       <div class="row__drag-handle" cdkDragHandle>
                         <img src="/icons/drag-dots.svg" />
                       </div>
@@ -513,8 +513,7 @@
                       [readonly]="
                         row !== tableRowService.draftRow &&
                         ((tableService.isStreaming && !$any(row)._isStreamed) ||
-                          (!tableService.config().column.editable &&
-                            !tableService.config().row.editable &&
+                          (!tableService.config().cell.editable &&
                             !column.editable &&
                             row.editable !== true &&
                             row.editable?.[column.id] !== true))
@@ -655,7 +654,7 @@
               <ng-container
                 *virtualScrollColumnRepeater="
                   virtualScroll.viewport.rightWrapper.columns;
-                  startIndex: tableService.frozenIndex() + 1;
+                  startIndex: tableService.frozenCount() + 1;
                   let column;
                   let columnIndex = index;
                   let columnRect = rect
@@ -736,7 +735,7 @@
                       [readonly]="
                         row !== tableRowService.draftRow &&
                         ((tableService.isStreaming && !$any(row)._isStreamed) ||
-                          (!tableService.config().column.editable &&
+                          (!tableService.config().cell.editable &&
                             !column.editable &&
                             row.editable !== true &&
                             row.editable?.[column.id] !== true))
@@ -858,7 +857,7 @@
                 footerCellTempTemplate;
                 context: {
                   column,
-                  columnIndex: tableService.frozenIndex() + columnIndex + 1,
+                  columnIndex: tableService.frozenCount() + columnIndex + 1,
                 }
               "
             ></ng-container>
@@ -869,10 +868,10 @@
   }
 
   <!-- Frozen divider -->
-  @if (tableService.config().column.freezable || tableService.frozenIndex() !== null) {
+  @if (tableService.config().column.freezable || tableService.frozenCount() !== null) {
     @let isHideHeadLine =
       tableService.layout.freezeHandle.isHideHeadLine ||
-      $any(tableColumnService.columns()?.[tableService.frozenIndex()])?._isResizing;
+      $any(tableColumnService.columns()?.[tableService.frozenCount()])?._isResizing;
     @let bodyLineHeight =
       virtualScroll.viewport.height + virtualScroll.scrollTop > virtualScroll.viewport.contentHeight
         ? virtualScroll.viewport.contentHeight -

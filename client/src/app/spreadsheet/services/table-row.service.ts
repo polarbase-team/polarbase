@@ -58,7 +58,7 @@ export class TableRowService extends TableBaseService {
   });
 
   canAddRow = computed(() => {
-    return this.tableService.config().row.creatable;
+    return this.tableService.config().row.addable;
   });
 
   private destroyRef = inject(DestroyRef);
@@ -84,7 +84,6 @@ export class TableRowService extends TableBaseService {
       for (const row of rows) {
         if (!this.rowLookup.has(row.id)) {
           row.id ??= _.uniqueId();
-          row.editable ??= true;
         }
         if (row.selected) this.selectedRows.add(row);
         this.rowLookup.set(row.id, row);

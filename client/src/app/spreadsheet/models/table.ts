@@ -13,19 +13,18 @@ export type TableRowSize = keyof typeof TableRowSize;
 export interface TableConfig {
   sideSpacing?: number;
   dataStream?: boolean;
-  calculateBy?: [TableColumn | TableColumn['id'], CalculateType][];
-  groupBy?: [TableColumn | TableColumn['id'], SortType][];
-  sortBy?: [TableColumn | TableColumn['id'], SortType][];
+  aggregations?: [TableColumn | TableColumn['id'], CalculateType][];
+  grouping?: [TableColumn | TableColumn['id'], SortType][];
+  sorting?: [TableColumn | TableColumn['id'], SortType][];
   column?: {
-    frozenIndex?: number | null;
+    frozenCount?: number | null;
     maxFrozenRatio?: number;
     defaultWidth?: number;
     minWidth?: number;
     maxWidth?: number;
-    arrangeable?: boolean;
+    reorderable?: boolean;
     calculable?: boolean;
-    creatable?: boolean;
-    editable?: boolean;
+    addable?: boolean;
     deletable?: boolean;
     freezable?: boolean;
     groupable?: boolean;
@@ -36,15 +35,15 @@ export interface TableConfig {
   row?: {
     size?: TableRowSize;
     selectable?: boolean;
-    arrangeable?: boolean;
+    reorderable?: boolean;
     expandable?: boolean;
-    creatable?: boolean;
+    addable?: boolean;
     insertable?: boolean;
-    editable?: boolean;
     deletable?: boolean;
   };
   cell?: {
     fillable?: boolean;
+    editable?: boolean;
     clearable?: boolean;
   };
 }
