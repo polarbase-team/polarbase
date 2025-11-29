@@ -330,10 +330,12 @@ export class TableGroupService extends TableBaseService {
   }
 
   private _expandGroup(group: TableGroup) {
+    group.isCollapsed = false;
     this.collapsedGroupIds.add(group.id);
   }
 
   private _collapseGroup(group: TableGroup) {
+    group.isCollapsed = true;
     this.collapsedGroupIds.delete(group.id);
   }
 }

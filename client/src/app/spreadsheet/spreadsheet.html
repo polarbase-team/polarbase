@@ -249,8 +249,8 @@
                       [ngClass]="group.isCollapsed ? 'pi-chevron-right' : 'pi-chevron-down'"
                       (click)="
                         group.isCollapsed
-                          ? this.tableGroupService.collapseGroup(group)
-                          : this.tableGroupService.expandGroup(group)
+                          ? this.tableGroupService.expandGroup(group)
+                          : this.tableGroupService.collapseGroup(group)
                       "
                     ></i>
                   </div>
