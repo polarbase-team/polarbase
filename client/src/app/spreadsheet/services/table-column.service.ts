@@ -2,9 +2,7 @@ import _ from 'lodash';
 import { Injectable, effect, signal } from '@angular/core';
 import {
   CdkDragDrop,
-  CdkDragEnd,
   CdkDragMove,
-  CdkDragStart,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
 import { ResizeEvent } from 'angular-resizable-element';

@@ -1,6 +1,6 @@
+import _ from 'lodash';
 import dayjs from 'dayjs';
 
-import { isEmpty } from '../../utils/is-empty';
 import { DateData } from '../interfaces/date-field.interface';
 import { DataType } from '../interfaces/field.interface';
 import { Field } from './field.object';
@@ -13,7 +13,7 @@ export class DateField extends Field<DateData> {
   }
 
   override compareData(source: DateData, destination = this.data!) {
-    if (isEmpty(source) && isEmpty(destination)) {
+    if (_.isNil(source) && _.isNil(destination)) {
       return super.compareData(source, destination);
     }
 

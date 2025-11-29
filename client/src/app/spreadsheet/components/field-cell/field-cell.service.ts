@@ -1,6 +1,6 @@
+import _ from 'lodash';
 import { ComponentRef, Injectable } from '@angular/core';
 import { startWith, Subject, takeUntil } from 'rxjs';
-import _ from 'lodash';
 
 import { DataType } from '../../field/interfaces/field.interface';
 import { FieldValidationErrors } from '../../field/objects/field.object';

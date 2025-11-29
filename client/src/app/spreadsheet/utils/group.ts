@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import { sortBy, sort, SortType, sortPredicate } from './sort';
+import { sortBy, sort, sortPredicate } from './sort';
 import { TableColumn } from '../models/table-column';
 import { TableRow } from '../models/table-row';
 

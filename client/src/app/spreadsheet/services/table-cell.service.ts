@@ -4,7 +4,6 @@ import { FORECAST } from '@formulajs/formulajs';
 import { Injectable, ElementRef, Renderer2, inject } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
-import { isEmpty } from '../utils/is-empty';
 import { Clipboard, ClipboardData, ClipboardItem } from '../utils/clipboard';
 import { EmitEventController } from '../utils/emit-event-controller';
 import { DataType } from '../field/interfaces/field.interface';
@@ -617,7 +616,7 @@ export class TableCellService extends TableBaseService {
         let data = row.data[column.id];
 
         try {
-          if (isEmpty(data)) {
+          if (_.isNil(data)) {
             data = null;
             throw new Error();
           }
@@ -946,7 +945,7 @@ export class TableCellService extends TableBaseService {
         let data = row.data?.[column.id];
         let text = '';
 
-        if (!isEmpty(data)) {
+        if (!_.isNil(data)) {
           data = _.cloneDeep(data);
           text = column.field.toString(data);
         }
@@ -1135,7 +1134,7 @@ export class TableCellService extends TableBaseService {
           (!excludeEmpty ||
             (column.field.dataType === DataType.Checkbox
               ? row.data?.[column.id] === true
-              : !isEmpty(row.data?.[column.id]))) &&
+              : !_.isNil(row.data?.[column.id]))) &&
           (!excludeNonEditable ||
             this.tableService.config().cell.editable ||
             column.editable ||
