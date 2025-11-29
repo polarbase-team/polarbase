@@ -72,12 +72,6 @@ export function getAggregateMenuItems(
   }));
 }
 
-interface TableColumnExtra extends TableColumn {
-  _bkWidth?: number;
-  _isDragging?: boolean;
-  _isResizing?: boolean;
-}
-
 function calculateColumnDragPlaceholderIndex(
   columns: TableColumn[],
   offsetX: number,
@@ -321,14 +315,9 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  onColumnDragStarted(_e: CdkDragStart, column: TableColumnExtra) {
+  onColumnDragStarted() {
     this.tableCellService.deselectAllCells();
     this.deselectAllColumns();
-    column._isDragging = true;
-  }
-
-  onColumnDragEnded(_e: CdkDragEnd, column: TableColumnExtra) {
-    column._isDragging = false;
   }
 
   onColumnDragMoved(e: CdkDragMove) {
@@ -395,16 +384,16 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  onColumnResizing(event: ResizeEvent, column: TableColumnExtra) {
+  onColumnResizing(column: TableColumn, event: ResizeEvent) {
     let newWidth = event.rectangle.width;
+
     const minWidth = this.tableService.config().column.minWidth;
     if (newWidth < minWidth) newWidth = minWidth;
+
     const maxWidth = this.tableService.config().column.maxWidth;
     if (newWidth > maxWidth) newWidth = maxWidth;
 
-    if (!column._bkWidth) column._bkWidth = column.width;
     column.width = newWidth;
-    column._isResizing = true;
     this.columns.update((arr) => [...arr]);
 
     if (this.tableService.layout.fillHandle.index && !this.tableService.layout.fillHandle.hidden) {
@@ -412,9 +401,7 @@ export class TableColumnService extends TableBaseService {
     }
   }
 
-  onColumnResized(_event: ResizeEvent, column: TableColumnExtra) {
-    column._bkWidth = undefined;
-    setTimeout(() => (column._isResizing = false));
+  onColumnResized(column: TableColumn) {
     this.host.columnAction.emit({
       type: TableColumnActionType.Resize,
       payload: column,

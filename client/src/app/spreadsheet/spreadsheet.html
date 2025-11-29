@@ -45,22 +45,19 @@
         [style.minWidth.px]="column.width"
         [style.maxWidth.px]="column.width"
         [style.zIndex]="tableColumnService.columns()?.length - columnIndex"
-        [class.cdk-drag-placeholder]="column._isDragging"
         [class.cell--active]="tableService.layout.column.selectedIndices?.has(columnIndex)"
         [class.header-cell--grouping]="!tableService.isStreaming && column.groupingType"
         [class.header-cell--sorting]="!tableService.isStreaming && column.sortingType"
-        [class.header-cell--resizing]="column._isResizing"
         cdkDrag
         cdkDragLockAxis="x"
         cdkDragPreviewClass="column-drag-preview"
         [cdkDragBoundary]="dragBoundary"
         [cdkDragDisabled]="!tableService.config().column.reorderable"
-        (cdkDragStarted)="tableColumnService.onColumnDragStarted($event, column)"
-        (cdkDragEnded)="tableColumnService.onColumnDragEnded($event, column)"
+        (cdkDragStarted)="tableColumnService.onColumnDragStarted()"
         (cdkDragMoved)="tableColumnService.onColumnDragMoved($event)"
         mwlResizable
-        (resizing)="tableColumnService.onColumnResizing($event, column)"
-        (resizeEnd)="tableColumnService.onColumnResized($event, column)"
+        (resizing)="tableColumnService.onColumnResizing(column, $event)"
+        (resizeEnd)="tableColumnService.onColumnResized(column)"
         (click)="!column._isResizing && tableColumnService.selectColumns($event, columnIndex)"
       >
         <div
@@ -471,7 +468,6 @@
                     [attr.data-column-id]="column.id"
                     [attr.data-row-index]="rowIndex"
                     [attr.data-column-index]="columnIndex"
-                    [class.cdk-drag-placeholder]="column._isDragging"
                     [class.cell--active]="
                       row.selected ||
                       (!tableService.layout.column.selectedIndices &&

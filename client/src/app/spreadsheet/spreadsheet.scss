@@ -453,11 +453,6 @@ $blank-row-height: 32px;
         &.cell--invalid {
           background-color: $color-red-100 !important; // PrimeNG red light
         }
-        &.header-cell--resizing {
-          .header-cell__resize-handle {
-            opacity: 1;
-          }
-        }
         &.header-cell--grouping,
         &.header-cell--sorting {
           &::after {
