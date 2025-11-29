@@ -308,7 +308,7 @@ export class TableGroupService extends TableBaseService {
   }
 
   updateGroupState() {
-    this.rootGroup.update(() => this.rootGroup().clone());
+    this.rootGroup.set(this.rootGroup().clone());
   }
 
   openContextMenu(e: Event) {

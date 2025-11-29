@@ -52,7 +52,7 @@ export class TableRowService extends TableBaseService {
     super();
 
     effect(() => {
-      this.rowSize.update(() => this.tableService.config().row.size);
+      this.rowSize.set(this.tableService.config().row.size);
     });
 
     effect(() => {
@@ -66,7 +66,7 @@ export class TableRowService extends TableBaseService {
       }
 
       this.tableService.refreshView();
-      this.rows.update(() => rows);
+      this.rows.set(rows);
     });
   }
 
@@ -207,7 +207,7 @@ export class TableRowService extends TableBaseService {
   }
 
   setRowSize(size: RowSize) {
-    this.rowSize.update(() => size);
+    this.rowSize.set(size);
     if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.updateGroupState();
     }
@@ -247,9 +247,9 @@ export class TableRowService extends TableBaseService {
     onBeforeInsert?.(newRow, position);
 
     this.pendingRow = newRow;
-    this.rows.update((value) => {
-      value.splice(position, 0, newRow);
-      return [...value];
+    this.rows.update((arr) => {
+      arr.splice(position, 0, newRow);
+      return [...arr];
     });
 
     this.selectAndFocusInsertedRow(position);

@@ -157,13 +157,14 @@ export class TableColumnService extends TableBaseService {
           this.columnById.set(column.id, column);
         }
       }
-      this.columns.update(() => _.filter(columns, (c) => !c.hidden));
+      this.columns.set(_.filter(columns, (c) => !c.hidden));
     });
 
     effect(() => {
       const columns = this.columns();
-      this.frozenColumns.update(() => columns.slice(0, this.tableService.frozenCount() + 1));
-      this.scrollableColumns.update(() => columns.slice(this.tableService.frozenCount() + 1));
+      const frozenCount = this.tableService.frozenCount();
+      this.frozenColumns.set(columns.slice(0, frozenCount + 1));
+      this.scrollableColumns.set(columns.slice(frozenCount + 1));
     });
   }
 
@@ -171,7 +172,7 @@ export class TableColumnService extends TableBaseService {
     if (!column) return;
 
     column.hidden = false;
-    this.columns.update(() => _.filter(this.host.sourceColumns(), (c) => !c.hidden));
+    this.columns.set(_.filter(this.host.sourceColumns(), (c) => !c.hidden));
     this.host.columnAction.emit({
       type: TableColumnActionType.Unhide,
       payload: [column],

@@ -390,14 +390,14 @@ export class TableService extends TableBaseService {
     const rootGroup = groupBy(this.host.sourceRows(), columns, (group: TableGroup) => {
       group.isCollapsed = this.tableGroupService.collapsedGroupIds.has(group.id);
     });
-    this.tableGroupService.rootGroup.update(() => rootGroup);
+    this.tableGroupService.rootGroup.set(rootGroup);
 
     this.sort();
     this.calculate();
   }
 
   ungroup() {
-    this.tableGroupService.rootGroup.update(() => null);
+    this.tableGroupService.rootGroup.set(null);
 
     for (const column of this.tableColumnService.groupedColumns.values()) {
       delete column.groupSortType;
@@ -424,7 +424,7 @@ export class TableService extends TableBaseService {
     if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.sortInGroup(columns);
     } else {
-      this.tableRowService.rows.update(() => sortBy(this.host.sourceRows(), columns));
+      this.tableRowService.rows.set(sortBy(this.host.sourceRows(), columns));
     }
   }
 
@@ -438,7 +438,7 @@ export class TableService extends TableBaseService {
     if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.unsortInGroup();
     } else {
-      this.tableRowService.rows.update(() => this.host.sourceRows());
+      this.tableRowService.rows.set(this.host.sourceRows());
     }
   }
 
