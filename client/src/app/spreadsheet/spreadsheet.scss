@@ -599,7 +599,7 @@ $blank-row-height: 32px;
       }
 
       &.row--hover {
-        &:not(.row--drafting) {
+        &:not(.row--pending) {
           .row__select-handle,
           .row__drag-handle {
             visibility: visible;

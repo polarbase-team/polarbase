@@ -241,7 +241,7 @@ export class TableGroupService extends TableBaseService {
     if (!group || group.depth < this.groupDepth()) return null;
 
     const { viewProps } = group as GroupView;
-    const left = getColumnOffset(this.tableColumnService.findColumnByIndex(columnIndex));
+    const left = getColumnOffset(this.tableColumnService.columnAt(columnIndex));
     const top =
       viewProps.rect.top +
       Dimension.GroupHeaderHeight +

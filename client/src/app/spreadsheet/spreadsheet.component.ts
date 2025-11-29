@@ -772,9 +772,9 @@ export class SpreadsheetComponent
     if (!index) return;
 
     const { columnIndex } = index;
-    const column = this.tableColumnService.findColumnByIndex(columnIndex);
+    const column = this.tableColumnService.columnAt(columnIndex);
     setTimeout(() => {
-      this.tableColumnService.openColumnContextMenu(e, column, columnIndex);
+      this.tableColumnService.openContextMenu(e, column, columnIndex);
     });
   }
 
@@ -783,13 +783,13 @@ export class SpreadsheetComponent
     if (!index) return;
 
     const { rowIndex } = index;
-    const row = this.tableRowService.findRowByIndex(rowIndex);
+    const row = this.tableRowService.rowAt(rowIndex);
 
     if (row && !row.selected) {
       this.selectCell(index);
     }
 
-    if (this.isMouseHolding || this.tableRowService.isDraftRow(row)) {
+    if (this.isMouseHolding || this.tableRowService.isPendingRow(row)) {
       return;
     }
 
@@ -801,7 +801,7 @@ export class SpreadsheetComponent
     }
 
     setTimeout(() => {
-      this.tableRowService.openRowActionMenu(e, row, rowIndex);
+      this.tableRowService.openContextMenu(e, row, rowIndex);
     });
   }
 

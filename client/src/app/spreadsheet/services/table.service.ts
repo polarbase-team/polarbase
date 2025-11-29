@@ -47,8 +47,8 @@ export type Layout = Partial<{
     isHideHeadLine?: boolean;
     isDragging?: boolean;
     dragOffsetY?: number;
-    dragPlaceholderIndex?: number;
-    dragPlaceholderOffsetX?: number;
+    dragTargetIndex?: number;
+    dragTargetOffsetX?: number;
   };
   fillHandle: {
     index?: CellIndex;
@@ -56,14 +56,14 @@ export type Layout = Partial<{
     hidden?: boolean;
   };
   column: {
-    dragPlaceholderIndex?: number;
-    dragPlaceholderOffsetX?: number;
+    dragTargetIndex?: number;
+    dragTargetOffsetX?: number;
     selectedIndices?: Set<number>;
   };
   row: {
-    dragOverGroup?: TableGroup;
-    dragPlaceholderIndex?: number;
-    dragPlaceholderOffsetY?: number;
+    dragTargetGroup?: TableGroup;
+    dragTargetIndex?: number;
+    dragTargetOffsetY?: number;
   };
   cell: {
     focused?: CellIndex;
@@ -130,7 +130,7 @@ function calculateFreezeDividerDragPlaceholderIndex(
   scrollLeft: number,
   frozenCount: number,
 ) {
-  let dragPlaceholderIndex = 0;
+  let dragTargetIndex = 0;
 
   for (let i = 0; i < columns.length; i++) {
     let a = getColumnOffset(columns[i]);
@@ -146,17 +146,17 @@ function calculateFreezeDividerDragPlaceholderIndex(
     if (offsetX >= a && offsetX <= b) {
       const compared = (a + b) / 2;
       if (offsetX < compared) {
-        dragPlaceholderIndex = i;
+        dragTargetIndex = i;
       } else {
-        dragPlaceholderIndex = i + 1;
+        dragTargetIndex = i + 1;
       }
       break;
     }
 
-    dragPlaceholderIndex = i;
+    dragTargetIndex = i;
   }
 
-  return dragPlaceholderIndex;
+  return dragTargetIndex;
 }
 
 @Injectable()
@@ -465,22 +465,22 @@ export class TableService extends TableBaseService {
       this.host.virtualScroll.scrollLeft,
       this.frozenCount(),
     );
-    const offset = getColumnOffset(this.tableColumnService.findColumnByIndex(index));
+    const offset = getColumnOffset(this.tableColumnService.columnAt(index));
     if (offset / this.host.virtualScroll.viewport.width > this.config().column.maxFrozenRatio) {
       return;
     }
-    this.layout.freezeHandle.dragPlaceholderIndex = index;
-    this.layout.freezeHandle.dragPlaceholderOffsetX = offset + this.config().sideSpacing;
+    this.layout.freezeHandle.dragTargetIndex = index;
+    this.layout.freezeHandle.dragTargetOffsetX = offset + this.config().sideSpacing;
   }
 
   onFreezeDividerDragEnded(e: CdkDragEnd) {
-    const { dragPlaceholderIndex } = this.layout.freezeHandle;
-    if (dragPlaceholderIndex === null) return;
+    const { dragTargetIndex } = this.layout.freezeHandle;
+    if (dragTargetIndex === null) return;
 
-    this.setFrozenCount(dragPlaceholderIndex - 1);
+    this.setFrozenCount(dragTargetIndex - 1);
     this.layout.freezeHandle.isDragging = false;
-    this.layout.freezeHandle.dragPlaceholderIndex = null;
-    this.layout.freezeHandle.dragPlaceholderOffsetX = null;
+    this.layout.freezeHandle.dragTargetIndex = null;
+    this.layout.freezeHandle.dragTargetOffsetX = null;
     e.source._dragRef.reset();
   }
 

@@ -313,7 +313,7 @@ export class TableCellService extends TableBaseService {
 
     state.reset();
 
-    if (this.tableRowService.isDraftRow(selectingCell.row)) {
+    if (this.tableRowService.isPendingRow(selectingCell.row)) {
       this.tableRowService.cancelDraftRow();
       this.deselectAllCells();
     }
@@ -372,11 +372,11 @@ export class TableCellService extends TableBaseService {
     const selectedCells: TableCell[] = [];
     for (let i = startRowIdx; i <= endRowIdx; i++) {
       const rowIndex = Math.abs(i);
-      const row = this.tableRowService.findRowByIndex(rowIndex);
+      const row = this.tableRowService.rowAt(rowIndex);
 
       for (let j = startColumnIdx; j <= endColumnIdx; j++) {
         const columnIndex = Math.abs(j);
-        const column = this.tableColumnService.findColumnByIndex(columnIndex);
+        const column = this.tableColumnService.columnAt(columnIndex);
         selectedCells.push({ row, column });
       }
     }
@@ -835,7 +835,7 @@ export class TableCellService extends TableBaseService {
       return this.tableGroupService.getRowCellOffsetInGroup(index);
     }
 
-    const left = getColumnOffset(this.tableColumnService.findColumnByIndex(index.columnIndex));
+    const left = getColumnOffset(this.tableColumnService.columnAt(index.columnIndex));
     const top = index.rowIndex * this.tableRowService.rowHeight();
 
     return { left, top };
@@ -850,8 +850,8 @@ export class TableCellService extends TableBaseService {
 
   findCellByIndex(index: CellIndex) {
     return {
-      row: this.tableRowService.findRowByIndex(index.rowIndex),
-      column: this.tableColumnService.findColumnByIndex(index.columnIndex),
+      row: this.tableRowService.rowAt(index.rowIndex),
+      column: this.tableColumnService.columnAt(index.columnIndex),
     };
   }
 
@@ -911,7 +911,7 @@ export class TableCellService extends TableBaseService {
 
       for (const row of this.tableRowService.rows()) {
         for (const columnIdx of this.tableService.layout.column.selectedIndices) {
-          const column = this.tableColumnService.findColumnByIndex(columnIdx);
+          const column = this.tableColumnService.columnAt(columnIdx);
           cells.push({ row, column });
         }
       }
@@ -1035,7 +1035,7 @@ export class TableCellService extends TableBaseService {
     const { scrollLayout, scrollLeft, scrollTop, viewport } = this.host.virtualScroll;
 
     const horizontalTrackOffsetX = scrollLayout.horizontal.track.offset.x;
-    const { width: cellWidth } = this.tableColumnService.findColumnByIndex(columnIndex);
+    const { width: cellWidth } = this.tableColumnService.columnAt(columnIndex);
     let left = scrollLeft;
     if (cellOffsetLeft >= horizontalTrackOffsetX) {
       if (cellOffsetLeft - horizontalTrackOffsetX < scrollLeft) {
@@ -1096,7 +1096,7 @@ export class TableCellService extends TableBaseService {
   ) {
     row.data = { ...row.data, ...rawData };
 
-    if (this.tableRowService.isDraftRow(row)) {
+    if (this.tableRowService.isPendingRow(row)) {
       this.interactiveColumns.clear();
       return;
     }

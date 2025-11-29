@@ -79,7 +79,7 @@ function calculateColumnDragPlaceholderIndex(
   frozenCount: number,
 ) {
   const length = columns.length;
-  let dragPlaceholderIndex = 0;
+  let dragTargetIndex = 0;
 
   for (let i = 0; i <= length; i++) {
     const curr = columns[i];
@@ -99,17 +99,17 @@ function calculateColumnDragPlaceholderIndex(
     if (offsetX >= a && offsetX <= b) {
       const compared = (a + b) / 2;
       if (offsetX < compared) {
-        dragPlaceholderIndex = i;
+        dragTargetIndex = i;
       } else {
-        dragPlaceholderIndex = i + 1;
+        dragTargetIndex = i + 1;
       }
       break;
     }
 
-    dragPlaceholderIndex = i;
+    dragTargetIndex = i;
   }
 
-  return dragPlaceholderIndex;
+  return dragTargetIndex;
 }
 
 @Injectable()
@@ -121,7 +121,7 @@ export class TableColumnService extends TableBaseService {
   groupedColumns = new Map<TableColumn['id'], TableColumn>();
   sortedColumns = new Map<TableColumn['id'], TableColumn>();
 
-  private columnLookup = new Map<TableColumn['id'], TableColumn>();
+  private columnById = new Map<TableColumn['id'], TableColumn>();
 
   constructor() {
     super();
@@ -157,10 +157,10 @@ export class TableColumnService extends TableBaseService {
     effect(() => {
       const columns = this.host.sourceColumns();
       for (const column of columns) {
-        if (!this.columnLookup.has(column.id)) {
+        if (!this.columnById.has(column.id)) {
           column.id ??= _.uniqueId();
           column.width ??= this.tableService.config().column.defaultWidth;
-          this.columnLookup.set(column.id, column);
+          this.columnById.set(column.id, column);
         }
       }
       this.columns.update(() => _.filter(columns, (c) => !c.hidden));
@@ -339,9 +339,9 @@ export class TableColumnService extends TableBaseService {
 
       let column: TableColumn;
       if (isOutRange) {
-        column = this.findColumnByIndex(index - 1);
+        column = this.columnAt(index - 1);
       } else {
-        column = this.findColumnByIndex(index);
+        column = this.columnAt(index);
       }
 
       if (column) {
@@ -357,20 +357,19 @@ export class TableColumnService extends TableBaseService {
       }
     }
 
-    this.tableService.layout.column.dragPlaceholderIndex = index;
-    this.tableService.layout.column.dragPlaceholderOffsetX =
+    this.tableService.layout.column.dragTargetIndex = index;
+    this.tableService.layout.column.dragTargetOffsetX =
       offset + this.tableService.config().sideSpacing;
   }
 
   onColumnDropped(e: CdkDragDrop<TableColumn[]>) {
-    const { dragPlaceholderIndex } = this.tableService.layout.column;
-    if (dragPlaceholderIndex === null) return;
+    const { dragTargetIndex } = this.tableService.layout.column;
+    if (dragTargetIndex === null) return;
 
     const previousIndex = e.previousIndex;
-    const currentIndex =
-      dragPlaceholderIndex > previousIndex ? dragPlaceholderIndex - 1 : dragPlaceholderIndex;
-    this.tableService.layout.column.dragPlaceholderIndex =
-      this.tableService.layout.column.dragPlaceholderOffsetX = null;
+    const currentIndex = dragTargetIndex > previousIndex ? dragTargetIndex - 1 : dragTargetIndex;
+    this.tableService.layout.column.dragTargetIndex =
+      this.tableService.layout.column.dragTargetOffsetX = null;
     if (previousIndex === currentIndex) return;
 
     moveItemInArray(this.columns(), previousIndex, currentIndex);
@@ -378,7 +377,7 @@ export class TableColumnService extends TableBaseService {
     this.host.columnAction.emit({
       type: TableColumnActionType.Move,
       payload: {
-        column: this.findColumnByIndex(currentIndex),
+        column: this.columnAt(currentIndex),
         position: currentIndex,
       },
     });
@@ -494,13 +493,13 @@ export class TableColumnService extends TableBaseService {
     return this.columns().length - 1;
   }
 
-  findColumnByIndex(index: number) {
+  columnAt(index: number) {
     return this.columns()[index];
   }
 
   findColumnByID(id: TableColumn['id']) {
-    return this.columnLookup?.has(id)
-      ? this.columnLookup.get(id)
+    return this.columnById?.has(id)
+      ? this.columnById.get(id)
       : _.find(this.host.sourceColumns(), { id });
   }
 
@@ -513,7 +512,7 @@ export class TableColumnService extends TableBaseService {
     return _.findIndex(this.columns(), { id });
   }
 
-  openColumnContextMenu(e: Event, column: TableColumn, columnIndex: number) {
+  openContextMenu(e: Event, column: TableColumn, columnIndex: number) {
     const items: MenuItem[] = [];
     const { column: config } = this.tableService.config();
 
@@ -638,7 +637,7 @@ export class TableColumnService extends TableBaseService {
     const columns: TableColumn[] = [];
     if (selectedIndices) {
       for (const idx of selectedIndices) {
-        columns.push(this.findColumnByIndex(idx));
+        columns.push(this.columnAt(idx));
       }
     }
     return columns;

@@ -362,7 +362,7 @@
               [style.top.px]="rowRect.top"
               [style.height.px]="rowRect.height"
               [class.row--selecting]="row.selected"
-              [class.row--drafting]="row === tableRowService.draftRow"
+              [class.row--pending]="row === tableRowService.pendingRow"
               [class.row--hover]="tableService.layout.cell.hovered?.rowIndex === rowIndex"
               [style.left.px]="rowRect.left"
               cdkDrag
@@ -409,7 +409,7 @@
                       </div>
                     }
                     <div class="index-block">
-                      @if (row === tableRowService.draftRow) {
+                      @if (row === tableRowService.pendingRow) {
                         <a
                           safe-area
                           class="text-xs text-blue-500 pointer-events-auto"
@@ -515,7 +515,7 @@
                       [field]="column.field"
                       [data]="row.data?.[column.id] ?? null"
                       [readonly]="
-                        row !== tableRowService.draftRow &&
+                        row !== tableRowService.pendingRow &&
                         ((tableService.isStreaming && !$any(row)._isStreamed) ||
                           (!tableService.config().cell.editable &&
                             !column.editable &&
@@ -652,7 +652,7 @@
               [style.top.px]="rowRect.top"
               [style.height.px]="rowRect.height"
               [class.row--selecting]="row.selected"
-              [class.row--drafting]="row === tableRowService.draftRow"
+              [class.row--pending]="row === tableRowService.pendingRow"
               [class.row--hover]="tableService.layout.cell.hovered?.rowIndex === rowIndex"
             >
               <ng-container
@@ -737,7 +737,7 @@
                       [field]="column.field"
                       [data]="row.data?.[column.id] ?? null"
                       [readonly]="
-                        row !== tableRowService.draftRow &&
+                        row !== tableRowService.pendingRow &&
                         ((tableService.isStreaming && !$any(row)._isStreamed) ||
                           (!tableService.config().cell.editable &&
                             !column.editable &&
@@ -923,7 +923,7 @@
         class="frozen-divider-drag-placeholder"
         [style.height.px]="bodyLineHeight + Dimension.HeaderHeight"
         [style.transform]="
-          'translate3d(' + tableService.layout.freezeHandle.dragPlaceholderOffsetX + 'px, 0, 0)'
+          'translate3d(' + tableService.layout.freezeHandle.dragTargetOffsetX + 'px, 0, 0)'
         "
       ></div>
       <div class="frozen-divider-drag-overlay"></div>
@@ -957,28 +957,24 @@
 
 <!-- Column drag placeholder -->
 @if (
-  tableService.layout.column.dragPlaceholderIndex !== undefined &&
-  tableService.layout.column.dragPlaceholderIndex !== null
+  tableService.layout.column.dragTargetIndex !== undefined &&
+  tableService.layout.column.dragTargetIndex !== null
 ) {
   <div
     class="column-drag-placeholder"
-    [style.transform]="
-      'translate3d(' + tableService.layout.column.dragPlaceholderOffsetX + 'px, 0, 0)'
-    "
+    [style.transform]="'translate3d(' + tableService.layout.column.dragTargetOffsetX + 'px, 0, 0)'"
   ></div>
   <div class="column-drag-overlay"></div>
 }
 
 <!-- Row drag placeholder -->
 @if (
-  tableService.layout.row.dragPlaceholderIndex !== undefined &&
-  tableService.layout.row.dragPlaceholderIndex !== null
+  tableService.layout.row.dragTargetIndex !== undefined &&
+  tableService.layout.row.dragTargetIndex !== null
 ) {
   <div
     class="row-drag-placeholder"
-    [style.transform]="
-      'translate3d(0, ' + tableService.layout.row.dragPlaceholderOffsetY + 'px, 0)'
-    "
+    [style.transform]="'translate3d(0, ' + tableService.layout.row.dragTargetOffsetY + 'px, 0)'"
   >
     <p-chip
       style="margin-top: -10px; margin-left: 10px"
