@@ -210,7 +210,7 @@ export class TableGroupService extends TableBaseService {
         ...movedRow.data,
         ...rowDataNeedUpdate,
       };
-      const i = this.findRowGroupIndex(targetGroup, movedRow);
+      const i = this.findRowIndexInGroup(targetGroup, movedRow);
       if (i < 0 || i >= movedIndex) continue;
       newMovedIndex--;
     }
@@ -265,12 +265,8 @@ export class TableGroupService extends TableBaseService {
     return groupAtOffset(this.rootGroup(), offset);
   }
 
-  findGroupByRowIndex(rowIndex: number) {
-    return findGroupByItemIndex(rowIndex, this.rootGroup());
-  }
-
-  findRowInGroupAtPointerPosition(pointerPosition: Point) {
-    let { y: pointerOffsetY } = this.host.virtualScroll.measurePointerOffset(pointerPosition);
+  rowAtPoint(point: Point) {
+    let { y: pointerOffsetY } = this.host.virtualScroll.measurePointerOffset(point);
     pointerOffsetY -= Dimension.BodyVerticalPadding;
     if (!_.isFinite(pointerOffsetY) || pointerOffsetY < 0) return null;
 
@@ -292,12 +288,12 @@ export class TableGroupService extends TableBaseService {
     };
   }
 
-  findRowGroupIndex(group: TableGroup, row: TableRow) {
-    return _.indexOf(group.rows, row);
+  findGroupByRowIndex(rowIndex: number) {
+    return findGroupByItemIndex(rowIndex, this.rootGroup());
   }
 
-  findRowIndexInGroup(row: TableRow) {
-    return _.indexOf(this.rootGroup().rows, row);
+  findRowIndexInGroup(group: TableGroup, row: TableRow) {
+    return _.indexOf(group.rows, row);
   }
 
   findRowIndexInGroupByID(id: TableRow['id']) {

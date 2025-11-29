@@ -166,7 +166,7 @@ export class TableRowService extends TableBaseService {
   }
 
   onRowDragMoved(e: CdkDragMove<TableRow>) {
-    const foundRow = this.findRowAtPointerPosition(e.pointerPosition);
+    const foundRow = this.rowAtPoint(e.pointerPosition);
     let group: TableGroup;
     let rowIndex: number;
     let rowOffset: number;
@@ -372,12 +372,12 @@ export class TableRowService extends TableBaseService {
       : this.rows().length - 1;
   }
 
-  findRowAtPointerPosition(pointerPosition: Point) {
+  rowAtPoint(point: Point) {
     if (this.tableGroupService.isGrouped()) {
-      return this.tableGroupService.findRowInGroupAtPointerPosition(pointerPosition);
+      return this.tableGroupService.rowAtPoint(point);
     }
 
-    let { y: pointerOffsetY } = this.host.virtualScroll.measurePointerOffset(pointerPosition);
+    let { y: pointerOffsetY } = this.host.virtualScroll.measurePointerOffset(point);
     pointerOffsetY -= Dimension.BodyVerticalPadding;
 
     if (!_.isFinite(pointerOffsetY) || pointerOffsetY < 0) {
@@ -412,7 +412,7 @@ export class TableRowService extends TableBaseService {
 
   findRowIndex(row: TableRow) {
     return this.tableGroupService.isGrouped()
-      ? this.tableGroupService.findRowIndexInGroup(row)
+      ? this.tableGroupService.findRowIndexInGroup(this.tableGroupService.rootGroup(), row)
       : _.indexOf(this.rows(), row);
   }
 
