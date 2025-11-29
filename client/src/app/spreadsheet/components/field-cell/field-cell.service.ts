@@ -8,7 +8,7 @@ import { FieldCell } from './field-cell';
 import { TableCell } from '../../models/table-cell';
 import { TableColumn } from '../../models/table-column';
 
-function matchCell(checkCell: TableCell): boolean {
+function matchCell(checkCell: TableCell) {
   return this.cell.row.id === checkCell.row.id && this.cell.column.id === checkCell.column.id;
 }
 
@@ -32,7 +32,7 @@ function flush(
   const { field }: TableColumn = this.cell.column;
   const errors = field.validate(this.savedData);
   if (errors !== null) {
-    const unsub$: Subject<void> = new Subject<void>();
+    const unsub$ = new Subject<void>();
     this.validate$
       .pipe(startWith(errors), takeUntil(unsub$))
       .subscribe((errs: FieldValidationErrors | null) => {
@@ -81,11 +81,11 @@ export class FieldCellService {
   // A private map to store cached component references categorized by DataType.
   private cacheStore = new Map<DataType, ComponentRef<FieldCell>[]>();
 
-  private revert$ = new Subject<void>();
-  private validate$ = new Subject<FieldValidationErrors | null>();
-
   // Holds the current selecting state for FieldCell components.
   private selectingState: FieldCellSelectingState;
+
+  private revert$ = new Subject<void>();
+  private validate$ = new Subject<FieldValidationErrors | null>();
 
   /**
    * Cleans up resources used by the service by completing internal observables.
