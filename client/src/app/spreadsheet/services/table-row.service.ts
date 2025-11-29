@@ -90,7 +90,7 @@ export class TableRowService extends TableBaseService {
         this.rowLookup.set(row.id, row);
       }
 
-      this.tableService.handleDataUpdate();
+      this.tableService.refreshDataView();
       this.rows.update(() => rows);
     });
   }
@@ -114,7 +114,7 @@ export class TableRowService extends TableBaseService {
             break;
           }
         }
-        this.tableService.handleDataUpdate();
+        this.tableService.refreshDataView();
       });
 
     outputToObservable(this.host.cellAction)
@@ -151,7 +151,7 @@ export class TableRowService extends TableBaseService {
   //     this.rowLookup.set(row.id, row);
   //   }
 
-  //   this.tableService.handleDataUpdate();
+  //   this.tableService.refreshDataView();
   //   this.cdr.markForCheck();
   // }
 
@@ -161,7 +161,7 @@ export class TableRowService extends TableBaseService {
   //       row.selected ? this.selectedRows.add(row) : this.selectedRows.delete(row);
   //     }
   //   }
-  //   this.tableService.handleDataUpdate();
+  //   this.tableService.refreshDataView();
   //   this.cdr.markForCheck();
   // }
 
@@ -196,13 +196,13 @@ export class TableRowService extends TableBaseService {
         this.host.virtualScroll.scrollTop -
         2;
     }
-    this.tableService.layoutProps.row.dragOverGroup = group;
-    this.tableService.layoutProps.row.dragPlaceholderIndex = rowIndex;
-    this.tableService.layoutProps.row.dragPlaceholderOffset = rowOffset;
+    this.tableService.layout.row.dragOverGroup = group;
+    this.tableService.layout.row.dragPlaceholderIndex = rowIndex;
+    this.tableService.layout.row.dragPlaceholderOffsetY = rowOffset;
   }
 
   onRowDragEnded(e: CdkDragEnd<TableRow>) {
-    const { dragPlaceholderIndex } = this.tableService.layoutProps.row;
+    const { dragPlaceholderIndex } = this.tableService.layout.row;
     if (dragPlaceholderIndex === null) return;
     const currentIndex = dragPlaceholderIndex;
 
@@ -210,15 +210,15 @@ export class TableRowService extends TableBaseService {
       const droppedRows = [...this.draggingRows];
       this.moveRows(droppedRows, currentIndex);
       if (this.tableGroupService.isGrouping()) {
-        const targetGroup = this.tableService.layoutProps.row.dragOverGroup;
+        const targetGroup = this.tableService.layout.row.dragOverGroup;
         this.tableGroupService.moveRowsInGroup(droppedRows, currentIndex, targetGroup);
       }
     }
 
     e.source.reset();
 
-    this.tableService.layoutProps.row.dragPlaceholderIndex =
-      this.tableService.layoutProps.row.dragOverGroup = null;
+    this.tableService.layout.row.dragPlaceholderIndex = this.tableService.layout.row.dragOverGroup =
+      null;
     this.draggingRows.clear();
   }
 
@@ -228,7 +228,7 @@ export class TableRowService extends TableBaseService {
       this.tableGroupService.markGroupAsChanged();
     }
     setTimeout(() => {
-      this.tableService.updateFillHandlerPosition();
+      this.tableService.positionFillHandle();
     });
   }
 
@@ -237,7 +237,7 @@ export class TableRowService extends TableBaseService {
   }
 
   expandSelectingRow() {
-    const selecting = this.tableService.layoutProps.cell.selection?.primary;
+    const selecting = this.tableService.layout.cell.selection?.anchor;
     if (!selecting) return;
     this.expandRow(this.findRowByIndex(selecting.rowIndex));
   }
@@ -268,7 +268,7 @@ export class TableRowService extends TableBaseService {
       return [...value];
     });
 
-    this.selectAndFocusInsertedRow(newRow, position);
+    this.selectAndFocusInsertedRow(position);
     this.addedEEC.addEvent(newRow.id, { row: newRow, insertedIndex: position });
     return newRow;
   }
@@ -370,7 +370,7 @@ export class TableRowService extends TableBaseService {
     const selectedRows = [...this.selectedRows];
 
     if (!selectedRows.length) {
-      const { selection } = this.tableService.layoutProps.cell;
+      const { selection } = this.tableService.layout.cell;
       const startIndex = selection.start.rowIndex;
       const endIndex = startIndex + selection.rowCount;
 
@@ -557,8 +557,8 @@ export class TableRowService extends TableBaseService {
     }
   }
 
-  private selectAndFocusInsertedRow(row: TableRow, insertedIndex: number) {
-    this.tableService.layoutProps.cell.selection = null;
+  private selectAndFocusInsertedRow(insertedIndex: number) {
+    this.tableService.layout.cell.selection = null;
 
     queueMicrotask(() => {
       const cellIndex: CellIndex = {
@@ -575,10 +575,10 @@ export class TableRowService extends TableBaseService {
   }
 
   private focusToFieldCellTouchable(retry = false) {
-    if (!this.tableService.layoutProps.cell.selection) return;
+    if (!this.tableService.layout.cell.selection) return;
 
     const fieldCell = this.tableCellService.findCellElementByIndex(
-      this.tableService.layoutProps.cell.selection.primary,
+      this.tableService.layout.cell.selection.anchor,
     )?.firstElementChild;
     if (fieldCell) {
       fieldCell.dispatchEvent(new Event('dblclick'));

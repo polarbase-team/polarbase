@@ -359,14 +359,14 @@ export class SpreadsheetComponent
     }
 
     this.scrollAnimationFrame = requestAnimationFrame(() => {
-      if (this.tableService.layoutProps.fillHandler.index) {
-        this.tableService.updateFillHandlerPosition(undefined, true);
+      if (this.tableService.layout.fillHandle.index) {
+        this.tableService.positionFillHandle(undefined, true);
       }
     });
   }
 
   protected disableScroll = () => {
-    if (this.tableService.layoutProps.cell.invalid) return true;
+    if (this.tableService.layout.cell.invalid) return true;
 
     return !!this.fieldCellService.getSelectingState()?.isEditing;
   };
@@ -421,15 +421,15 @@ export class SpreadsheetComponent
         let delayEditCellFn: number;
 
         const isFillHandlerActive = !!this.fillHander?.nativeElement.contains(target);
-        const currSelection = this.tableService.layoutProps.cell.selection;
-        const primaryCellIdxInSelection = currSelection?.primary;
+        const currSelection = this.tableService.layout.cell.selection;
+        const anchorCellIdxInSelection = currSelection?.anchor;
 
         if (isFillHandlerActive) {
           startCellIdx = {
-            rowIndex: Math.max(currSelection.start.rowIndex, primaryCellIdxInSelection.rowIndex),
+            rowIndex: Math.max(currSelection.start.rowIndex, anchorCellIdxInSelection.rowIndex),
             columnIndex: Math.min(
               currSelection.start.columnIndex,
-              primaryCellIdxInSelection.columnIndex,
+              anchorCellIdxInSelection.columnIndex,
             ),
           };
         } else {
@@ -437,9 +437,9 @@ export class SpreadsheetComponent
 
           if (!startCellIdx) return;
 
-          if (primaryCellIdxInSelection) {
+          if (anchorCellIdxInSelection) {
             if (e1.shiftKey) {
-              this.selectCells(primaryCellIdxInSelection, startCellIdx);
+              this.selectCells(anchorCellIdxInSelection, startCellIdx);
               return;
             }
 
@@ -447,8 +447,8 @@ export class SpreadsheetComponent
             // if at least one cell is being edited
             // or edit on same cell.
             if (
-              primaryCellIdxInSelection.rowIndex === startCellIdx.rowIndex &&
-              primaryCellIdxInSelection.columnIndex === startCellIdx.columnIndex
+              anchorCellIdxInSelection.rowIndex === startCellIdx.rowIndex &&
+              anchorCellIdxInSelection.columnIndex === startCellIdx.columnIndex
             ) {
               return;
             }
@@ -524,7 +524,7 @@ export class SpreadsheetComponent
                 };
               }
 
-              this.tableService.layoutProps.cell.filling = {
+              this.tableService.layout.cell.fill = {
                 start,
                 end,
                 isReverse,
@@ -544,7 +544,7 @@ export class SpreadsheetComponent
           this.isMouseHolding = false;
 
           if (isFillHandlerActive) {
-            const cellFilling = this.tableService.layoutProps.cell.filling;
+            const cellFilling = this.tableService.layout.cell.fill;
 
             cellFilling.isReverse
               ? this.selectCells(cellFilling.start, currSelection.end, true)
@@ -556,7 +556,7 @@ export class SpreadsheetComponent
               cellFilling.isReverse,
             );
 
-            this.tableService.layoutProps.cell.filling = null;
+            this.tableService.layout.cell.fill = null;
 
             this.detectChanges();
           }
@@ -569,9 +569,7 @@ export class SpreadsheetComponent
       pause: true,
       shouldPause: (e) =>
         this.shouldPauseEvent(e, (shouldPause) => {
-          return (
-            shouldPause && (e.code !== 'Escape' || !this.tableService.layoutProps.cell.invalid)
-          );
+          return shouldPause && (e.code !== 'Escape' || !this.tableService.layout.cell.invalid);
         }),
     });
 
@@ -716,9 +714,9 @@ export class SpreadsheetComponent
 
   private selectCell(index: CellIndex) {
     if (
-      this.tableService.layoutProps.cell.selection &&
+      this.tableService.layout.cell.selection &&
       this.tableCellService.compareCellIndex(
-        this.tableService.layoutProps.cell.selection.primary,
+        this.tableService.layout.cell.selection.anchor,
         index,
       ) === 0
     ) {
@@ -731,13 +729,13 @@ export class SpreadsheetComponent
 
   private selectCells(startIdx: CellIndex, endIdx: CellIndex, extend = false) {
     if (
-      this.tableService.layoutProps.cell.selection &&
+      this.tableService.layout.cell.selection &&
       this.tableCellService.compareCellIndex(
-        this.tableService.layoutProps.cell.selection.start,
+        this.tableService.layout.cell.selection.start,
         startIdx,
       ) === 0 &&
       this.tableCellService.compareCellIndex(
-        this.tableService.layoutProps.cell.selection.end,
+        this.tableService.layout.cell.selection.end,
         endIdx,
       ) === 0
     ) {
@@ -750,7 +748,7 @@ export class SpreadsheetComponent
 
   private shouldPauseEvent(e: Event, customizer?: (shouldPause: boolean) => boolean) {
     let shouldPause =
-      !!this.tableService.layoutProps.cell.invalid ||
+      !!this.tableService.layout.cell.invalid ||
       this.checkOverlapedByOtherSpreadsheet() ||
       this.checkOverlapedByOverlay(e.target);
 

@@ -12,7 +12,7 @@ export type TableRowSize = keyof typeof TableRowSize;
 
 export interface TableConfig {
   sideSpacing?: number;
-  streamData?: boolean;
+  dataStream?: boolean;
   calculateBy?: [TableColumn | TableColumn['id'], CalculateType][];
   groupBy?: [TableColumn | TableColumn['id'], SortType][];
   sortBy?: [TableColumn | TableColumn['id'], SortType][];

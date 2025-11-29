@@ -46,9 +46,9 @@
         [style.maxWidth.px]="column.width"
         [style.zIndex]="tableColumnService.columns()?.length - columnIndex"
         [class.cdk-drag-placeholder]="column._isDragging"
-        [class.cell--active]="tableService.layoutProps.column.selection?.has(columnIndex)"
-        [class.header-cell--grouping]="!tableService.isDataStreaming && column.groupingType"
-        [class.header-cell--sorting]="!tableService.isDataStreaming && column.sortingType"
+        [class.cell--active]="tableService.layout.column.selectedIndices?.has(columnIndex)"
+        [class.header-cell--grouping]="!tableService.isStreaming && column.groupingType"
+        [class.header-cell--sorting]="!tableService.isStreaming && column.sortingType"
         [class.header-cell--resizing]="column._isResizing"
         cdkDrag
         cdkDragLockAxis="x"
@@ -125,10 +125,10 @@
             pTooltip="Resize column"
             (mousedown)="$event.stopPropagation()"
             (mouseenter)="
-              tableService.layoutProps.frozenDivider.isHideHeadLine =
+              tableService.layout.freezeHandle.isHideHeadLine =
                 columnIndex === tableService.frozenIndex()
             "
-            (mouseleave)="tableService.layoutProps.frozenDivider.isHideHeadLine = false"
+            (mouseleave)="tableService.layout.freezeHandle.isHideHeadLine = false"
           ></div>
         }
       </div>
@@ -290,7 +290,7 @@
                             calculationBlockTemplate;
                             context: {
                               column,
-                              calculatedResult: group.calculatedResult?.get(column.id),
+                              calcResults: group.calcResults?.get(column.id),
                             }
                           "
                         ></ng-container>
@@ -311,7 +311,7 @@
                             calculationBlockTemplate;
                             context: {
                               column,
-                              calculatedResult: group.calculatedResult?.get(column.id),
+                              calcResults: group.calcResults?.get(column.id),
                             }
                           "
                         ></ng-container>
@@ -326,7 +326,7 @@
                     <div class="row blank-row">
                       <div
                         class="row-cell cell index-cell"
-                        [attr.disabled]="tableService.isDataStreaming"
+                        [attr.disabled]="tableService.isStreaming"
                         (click)="tableRowService.addNewRow(group)"
                       >
                         <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
@@ -358,7 +358,7 @@
               [style.height.px]="rowRect.height"
               [class.row--selecting]="row.selected"
               [class.row--drafting]="row === tableRowService.draftRow"
-              [class.row--hover]="tableService.layoutProps.cell.hovering?.rowIndex === rowIndex"
+              [class.row--hover]="tableService.layout.cell.hovered?.rowIndex === rowIndex"
               [style.left.px]="rowRect.left"
               cdkDrag
               cdkDragLockAxis="y"
@@ -385,10 +385,10 @@
                   cell-type="row"
                   [class.cell--active]="
                     row.selected ||
-                    (!tableService.layoutProps.column.selection &&
-                      tableService.layoutProps.cell.selection &&
-                      tableService.layoutProps.cell.selection.count === 1 &&
-                      tableService.layoutProps.cell.selection.primary.rowIndex === rowIndex)
+                    (!tableService.layout.column.selectedIndices &&
+                      tableService.layout.cell.selection &&
+                      tableService.layout.cell.selection.count === 1 &&
+                      tableService.layout.cell.selection.anchor.rowIndex === rowIndex)
                   "
                   (pointerenter)="
                     tableCellService.onCellHover($event, { rowIndex, columnIndex: -1 })
@@ -466,41 +466,41 @@
                     [class.cdk-drag-placeholder]="column._isDragging"
                     [class.cell--active]="
                       row.selected ||
-                      (!tableService.layoutProps.column.selection &&
-                        tableService.layoutProps.cell.selection &&
-                        tableService.layoutProps.cell.selection.count === 1 &&
-                        tableService.layoutProps.cell.selection.primary.rowIndex === rowIndex) ||
-                      (tableService.layoutProps.cell.selection &&
-                        tableService.layoutProps.cell.selection.start.rowIndex <= rowIndex &&
-                        tableService.layoutProps.cell.selection.start.columnIndex <= columnIndex &&
-                        tableService.layoutProps.cell.selection.end.rowIndex >= rowIndex &&
-                        tableService.layoutProps.cell.selection.end.columnIndex >= columnIndex) ||
-                      tableService.layoutProps.column.selection?.has(columnIndex)
+                      (!tableService.layout.column.selectedIndices &&
+                        tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.count === 1 &&
+                        tableService.layout.cell.selection.anchor.rowIndex === rowIndex) ||
+                      (tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.start.rowIndex <= rowIndex &&
+                        tableService.layout.cell.selection.start.columnIndex <= columnIndex &&
+                        tableService.layout.cell.selection.end.rowIndex >= rowIndex &&
+                        tableService.layout.cell.selection.end.columnIndex >= columnIndex) ||
+                      tableService.layout.column.selectedIndices?.has(columnIndex)
                     "
                     [class.cell--highlight]="
-                      tableService.layoutProps.cell.searching?.found?.get(row.id)?.has(column.id)
+                      tableService.layout.cell.search?.matches?.get(row.id)?.has(column.id)
                     "
                     [class.cell--filling]="
-                      tableService.layoutProps.cell.filling &&
-                      tableService.layoutProps.cell.filling.start.rowIndex <= rowIndex &&
-                      tableService.layoutProps.cell.filling.start.columnIndex <= columnIndex &&
-                      tableService.layoutProps.cell.filling.end.rowIndex >= rowIndex &&
-                      tableService.layoutProps.cell.filling.end.columnIndex >= columnIndex
+                      tableService.layout.cell.fill &&
+                      tableService.layout.cell.fill.start.rowIndex <= rowIndex &&
+                      tableService.layout.cell.fill.start.columnIndex <= columnIndex &&
+                      tableService.layout.cell.fill.end.rowIndex >= rowIndex &&
+                      tableService.layout.cell.fill.end.columnIndex >= columnIndex
                     "
                     [class.cell--focusing]="
-                      tableService.layoutProps.cell.focusing &&
-                      tableService.layoutProps.cell.focusing.rowIndex === rowIndex &&
-                      tableService.layoutProps.cell.focusing.columnIndex === columnIndex
+                      tableService.layout.cell.focused &&
+                      tableService.layout.cell.focused.rowIndex === rowIndex &&
+                      tableService.layout.cell.focused.columnIndex === columnIndex
                     "
                     [class.cell--invalid]="
-                      tableService.layoutProps.cell.invalid &&
-                      tableService.layoutProps.cell.invalid.rowIndex === rowIndex &&
-                      tableService.layoutProps.cell.invalid.columnIndex === columnIndex
+                      tableService.layout.cell.invalid &&
+                      tableService.layout.cell.invalid.rowIndex === rowIndex &&
+                      tableService.layout.cell.invalid.columnIndex === columnIndex
                     "
                     [class.row-cell--selecting]="
-                      tableService.layoutProps.cell.selection &&
-                      tableService.layoutProps.cell.selection.primary.rowIndex === rowIndex &&
-                      tableService.layoutProps.cell.selection.primary.columnIndex === columnIndex
+                      tableService.layout.cell.selection &&
+                      tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
+                      tableService.layout.cell.selection.anchor.columnIndex === columnIndex
                     "
                     (pointerenter)="tableCellService.onCellHover($event, { rowIndex, columnIndex })"
                   >
@@ -512,7 +512,7 @@
                       [data]="row.data?.[column.id] ?? null"
                       [readonly]="
                         row !== tableRowService.draftRow &&
-                        ((tableService.isDataStreaming && !$any(row)._isStreamed) ||
+                        ((tableService.isStreaming && !$any(row)._isStreamed) ||
                           (!tableService.config().column.editable &&
                             !tableService.config().row.editable &&
                             !column.editable &&
@@ -520,9 +520,9 @@
                             row.editable?.[column.id] !== true))
                       "
                       [selecting]="
-                        !!tableService.layoutProps.cell.selection &&
-                        tableService.layoutProps.cell.selection.primary.rowIndex === rowIndex &&
-                        tableService.layoutProps.cell.selection.primary.columnIndex === columnIndex
+                        !!tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
+                        tableService.layout.cell.selection.anchor.columnIndex === columnIndex
                       "
                     ></ng-template>
                   </div>
@@ -537,7 +537,7 @@
             <div class="row blank-row">
               <div
                 class="row-cell cell index-cell"
-                [attr.disabled]="tableService.isDataStreaming"
+                [attr.disabled]="tableService.isStreaming"
                 (click)="tableRowService.addNewRow()"
               >
                 <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
@@ -611,7 +611,7 @@
                           calculationBlockTemplate;
                           context: {
                             column,
-                            calculatedResult: group.calculatedResult?.get(column.id),
+                            calcResults: group.calcResults?.get(column.id),
                           }
                         "
                       ></ng-container>
@@ -650,7 +650,7 @@
               [style.height.px]="rowRect.height"
               [class.row--selecting]="row.selected"
               [class.row--drafting]="row === tableRowService.draftRow"
-              [class.row--hover]="tableService.layoutProps.cell.hovering?.rowIndex === rowIndex"
+              [class.row--hover]="tableService.layout.cell.hovered?.rowIndex === rowIndex"
             >
               <ng-container
                 *virtualScrollColumnRepeater="
@@ -689,41 +689,41 @@
                     [class.cdk-drag-placeholder]="column._isDragging"
                     [class.cell--active]="
                       row.selected ||
-                      (!tableService.layoutProps.column.selection &&
-                        tableService.layoutProps.cell.selection &&
-                        tableService.layoutProps.cell.selection.count === 1 &&
-                        tableService.layoutProps.cell.selection.primary.rowIndex === rowIndex) ||
-                      (tableService.layoutProps.cell.selection &&
-                        tableService.layoutProps.cell.selection.start.rowIndex <= rowIndex &&
-                        tableService.layoutProps.cell.selection.start.columnIndex <= columnIndex &&
-                        tableService.layoutProps.cell.selection.end.rowIndex >= rowIndex &&
-                        tableService.layoutProps.cell.selection.end.columnIndex >= columnIndex) ||
-                      tableService.layoutProps.column.selection?.has(columnIndex)
+                      (!tableService.layout.column.selectedIndices &&
+                        tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.count === 1 &&
+                        tableService.layout.cell.selection.anchor.rowIndex === rowIndex) ||
+                      (tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.start.rowIndex <= rowIndex &&
+                        tableService.layout.cell.selection.start.columnIndex <= columnIndex &&
+                        tableService.layout.cell.selection.end.rowIndex >= rowIndex &&
+                        tableService.layout.cell.selection.end.columnIndex >= columnIndex) ||
+                      tableService.layout.column.selectedIndices?.has(columnIndex)
                     "
                     [class.cell--highlight]="
-                      tableService.layoutProps.cell.searching?.found?.get(row.id)?.has(column.id)
+                      tableService.layout.cell.search?.matches?.get(row.id)?.has(column.id)
                     "
                     [class.cell--filling]="
-                      tableService.layoutProps.cell.filling &&
-                      tableService.layoutProps.cell.filling.start.rowIndex <= rowIndex &&
-                      tableService.layoutProps.cell.filling.start.columnIndex <= columnIndex &&
-                      tableService.layoutProps.cell.filling.end.rowIndex >= rowIndex &&
-                      tableService.layoutProps.cell.filling.end.columnIndex >= columnIndex
+                      tableService.layout.cell.fill &&
+                      tableService.layout.cell.fill.start.rowIndex <= rowIndex &&
+                      tableService.layout.cell.fill.start.columnIndex <= columnIndex &&
+                      tableService.layout.cell.fill.end.rowIndex >= rowIndex &&
+                      tableService.layout.cell.fill.end.columnIndex >= columnIndex
                     "
                     [class.cell--focusing]="
-                      tableService.layoutProps.cell.focusing &&
-                      tableService.layoutProps.cell.focusing.rowIndex === rowIndex &&
-                      tableService.layoutProps.cell.focusing.columnIndex === columnIndex
+                      tableService.layout.cell.focused &&
+                      tableService.layout.cell.focused.rowIndex === rowIndex &&
+                      tableService.layout.cell.focused.columnIndex === columnIndex
                     "
                     [class.cell--invalid]="
-                      tableService.layoutProps.cell.invalid &&
-                      tableService.layoutProps.cell.invalid.rowIndex === rowIndex &&
-                      tableService.layoutProps.cell.invalid.columnIndex === columnIndex
+                      tableService.layout.cell.invalid &&
+                      tableService.layout.cell.invalid.rowIndex === rowIndex &&
+                      tableService.layout.cell.invalid.columnIndex === columnIndex
                     "
                     [class.row-cell--selecting]="
-                      tableService.layoutProps.cell.selection &&
-                      tableService.layoutProps.cell.selection.primary.rowIndex === rowIndex &&
-                      tableService.layoutProps.cell.selection.primary.columnIndex === columnIndex
+                      tableService.layout.cell.selection &&
+                      tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
+                      tableService.layout.cell.selection.anchor.columnIndex === columnIndex
                     "
                     (pointerenter)="tableCellService.onCellHover($event, { rowIndex, columnIndex })"
                   >
@@ -735,16 +735,16 @@
                       [data]="row.data?.[column.id] ?? null"
                       [readonly]="
                         row !== tableRowService.draftRow &&
-                        ((tableService.isDataStreaming && !$any(row)._isStreamed) ||
+                        ((tableService.isStreaming && !$any(row)._isStreamed) ||
                           (!tableService.config().column.editable &&
                             !column.editable &&
                             row.editable !== true &&
                             row.editable?.[column.id] !== true))
                       "
                       [selecting]="
-                        !!tableService.layoutProps.cell.selection &&
-                        tableService.layoutProps.cell.selection.primary.rowIndex === rowIndex &&
-                        tableService.layoutProps.cell.selection.primary.columnIndex === columnIndex
+                        !!tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
+                        tableService.layout.cell.selection.anchor.columnIndex === columnIndex
                       "
                     ></ng-template>
                   </div>
@@ -780,9 +780,9 @@
               calculationBlockTemplate;
               context: {
                 column,
-                calculatedResult: (tableGroupService.isGrouping()
-                  ? tableGroupService.rootGroup().calculatedResult
-                  : tableService.calculatedResult
+                calcResults: (tableGroupService.isGrouping()
+                  ? tableGroupService.rootGroup().calcResults
+                  : tableService.calcResults
                 )?.get(column.id),
               }
             "
@@ -797,7 +797,7 @@
           [style.width.px]="virtualScroll.viewport.leftWidth"
         >
           <div class="footer-cell cell index-cell">
-            @if (tableService.isDataStreaming) {
+            @if (tableService.isStreaming) {
               <p-skeleton
                 height="24px"
                 width="100px"
@@ -871,7 +871,7 @@
   <!-- Frozen divider -->
   @if (tableService.config().column.freezable || tableService.frozenIndex() !== null) {
     @let isHideHeadLine =
-      tableService.layoutProps.frozenDivider.isHideHeadLine ||
+      tableService.layout.freezeHandle.isHideHeadLine ||
       $any(tableColumnService.columns()?.[tableService.frozenIndex()])?._isResizing;
     @let bodyLineHeight =
       virtualScroll.viewport.height + virtualScroll.scrollTop > virtualScroll.viewport.contentHeight
@@ -884,8 +884,8 @@
       cdkDrag
       cdkDragLockAxis="x"
       [style.left.px]="virtualScroll.scrollDivideOffset"
-      [class.frozen-divider--hover]="tableService.layoutProps.frozenDivider.isHover"
-      [class.frozen-divider--dragging]="tableService.layoutProps.frozenDivider.dragging"
+      [class.frozen-divider--hover]="tableService.layout.freezeHandle.isHovered"
+      [class.frozen-divider--dragging]="tableService.layout.freezeHandle.isDragging"
       [class.frozen-divider--disabled]="!tableService.config().column.freezable || isHideHeadLine"
       [cdkDragDisabled]="!tableService.config().column.freezable"
       (cdkDragStarted)="tableService.onFreezeDividerDragStarted()"
@@ -907,7 +907,7 @@
         <span
           class="frozen-divider__drag-handle"
           [style.transform]="
-            'translate3d(0,' + tableService.layoutProps.frozenDivider.dragHandleOffset + 'px, 0)'
+            'translate3d(0,' + tableService.layout.freezeHandle.dragOffsetY + 'px, 0)'
           "
         ></span>
       </div>
@@ -915,12 +915,12 @@
         <div class="frozen-divider__line frozen-divider__foot-line"></div>
       }
     </div>
-    @if (tableService.layoutProps.frozenDivider.dragging) {
+    @if (tableService.layout.freezeHandle.isDragging) {
       <div
         class="frozen-divider-drag-placeholder"
         [style.height.px]="bodyLineHeight + Dimension.HeaderHeight"
         [style.transform]="
-          'translate3d(' + tableService.layoutProps.frozenDivider.dragging.offset + 'px, 0, 0)'
+          'translate3d(' + tableService.layout.freezeHandle.dragPlaceholderOffsetX + 'px, 0, 0)'
         "
       ></div>
       <div class="frozen-divider-drag-overlay"></div>
@@ -930,15 +930,15 @@
   <!-- Fill handler -->
   @if (tableService.config().cell.fillable) {
     <div class="fill-handler-wrapper">
-      @if (tableService.layoutProps.fillHandler?.offset) {
+      @if (tableService.layout.fillHandle?.offset) {
         <div
           class="fill-handler"
           #fillHanlder
           safe-area
           virtualScrollAutoScrollHolder="vertical"
-          [style.left.px]="tableService.layoutProps.fillHandler.offset.left"
-          [style.top.px]="tableService.layoutProps.fillHandler.offset.top"
-          [class.hidden]="tableService.layoutProps.fillHandler.hidden"
+          [style.left.px]="tableService.layout.fillHandle.offset.left"
+          [style.top.px]="tableService.layout.fillHandle.offset.top"
+          [class.hidden]="tableService.layout.fillHandle.hidden"
         ></div>
       }
     </div>
@@ -954,13 +954,13 @@
 
 <!-- Column drag placeholder -->
 @if (
-  tableService.layoutProps.column.dragPlaceholderIndex !== undefined &&
-  tableService.layoutProps.column.dragPlaceholderIndex !== null
+  tableService.layout.column.dragPlaceholderIndex !== undefined &&
+  tableService.layout.column.dragPlaceholderIndex !== null
 ) {
   <div
     class="column-drag-placeholder"
     [style.transform]="
-      'translate3d(' + tableService.layoutProps.column.dragPlaceholderOffset + 'px, 0, 0)'
+      'translate3d(' + tableService.layout.column.dragPlaceholderOffsetX + 'px, 0, 0)'
     "
   ></div>
   <div class="column-drag-overlay"></div>
@@ -968,13 +968,13 @@
 
 <!-- Row drag placeholder -->
 @if (
-  tableService.layoutProps.row.dragPlaceholderIndex !== undefined &&
-  tableService.layoutProps.row.dragPlaceholderIndex !== null
+  tableService.layout.row.dragPlaceholderIndex !== undefined &&
+  tableService.layout.row.dragPlaceholderIndex !== null
 ) {
   <div
     class="row-drag-placeholder"
     [style.transform]="
-      'translate3d(0, ' + tableService.layoutProps.row.dragPlaceholderOffset + 'px, 0)'
+      'translate3d(0, ' + tableService.layout.row.dragPlaceholderOffsetY + 'px, 0)'
     "
   >
     <p-chip
@@ -986,7 +986,7 @@
 }
 
 <!-- Calculation -->
-<ng-template #calculationBlockTemplate let-column="column" let-calculatedResult="calculatedResult">
+<ng-template #calculationBlockTemplate let-column="column" let-calcResults="calcResults">
   @if (tableService.config().column.calculable) {
     <div
       class="calculation-block"
@@ -1001,12 +1001,12 @@
           {{ column.calculateType }}:
         </div>
         <b>
-          @if (tableService.isDataStreaming) {
+          @if (tableService.isStreaming) {
             <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
               >Calculating...</span
             >
           } @else {
-            {{ calculatedResult | parseCalculatedResult: column.calculateType }}
+            {{ calcResults | parseCalculatedResult: column.calculateType }}
           }
         </b>
       } @else {
@@ -1022,12 +1022,12 @@
         {{ column.calculateType }}:
       </div>
       <b>
-        @if (tableService.isDataStreaming) {
+        @if (tableService.isStreaming) {
           <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
             >Calculating...</span
           >
         } @else {
-          {{ calculatedResult | parseCalculatedResult: column.calculateType }}
+          {{ calcResults | parseCalculatedResult: column.calculateType }}
         }
       </b>
     </div>

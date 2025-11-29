@@ -41,54 +41,56 @@ export const Dimension = {
   GroupSpacing: 20,
 } as const;
 
-export type LayoutProps = Partial<{
-  frozenDivider: {
-    isHover?: boolean;
+export type Layout = Partial<{
+  freezeHandle: {
+    isHovered?: boolean;
     isHideHeadLine?: boolean;
-    dragHandleOffset?: number;
-    dragging?: { index: number; offset: number };
+    isDragging?: boolean;
+    dragOffsetY?: number;
+    dragPlaceholderIndex?: number;
+    dragPlaceholderOffsetX?: number;
   };
-  fillHandler: {
+  fillHandle: {
     index?: CellIndex;
     offset?: CellOffset;
     hidden?: boolean;
   };
   column: {
     dragPlaceholderIndex?: number;
-    dragPlaceholderOffset?: number;
-    selection?: Set<number>;
+    dragPlaceholderOffsetX?: number;
+    selectedIndices?: Set<number>;
   };
   row: {
     dragOverGroup?: TableGroup;
     dragPlaceholderIndex?: number;
-    dragPlaceholderOffset?: number;
+    dragPlaceholderOffsetY?: number;
   };
   cell: {
-    focusing?: CellIndex;
-    hovering?: CellIndex;
-    filling?: {
+    focused?: CellIndex;
+    hovered?: CellIndex;
+    fill?: {
       start: CellIndex;
       end: CellIndex;
       isReverse: boolean;
     };
     selection?: {
-      primary: CellIndex;
+      anchor: CellIndex;
       start: CellIndex;
       end: CellIndex;
       rowCount: number;
       columnCount: number;
       count: number;
     };
-    searching?: {
-      found: Map<TableRow['id'], Map<TableColumn['id'], TableCell>>;
-      resultIndex: number;
+    search?: {
+      matches: Map<TableRow['id'], Map<TableColumn['id'], TableCell>>;
+      currentMatchIndex: number;
     };
     invalid?: CellIndex;
   };
 }>;
 
 const DEFAULT_CONFIG: TableConfig = {
-  streamData: false,
+  dataStream: false,
   sideSpacing: 0,
   column: {
     frozenIndex: 0,
@@ -162,7 +164,7 @@ function calculateFreezeDividerDragPlaceholderIndex(
 export class TableService extends TableBaseService {
   config = computed<TableConfig>(() => {
     const config = _.defaultsDeep(this.host.sourceConfig(), DEFAULT_CONFIG);
-    this.isDataStreaming ??= config.streamData;
+    this.isStreaming ??= config.dataStream;
     return config;
   });
 
@@ -187,17 +189,17 @@ export class TableService extends TableBaseService {
     return !!this.config().sortBy || this.tableColumnService.sortedColumns.size > 0;
   });
 
-  layoutProps: LayoutProps = {
-    frozenDivider: {},
-    fillHandler: {},
+  layout: Layout = {
+    freezeHandle: {},
+    fillHandle: {},
     column: {},
     row: {},
     cell: {},
   };
-  streamData$: Subject<TableRow[]>;
-  isDataStreaming: boolean;
-  searchResult: [TableRow, TableColumn][];
-  calculatedResult: Map<TableColumn['id'], any>;
+  dataStream$: Subject<TableRow[]>;
+  isStreaming: boolean;
+  searchResults: [TableRow, TableColumn][];
+  calcResults: Map<TableColumn['id'], any>;
 
   private cdRef = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);
@@ -205,18 +207,17 @@ export class TableService extends TableBaseService {
   private fieldCellService = inject(FieldCellService);
 
   get searchInfo(): TableSearchInfo {
-    const total = this.searchResult?.length || 0;
-    const { searching } = this.layoutProps.cell;
-    const current = total > 0 ? searching?.resultIndex + 1 : 0;
-
+    const total = this.searchResults?.length || 0;
+    const { search } = this.layout.cell;
+    const current = total > 0 ? search?.currentMatchIndex + 1 : 0;
     return { current, total };
   }
 
   override onInit() {
-    if (!this.isDataStreaming) return;
+    if (!this.isStreaming) return;
 
-    this.streamData$ = new Subject();
-    this.streamData$
+    this.dataStream$ = new Subject();
+    this.dataStream$
       .pipe(
         throttleTime(200),
         mergeMap((rows) => of(rows)),
@@ -230,14 +231,14 @@ export class TableService extends TableBaseService {
           throw new Error('Stream error');
         },
         complete: () => {
-          this.isDataStreaming = false;
-          this.handleDataUpdate();
+          this.isStreaming = false;
+          this.refreshDataView();
         },
       });
   }
 
-  handleDataUpdate = _.throttle(() => {
-    if (this.isDataStreaming) return;
+  refreshDataView = _.throttle(() => {
+    if (this.isStreaming) return;
 
     if (this.shouldGroup()) {
       this.group();
@@ -248,22 +249,22 @@ export class TableService extends TableBaseService {
 
     // Flushes the selecting state if the selecting row has been rearranged or changed.
     // Ensures that the current selecting cell state is consistent with the actual layout.
-    const currSelection = this.layoutProps.cell.selection;
-    if (!currSelection?.primary) return;
+    const currSelection = this.layout.cell.selection;
+    if (!currSelection?.anchor) return;
 
     const state = this.fieldCellService.getSelectingState();
     if (!state?.detectChange()) return;
 
-    const cell = this.tableCellService.findCellByIndex(currSelection.primary);
+    const cell = this.tableCellService.findCellByIndex(currSelection.anchor);
     if (cell && this.tableCellService.compareCell(cell, state.cell)) return;
 
     this.tableCellService.flushSelectingCellState();
   }, 1000);
 
   search(searchQuery: string) {
-    let searchResult: [TableRow, TableColumn][];
-    let searching;
-    let focusing;
+    let searchResults: [TableRow, TableColumn][];
+    let search;
+    let focused;
 
     if (searchQuery) {
       const data: [TableRow, TableColumn][] = [];
@@ -274,19 +275,19 @@ export class TableService extends TableBaseService {
         }
       }
 
-      searchResult = searchBy(
+      searchResults = searchBy(
         data,
         searchQuery,
         this.tableCellService.searchCellPredicate.bind(this),
       );
 
-      if (searchResult.length) {
+      if (searchResults.length) {
         const found = new Map();
-        let focusingRowIndex: number;
-        let focusingColumnIndex: number;
+        let focusedRowIndex: number;
+        let focusedColumnIndex: number;
 
-        for (let i = 0; i < searchResult.length; i++) {
-          const [row, column] = searchResult[i];
+        for (let i = 0; i < searchResults.length; i++) {
+          const [row, column] = searchResults[i];
           const rowID = row.id;
           const columnID = column.id;
           const m = found.get(rowID) || new Map();
@@ -296,34 +297,34 @@ export class TableService extends TableBaseService {
 
           if (i > 0) continue;
 
-          focusingRowIndex = this.tableRowService.findRowIndex(row);
-          focusingColumnIndex = this.tableColumnService.findColumnIndex(column);
+          focusedRowIndex = this.tableRowService.findRowIndex(row);
+          focusedColumnIndex = this.tableColumnService.findColumnIndex(column);
         }
 
-        searching = { found, resultIndex: 0 };
-        focusing = {
-          rowIndex: focusingRowIndex,
-          columnIndex: focusingColumnIndex,
+        search = { found, resultIndex: 0 };
+        focused = {
+          rowIndex: focusedRowIndex,
+          columnIndex: focusedColumnIndex,
         };
       }
     }
 
-    this.searchResult = searchResult;
-    this.layoutProps.cell.searching = searching;
-    this.layoutProps.cell.focusing = focusing;
+    this.searchResults = searchResults;
+    this.layout.cell.search = search;
+    this.layout.cell.focused = focused;
 
-    if (focusing) {
+    if (focused) {
       this.tableCellService.scrollToFocusingCell();
     }
   }
 
   searchPrevious(previousIndex: number) {
-    const searchResult = this.searchResult[previousIndex];
-    if (!searchResult) return;
+    const searchResults = this.searchResults[previousIndex];
+    if (!searchResults) return;
 
-    const [row, column] = searchResult;
-    this.layoutProps.cell.searching.resultIndex = previousIndex;
-    this.layoutProps.cell.focusing = {
+    const [row, column] = searchResults;
+    this.layout.cell.search.currentMatchIndex = previousIndex;
+    this.layout.cell.focused = {
       rowIndex: this.tableRowService.findRowIndex(row),
       columnIndex: this.tableColumnService.findColumnIndex(column),
     };
@@ -331,12 +332,12 @@ export class TableService extends TableBaseService {
   }
 
   searchNext(nextIndex: number) {
-    const searchResult = this.searchResult[nextIndex];
-    if (!searchResult) return;
+    const searchResults = this.searchResults[nextIndex];
+    if (!searchResults) return;
 
-    const [row, column] = searchResult;
-    this.layoutProps.cell.searching.resultIndex = nextIndex;
-    this.layoutProps.cell.focusing = {
+    const [row, column] = searchResults;
+    this.layout.cell.search.currentMatchIndex = nextIndex;
+    this.layout.cell.focused = {
       rowIndex: this.tableRowService.findRowIndex(row),
       columnIndex: this.tableColumnService.findColumnIndex(column),
     };
@@ -354,16 +355,16 @@ export class TableService extends TableBaseService {
       columns = [...this.tableColumnService.calculatedColumns.values()];
     }
 
-    if (this.isDataStreaming || !columns?.length) return;
+    if (this.isStreaming || !columns?.length) return;
 
     if (this.tableGroupService.isGrouping()) {
       this.tableGroupService.calculateInGroup(columns);
-      this.calculatedResult = this.tableGroupService.rootGroup().calculatedResult;
+      this.calcResults = this.tableGroupService.rootGroup().calcResults;
     } else {
-      if (this.calculatedResult) {
-        this.calculatedResult.clear();
+      if (this.calcResults) {
+        this.calcResults.clear();
       } else {
-        this.calculatedResult = new Map();
+        this.calcResults = new Map();
       }
 
       for (const column of columns) {
@@ -371,7 +372,7 @@ export class TableService extends TableBaseService {
         for (const row of this.tableRowService.rows()) {
           data.push(makeUpCalculatedData(row.data[column.id], column.calculateType));
         }
-        this.calculatedResult.set(column.id, calculateBy(data, column.calculateType));
+        this.calcResults.set(column.id, calculateBy(data, column.calculateType));
       }
     }
   }
@@ -382,7 +383,7 @@ export class TableService extends TableBaseService {
     }
 
     this.tableColumnService.calculatedColumns.clear();
-    this.calculatedResult.clear();
+    this.calcResults.clear();
   }
 
   group(columns?: TableColumn[]) {
@@ -398,7 +399,7 @@ export class TableService extends TableBaseService {
       columns = [...this.tableColumnService.groupedColumns.values()];
     }
 
-    if (this.isDataStreaming || !columns?.length) return;
+    if (this.isStreaming || !columns?.length) return;
 
     const rootGroup = groupBy(this.host.sourceRows(), columns, (group: TableGroup) => {
       group.isCollapsed = this.tableGroupService.collapsedState.get(group.id);
@@ -432,7 +433,7 @@ export class TableService extends TableBaseService {
       columns = [...this.tableColumnService.sortedColumns.values()];
     }
 
-    if (this.isDataStreaming || !columns?.length) return;
+    if (this.isStreaming || !columns?.length) return;
 
     if (this.tableGroupService.isGrouping()) {
       this.tableGroupService.sortInGroup(columns);
@@ -456,18 +457,17 @@ export class TableService extends TableBaseService {
   }
 
   onFreezeDividerMousemove(e: MouseEvent) {
-    this.layoutProps.frozenDivider.isHover = true;
-    this.layoutProps.frozenDivider.dragHandleOffset =
-      e.offsetY - Dimension.FreezeDividerDragHandleHeight / 2;
+    this.layout.freezeHandle.isHovered = true;
+    this.layout.freezeHandle.dragOffsetY = e.offsetY - Dimension.FreezeDividerDragHandleHeight / 2;
   }
 
   onFreezeDividerMouseleave() {
-    this.layoutProps.frozenDivider.isHover = false;
+    this.layout.freezeHandle.isHovered = false;
   }
 
   onFreezeDividerDragStarted() {
     this.host.virtualScroll.scrollToLeft();
-    this.layoutProps.frozenDivider.dragging = {} as any;
+    this.layout.freezeHandle.isDragging = true;
   }
 
   onFreezeDividerDragMoved(e: CdkDragMove) {
@@ -482,16 +482,18 @@ export class TableService extends TableBaseService {
     if (offset / this.host.virtualScroll.viewport.width > this.config().column.maxFrozenRatio) {
       return;
     }
-    this.layoutProps.frozenDivider.dragging.index = index;
-    this.layoutProps.frozenDivider.dragging.offset = offset + this.config().sideSpacing;
+    this.layout.freezeHandle.dragPlaceholderIndex = index;
+    this.layout.freezeHandle.dragPlaceholderOffsetX = offset + this.config().sideSpacing;
   }
 
   onFreezeDividerDragEnded(e: CdkDragEnd) {
-    const { index } = this.layoutProps.frozenDivider.dragging;
-    if (index === null) return;
+    const { dragPlaceholderIndex } = this.layout.freezeHandle;
+    if (dragPlaceholderIndex === null) return;
 
-    this.updateFrozenIndex(index - 1);
-    this.layoutProps.frozenDivider.dragging = null;
+    this.updateFrozenIndex(dragPlaceholderIndex - 1);
+    this.layout.freezeHandle.isDragging = false;
+    this.layout.freezeHandle.dragPlaceholderIndex = null;
+    this.layout.freezeHandle.dragPlaceholderOffsetX = null;
     e.source._dragRef.reset();
   }
 
@@ -505,19 +507,16 @@ export class TableService extends TableBaseService {
     });
   }
 
-  updateFillHandlerPosition(
-    index = this.layoutProps.cell.selection.end,
-    shouldRetryOnMissingCell?: boolean,
-  ) {
+  positionFillHandle(index = this.layout.cell.selection.end, retryIfNotRendered?: boolean) {
     const ele = this.tableCellService.findCellElementByIndex(index);
 
     if (!ele) {
-      this.layoutProps.fillHandler.hidden = true;
-      if (shouldRetryOnMissingCell) {
+      this.layout.fillHandle.hidden = true;
+      if (retryIfNotRendered) {
         of([1, 2, 3])
           .pipe(delay(500), take(1))
           .subscribe(() => {
-            this.updateFillHandlerPosition(index);
+            this.positionFillHandle(index);
           });
       }
       return;
@@ -535,9 +534,9 @@ export class TableService extends TableBaseService {
         Dimension.FooterHeight,
     };
 
-    this.layoutProps.fillHandler.index = index;
-    this.layoutProps.fillHandler.offset = offset;
-    this.layoutProps.fillHandler.hidden = false;
+    this.layout.fillHandle.index = index;
+    this.layout.fillHandle.offset = offset;
+    this.layout.fillHandle.hidden = false;
     this.cdRef.detectChanges();
   }
 }

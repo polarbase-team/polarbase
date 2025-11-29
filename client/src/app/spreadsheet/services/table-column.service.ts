@@ -369,20 +369,20 @@ export class TableColumnService extends TableBaseService {
       }
     }
 
-    this.tableService.layoutProps.column.dragPlaceholderIndex = index;
-    this.tableService.layoutProps.column.dragPlaceholderOffset =
+    this.tableService.layout.column.dragPlaceholderIndex = index;
+    this.tableService.layout.column.dragPlaceholderOffsetX =
       offset + this.tableService.config().sideSpacing;
   }
 
   onColumnDropped(e: CdkDragDrop<TableColumn[]>) {
-    const { dragPlaceholderIndex } = this.tableService.layoutProps.column;
+    const { dragPlaceholderIndex } = this.tableService.layout.column;
     if (dragPlaceholderIndex === null) return;
 
     const previousIndex = e.previousIndex;
     const currentIndex =
       dragPlaceholderIndex > previousIndex ? dragPlaceholderIndex - 1 : dragPlaceholderIndex;
-    this.tableService.layoutProps.column.dragPlaceholderIndex =
-      this.tableService.layoutProps.column.dragPlaceholderOffset = null;
+    this.tableService.layout.column.dragPlaceholderIndex =
+      this.tableService.layout.column.dragPlaceholderOffsetX = null;
     if (previousIndex === currentIndex) return;
 
     moveItemInArray(this.columns(), previousIndex, currentIndex);
@@ -408,11 +408,8 @@ export class TableColumnService extends TableBaseService {
     column._isResizing = true;
     this.columns.update((arr) => [...arr]);
 
-    if (
-      this.tableService.layoutProps.fillHandler.index &&
-      !this.tableService.layoutProps.fillHandler.hidden
-    ) {
-      this.tableService.updateFillHandlerPosition();
+    if (this.tableService.layout.fillHandle.index && !this.tableService.layout.fillHandle.hidden) {
+      this.tableService.positionFillHandle();
     }
   }
 
@@ -428,9 +425,11 @@ export class TableColumnService extends TableBaseService {
   selectColumn(e: MouseEvent, columnIndex: number) {
     this.tableCellService.deselectAllCells();
     this.tableRowService.deselectAllRows();
-    const selection = this.tableService.layoutProps.column.selection || new Set();
+
+    const selectedIndices = this.tableService.layout.column.selectedIndices || new Set();
+
     if (e.shiftKey) {
-      let startIdx = selection.values().next().value ?? columnIndex;
+      let startIdx = selectedIndices.values().next().value ?? columnIndex;
       let endIdx = columnIndex;
       if (columnIndex < startIdx) {
         endIdx = startIdx;
@@ -439,15 +438,16 @@ export class TableColumnService extends TableBaseService {
         endIdx = columnIndex;
       }
       for (let i = startIdx; i <= endIdx; i++) {
-        selection.add(i);
+        selectedIndices.add(i);
       }
       // } else if (_.isCmdKey(e as unknown as KeyboardEvent)) {
       // selection.add(columnIndex);
     } else {
-      selection.clear();
-      selection.add(columnIndex);
+      selectedIndices.clear();
+      selectedIndices.add(columnIndex);
     }
-    this.tableService.layoutProps.column.selection = selection;
+
+    this.tableService.layout.column.selectedIndices = selectedIndices;
     this.host.columnAction.emit({
       type: TableColumnActionType.Select,
       payload: this.getSelectedColumns(),
@@ -458,8 +458,8 @@ export class TableColumnService extends TableBaseService {
     this.host.menu.hide();
     this.host.contextMenu.hide();
 
-    if (!this.tableService.layoutProps.column.selection) return;
-    this.tableService.layoutProps.column.selection = null;
+    if (!this.tableService.layout.column.selectedIndices) return;
+    this.tableService.layout.column.selectedIndices = null;
 
     this.host.columnAction.emit({
       type: TableColumnActionType.Select,
@@ -531,7 +531,7 @@ export class TableColumnService extends TableBaseService {
     const items: MenuItem[] = [];
     const { column: config } = this.tableService.config();
 
-    if (this.tableService.layoutProps.column.selection?.size > 1) {
+    if (this.tableService.layout.column.selectedIndices?.size > 1) {
       items.push({
         label: 'Hide selected columns',
         icon: 'pi pi-eye-slash',
@@ -648,10 +648,10 @@ export class TableColumnService extends TableBaseService {
   }
 
   private getSelectedColumns() {
-    const { selection } = this.tableService.layoutProps.column;
+    const { selectedIndices } = this.tableService.layout.column;
     const columns: TableColumn[] = [];
-    if (selection) {
-      for (const idx of selection) {
+    if (selectedIndices) {
+      for (const idx of selectedIndices) {
         columns.push(this.findColumnByIndex(idx));
       }
     }

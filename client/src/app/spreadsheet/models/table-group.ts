@@ -3,5 +3,5 @@ import { TableColumn } from './table-column';
 
 export interface TableGroup extends HierarchyGroup {
   isCollapsed?: boolean;
-  calculatedResult?: Map<TableColumn['id'], any>;
+  calcResults?: Map<TableColumn['id'], any>;
 }

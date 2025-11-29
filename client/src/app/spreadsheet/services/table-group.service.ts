@@ -18,10 +18,10 @@ function calculateInGroup(
   columns: TableColumn[],
   calculatePredicate?: (...args: any) => any,
 ) {
-  if (group.calculatedResult) {
-    group.calculatedResult.clear();
+  if (group.calcResults) {
+    group.calcResults.clear();
   } else {
-    group.calculatedResult = new Map();
+    group.calcResults = new Map();
   }
 
   for (const column of columns) {
@@ -29,7 +29,7 @@ function calculateInGroup(
     for (const row of group.rows) {
       data.push(makeUpCalculatedData(row.data[column.id], column.calculateType));
     }
-    group.calculatedResult.set(column.id, calculateBy(data, column.calculateType));
+    group.calcResults.set(column.id, calculateBy(data, column.calculateType));
   }
 
   if (!group.children) return;
@@ -231,9 +231,8 @@ export class TableGroupService extends TableBaseService {
   }
 
   getSelectingGroup() {
-    const rowIndex = this.tableService.layoutProps.cell.selection?.primary.rowIndex;
-    if (!_.isFinite(rowIndex)) return void 0;
-    return this.findGroupByRowIndex(rowIndex);
+    const rowIndex = this.tableService.layout.cell.selection?.anchor.rowIndex;
+    if (_.isFinite(rowIndex)) return this.findGroupByRowIndex(rowIndex);
   }
 
   getRowCellOffsetInGroup({ rowIndex, columnIndex }: CellIndex) {

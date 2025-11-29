@@ -220,7 +220,7 @@ export class TableCellService extends TableBaseService {
     if (
       (this.host.isMouseHolding ||
         this.host.isMouseHiding ||
-        !!this.tableService.layoutProps.cell.invalid ||
+        !!this.tableService.layout.cell.invalid ||
         !this.host.virtualScroll.isScrollCompleted ||
         this.fieldCellService.getSelectingState()?.isEditing) &&
       (e as PointerEvent).pointerType !== 'touch'
@@ -229,11 +229,11 @@ export class TableCellService extends TableBaseService {
       return;
     }
 
-    this.tableService.layoutProps.cell.hovering = index;
+    this.tableService.layout.cell.hovered = index;
 
     const unlisten = this.renderer.listen(e.target, 'pointerleave', () => {
       unlisten();
-      this.tableService.layoutProps.cell.hovering = null;
+      this.tableService.layout.cell.hovered = null;
     });
   }
 
@@ -243,7 +243,7 @@ export class TableCellService extends TableBaseService {
       callback?.();
     };
 
-    if (!this.tableService.layoutProps.cell.selection) {
+    if (!this.tableService.layout.cell.selection) {
       _callback();
       return;
     }
@@ -292,24 +292,24 @@ export class TableCellService extends TableBaseService {
             this.openErrorTooltip(cellElement, key);
           }
 
-          this.tableService.layoutProps.fillHandler.hidden = true;
+          this.tableService.layout.fillHandle.hidden = true;
         } else {
           this.closeErrorTooltip();
-          this.tableService.layoutProps.fillHandler.hidden = false;
+          this.tableService.layout.fillHandle.hidden = false;
         }
 
-        this.tableService.layoutProps.cell.invalid = invalid;
+        this.tableService.layout.cell.invalid = invalid;
       },
     );
   }
 
   revertSelectingCellState() {
-    if (!this.tableService.layoutProps.cell.selection) return;
+    if (!this.tableService.layout.cell.selection) return;
 
     const state = this.fieldCellService.getSelectingState();
     if (!state) return;
 
-    const selectingCell = this.findCellByIndex(this.tableService.layoutProps.cell.selection.start);
+    const selectingCell = this.findCellByIndex(this.tableService.layout.cell.selection.start);
 
     state.reset();
 
@@ -320,7 +320,7 @@ export class TableCellService extends TableBaseService {
   }
 
   scrollToFocusingCell() {
-    const { rowIndex, columnIndex } = this.tableService.layoutProps.cell.focusing;
+    const { rowIndex, columnIndex } = this.tableService.layout.cell.focused;
     this.scrollToCellByIndex({ rowIndex, columnIndex });
   }
 
@@ -396,20 +396,20 @@ export class TableCellService extends TableBaseService {
 
       const rowCount = endRowIdx - startRowIdx + 1;
       const columnCount = endColumnIdx - startColumnIdx + 1;
-      const primary =
-        extend && this.tableService.layoutProps.cell.selection
-          ? this.tableService.layoutProps.cell.selection.primary
+      const anchor =
+        extend && this.tableService.layout.cell.selection
+          ? this.tableService.layout.cell.selection.anchor
           : start;
 
-      this.tableService.layoutProps.cell.selection = {
-        primary,
+      this.tableService.layout.cell.selection = {
+        anchor,
         start,
         end,
         rowCount,
         columnCount,
         count: rowCount * columnCount,
       };
-      this.tableService.layoutProps.cell.focusing = primary;
+      this.tableService.layout.cell.focused = anchor;
 
       this.emitCellAsSelected(selectedCells);
 
@@ -419,23 +419,23 @@ export class TableCellService extends TableBaseService {
         } catch {}
       }
 
-      this.tableService.updateFillHandlerPosition(end);
+      this.tableService.positionFillHandle(end);
     });
 
     return this.getCells(start, end);
   }
 
   deselectAllCells() {
-    if (!this.tableService.layoutProps.cell.selection) return;
+    if (!this.tableService.layout.cell.selection) return;
 
     this.flushSelectingCellState(() => {
-      this.tableService.layoutProps.cell.selection =
-        this.tableService.layoutProps.cell.focusing =
-        this.tableService.layoutProps.cell.filling =
+      this.tableService.layout.cell.selection =
+        this.tableService.layout.cell.focused =
+        this.tableService.layout.cell.fill =
           null;
 
-      this.tableService.layoutProps.fillHandler.index = null;
-      this.tableService.layoutProps.fillHandler.hidden = true;
+      this.tableService.layout.fillHandle.index = null;
+      this.tableService.layout.fillHandle.hidden = true;
 
       this.host.cellAction.emit({
         type: TableCellActionType.Select,
@@ -464,8 +464,8 @@ export class TableCellService extends TableBaseService {
   pasteCells(clipboardData: ClipboardData<TableCell>) {
     let matrix: MatrixCell;
 
-    if (this.tableService.layoutProps.column.selection) {
-      const columnSelection = this.tableService.layoutProps.column.selection;
+    if (this.tableService.layout.column.selectedIndices) {
+      const columnSelection = this.tableService.layout.column.selectedIndices;
       const itr = columnSelection.values();
       let currIdx = itr.next().value;
       let nextIdx = itr.next().value;
@@ -500,7 +500,7 @@ export class TableCellService extends TableBaseService {
         [ExcludeCellState.NonEditable],
       );
     } else {
-      const cellSelection = this.tableService.layoutProps.cell.selection;
+      const cellSelection = this.tableService.layout.cell.selection;
       if (!cellSelection) return;
 
       if (
@@ -751,7 +751,7 @@ export class TableCellService extends TableBaseService {
   }
 
   moveToCell(direction: Direction) {
-    const selectingIdx = this.tableService.layoutProps.cell.selection?.primary;
+    const selectingIdx = this.tableService.layout.cell.selection?.anchor;
     if (!selectingIdx) return;
 
     let { rowIndex, columnIndex } = selectingIdx;
@@ -779,13 +779,13 @@ export class TableCellService extends TableBaseService {
   }
 
   extendSelectedCells(direction: Direction, step = 1) {
-    const selectingIdx = this.tableService.layoutProps.cell.selection?.primary;
+    const selectingIdx = this.tableService.layout.cell.selection?.anchor;
     if (!selectingIdx) return;
 
     let startIdx = { ...selectingIdx };
     let endIdx = { ...selectingIdx };
 
-    const selection = this.tableService.layoutProps.cell.selection;
+    const selection = this.tableService.layout.cell.selection;
 
     if (selection) {
       startIdx = { ...selection.start };
@@ -906,21 +906,21 @@ export class TableCellService extends TableBaseService {
       }
 
       matrix = new MatrixCell(cells);
-    } else if (this.tableService.layoutProps.column.selection) {
+    } else if (this.tableService.layout.column.selectedIndices) {
       const cells: TableCell[] = [];
 
       for (const row of this.tableRowService.rows()) {
-        for (const columnIdx of this.tableService.layoutProps.column.selection) {
+        for (const columnIdx of this.tableService.layout.column.selectedIndices) {
           const column = this.tableColumnService.findColumnByIndex(columnIdx);
           cells.push({ row, column });
         }
       }
 
       matrix = new MatrixCell(cells);
-    } else if (this.tableService.layoutProps.cell.selection) {
+    } else if (this.tableService.layout.cell.selection) {
       matrix = this.getCells(
-        this.tableService.layoutProps.cell.selection.start,
-        this.tableService.layoutProps.cell.selection.end,
+        this.tableService.layout.cell.selection.start,
+        this.tableService.layout.cell.selection.end,
       );
     }
 
