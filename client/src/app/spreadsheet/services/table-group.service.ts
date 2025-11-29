@@ -235,7 +235,8 @@ export class TableGroupService extends TableBaseService {
     if (_.isFinite(rowIndex)) return this.findGroupByRowIndex(rowIndex);
   }
 
-  getRowCellOffsetInGroup({ rowIndex, columnIndex }: CellIndex) {
+  getRowCellOffsetInGroup(cellIndex: CellIndex) {
+    const { rowIndex, columnIndex } = cellIndex;
     const group = this.findGroupByRowIndex(rowIndex);
     if (!group || group.depth < this.groupDepth()) return null;
 
