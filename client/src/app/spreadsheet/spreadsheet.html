@@ -3,12 +3,12 @@
 <p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
 <p-contextmenu #contextMenu [model]="menuItems" appendTo="body" />
 <p-overlay
-  [visible]="!!tableCellService.cellError"
-  [target]="$any(tableCellService.cellError?.target)"
+  [visible]="!!tableCellService.activeCellError"
+  [target]="$any(tableCellService.activeCellError?.target)"
   appendTo="body"
 >
   <ng-template #content>
-    <p-message severity="error">{{ tableCellService.cellError?.message }}</p-message>
+    <p-message severity="error">{{ tableCellService.activeCellError?.message }}</p-message>
   </ng-template>
 </p-overlay>
 

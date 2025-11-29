@@ -102,14 +102,14 @@ export class MatrixCell {
 
 @Injectable()
 export class TableCellService extends TableBaseService {
-  cellError: { target: HTMLElement; message: string };
+  activeCellError: { target: HTMLElement; message: string };
 
   private renderer = inject(Renderer2);
   private eleRef = inject(ElementRef);
   private toastService = inject(MessageService);
   private fieldCellService = inject(FieldCellService);
   private interactiveColumns = new Set<TableColumn>();
-  private dataEditedEEC = new EmitEventController<
+  private cellEditController = new EmitEventController<
     TableRow['id'],
     { type: TableCellActionType; payload: TableCellEditedEvent }
   >({
@@ -198,7 +198,7 @@ export class TableCellService extends TableBaseService {
   });
 
   override onDestroy() {
-    this.dataEditedEEC.flush();
+    this.cellEditController.flush();
   }
 
   scrollToCell(cell: TableCell) {
@@ -261,7 +261,7 @@ export class TableCellService extends TableBaseService {
           const newData: TableRowCellData = { [column.id]: data };
           let rawData: TableRowCellData;
           this.markColumnAsInteracted(column);
-          this.markCellDataAsEdited(row, newData, rawData);
+          this.queueCellEdit(row, newData, rawData);
           this.emitCellDataAsEdited();
         }
 
@@ -275,7 +275,7 @@ export class TableCellService extends TableBaseService {
           return;
         }
 
-        const cellElement = this.findCellElementByIndex(cellIndex);
+        const cellElement = this.cellElementAt(cellIndex);
         if (!cellElement) {
           state.reset();
           _callback();
@@ -289,12 +289,12 @@ export class TableCellService extends TableBaseService {
 
           for (const key in errors) {
             if (!errors.hasOwnProperty(key)) continue;
-            this.openErrorTooltip(cellElement, key);
+            this.showCellError(cellElement, key);
           }
 
           this.tableService.layout.fillHandle.hidden = true;
         } else {
-          this.closeErrorTooltip();
+          this.hideCellError();
           this.tableService.layout.fillHandle.hidden = false;
         }
 
@@ -309,7 +309,7 @@ export class TableCellService extends TableBaseService {
     const state = this.fieldCellService.getSelectingState();
     if (!state) return;
 
-    const selectingCell = this.findCellByIndex(this.tableService.layout.cell.selection.start);
+    const selectingCell = this.cellAt(this.tableService.layout.cell.selection.start);
 
     state.reset();
 
@@ -319,12 +319,12 @@ export class TableCellService extends TableBaseService {
     }
   }
 
-  scrollToFocusingCell() {
+  scrollToFocusedCell() {
     const { rowIndex, columnIndex } = this.tableService.layout.cell.focused;
     this.scrollToCellByIndex({ rowIndex, columnIndex });
   }
 
-  getCells(
+  getCellMatrix(
     startCellIndex: CellIndex,
     endCellIndex: CellIndex,
     excludeStates?: ExcludeCellState[],
@@ -337,7 +337,7 @@ export class TableCellService extends TableBaseService {
       const cells = matrix.addRow();
       for (let j = startColumnIdx; j <= endColumnIdx; j++) {
         cells.push(
-          this.findCellByIndex({
+          this.cellAt({
             rowIndex: i,
             columnIndex: j,
           }),
@@ -422,7 +422,7 @@ export class TableCellService extends TableBaseService {
       this.tableService.positionFillHandle(end);
     });
 
-    return this.getCells(start, end);
+    return this.getCellMatrix(start, end);
   }
 
   deselectAllCells() {
@@ -494,7 +494,7 @@ export class TableCellService extends TableBaseService {
       const startIdx = arr[0];
       const endIdx = arr[arr.length - 1];
 
-      matrix = this.getCells(
+      matrix = this.getCellMatrix(
         { rowIndex: 0, columnIndex: startIdx },
         { rowIndex: this.tableRowService.getLastRowIndex(), columnIndex: endIdx },
         [ExcludeCellState.NonEditable],
@@ -519,7 +519,7 @@ export class TableCellService extends TableBaseService {
           ExcludeCellState.NonEditable,
         ]);
       } else {
-        matrix = this.getCells(cellSelection.start, cellSelection.end, [
+        matrix = this.getCellMatrix(cellSelection.start, cellSelection.end, [
           ExcludeCellState.NonEditable,
         ]);
       }
@@ -563,7 +563,7 @@ export class TableCellService extends TableBaseService {
       }
 
       if (row) {
-        this.markCellDataAsEdited(row, newData, rawData, TableCellActionType.Paste);
+        this.queueCellEdit(row, newData, rawData, TableCellActionType.Paste);
       }
     }
 
@@ -592,10 +592,10 @@ export class TableCellService extends TableBaseService {
   }
 
   fillCells(source: [CellIndex, CellIndex], target: [CellIndex, CellIndex], isReverse: boolean) {
-    const targetMatrixCell = this.filterExcludeCells(this.getCells(target[0], target[1]), [
+    const targetMatrixCell = this.filterExcludeCells(this.getCellMatrix(target[0], target[1]), [
       ExcludeCellState.NonEditable,
     ]);
-    const sourceMatrixCell = this.getCells(source[0], source[1]);
+    const sourceMatrixCell = this.getCellMatrix(source[0], source[1]);
     const sourceValues = sourceMatrixCell.values();
     const targetValues = targetMatrixCell.values();
 
@@ -738,7 +738,7 @@ export class TableCellService extends TableBaseService {
       }
 
       if (row) {
-        this.markCellDataAsEdited(row, newData, undefined, TableCellActionType.Fill);
+        this.queueCellEdit(row, newData, undefined, TableCellActionType.Fill);
       }
     }
 
@@ -830,7 +830,14 @@ export class TableCellService extends TableBaseService {
     this.selectCells(startIdx, endIdx, true, true);
   }
 
-  getCellOffset(index: CellIndex) {
+  cellAt(index: CellIndex) {
+    return {
+      row: this.tableRowService.rowAt(index.rowIndex),
+      column: this.tableColumnService.columnAt(index.columnIndex),
+    };
+  }
+
+  cellOffsetAt(index: CellIndex) {
     if (this.tableGroupService.isGrouped()) {
       return this.tableGroupService.getRowCellOffsetInGroup(index);
     }
@@ -841,24 +848,17 @@ export class TableCellService extends TableBaseService {
     return { left, top };
   }
 
+  cellElementAt(index: CellIndex) {
+    const rowIdxAttr = `[data-row-index="${index.rowIndex}"]`;
+    const columnIdxAttr = `[data-column-index="${index.columnIndex}"]`;
+    return this.eleRef.nativeElement.querySelector(`${rowIdxAttr}${columnIdxAttr}`);
+  }
+
   findCellIndex(cell: TableCell) {
     return {
       rowIndex: this.tableRowService.findRowIndex(cell.row),
       columnIndex: this.tableColumnService.findColumnIndex(cell.column),
     };
-  }
-
-  findCellByIndex(index: CellIndex) {
-    return {
-      row: this.tableRowService.rowAt(index.rowIndex),
-      column: this.tableColumnService.columnAt(index.columnIndex),
-    };
-  }
-
-  findCellElementByIndex(index: CellIndex) {
-    const rowIdxAttr = `[data-row-index="${index.rowIndex}"]`;
-    const columnIdxAttr = `[data-column-index="${index.columnIndex}"]`;
-    return this.eleRef.nativeElement.querySelector(`${rowIdxAttr}${columnIdxAttr}`);
   }
 
   findCellByElement(element: HTMLElement, cellType?: string) {
@@ -870,7 +870,7 @@ export class TableCellService extends TableBaseService {
     return { rowIndex, columnIndex };
   }
 
-  compareCell(source: TableCell, destination: TableCell) {
+  isSameCell(source: TableCell, destination: TableCell) {
     return source.row.id === destination.row.id && source.column.id === source.column.id;
   }
 
@@ -918,7 +918,7 @@ export class TableCellService extends TableBaseService {
 
       matrix = new MatrixCell(cells);
     } else if (this.tableService.layout.cell.selection) {
-      matrix = this.getCells(
+      matrix = this.getCellMatrix(
         this.tableService.layout.cell.selection.start,
         this.tableService.layout.cell.selection.end,
       );
@@ -980,7 +980,7 @@ export class TableCellService extends TableBaseService {
     }
 
     for (const row of rows) {
-      this.markCellDataAsEdited(row, newData);
+      this.queueCellEdit(row, newData);
     }
 
     this.emitCellDataAsEdited();
@@ -1015,7 +1015,7 @@ export class TableCellService extends TableBaseService {
       }
 
       if (row) {
-        this.markCellDataAsEdited(row, newData, undefined, TableCellActionType.Clear);
+        this.queueCellEdit(row, newData, undefined, TableCellActionType.Clear);
       }
     }
 
@@ -1031,7 +1031,7 @@ export class TableCellService extends TableBaseService {
       return;
     }
 
-    const { left: cellOffsetLeft, top: cellOffsetTop } = this.getCellOffset(index);
+    const { left: cellOffsetLeft, top: cellOffsetTop } = this.cellOffsetAt(index);
     const { scrollLayout, scrollLeft, scrollTop, viewport } = this.host.virtualScroll;
 
     const horizontalTrackOffsetX = scrollLayout.horizontal.track.offset.x;
@@ -1088,7 +1088,7 @@ export class TableCellService extends TableBaseService {
     this.interactiveColumns.add(column);
   }
 
-  private markCellDataAsEdited(
+  private queueCellEdit(
     row: TableRow,
     newData: TableRowCellData,
     rawData = newData,
@@ -1101,19 +1101,17 @@ export class TableCellService extends TableBaseService {
       return;
     }
 
-    let event = this.dataEditedEEC.getEvent(row.id);
-
+    let event = this.cellEditController.getEvent(row.id);
     if (event) {
       event.payload.newData = { ...event.payload.newData, ...newData };
     } else {
       event = { type, payload: { row, newData } };
     }
-
-    this.dataEditedEEC.addEvent(row.id, event);
+    this.cellEditController.addEvent(row.id, event);
   }
 
   private emitCellDataAsEdited() {
-    this.dataEditedEEC.emit();
+    this.cellEditController.emit();
   }
 
   private emitCellAsSelected = _.debounce((selectedCells: TableCell[]) => {
@@ -1154,7 +1152,7 @@ export class TableCellService extends TableBaseService {
     return matrix;
   }
 
-  private openErrorTooltip(target: HTMLElement, key: string) {
+  private showCellError(target: HTMLElement, key: string) {
     let message: string;
     switch (key) {
       case FieldValidationKey.Required:
@@ -1172,10 +1170,10 @@ export class TableCellService extends TableBaseService {
       default:
         message = 'An error has occurred.';
     }
-    this.cellError = { target, message };
+    this.activeCellError = { target, message };
   }
 
-  private closeErrorTooltip() {
-    this.cellError = null;
+  private hideCellError() {
+    this.activeCellError = null;
   }
 }

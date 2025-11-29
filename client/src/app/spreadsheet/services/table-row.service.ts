@@ -561,7 +561,7 @@ export class TableRowService extends TableBaseService {
   private focusToFieldCellTouchable(retry = false) {
     if (!this.tableService.layout.cell.selection) return;
 
-    const fieldCell = this.tableCellService.findCellElementByIndex(
+    const fieldCell = this.tableCellService.cellElementAt(
       this.tableService.layout.cell.selection.anchor,
     )?.firstElementChild;
     if (fieldCell) {

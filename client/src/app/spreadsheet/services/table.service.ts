@@ -242,8 +242,8 @@ export class TableService extends TableBaseService {
     const state = this.fieldCellService.getSelectingState();
     if (!state?.detectChange()) return;
 
-    const cell = this.tableCellService.findCellByIndex(currSelection.anchor);
-    if (cell && this.tableCellService.compareCell(cell, state.cell)) return;
+    const cell = this.tableCellService.cellAt(currSelection.anchor);
+    if (cell && this.tableCellService.isSameCell(cell, state.cell)) return;
 
     this.tableCellService.flushSelectingCellState();
   }, 1000);
@@ -301,7 +301,7 @@ export class TableService extends TableBaseService {
     this.layout.cell.focused = focused;
 
     if (focused) {
-      this.tableCellService.scrollToFocusingCell();
+      this.tableCellService.scrollToFocusedCell();
     }
   }
 
@@ -315,7 +315,7 @@ export class TableService extends TableBaseService {
       rowIndex: this.tableRowService.findRowIndex(row),
       columnIndex: this.tableColumnService.findColumnIndex(column),
     };
-    this.tableCellService.scrollToFocusingCell();
+    this.tableCellService.scrollToFocusedCell();
   }
 
   searchNext(nextIndex: number) {
@@ -328,7 +328,7 @@ export class TableService extends TableBaseService {
       rowIndex: this.tableRowService.findRowIndex(row),
       columnIndex: this.tableColumnService.findColumnIndex(column),
     };
-    this.tableCellService.scrollToFocusingCell();
+    this.tableCellService.scrollToFocusedCell();
   }
 
   calculate(columns?: TableColumn[]) {
@@ -496,7 +496,7 @@ export class TableService extends TableBaseService {
   }
 
   positionFillHandle(index = this.layout.cell.selection.end, retryIfNotRendered?: boolean) {
-    const ele = this.tableCellService.findCellElementByIndex(index);
+    const ele = this.tableCellService.cellElementAt(index);
 
     if (!ele) {
       this.layout.fillHandle.hidden = true;
