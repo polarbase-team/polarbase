@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  computed,
   ContentChild,
   DestroyRef,
   ElementRef,
@@ -164,16 +165,17 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     return this._scrollingY !== false;
   }
 
-  get scrollWidth() {
-    return this.viewport.contentWidth + SCROLL_EXTRA_WIDTH;
-  }
-  get scrollHeight() {
-    return this.viewport.contentHeight + SCROLL_EXTRA_HEIGHT;
-  }
+  scrollWidth = computed(() => {
+    return this.viewport.contentWidth() + SCROLL_EXTRA_WIDTH;
+  });
 
-  get scrollDivideOffset() {
-    return this.viewport.leftWidth + this.sideSpacing();
-  }
+  scrollHeight = computed(() => {
+    return this.viewport.contentHeight() + SCROLL_EXTRA_HEIGHT;
+  });
+
+  scrollDivideOffset = computed(() => {
+    return this.viewport.leftWidth() + this.sideSpacing();
+  });
 
   get scrollLayout() {
     return this.layout;
@@ -692,13 +694,14 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     let trackSize = 0;
     let thumbSize = 0;
 
-    if (this.scrollWidth) {
-      ratio = this.viewport.width / this.scrollWidth;
-      max = this.scrollWidth - ratio * this.scrollWidth;
+    const scrollWidth = this.scrollWidth();
+    if (scrollWidth) {
+      ratio = this.viewport.width / scrollWidth;
+      max = scrollWidth - ratio * scrollWidth;
       available = ratio < 1;
-      trackOffsetX = this.scrollDivideOffset;
+      trackOffsetX = this.scrollDivideOffset();
       trackOffsetY = this.eleRef.nativeElement.clientHeight - SCROLLBAR_TRACK_SIZE;
-      trackSize = this.viewport.width - this.scrollDivideOffset;
+      trackSize = this.viewport.width - this.scrollDivideOffset();
       thumbSize = ratio * trackSize;
     }
 
@@ -725,9 +728,10 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     let thumbSize = 0;
     let available = false;
 
-    if (this.scrollHeight) {
-      ratio = this.viewport.height / this.scrollHeight;
-      max = this.scrollHeight - ratio * this.scrollHeight;
+    const scrollHeight = this.scrollHeight();
+    if (scrollHeight) {
+      ratio = this.viewport.height / scrollHeight;
+      max = scrollHeight - ratio * scrollHeight;
       available = ratio < 1;
       trackOffsetX = this.eleRef.nativeElement.clientWidth - SCROLLBAR_TRACK_SIZE;
       trackOffsetY = this.viewport.offsetTop;
@@ -757,28 +761,34 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
   private computeHorizontalThumbPosition() {
     let position = 0;
-    if (this.scrollWidth) {
+
+    const scrollWidth = this.scrollWidth();
+    if (scrollWidth) {
       const trackSize = this.layout.horizontal.track.size;
       const thumbSize = this.layout.horizontal.thumb.size;
 
-      position = (this._scrollLeft / this.scrollWidth) * trackSize;
+      position = (this._scrollLeft / scrollWidth) * trackSize;
       if (thumbSize < SCROLLBAR_THUMB_MIN_SIZE) {
         position -= ((SCROLLBAR_THUMB_MIN_SIZE - thumbSize) / trackSize) * position;
       }
     }
+
     this.layout.horizontal.thumb.position = position;
   }
 
   private computeVerticalThumbPosition() {
     let position = 0;
-    if (this.scrollHeight) {
+
+    const scrollHeight = this.scrollHeight();
+    if (scrollHeight) {
       const trackSize = this.layout.vertical.track.size;
       const thumbSize = this.layout.vertical.thumb.size;
-      position = (this._scrollTop / this.scrollHeight) * trackSize;
+      position = (this._scrollTop / scrollHeight) * trackSize;
       if (thumbSize < SCROLLBAR_THUMB_MIN_SIZE) {
         position -= ((SCROLLBAR_THUMB_MIN_SIZE - thumbSize) / trackSize) * position;
       }
     }
+
     this.layout.vertical.thumb.position = position;
   }
 }

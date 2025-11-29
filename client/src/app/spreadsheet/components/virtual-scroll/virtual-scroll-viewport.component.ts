@@ -12,6 +12,7 @@ import {
   IterableDiffers,
   OnDestroy,
   output,
+  signal,
 } from '@angular/core';
 
 import { Dimension } from '../../services/table.service';
@@ -70,6 +71,11 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   sizeUpdated = output<ViewportSizeUpdatedEvent>();
   sizeUpdated$ = outputToObservable(this.sizeUpdated);
 
+  leftWidth = signal<number>(Dimension.IndexCellWidth);
+  rightWidth = signal<number>(Dimension.ActionCellWidth);
+  contentWidth = signal<number>(0);
+  contentHeight = signal<number>(Dimension.BlankRowHeight);
+
   private cdRef = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);
   private iterableDiffers = inject(IterableDiffers);
@@ -84,12 +90,8 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   private groupDs: TableGroup[];
   private _rowHeight: number;
   private groupDepth: number;
-  private _leftWidth: number;
-  private _rightWidth: number;
   private rawLeftWidth: number;
   private rawRightWidth: number;
-  private _contentWidth: number;
-  private _contentHeight: number;
   private isGrouping: boolean;
   private canCheckDiff: boolean;
   private needsUpdate: boolean;
@@ -240,22 +242,6 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     return this.element.clientHeight;
   }
 
-  get leftWidth() {
-    return this._leftWidth ?? Dimension.IndexCellWidth;
-  }
-
-  get rightWidth() {
-    return this._rightWidth ?? Dimension.ActionCellWidth;
-  }
-
-  get contentWidth() {
-    return this._contentWidth ?? 0;
-  }
-
-  get contentHeight() {
-    return this._contentHeight ?? Dimension.BlankRowHeight;
-  }
-
   ngAfterContentInit() {
     this.canCheckDiff = this.needsUpdate = true;
     this.resizeObserve.observe(this.element);
@@ -284,7 +270,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       const leftColumnRange: TableColumn[] = this.leftColumnDs;
       const rightColumnRange: TableColumn[] = findColumnInsideViewport(this.rightColumnDs, [
         scrollLeft,
-        scrollLeft + (this.width - this.leftWidth),
+        scrollLeft + (this.width - this.leftWidth()),
       ]);
       this.updateColumnRange(leftColumnRange, rightColumnRange);
     }
@@ -380,27 +366,26 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     }
 
     if (shouldMakeUpGroupViewProps) {
-      this._contentHeight = makeUpGroupViewProps(
-        this._rootGroup,
-        this._rowHeight,
-        Dimension.BlankRowHeight,
+      this.contentHeight.set(
+        makeUpGroupViewProps(this._rootGroup, this._rowHeight, Dimension.BlankRowHeight),
       );
     } else if (shouldMakeUpRowViewProps) {
-      this._contentHeight =
-        makeUpRowViewProps(this.rowDs, this._rowHeight) + Dimension.BlankRowHeight;
+      this.contentHeight.set(
+        makeUpRowViewProps(this.rowDs, this._rowHeight) + Dimension.BlankRowHeight,
+      );
     }
 
-    this._leftWidth = this.rawLeftWidth;
-    this._rightWidth = this.rawRightWidth;
+    this.leftWidth.set(this.rawLeftWidth);
+    this.rightWidth.set(this.rawRightWidth);
 
     if (this.isGrouping) {
-      this._leftWidth += totalGroupPadding;
-      this._rightWidth += totalGroupPadding;
-    } else if (!this._contentHeight) {
-      this._contentHeight = Dimension.BlankRowHeight;
+      this.leftWidth.update((v) => (v += totalGroupPadding));
+      this.rightWidth.update((v) => (v += totalGroupPadding));
+    } else if (!this.contentHeight()) {
+      this.contentHeight.set(Dimension.BlankRowHeight);
     }
 
-    this._contentWidth = this._leftWidth + this._rightWidth;
+    this.contentWidth.set(this.leftWidth() + this.rightWidth());
 
     this.onSizeUpdated(
       shouldMakeUpColumnViewProps,
@@ -437,10 +422,10 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       size: {
         width: this.width,
         height: this.height,
-        leftWidth: this.leftWidth,
-        rightWidth: this.rightWidth,
-        contentWidth: this.contentWidth,
-        contentHeight: this.contentHeight,
+        leftWidth: this.leftWidth(),
+        rightWidth: this.rightWidth(),
+        contentWidth: this.contentWidth(),
+        contentHeight: this.contentHeight(),
       },
     });
   }

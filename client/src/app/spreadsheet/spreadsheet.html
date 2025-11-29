@@ -130,11 +130,11 @@
         }
       </div>
     </ng-template>
-    <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset">
+    <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset()">
       <div
         class="pane-content box box-left box--radius flex flex-row"
         [style.left.px]="tableService.config().sideSpacing"
-        [style.width.px]="virtualScroll.viewport.leftWidth"
+        [style.width.px]="virtualScroll.viewport.leftWidth()"
       >
         <div class="header-cell cell index-cell">
           <div class="index-block">
@@ -162,12 +162,12 @@
     </div>
     <div
       class="pane pane-right"
-      [style.left.px]="virtualScroll.scrollDivideOffset"
-      [class.hidden]="!virtualScroll.viewport.leftWidth"
+      [style.left.px]="virtualScroll.scrollDivideOffset()"
+      [class.hidden]="!virtualScroll.viewport.leftWidth()"
     >
       <div
         class="pane-content box box-right box--radius flex flex-row"
-        [style.width.px]="virtualScroll.viewport.rightWidth"
+        [style.width.px]="virtualScroll.viewport.rightWidth()"
         [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
       >
         @for (
@@ -204,17 +204,17 @@
     [rootGroup]="tableGroupService.rootGroup()"
     [rowHeight]="tableRowService.rowHeight()"
   >
-    <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset">
+    <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset()">
       <div
         class="pane-content"
         [style.left.px]="tableService.config().sideSpacing"
-        [style.width.px]="virtualScroll.viewport.leftWidth"
-        [style.height.px]="virtualScroll.viewport.contentHeight"
+        [style.width.px]="virtualScroll.viewport.leftWidth()"
+        [style.height.px]="virtualScroll.viewport.contentHeight()"
         [style.transform]="'translate3d(0,' + -virtualScroll.scrollTop + 'px, 0)'"
       >
         <div
           virtualScrollLeftContentWrapper
-          [style.height.px]="virtualScroll.viewport.contentHeight"
+          [style.height.px]="virtualScroll.viewport.contentHeight()"
           [ngClass]="{
             'box box-left box--radius': tableGroupService.hasNoGroups(),
           }"
@@ -552,20 +552,20 @@
     </div>
     <div
       class="pane pane-right"
-      [style.left.px]="virtualScroll.scrollDivideOffset"
-      [class.hidden]="!virtualScroll.viewport.leftWidth"
+      [style.left.px]="virtualScroll.scrollDivideOffset()"
+      [class.hidden]="!virtualScroll.viewport.leftWidth()"
     >
       <div
         class="pane-content"
-        [style.width.px]="virtualScroll.viewport.rightWidth"
+        [style.width.px]="virtualScroll.viewport.rightWidth()"
         [style.transform]="
           'translate3d(' + -virtualScroll.scrollLeft + 'px,' + -virtualScroll.scrollTop + 'px, 0)'
         "
-        [style.height.px]="virtualScroll.viewport.contentHeight"
+        [style.height.px]="virtualScroll.viewport.contentHeight()"
       >
         <div
           virtualScrollRightContentWrapper
-          [style.height.px]="virtualScroll.viewport.contentHeight"
+          [style.height.px]="virtualScroll.viewport.contentHeight()"
           [ngClass]="{
             'box box-right box--radius': tableGroupService.hasNoGroups(),
           }"
@@ -792,12 +792,12 @@
           ></ng-container>
         </div>
       </ng-template>
-      <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset">
+      <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset()">
         <div
           class="pane-content flex flex-row full-height"
           style="height: 100%"
           [style.left.px]="tableService.config().sideSpacing"
-          [style.width.px]="virtualScroll.viewport.leftWidth"
+          [style.width.px]="virtualScroll.viewport.leftWidth()"
         >
           <div class="footer-cell cell index-cell">
             @if (tableService.isStreaming) {
@@ -842,13 +842,13 @@
       </div>
       <div
         class="pane pane-right"
-        [style.left.px]="virtualScroll.scrollDivideOffset"
-        [class.hidden]="!virtualScroll.viewport.leftWidth"
+        [style.left.px]="virtualScroll.scrollDivideOffset()"
+        [class.hidden]="!virtualScroll.viewport.leftWidth()"
       >
         <div
           class="pane-content flex flex-row full-height"
           style="height: 100%"
-          [style.width.px]="virtualScroll.viewport.rightWidth"
+          [style.width.px]="virtualScroll.viewport.rightWidth()"
           [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
         >
           @for (
@@ -877,8 +877,9 @@
       tableService.layout.freezeHandle.isHideHeadLine ||
       $any(tableColumnService.columns()?.[tableService.frozenCount()])?._isResizing;
     @let bodyLineHeight =
-      virtualScroll.viewport.height + virtualScroll.scrollTop > virtualScroll.viewport.contentHeight
-        ? virtualScroll.viewport.contentHeight -
+      virtualScroll.viewport.height + virtualScroll.scrollTop >
+      virtualScroll.viewport.contentHeight()
+        ? virtualScroll.viewport.contentHeight() -
           virtualScroll.scrollTop +
           Dimension.BodyVerticalPadding
         : virtualScroll.viewport.height;
@@ -886,7 +887,7 @@
       class="frozen-divider"
       cdkDrag
       cdkDragLockAxis="x"
-      [style.left.px]="virtualScroll.scrollDivideOffset"
+      [style.left.px]="virtualScroll.scrollDivideOffset()"
       [class.frozen-divider--hover]="tableService.layout.freezeHandle.isHovered"
       [class.frozen-divider--dragging]="tableService.layout.freezeHandle.isDragging"
       [class.frozen-divider--disabled]="!tableService.config().column.freezable || isHideHeadLine"
@@ -903,7 +904,7 @@
         class="frozen-divider__line frozen-divider__body-line"
         cdkDragHandle
         [style.height.px]="bodyLineHeight"
-        [class.hidden]="!virtualScroll.viewport.contentHeight"
+        [class.hidden]="!virtualScroll.viewport.contentHeight()"
         (mousemove)="tableService.onFreezeDividerMousemove($event)"
         (mouseleave)="tableService.onFreezeDividerMouseleave()"
       >
