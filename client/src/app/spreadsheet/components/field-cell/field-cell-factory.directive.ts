@@ -55,6 +55,7 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private fieldCellService = inject(FieldCellService);
   private cmpRef: ComponentRef<FieldCell>;
+  private dataType: DataType;
   private isCreated: boolean;
   private revert$$: Subscription;
 
@@ -122,6 +123,8 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
    */
   private createCmp(isRecreate = false) {
     if (isRecreate) this.clean();
+    // Store dataType to ensure the correct cmpRef is saved and retrieved
+    this.dataType = this.field.dataType;
     this.insertCmp();
     this.isCreated = true;
   }
@@ -133,7 +136,7 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
    */
   private insertCmp() {
     if (!this.cmpRef) {
-      const dataType = this.field.dataType;
+      const dataType = this.dataType;
       if (!dataType || !FIELD_CELL_CMP_MAP.has(dataType)) {
         throw new Error(`FieldCellFactoryDirective: Unsupported field data type: ${dataType}`);
       }
@@ -161,10 +164,8 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
    * if it is valid and not destroyed.
    */
   private storeCmp() {
-    if (!this.cmpRef || this.cmpRef.hostView.destroyed) {
-      return;
-    }
-    this.fieldCellService.set(this.field.dataType, this.cmpRef);
+    if (!this.cmpRef || this.cmpRef.hostView.destroyed) return;
+    this.fieldCellService.set(this.dataType, this.cmpRef);
   }
 
   /**
