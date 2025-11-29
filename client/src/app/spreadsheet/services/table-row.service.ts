@@ -193,7 +193,7 @@ export class TableRowService extends TableBaseService {
     if (_.isFinite(currentIndex)) {
       const droppedRows = [...this.draggingRows];
       this.moveRows(droppedRows, currentIndex);
-      if (this.tableGroupService.isGrouping()) {
+      if (this.tableGroupService.isGrouped()) {
         const targetGroup = this.tableService.layout.row.dragTargetGroup;
         this.tableGroupService.moveRowsInGroup(droppedRows, currentIndex, targetGroup);
       }
@@ -208,7 +208,7 @@ export class TableRowService extends TableBaseService {
 
   setRowSize(size: RowSize) {
     this.rowSize.update(() => size);
-    if (this.tableGroupService.isGrouping()) {
+    if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.markGroupAsChanged();
     }
     setTimeout(() => {
@@ -229,7 +229,7 @@ export class TableRowService extends TableBaseService {
   addNewRow(group?: TableGroup) {
     if (!this.canAddRow()) return;
 
-    this.tableGroupService.isGrouping()
+    this.tableGroupService.isGrouped()
       ? this.tableGroupService.insertRowInGroup(group)
       : this.insertRow();
   }
@@ -367,13 +367,13 @@ export class TableRowService extends TableBaseService {
   }
 
   getLastRowIndex() {
-    return this.tableGroupService.isGrouping()
+    return this.tableGroupService.isGrouped()
       ? this.tableGroupService.getLastRowIndexInGroup()
       : this.rows().length - 1;
   }
 
   findRowAtPointerPosition(pointerPosition: Point) {
-    if (this.tableGroupService.isGrouping()) {
+    if (this.tableGroupService.isGrouped()) {
       return this.tableGroupService.findRowInGroupAtPointerPosition(pointerPosition);
     }
 
@@ -401,7 +401,7 @@ export class TableRowService extends TableBaseService {
   }
 
   rowAt(index: number) {
-    return this.tableGroupService.isGrouping()
+    return this.tableGroupService.isGrouped()
       ? this.tableGroupService.findRowInGroupByIndex(index)
       : this.rows()[index];
   }
@@ -411,13 +411,13 @@ export class TableRowService extends TableBaseService {
   }
 
   findRowIndex(row: TableRow) {
-    return this.tableGroupService.isGrouping()
+    return this.tableGroupService.isGrouped()
       ? this.tableGroupService.findRowIndexInGroup(row)
       : _.indexOf(this.rows(), row);
   }
 
   findRowIndexByID(id: TableRow['id']) {
-    return this.tableGroupService.isGrouping()
+    return this.tableGroupService.isGrouped()
       ? this.tableGroupService.findRowIndexInGroupByID(id)
       : _.findIndex(this.rows(), { id });
   }
@@ -536,7 +536,7 @@ export class TableRowService extends TableBaseService {
   private removeRows(rows: TableRow[]) {
     this.rows.update((arr) => _.without(arr, ...rows));
 
-    if (this.tableGroupService.isGrouping()) {
+    if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.deleteRowsInGroup(rows);
     }
   }

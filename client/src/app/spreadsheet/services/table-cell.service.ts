@@ -831,7 +831,7 @@ export class TableCellService extends TableBaseService {
   }
 
   getCellOffset(index: CellIndex) {
-    if (this.tableGroupService.isGrouping()) {
+    if (this.tableGroupService.isGrouped()) {
       return this.tableGroupService.getRowCellOffsetInGroup(index);
     }
 

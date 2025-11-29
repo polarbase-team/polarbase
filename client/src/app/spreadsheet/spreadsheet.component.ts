@@ -795,7 +795,7 @@ export class SpreadsheetComponent
 
     let group: TableGroup;
     let rowGroupIndex: number;
-    if (this.tableGroupService.isGrouping()) {
+    if (this.tableGroupService.isGrouped()) {
       group = this.tableGroupService.findGroupByRowIndex(rowIndex);
       rowGroupIndex = this.tableGroupService.findRowGroupIndex(group, row);
     }
@@ -807,7 +807,7 @@ export class SpreadsheetComponent
 
   private openGroupActionMenu(e: MouseEvent) {
     setTimeout(() => {
-      this.tableGroupService.openGroupActionMenu(e);
+      this.tableGroupService.openContextnMenu(e);
     });
   }
 }

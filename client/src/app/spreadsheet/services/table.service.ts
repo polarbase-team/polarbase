@@ -344,7 +344,7 @@ export class TableService extends TableBaseService {
 
     if (this.isStreaming || !columns?.length) return;
 
-    if (this.tableGroupService.isGrouping()) {
+    if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.calculateInGroup(columns);
       this.calcResults = this.tableGroupService.rootGroup().calcResults;
     } else {
@@ -376,7 +376,7 @@ export class TableService extends TableBaseService {
   group(columns?: TableColumn[]) {
     if (columns) {
       this.tableColumnService.groupedColumns.clear();
-      this.tableGroupService.collapsedState.clear();
+      this.tableGroupService.collapsedGroupIds.clear();
 
       for (const column of columns) {
         if (!column.groupSortType) continue;
@@ -389,7 +389,7 @@ export class TableService extends TableBaseService {
     if (this.isStreaming || !columns?.length) return;
 
     const rootGroup = groupBy(this.host.sourceRows(), columns, (group: TableGroup) => {
-      group.isCollapsed = this.tableGroupService.collapsedState.get(group.id);
+      group.isCollapsed = this.tableGroupService.collapsedGroupIds.has(group.id);
     });
     this.tableGroupService.rootGroup.update(() => rootGroup);
 
@@ -405,7 +405,7 @@ export class TableService extends TableBaseService {
     }
 
     this.tableColumnService.groupedColumns.clear();
-    this.tableGroupService.collapsedState.clear();
+    this.tableGroupService.collapsedGroupIds.clear();
   }
 
   sort(columns?: TableColumn[]) {
@@ -422,7 +422,7 @@ export class TableService extends TableBaseService {
 
     if (this.isStreaming || !columns?.length) return;
 
-    if (this.tableGroupService.isGrouping()) {
+    if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.sortInGroup(columns);
     } else {
       this.tableRowService.rows.update(() => sortBy(this.host.sourceRows(), columns));
@@ -436,7 +436,7 @@ export class TableService extends TableBaseService {
 
     this.tableColumnService.sortedColumns.clear();
 
-    if (this.tableGroupService.isGrouping()) {
+    if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.unsortInGroup();
     } else {
       this.tableRowService.rows.update(() => this.host.sourceRows());

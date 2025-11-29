@@ -535,7 +535,7 @@
           </ng-container>
           @if (
             tableRowService.canAddRow() &&
-            (!tableGroupService.isGrouping() || tableGroupService.hasNoGroups())
+            (!tableGroupService.isGrouped() || tableGroupService.hasNoGroups())
           ) {
             <div class="row blank-row">
               <div
@@ -757,7 +757,7 @@
           </ng-container>
           @if (
             tableRowService.canAddRow() &&
-            (!tableGroupService.isGrouping() || tableGroupService.hasNoGroups())
+            (!tableGroupService.isGrouped() || tableGroupService.hasNoGroups())
           ) {
             <div class="row blank-row"></div>
           }
@@ -783,7 +783,7 @@
               calculationBlockTemplate;
               context: {
                 column,
-                calcResults: (tableGroupService.isGrouping()
+                calcResults: (tableGroupService.isGrouped()
                   ? tableGroupService.rootGroup().calcResults
                   : tableService.calcResults
                 )?.get(column.id),
