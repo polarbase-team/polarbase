@@ -61,7 +61,7 @@
         mwlResizable
         (resizing)="tableColumnService.onColumnResizing($event, column)"
         (resizeEnd)="tableColumnService.onColumnResized($event, column)"
-        (click)="!column._isResizing && tableColumnService.selectColumn($event, columnIndex)"
+        (click)="!column._isResizing && tableColumnService.selectColumns($event, columnIndex)"
       >
         <div
           class="header-cell cell"
@@ -152,7 +152,11 @@
             ></p-checkbox>
           </div>
         </div>
-        @for (column of tableColumnService.leftColumns(); let columnIndex = $index; track column) {
+        @for (
+          column of tableColumnService.frozenColumns();
+          let columnIndex = $index;
+          track column
+        ) {
           <ng-container
             *ngTemplateOutlet="headerCellTemplate; context: { column, columnIndex }"
           ></ng-container>
@@ -169,7 +173,11 @@
         [style.width.px]="virtualScroll.viewport.rightWidth"
         [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
       >
-        @for (column of tableColumnService.rightColumns(); let columnIndex = $index; track column) {
+        @for (
+          column of tableColumnService.scrollableColumns();
+          let columnIndex = $index;
+          track column
+        ) {
           <ng-container
             *ngTemplateOutlet="
               headerCellTemplate;
@@ -193,8 +201,8 @@
   <div
     class="spreadsheet__body"
     virtualScrollViewport
-    [leftColumns]="tableColumnService.leftColumns()"
-    [rightColumns]="tableColumnService.rightColumns()"
+    [leftColumns]="tableColumnService.frozenColumns()"
+    [rightColumns]="tableColumnService.scrollableColumns()"
     [rows]="tableRowService.rows()"
     [rootGroup]="tableGroupService.rootGroup()"
     [rowHeight]="tableRowService.rowHeight()"
@@ -826,7 +834,7 @@
             }
           </div>
           @for (
-            column of tableColumnService.leftColumns();
+            column of tableColumnService.frozenColumns();
             let columnIndex = $index;
             track column
           ) {
@@ -848,7 +856,7 @@
           [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
         >
           @for (
-            column of tableColumnService.rightColumns();
+            column of tableColumnService.scrollableColumns();
             let columnIndex = $index;
             track column
           ) {

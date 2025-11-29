@@ -121,8 +121,8 @@ function calculateColumnDragPlaceholderIndex(
 @Injectable()
 export class TableColumnService extends TableBaseService {
   columns = signal<TableColumn[]>([]);
-  leftColumns = signal<TableColumn[]>([]);
-  rightColumns = signal<TableColumn[]>([]);
+  frozenColumns = signal<TableColumn[]>([]);
+  scrollableColumns = signal<TableColumn[]>([]);
   calculatedColumns = new Map<TableColumn['id'], TableColumn>();
   groupedColumns = new Map<TableColumn['id'], TableColumn>();
   sortedColumns = new Map<TableColumn['id'], TableColumn>();
@@ -174,8 +174,19 @@ export class TableColumnService extends TableBaseService {
 
     effect(() => {
       const columns = this.columns();
-      this.leftColumns.update(() => columns.slice(0, this.tableService.frozenCount() + 1));
-      this.rightColumns.update(() => columns.slice(this.tableService.frozenCount() + 1));
+      this.frozenColumns.update(() => columns.slice(0, this.tableService.frozenCount() + 1));
+      this.scrollableColumns.update(() => columns.slice(this.tableService.frozenCount() + 1));
+    });
+  }
+
+  showColumn(column: TableColumn) {
+    if (!column) return;
+
+    column.hidden = false;
+    this.columns.update(() => _.filter(this.host.sourceColumns(), (c) => !c.hidden));
+    this.host.columnAction.emit({
+      type: TableColumnActionType.Unhide,
+      payload: [column],
     });
   }
 
@@ -186,17 +197,6 @@ export class TableColumnService extends TableBaseService {
     this.columns.update((arr) => _.without(arr, column));
     this.host.columnAction.emit({
       type: TableColumnActionType.Hide,
-      payload: [column],
-    });
-  }
-
-  unhideColumn(column: TableColumn) {
-    if (!column) return;
-
-    column.hidden = false;
-    this.columns.update(() => _.filter(this.host.sourceColumns(), (c) => !c.hidden));
-    this.host.columnAction.emit({
-      type: TableColumnActionType.Unhide,
       payload: [column],
     });
   }
@@ -421,7 +421,7 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  selectColumn(e: MouseEvent, columnIndex: number) {
+  selectColumns(e: MouseEvent, columnIndex: number) {
     this.tableCellService.deselectAllCells();
     this.tableRowService.deselectAllRows();
 
