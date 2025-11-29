@@ -303,7 +303,7 @@ export class TableColumnService extends TableBaseService {
       row.data ||= {};
       row.data[column.id] = null;
     }
-    if (this.tableService.shouldGroup()) {
+    if (this.groupedColumns.size > 0) {
       if (column.groupSortType) {
         this.tableService.group();
       }

@@ -176,18 +176,6 @@ export class TableService extends TableBaseService {
     return frozenCount;
   });
 
-  shouldCalculate = computed(() => {
-    return !!this.config().aggregations || this.tableColumnService.calculatedColumns.size > 0;
-  });
-
-  shouldGroup = computed(() => {
-    return !!this.config().grouping || this.tableColumnService.groupedColumns.size > 0;
-  });
-
-  shouldSort = computed(() => {
-    return !!this.config().sorting || this.tableColumnService.sortedColumns.size > 0;
-  });
-
   layout: Layout = {
     freezeHandle: {},
     fillHandle: {},
@@ -239,7 +227,7 @@ export class TableService extends TableBaseService {
   refreshDataView = _.throttle(() => {
     if (this.isStreaming) return;
 
-    if (this.shouldGroup()) {
+    if (this.tableColumnService.groupedColumns.size > 0) {
       this.group();
     } else {
       this.sort();
