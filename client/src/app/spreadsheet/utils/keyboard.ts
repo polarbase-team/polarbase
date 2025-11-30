@@ -12,8 +12,8 @@ export type CombinationKey = (typeof CombinationKey)[keyof typeof CombinationKey
 
 export interface KeyboardConfig {
   target: HTMLElement;
-  pause: boolean;
-  shouldPause: (e: KeyboardEvent) => boolean;
+  disabled: boolean;
+  shouldIgnoreEvent: (e: KeyboardEvent) => boolean;
 }
 
 const IS_MACOS: boolean = /Mac/i.test(navigator.userAgent);
@@ -22,26 +22,26 @@ export class Keyboard {
   keydown$: Subject<KeyboardEvent> = new Subject<KeyboardEvent>();
   keyup$: Subject<KeyboardEvent> = new Subject<KeyboardEvent>();
 
-  private isPaused: boolean;
+  private isDisabled: boolean;
   private keydownEventSub: Subscription;
   private keyupEventSub: Subscription;
 
   constructor(config?: Partial<KeyboardConfig>) {
     let target: HTMLElement | Document = document;
-    let shouldPause: (e: KeyboardEvent) => boolean;
+    let shouldIgnoreEvent: (e: KeyboardEvent) => boolean;
     if (config) {
-      this.isPaused = config.pause;
+      this.isDisabled = config.disabled;
       target = config.target || target;
-      shouldPause = config.shouldPause;
+      shouldIgnoreEvent = config.shouldIgnoreEvent;
     }
 
     this.keydownEventSub = fromEvent<KeyboardEvent>(target, 'keydown')
-      .pipe(filter((e) => !this.isPaused && !shouldPause?.(e)))
+      .pipe(filter((e) => !this.isDisabled && !shouldIgnoreEvent?.(e)))
       .subscribe((e) => {
         this.keydown$.next(e);
       });
     this.keyupEventSub = fromEvent<KeyboardEvent>(target, 'keyup')
-      .pipe(filter((e) => !this.isPaused && !shouldPause?.(e)))
+      .pipe(filter((e) => !this.isDisabled && !shouldIgnoreEvent?.(e)))
       .subscribe((e) => {
         this.keyup$.next(e);
       });
@@ -73,19 +73,19 @@ export class Keyboard {
     return arr.join('.');
   }
 
-  continue() {
-    this.isPaused = false;
+  enable() {
+    this.isDisabled = false;
   }
 
-  pause() {
-    this.isPaused = true;
+  disable() {
+    this.isDisabled = true;
   }
 
-  stop() {
+  destroy() {
     this.keydownEventSub.unsubscribe();
     this.keyupEventSub.unsubscribe();
     this.keydown$.complete();
     this.keyup$.complete();
-    this.isPaused = this.keydownEventSub = this.keyupEventSub = undefined;
+    this.isDisabled = this.keydownEventSub = this.keyupEventSub = undefined;
   }
 }

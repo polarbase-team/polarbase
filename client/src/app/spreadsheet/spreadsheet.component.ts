@@ -246,13 +246,13 @@ export class SpreadsheetComponent
         )
         .subscribe((isContinue) => {
           if (!isContinue) {
-            this.keyboard.pause();
-            this.clipboard.pause();
+            this.keyboard.disable();
+            this.clipboard.disable();
             return;
           }
 
-          this.keyboard.continue();
-          this.clipboard.continue();
+          this.keyboard.enable();
+          this.clipboard.enable();
         });
     });
   }
@@ -297,8 +297,8 @@ export class SpreadsheetComponent
     this.tableGroupService.onDestroy();
 
     this.fieldCellService.destroy();
-    this.keyboard.stop();
-    this.clipboard.stop();
+    this.keyboard.destroy();
+    this.clipboard.destroy();
   }
 
   detectChanges() {
@@ -371,9 +371,9 @@ export class SpreadsheetComponent
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((e1) => {
         const isRightClick = e1.button === 2;
-        const shouldPause: boolean =
-          !(isRightClick && this.contextMenu.visible()) && this.shouldPauseEvent(e1);
-        if (shouldPause) return;
+        const shouldIgnore: boolean =
+          !(isRightClick && this.contextMenu.visible()) && this.shouldIgnoreEvent(e1);
+        if (shouldIgnore) return;
 
         const target = e1.target as HTMLElement;
 
@@ -561,10 +561,10 @@ export class SpreadsheetComponent
 
   private handleKeyboardEvents() {
     this.keyboard = new Keyboard({
-      pause: true,
-      shouldPause: (e) =>
-        this.shouldPauseEvent(e, (shouldPause) => {
-          return shouldPause && (e.code !== 'Escape' || !this.tableService.layout.cell.invalid);
+      disabled: true,
+      shouldIgnoreEvent: (e) =>
+        this.shouldIgnoreEvent(e, (shouldIgnore) => {
+          return shouldIgnore && (e.code !== 'Escape' || !this.tableService.layout.cell.invalid);
         }),
     });
 
@@ -690,8 +690,8 @@ export class SpreadsheetComponent
 
   private handleClipboardEvents() {
     this.clipboard = new Clipboard({
-      pause: true,
-      shouldPause: (e) => this.shouldPauseEvent(e),
+      disabled: true,
+      shouldIgnoreEvent: (e) => this.shouldIgnoreEvent(e),
     });
 
     this.clipboard.copy$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -741,17 +741,17 @@ export class SpreadsheetComponent
     this.detectChanges();
   }
 
-  private shouldPauseEvent(e: Event, customizer?: (shouldPause: boolean) => boolean) {
-    let shouldPause =
+  private shouldIgnoreEvent(e: Event, customizer?: (shouldIgnore: boolean) => boolean) {
+    let shouldIgnore =
       !!this.tableService.layout.cell.invalid ||
       this.checkOverlapedByOtherSpreadsheet() ||
       this.checkOverlapedByOverlay(e.target);
 
     if (_.isFunction(customizer)) {
-      shouldPause = customizer(shouldPause);
+      shouldIgnore = customizer(shouldIgnore);
     }
 
-    return shouldPause;
+    return shouldIgnore;
   }
 
   private checkOverlapedByOtherSpreadsheet() {

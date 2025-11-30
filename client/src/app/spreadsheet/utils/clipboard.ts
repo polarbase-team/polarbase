@@ -17,8 +17,8 @@ export interface ClipboardData<T = any> {
 
 export interface ClipboardConfig {
   target: HTMLElement;
-  pause: boolean;
-  shouldPause: (e: ClipboardEvent) => boolean;
+  disabled: boolean;
+  shouldIgnoreEvent: (e: ClipboardEvent) => boolean;
 }
 
 const TAB_CHAR: string = '\t';
@@ -49,7 +49,7 @@ export class Clipboard<T = any> {
   private matrix: ClipboardItem<T>[][];
   private nativeText: string;
   private _isCutAction: boolean;
-  private isPaused: boolean;
+  private isDisabled: boolean;
   private copyEventSub: Subscription;
   private cutEventSub: Subscription;
   private pasteEventSub: Subscription;
@@ -60,39 +60,39 @@ export class Clipboard<T = any> {
 
   constructor(config?: Partial<ClipboardConfig>) {
     let target: HTMLElement | Document = document;
-    let shouldPause: (e: ClipboardEvent) => boolean;
+    let shouldIgnoreEvent: (e: ClipboardEvent) => boolean;
 
     if (config) {
-      this.isPaused = config.pause;
+      this.isDisabled = config.disabled;
       target = config.target || target;
-      shouldPause = config.shouldPause;
+      shouldIgnoreEvent = config.shouldIgnoreEvent;
     }
 
     this.copyEventSub = fromEvent<ClipboardEvent>(target, 'copy')
-      .pipe(filter((e) => !this.isPaused && !shouldPause?.(e)))
+      .pipe(filter((e) => !this.isDisabled && !shouldIgnoreEvent?.(e)))
       .subscribe((e) => {
-        const isPaused = this.isPaused || shouldPause?.(e);
-        if (isPaused) return;
+        const isDisabled = this.isDisabled || shouldIgnoreEvent?.(e);
+        if (isDisabled) return;
 
         this._isCutAction = false;
         this.copy$.next(e);
       });
 
     this.cutEventSub = fromEvent<ClipboardEvent>(target, 'cut')
-      .pipe(filter((e) => !this.isPaused && !shouldPause?.(e)))
+      .pipe(filter((e) => !this.isDisabled && !shouldIgnoreEvent?.(e)))
       .subscribe((e) => {
-        const isPaused = this.isPaused || shouldPause?.(e);
-        if (isPaused) return;
+        const isDisabled = this.isDisabled || shouldIgnoreEvent?.(e);
+        if (isDisabled) return;
 
         this._isCutAction = true;
         this.copy$.next(e);
       });
 
     this.pasteEventSub = fromEvent<ClipboardEvent>(target, 'paste')
-      .pipe(filter((e) => !this.isPaused && !shouldPause?.(e)))
+      .pipe(filter((e) => !this.isDisabled && !shouldIgnoreEvent?.(e)))
       .subscribe((e) => {
-        const isPaused = this.isPaused || shouldPause?.(e);
-        if (isPaused) return;
+        const isDisabled = this.isDisabled || shouldIgnoreEvent?.(e);
+        if (isDisabled) return;
 
         const nativePastedText = e.clipboardData.getData('text').replace(/\r\n/g, NEWLINE_CHAR);
         if (this.nativeText !== nativePastedText) {
@@ -112,25 +112,25 @@ export class Clipboard<T = any> {
       });
   }
 
-  continue() {
-    this.isPaused = false;
+  enable() {
+    this.isDisabled = false;
   }
 
-  pause() {
-    this.isPaused = true;
+  disable() {
+    this.isDisabled = true;
   }
 
-  stop() {
+  destroy() {
     this.copyEventSub.unsubscribe();
     this.cutEventSub.unsubscribe();
     this.pasteEventSub.unsubscribe();
     this.copy$.complete();
     this.cut$.complete();
     this.paste$.complete();
-    this.isPaused = this.copyEventSub = this.cutEventSub = this.pasteEventSub = undefined;
+    this.isDisabled = this.copyEventSub = this.cutEventSub = this.pasteEventSub = undefined;
   }
 
-  read(): ClipboardData<T> {
+  read() {
     const data: ClipboardData<T> = {
       matrix: null,
       rowCount: 0,
