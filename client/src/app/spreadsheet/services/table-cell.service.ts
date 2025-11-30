@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import dayjs, { isDayjs } from 'dayjs';
 import { FORECAST } from '@formulajs/formulajs';
-import { Injectable, ElementRef, Renderer2, inject } from '@angular/core';
+import { Injectable, ElementRef, Renderer2, inject, ChangeDetectorRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
 import { Clipboard, ClipboardData, ClipboardItem } from '../utils/clipboard';
@@ -104,6 +104,7 @@ export class TableCellService extends TableBaseService {
   activeCellError: { target: HTMLElement; message: string };
 
   private renderer = inject(Renderer2);
+  private cdRef = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);
   private toastService = inject(MessageService);
   private fieldCellService = inject(FieldCellService);
@@ -233,6 +234,7 @@ export class TableCellService extends TableBaseService {
     const unlisten = this.renderer.listen(e.target, 'pointerleave', () => {
       unlisten();
       this.tableService.layout.cell.hovered = null;
+      this.cdRef.detectChanges();
     });
   }
 
