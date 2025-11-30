@@ -289,7 +289,7 @@
                       [style.minWidth.px]="tableService.config().column.minWidth"
                       [style.maxWidth.px]="tableService.config().column.minWidth"
                     >
-                      @if (!virtualScroll.isLongScrollingY) {
+                      @if (!virtualScroll.isLongScrollingY()) {
                         <ng-container
                           *ngTemplateOutlet="
                             calculationBlockTemplate;
@@ -310,7 +310,7 @@
                       [style.minWidth.px]="columnRect.width"
                       [style.maxWidth.px]="columnRect.width"
                     >
-                      @if (!virtualScroll.isLongScrollingY) {
+                      @if (!virtualScroll.isLongScrollingY()) {
                         <ng-container
                           *ngTemplateOutlet="
                             calculationBlockTemplate;
@@ -374,7 +374,7 @@
               (cdkDragMoved)="tableRowService.onRowDragMoved($event)"
               (cdkDragEnded)="tableRowService.onRowDragEnded($event)"
             >
-              @if (virtualScroll.isLongScrollingY) {
+              @if (virtualScroll.isLongScrollingY()) {
                 <div class="row-cell cell index-cell" cell-type="row">
                   <div class="h-fit-content">
                     <div class="index-block">
@@ -443,7 +443,7 @@
                   let columnRect = rect
                 "
               >
-                @if (virtualScroll.isLongScrollingY) {
+                @if (virtualScroll.isLongScrollingY()) {
                   <div
                     class="row-cell cell"
                     safe-area
@@ -612,7 +612,7 @@
                     [style.minWidth.px]="columnRect.width"
                     [style.maxWidth.px]="columnRect.width"
                   >
-                    @if (!virtualScroll.isLongScrollingY) {
+                    @if (!virtualScroll.isLongScrollingY()) {
                       <ng-container
                         *ngTemplateOutlet="
                           calculationBlockTemplate;
@@ -668,7 +668,7 @@
                   let columnRect = rect
                 "
               >
-                @if (virtualScroll.isLongScrollingY) {
+                @if (virtualScroll.isLongScrollingY()) {
                   <div
                     class="row-cell cell"
                     safe-area

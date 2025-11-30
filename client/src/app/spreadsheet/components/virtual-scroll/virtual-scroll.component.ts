@@ -88,6 +88,11 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
   scrollLeft = signal<number>(0);
   scrollTop = signal<number>(0);
+  scrollingX = signal<boolean>(false);
+  scrollingY = signal<boolean>(false);
+  isLongScrollingX = signal<boolean>(false);
+  isLongScrollingY = signal<boolean>(false);
+  isScrollCompleted = signal<boolean>(true);
 
   @ContentChild(VirtualScrollViewportComponent, { static: true })
   readonly viewport: VirtualScrollViewportComponent;
@@ -126,39 +131,15 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   private stopSubEvent$ = new Subject<void>();
   private isAutoScroll = false;
   private momentumAnimationFrame: number;
-  private _scrollingX = false;
-  private _scrollingY = false;
-  private _isLongScrollingX = false;
-  private _isLongScrollingY = false;
-  private _isScrollCompleted = true;
 
   @HostBinding('class.virtual-scroll--scrolling')
   get classScrolling() {
     return this.isScrolling && !this.isAutoScroll;
   }
 
-  get isScrolling() {
-    return this.scrollingX || this.scrollingY;
-  }
-
-  get isLongScrollingX() {
-    return this._isLongScrollingX;
-  }
-
-  get isLongScrollingY() {
-    return this._isLongScrollingY;
-  }
-
-  get isScrollCompleted() {
-    return this._isScrollCompleted;
-  }
-
-  get scrollingX() {
-    return this._scrollingX !== false;
-  }
-  get scrollingY() {
-    return this._scrollingY !== false;
-  }
+  isScrolling = computed(() => {
+    return this.scrollingX() || this.scrollingY();
+  });
 
   scrollWidth = computed(() => {
     return this.viewport.contentWidth() + SCROLL_EXTRA_WIDTH;
@@ -226,12 +207,14 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         .pipe(
           debounceTime(200),
           tap(() => {
-            this._scrollingX = this._scrollingY = false;
+            this.scrollingX.set(false);
+            this.scrollingY.set(false);
             this.markForCheck();
           }),
           debounceTime(300),
           tap(() => {
-            this._isLongScrollingX = this._isLongScrollingY = false;
+            this.isLongScrollingX.set(false);
+            this.isLongScrollingY.set(false);
             this.markForCheck();
           }),
           takeUntilDestroyed(this.destroyRef),
@@ -344,7 +327,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
     if (e1.button === 2) return; // Right click
 
-    this._isScrollCompleted = false;
+    this.isScrollCompleted.set(false);
 
     const { left, top } = this.viewport.element.getBoundingClientRect();
     const stopScrollTimers = new Subject<void>();
@@ -409,7 +392,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
               takeUntilDestroyed(this.destroyRef),
             )
             .subscribe(() => {
-              if (this._isScrollCompleted) {
+              if (this.isScrollCompleted()) {
                 stopScrollTimers.next();
                 return;
               }
@@ -428,7 +411,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         e2.stopPropagation();
         e2.preventDefault();
         this.stopSubEvent$.next();
-        this._isScrollCompleted = true;
+        this.isScrollCompleted.set(true);
         stopScrollTimers.next();
         this.isAutoScroll = false;
       });
@@ -444,7 +427,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       cancelAnimationFrame(this.momentumAnimationFrame);
     }
 
-    this._isScrollCompleted = false;
+    this.isScrollCompleted.set(false);
 
     const start = { x: e1.pageX, y: e1.pageY };
     let velocityX = 0;
@@ -518,7 +501,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
             cancelAnimationFrame(this.momentumAnimationFrame);
           }
 
-          this._isScrollCompleted = true;
+          this.isScrollCompleted.set(true);
         };
 
         momentum();
@@ -533,7 +516,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     e1.stopPropagation();
     e1.preventDefault();
 
-    this._isScrollCompleted = false;
+    this.isScrollCompleted.set(false);
 
     const currentPos: {
       scrollLeft: number;
@@ -595,15 +578,15 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         e2.preventDefault();
 
         this.stopSubEvent$.next();
-        this._isScrollCompleted = true;
+        this.isScrollCompleted.set(true);
       });
   }
 
   private _scrollTo(scrollLeft: number, scrollTop: number) {
     this.updateScroll(scrollLeft, scrollTop);
     this.viewport.measureRangeSize(
-      [this.scrollLeft(), this._scrollingX],
-      [this.scrollTop(), this._scrollingY],
+      [this.scrollLeft(), this.scrollingX()],
+      [this.scrollTop(), this.scrollingY()],
     );
   }
 
@@ -633,22 +616,22 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
     if (!scrollingX && !scrollingY) return;
 
-    let isLongScrollingX = this.isLongScrollingX;
+    let isLongScrollingX = this.isLongScrollingX();
     if (!isLongScrollingX && Math.abs(this.scrollLeft() - scrollLeft) > SCROLL_LONG_DISTANCE) {
       isLongScrollingX = true;
     }
 
-    let isLongScrollingY = this.isLongScrollingY;
+    let isLongScrollingY = this.isLongScrollingY();
     if (!isLongScrollingY && Math.abs(this.scrollTop() - scrollTop) > SCROLL_LONG_DISTANCE) {
       isLongScrollingY = true;
     }
 
     this.scrollLeft.set(scrollLeft);
     this.scrollTop.set(scrollTop);
-    this._scrollingX = !!scrollingX;
-    this._scrollingY = !!scrollingY;
-    this._isLongScrollingX = isLongScrollingX;
-    this._isLongScrollingY = isLongScrollingY;
+    this.scrollingX.set(!!scrollingX);
+    this.scrollingY.set(!!scrollingY);
+    this.isLongScrollingX.set(isLongScrollingX);
+    this.isLongScrollingY.set(isLongScrollingY);
     this.markForCheck();
 
     this.scrolling.emit({
