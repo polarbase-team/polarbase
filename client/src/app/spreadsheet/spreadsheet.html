@@ -168,7 +168,7 @@
       <div
         class="pane-content box box-right box--radius flex flex-row"
         [style.width.px]="virtualScroll.viewport.rightWidth()"
-        [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
+        [style.transform]="'translate3d(' + -virtualScroll.scrollLeft() + 'px, 0, 0)'"
       >
         @for (
           column of tableColumnService.scrollableColumns();
@@ -210,7 +210,7 @@
         [style.left.px]="tableService.config().sideSpacing"
         [style.width.px]="virtualScroll.viewport.leftWidth()"
         [style.height.px]="virtualScroll.viewport.contentHeight()"
-        [style.transform]="'translate3d(0,' + -virtualScroll.scrollTop + 'px, 0)'"
+        [style.transform]="'translate3d(0,' + -virtualScroll.scrollTop() + 'px, 0)'"
       >
         <div
           virtualScrollLeftContentWrapper
@@ -559,7 +559,11 @@
         class="pane-content"
         [style.width.px]="virtualScroll.viewport.rightWidth()"
         [style.transform]="
-          'translate3d(' + -virtualScroll.scrollLeft + 'px,' + -virtualScroll.scrollTop + 'px, 0)'
+          'translate3d(' +
+          -virtualScroll.scrollLeft() +
+          'px,' +
+          -virtualScroll.scrollTop() +
+          'px, 0)'
         "
         [style.height.px]="virtualScroll.viewport.contentHeight()"
       >
@@ -849,7 +853,7 @@
           class="pane-content flex flex-row full-height"
           style="height: 100%"
           [style.width.px]="virtualScroll.viewport.rightWidth()"
-          [style.transform]="'translate3d(' + -virtualScroll.scrollLeft + 'px, 0, 0)'"
+          [style.transform]="'translate3d(' + -virtualScroll.scrollLeft() + 'px, 0, 0)'"
         >
           @for (
             column of tableColumnService.scrollableColumns();
@@ -877,10 +881,10 @@
       tableService.layout.freezeHandle.isHideHeadLine ||
       $any(tableColumnService.columns()?.[tableService.frozenCount()])?._isResizing;
     @let bodyLineHeight =
-      virtualScroll.viewport.height + virtualScroll.scrollTop >
+      virtualScroll.viewport.height + virtualScroll.scrollTop() >
       virtualScroll.viewport.contentHeight()
         ? virtualScroll.viewport.contentHeight() -
-          virtualScroll.scrollTop +
+          virtualScroll.scrollTop() +
           Dimension.BodyVerticalPadding
         : virtualScroll.viewport.height;
     <div

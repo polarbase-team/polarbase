@@ -323,7 +323,7 @@ export class TableColumnService extends TableBaseService {
         : calculateColumnDragPlaceholderIndex(
             this.columns(),
             pointerOffsetX,
-            this.host.virtualScroll.scrollLeft,
+            this.host.virtualScroll.scrollLeft(),
             this.tableService.frozenCount(),
           );
     let offset = null;
@@ -345,7 +345,7 @@ export class TableColumnService extends TableBaseService {
           offset += column.width;
         }
         if (index - 1 > this.tableService.frozenCount()) {
-          offset -= this.host.virtualScroll.scrollLeft;
+          offset -= this.host.virtualScroll.scrollLeft();
         }
       } else {
         index = null;

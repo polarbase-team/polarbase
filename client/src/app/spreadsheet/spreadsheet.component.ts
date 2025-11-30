@@ -181,7 +181,7 @@ export class SpreadsheetComponent
   @HostBinding('class')
   get class() {
     return {
-      'spreadsheet--right-scrolled': this.virtualScroll.scrollLeft > 0,
+      'spreadsheet--right-scrolled': this.virtualScroll.scrollLeft() > 0,
     };
   }
 

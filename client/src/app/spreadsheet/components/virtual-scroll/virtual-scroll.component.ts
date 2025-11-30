@@ -12,6 +12,7 @@ import {
   input,
   OnDestroy,
   output,
+  signal,
   ViewChild,
 } from '@angular/core';
 import { outputToObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -85,6 +86,9 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
   scrolling = output<ScrollEvent>();
 
+  scrollLeft = signal<number>(0);
+  scrollTop = signal<number>(0);
+
   @ContentChild(VirtualScrollViewportComponent, { static: true })
   readonly viewport: VirtualScrollViewportComponent;
 
@@ -122,8 +126,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   private stopSubEvent$ = new Subject<void>();
   private isAutoScroll = false;
   private momentumAnimationFrame: number;
-  private _scrollLeft = 0;
-  private _scrollTop = 0;
   private _scrollingX = false;
   private _scrollingY = false;
   private _isLongScrollingX = false;
@@ -149,13 +151,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
   get isScrollCompleted() {
     return this._isScrollCompleted;
-  }
-
-  get scrollLeft() {
-    return this._scrollLeft;
-  }
-  get scrollTop() {
-    return this._scrollTop;
   }
 
   get scrollingX() {
@@ -252,8 +247,8 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         .subscribe((e) => {
           this.updateLayout();
           this.viewport.measureRangeSize(
-            [this._scrollLeft, e.updateOnWidth],
-            [this._scrollTop, e.updateOnHeight],
+            [this.scrollLeft(), e.updateOnWidth],
+            [this.scrollTop(), e.updateOnHeight],
           );
         });
     });
@@ -272,12 +267,12 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   }
 
   scrollBy(options: ScrollToOptions) {
-    let scrollLeft = this._scrollLeft;
+    let scrollLeft = this.scrollLeft();
     if (options.left) {
       scrollLeft += options.left;
     }
 
-    let scrollTop = this._scrollTop;
+    let scrollTop = this.scrollTop();
     if (options.top) {
       scrollTop += options.top;
     }
@@ -311,20 +306,20 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
     let offsetX = null;
     if (x >= left && x <= left + width) {
-      offsetX = x - left + this._scrollLeft;
+      offsetX = x - left + this.scrollLeft();
     }
 
     let offsetY = null;
     if (y >= top && y <= top + height) {
-      offsetY = y - top + this._scrollTop;
+      offsetY = y - top + this.scrollTop();
     }
 
     return { x: offsetX, y: offsetY };
   }
 
   private onWheel(e: WheelEvent) {
-    let left = this._scrollLeft;
-    let top = this._scrollTop;
+    let left = this.scrollLeft();
+    let top = this.scrollTop();
 
     if (e.shiftKey) {
       if (IS_MACOS) {
@@ -454,8 +449,8 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     const start = { x: e1.pageX, y: e1.pageY };
     let velocityX = 0;
     let velocityY = 0;
-    let currentX = this._scrollLeft;
-    let currentY = this._scrollTop;
+    let currentX = this.scrollLeft();
+    let currentY = this.scrollTop();
     let currentAnimationFrame: number;
 
     fromEvent<PointerEvent>(document, 'pointermove')
@@ -547,8 +542,8 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       mouseY: number;
     } = {
       // The current scroll
-      scrollLeft: this._scrollLeft,
-      scrollTop: this._scrollTop,
+      scrollLeft: this.scrollLeft(),
+      scrollTop: this.scrollTop(),
       // Get the current mouse position
       mouseX: e1.clientX,
       mouseY: e1.clientY,
@@ -607,12 +602,12 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   private _scrollTo(scrollLeft: number, scrollTop: number) {
     this.updateScroll(scrollLeft, scrollTop);
     this.viewport.measureRangeSize(
-      [this._scrollLeft, this._scrollingX],
-      [this._scrollTop, this._scrollingY],
+      [this.scrollLeft(), this._scrollingX],
+      [this.scrollTop(), this._scrollingY],
     );
   }
 
-  private updateScroll(scrollLeft = this._scrollLeft, scrollTop = this._scrollTop) {
+  private updateScroll(scrollLeft = this.scrollLeft(), scrollTop = this.scrollTop()) {
     scrollLeft = this.layout.horizontal.available
       ? Math.min(Math.max(scrollLeft, 0), this.layout.horizontal.max)
       : 0;
@@ -620,7 +615,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       ? Math.min(Math.max(scrollTop, 0), this.layout.vertical.max)
       : 0;
 
-    const offsetX = scrollLeft - this._scrollLeft;
+    const offsetX = scrollLeft - this.scrollLeft();
     let scrollingX: Scrolling = false;
     if (offsetX > 0) {
       scrollingX = 'to-end';
@@ -628,7 +623,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       scrollingX = 'to-start';
     }
 
-    const offsetY = scrollTop - this._scrollTop;
+    const offsetY = scrollTop - this.scrollTop();
     let scrollingY: Scrolling = false;
     if (offsetY > 0) {
       scrollingY = 'to-end';
@@ -639,17 +634,17 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     if (!scrollingX && !scrollingY) return;
 
     let isLongScrollingX = this.isLongScrollingX;
-    if (!isLongScrollingX && Math.abs(this._scrollLeft - scrollLeft) > SCROLL_LONG_DISTANCE) {
+    if (!isLongScrollingX && Math.abs(this.scrollLeft() - scrollLeft) > SCROLL_LONG_DISTANCE) {
       isLongScrollingX = true;
     }
 
     let isLongScrollingY = this.isLongScrollingY;
-    if (!isLongScrollingY && Math.abs(this._scrollTop - scrollTop) > SCROLL_LONG_DISTANCE) {
+    if (!isLongScrollingY && Math.abs(this.scrollTop() - scrollTop) > SCROLL_LONG_DISTANCE) {
       isLongScrollingY = true;
     }
 
-    this._scrollLeft = scrollLeft;
-    this._scrollTop = scrollTop;
+    this.scrollLeft.set(scrollLeft);
+    this.scrollTop.set(scrollTop);
     this._scrollingX = !!scrollingX;
     this._scrollingY = !!scrollingY;
     this._isLongScrollingX = isLongScrollingX;
@@ -767,7 +762,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
       const trackSize = this.layout.horizontal.track.size;
       const thumbSize = this.layout.horizontal.thumb.size;
 
-      position = (this._scrollLeft / scrollWidth) * trackSize;
+      position = (this.scrollLeft() / scrollWidth) * trackSize;
       if (thumbSize < SCROLLBAR_THUMB_MIN_SIZE) {
         position -= ((SCROLLBAR_THUMB_MIN_SIZE - thumbSize) / trackSize) * position;
       }
@@ -783,7 +778,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     if (scrollHeight) {
       const trackSize = this.layout.vertical.track.size;
       const thumbSize = this.layout.vertical.thumb.size;
-      position = (this._scrollTop / scrollHeight) * trackSize;
+      position = (this.scrollTop() / scrollHeight) * trackSize;
       if (thumbSize < SCROLLBAR_THUMB_MIN_SIZE) {
         position -= ((SCROLLBAR_THUMB_MIN_SIZE - thumbSize) / trackSize) * position;
       }

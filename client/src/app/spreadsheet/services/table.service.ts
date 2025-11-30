@@ -461,7 +461,7 @@ export class TableService extends TableBaseService {
     const index = calculateFreezeDividerDragPlaceholderIndex(
       this.tableColumnService.columns(),
       pointerOffsetX,
-      this.host.virtualScroll.scrollLeft,
+      this.host.virtualScroll.scrollLeft(),
       this.frozenCount(),
     );
     const offset = getColumnOffset(this.tableColumnService.columnAt(index));

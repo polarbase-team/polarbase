@@ -177,7 +177,7 @@ export class TableRowService extends TableBaseService {
         foundRow.rowOffset +
         Dimension.HeaderHeight +
         Dimension.BodyVerticalPadding -
-        this.host.virtualScroll.scrollTop -
+        this.host.virtualScroll.scrollTop() -
         2;
     }
     this.tableService.layout.row.dragTargetGroup = group;
