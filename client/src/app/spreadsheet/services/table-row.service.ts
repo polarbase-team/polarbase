@@ -432,7 +432,13 @@ export class TableRowService extends TableBaseService {
     return this.pendingRow === row;
   }
 
-  openContextMenu(e: Event, row: TableRow, rowIndex: number) {
+  openContextMenu(
+    e: Event,
+    row: TableRow,
+    rowIndex: number,
+    group: TableGroup,
+    rowGroupIndex: number,
+  ) {
     const items: MenuItem[] = [];
 
     if (this.selectedRows?.size > 1) {
@@ -500,14 +506,18 @@ export class TableRowService extends TableBaseService {
             label: 'Insert row above',
             icon: 'pi pi-arrow-up',
             command: () => {
-              this.insertRow(null, rowIndex);
+              this.tableGroupService.isGrouped()
+                ? this.tableGroupService.insertRowInGroup(group, rowGroupIndex)
+                : this.insertRow(null, rowIndex);
             },
           },
           {
             label: 'Insert row below',
             icon: 'pi pi-arrow-down',
             command: () => {
-              this.insertRow(null, rowIndex + 1);
+              this.tableGroupService.isGrouped()
+                ? this.tableGroupService.insertRowInGroup(group, rowGroupIndex + 1)
+                : this.insertRow(null, rowIndex + 1);
             },
           },
           { separator: true },

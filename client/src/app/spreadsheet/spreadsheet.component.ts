@@ -796,7 +796,7 @@ export class SpreadsheetComponent
     }
 
     setTimeout(() => {
-      this.tableRowService.openContextMenu(e, row, rowIndex);
+      this.tableRowService.openContextMenu(e, row, rowIndex, group, rowGroupIndex);
     });
   }
 
