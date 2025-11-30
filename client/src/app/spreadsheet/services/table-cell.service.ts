@@ -1031,9 +1031,9 @@ export class TableCellService extends TableBaseService {
     }
 
     const { left: cellOffsetLeft, top: cellOffsetTop } = this.cellOffsetAt(index);
-    const { scrollLayout, scrollLeft, scrollTop, viewport } = this.host.virtualScroll;
+    const { layout, scrollLeft, scrollTop, viewport } = this.host.virtualScroll;
 
-    const horizontalTrackOffsetX = scrollLayout.horizontal.track.offset.x;
+    const horizontalTrackOffsetX = layout.horizontal.track.offset.x;
     const { width: cellWidth } = this.tableColumnService.columnAt(columnIndex);
     let left = scrollLeft();
     if (cellOffsetLeft >= horizontalTrackOffsetX) {
@@ -1044,7 +1044,7 @@ export class TableCellService extends TableBaseService {
       }
     }
 
-    const verticalTrackOffsetY = scrollLayout.vertical.track.offset.y;
+    const verticalTrackOffsetY = layout.vertical.track.offset.y;
     const cellHeight = this.tableRowService.rowHeight();
     let top = scrollTop();
     if (cellOffsetTop >= verticalTrackOffsetY) {

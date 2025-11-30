@@ -96,16 +96,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   isLongScrollingY = signal<boolean>(false);
   isScrollCompleted = signal<boolean>(true);
   isAutoScroll = signal<boolean>(false);
-
-  @ContentChild(VirtualScrollViewportComponent, { static: true })
-  readonly viewport: VirtualScrollViewportComponent;
-
-  @ViewChild('horizontalThumb', { static: true })
-  protected horizontalThumb: ElementRef;
-  @ViewChild('verticalThumb', { static: true })
-  protected verticalThumb: ElementRef;
-
-  protected layout: ScrollLayout = {
+  layout: ScrollLayout = {
     horizontal: {
       ratio: 0,
       max: 0,
@@ -128,6 +119,14 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     },
   };
 
+  @ContentChild(VirtualScrollViewportComponent, { static: true })
+  readonly viewport: VirtualScrollViewportComponent;
+
+  @ViewChild('horizontalThumb', { static: true })
+  protected horizontalThumb: ElementRef;
+  @ViewChild('verticalThumb', { static: true })
+  protected verticalThumb: ElementRef;
+
   private cdRef = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);
   private destroyRef = inject(DestroyRef);
@@ -149,10 +148,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   scrollDivideOffset = computed(() => {
     return this.viewport.leftWidth() + this.sideSpacing();
   });
-
-  get scrollLayout() {
-    return this.layout;
-  }
 
   ngAfterContentInit() {
     Promise.resolve().then(() => {
@@ -353,7 +348,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
           let autoScrollStepX: number;
 
           if (dir === '' || dir === 'horizontal') {
-            if (e2.pageX > left + this.viewport.width - AUTO_SCROLL_ALLOW_RANGE) {
+            if (e2.pageX > left + this.viewport.width() - AUTO_SCROLL_ALLOW_RANGE) {
               autoScrollStepX = AUTO_SCROLL_STEP;
             } else if (
               e2.pageX <
@@ -366,7 +361,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
           let autoScrollStepY: number;
 
           if (dir === '' || dir === 'vertical') {
-            if (e2.pageY > top + this.viewport.height - AUTO_SCROLL_ALLOW_RANGE) {
+            if (e2.pageY > top + this.viewport.height() - AUTO_SCROLL_ALLOW_RANGE) {
               autoScrollStepY = AUTO_SCROLL_STEP;
             } else if (
               e2.pageY <

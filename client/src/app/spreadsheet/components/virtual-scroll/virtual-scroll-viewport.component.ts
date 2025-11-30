@@ -10,7 +10,6 @@ import {
   ElementRef,
   inject,
   input,
-  Input,
   IterableDiffer,
   IterableDiffers,
   OnDestroy,
@@ -79,6 +78,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   rightWidth = signal<number>(Dimension.ActionCellWidth);
   contentWidth = signal<number>(0);
   contentHeight = signal<number>(Dimension.BlankRowHeight);
+  element: HTMLElement;
 
   @ContentChild(VSLeftCWComponent, { static: true })
   leftWrapper: VSLeftCWComponent;
@@ -107,10 +107,6 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   private groupDsDiffer: IterableDiffer<TableGroup>;
   private groupRangeDiffer: IterableDiffer<TableGroup>;
 
-  get element() {
-    return this.eleRef.nativeElement;
-  }
-
   offsetLeft = computed(() => {
     return this.element.offsetLeft;
   });
@@ -126,6 +122,8 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   });
 
   constructor() {
+    this.element = this.eleRef.nativeElement;
+
     effect(() => {
       this.leftColumnDs = this.leftColumns() || [];
 
