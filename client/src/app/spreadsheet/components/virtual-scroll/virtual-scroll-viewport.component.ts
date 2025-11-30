@@ -263,10 +263,8 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
    * @url https://dev.to/adamklein/build-your-own-virtual-scroll-part-i-11ib
    * @url https://dev.to/adamklein/build-your-own-virtual-scroll-part-ii-3j86
    */
-  measureRangeSize(
-    [scrollLeft, scrollingX]: [number, Scrolling?],
-    [scrollTop, scrollingY]: [number, Scrolling?],
-  ) {
+  measureRangeSize(rangeX: [number, Scrolling?], rangeY: [number, Scrolling?]) {
+    const [scrollLeft, scrollingX] = rangeX;
     if (scrollingX !== false) {
       const leftColumnRange: TableColumn[] = this.leftColumnDs;
       const rightColumnRange: TableColumn[] = findColumnInsideViewport(this.rightColumnDs, [
@@ -276,9 +274,9 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       this.updateColumnRange(leftColumnRange, rightColumnRange);
     }
 
+    const [scrollTop, scrollingY] = rangeY;
     if (scrollingY !== false) {
       let rowRange: TableRow[];
-
       if (this.isGrouping) {
         const [groupRange, rowRangeInGroup]: [TableGroup[], TableRow[]] = findGroupInsideViewport(
           this.groupDs,
@@ -290,7 +288,6 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       } else {
         rowRange = findRowInsideViewport(this.rowDs, this._rowHeight, [scrollTop, this.height()]);
       }
-
       this.updateRowRange(rowRange);
     }
   }
