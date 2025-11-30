@@ -17,7 +17,7 @@ export const GROUP_TRACK_BY_FN: TrackByFunction<TableGroup> = (
   group: TableGroup,
 ): TableGroup['id'] => group.id;
 
-export function _getGroupRect(group: GroupView) {
+export function getGroupRect(group: GroupView) {
   return group?.viewProps.rect || null;
 }
 
