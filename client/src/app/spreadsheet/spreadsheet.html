@@ -935,13 +935,13 @@
     }
   }
 
-  <!-- Fill handler -->
+  <!-- Fill handle -->
   @if (tableService.config().cell.fillable) {
-    <div class="fill-handler-wrapper">
+    <div class="fill-handle-wrapper">
       @if (tableService.layout.fillHandle?.offset) {
         <div
-          class="fill-handler"
-          #fillHanlder
+          class="fill-handle"
+          #fillHandle
           safe-area
           virtualScrollAutoScrollHolder="vertical"
           [style.left.px]="tableService.layout.fillHandle.offset.left"

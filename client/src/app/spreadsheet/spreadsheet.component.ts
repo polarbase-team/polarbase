@@ -156,7 +156,7 @@ export class SpreadsheetComponent
 
   @ViewChild('menu', { static: true }) menu: Menu;
   @ViewChild('contextMenu', { static: true }) contextMenu: ContextMenu;
-  @ViewChild('fillHanlder') fillHander: ElementRef<HTMLElement>;
+  @ViewChild('fillHandle') fillHandle: ElementRef<HTMLElement>;
   @ViewChild(VirtualScrollComponent, { static: true }) virtualScroll: VirtualScrollComponent;
 
   tableService = inject(TableService);
@@ -415,7 +415,7 @@ export class SpreadsheetComponent
         let isTouchEvent: boolean;
         let delayEditCellFn: number;
 
-        const isFillHandlerActive = !!this.fillHander?.nativeElement.contains(target);
+        const isFillHandlerActive = !!this.fillHandle?.nativeElement.contains(target);
         const currSelection = this.tableService.layout.cell.selection;
         const anchorCellIdxInSelection = currSelection?.anchor;
 
