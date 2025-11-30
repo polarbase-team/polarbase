@@ -559,12 +559,12 @@ export class TableRowService extends TableBaseService {
         rowIndex: insertedIndex,
         columnIndex: 0,
       };
-
       this.tableCellService.selectCells(cellIndex, cellIndex, true);
+      this.host.detectChanges();
 
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         this.focusFirstCellOfNewRow(true);
-      });
+      }, 17);
     });
   }
 
