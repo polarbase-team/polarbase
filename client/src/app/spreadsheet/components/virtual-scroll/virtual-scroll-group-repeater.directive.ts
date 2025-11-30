@@ -1,4 +1,4 @@
-import { Directive, Input, TrackByFunction } from '@angular/core';
+import { Directive, effect, input, TrackByFunction } from '@angular/core';
 
 import { Dimension } from '../../services/table.service';
 import { TableGroup } from '../../models/table-group';
@@ -136,18 +136,44 @@ export class VirtualScrollGroupRepeaterDirective extends ViewRepeater<
   TableGroup,
   GroupViewContext
 > {
-  @Input('virtualScrollGroupRepeaterStartIndex')
-  override dataSourceStartIndex = 0;
-  @Input('virtualScrollGroupRepeaterTrackBy')
-  override dataSourceTrackByFn = GROUP_TRACK_BY_FN;
+  readonly dataSourceStartIndex = input<number>(0, {
+    alias: 'virtualScrollGroupRepeaterStartIndex',
+  });
 
-  @Input('virtualScrollGroupRepeater')
-  set groupDs(ds: TableGroup[]) {
-    this.dataSource = ds;
-  }
+  readonly dataSourceTrackByFn = input<(index: number, item: TableGroup) => any>(
+    GROUP_TRACK_BY_FN,
+    {
+      alias: 'virtualScrollGroupRepeaterTrackBy',
+    },
+  );
 
-  @Input('virtualScrollGroupRepeaterCacheSize')
-  set groupCacheSize(size: number) {
-    this.cacheSize = size;
+  readonly ds = input.required<TableGroup[]>({
+    alias: 'virtualScrollGroupRepeater',
+  });
+
+  readonly cacheSize = input<number | undefined>(undefined, {
+    alias: 'virtualScrollGroupRepeaterCacheSize',
+  });
+
+  constructor() {
+    super();
+
+    effect(() => {
+      this.dataSource = this.ds();
+    });
+
+    effect(() => {
+      this.dsStartIndex = this.dataSourceStartIndex();
+    });
+
+    effect(() => {
+      this.dsTrackByFn = this.dataSourceTrackByFn();
+    });
+
+    effect(() => {
+      if (this.cacheSize() !== undefined) {
+        this.repeater.viewCacheSize = this.cacheSize();
+      }
+    });
   }
 }

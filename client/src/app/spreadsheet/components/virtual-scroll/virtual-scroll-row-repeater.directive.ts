@@ -1,4 +1,4 @@
-import { Directive, Input, TrackByFunction } from '@angular/core';
+import { Directive, effect, input, TrackByFunction } from '@angular/core';
 
 import { Dimension } from '../../services/table.service';
 import { TableRow } from '../../models/table-row';
@@ -79,19 +79,42 @@ export function findRowInsideViewport(
   exportAs: 'virtualScrollRowRepeater',
 })
 export class VirtualScrollRowRepeaterDirective extends ViewRepeater<TableRow, RowViewContext> {
-  @Input('virtualScrollRowRepeaterStartIndex')
-  override dataSourceStartIndex = 0;
-  @Input('virtualScrollRowRepeaterTrackBy')
-  override dataSourceTrackByFn = ROW_TRACK_BY_FN;
+  readonly dataSourceStartIndex = input<number>(0, {
+    alias: 'virtualScrollRowRepeaterStartIndex',
+  });
 
-  @Input('virtualScrollRowRepeater')
-  set rowDs(ds: TableRow[]) {
-    this.dataSource = ds;
-  }
+  readonly dataSourceTrackByFn = input<(index: number, item: TableRow) => any>(ROW_TRACK_BY_FN, {
+    alias: 'virtualScrollRowRepeaterTrackBy',
+  });
 
-  @Input('virtualScrollRowRepeaterCacheSize')
-  set rowCacheSize(size: number) {
-    this.cacheSize = size;
+  readonly ds = input.required<TableRow[]>({
+    alias: 'virtualScrollRowRepeater',
+  });
+
+  readonly cacheSize = input<number | undefined>(undefined, {
+    alias: 'virtualScrollRowRepeaterCacheSize',
+  });
+
+  constructor() {
+    super();
+
+    effect(() => {
+      this.dataSource = this.ds();
+    });
+
+    effect(() => {
+      this.dsStartIndex = this.dataSourceStartIndex();
+    });
+
+    effect(() => {
+      this.dsTrackByFn = this.dataSourceTrackByFn();
+    });
+
+    effect(() => {
+      if (this.cacheSize() !== undefined) {
+        this.repeater.viewCacheSize = this.cacheSize();
+      }
+    });
   }
 
   protected override updateContextProperties(context: RowViewContext) {

@@ -169,30 +169,23 @@ export class ViewRepeater<R, C extends ViewContext<R>> implements DoCheck {
   protected vcRef = inject(ViewContainerRef);
   protected differs = inject(IterableDiffers);
   protected repeater = new RecycleViewRepeaterStrategy<R, C>(this.vcRef, this.tmplRef);
+  protected needsUpdate: boolean;
+  protected dsDiffer: IterableDiffer<R>;
+  protected dsStartIndex = 0;
+  protected dsTrackByFn: TrackByFunction<R>;
 
-  protected dataSourceDiffer: IterableDiffer<R>;
-  protected dataSourceStartIndex = 0;
-  protected dataSourceTrackByFn: TrackByFunction<R>;
-
-  private needsUpdate: boolean;
   private _dataSource: R[];
-
   get dataSource() {
     return this._dataSource;
   }
   set dataSource(dataSource: R[]) {
     this._dataSource = dataSource || [];
-
     this.onDataSourceChanged();
   }
 
-  set cacheSize(size: number) {
-    this.repeater.viewCacheSize = size;
-  }
-
   ngDoCheck() {
-    if (this.dataSourceDiffer && this.needsUpdate) {
-      const changes = this.dataSourceDiffer.diff(this.dataSource);
+    if (this.dsDiffer && this.needsUpdate) {
+      const changes = this.dsDiffer.diff(this.dataSource);
       if (changes) {
         this.applyChanges(changes);
       } else {
@@ -248,13 +241,13 @@ export class ViewRepeater<R, C extends ViewContext<R>> implements DoCheck {
 
   protected updateContextProperties(context: C) {
     const { viewProps } = context.$implicit;
-    context.index = viewProps.index + this.dataSourceStartIndex;
+    context.index = viewProps.index + this.dsStartIndex;
     context.rect = viewProps.rect;
   }
 
   private onDataSourceChanged() {
-    if (!this.dataSourceDiffer) {
-      this.dataSourceDiffer = this.differs.find(this.dataSource).create(this.dataSourceTrackByFn);
+    if (!this.dsDiffer) {
+      this.dsDiffer = this.differs.find(this.dataSource).create(this.dsTrackByFn);
     }
     this.needsUpdate = true;
   }
