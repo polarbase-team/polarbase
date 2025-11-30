@@ -9,7 +9,6 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  HostBinding,
   HostListener,
   inject,
   input,
@@ -93,7 +92,10 @@ const stack: SpreadsheetComponent[] = [];
   selector: 'spreadsheet',
   templateUrl: './spreadsheet.html',
   styleUrls: ['./spreadsheet.scss'],
-  host: { class: 'spreadsheet' },
+  host: {
+    class: 'spreadsheet',
+    '[class.spreadsheet--right-scrolled]': 'virtualScroll.scrollLeft() > 0',
+  },
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -177,13 +179,6 @@ export class SpreadsheetComponent
   private keyboard: Keyboard;
   private clipboard: Clipboard<TableCell>;
   private scrollAnimationFrame: number;
-
-  @HostBinding('class')
-  get class() {
-    return {
-      'spreadsheet--right-scrolled': this.virtualScroll.scrollLeft() > 0,
-    };
-  }
 
   constructor() {
     this.tableService.host =

@@ -7,7 +7,6 @@ import {
   ContentChild,
   DestroyRef,
   ElementRef,
-  HostBinding,
   inject,
   input,
   OnDestroy,
@@ -74,7 +73,10 @@ const SCROLL_LONG_DISTANCE = 1200;
   selector: 'virtual-scroll, [virtualScroll]',
   templateUrl: './virtual-scroll.html',
   styleUrls: ['./virtual-scroll.scss'],
-  host: { class: 'virtual-scroll' },
+  host: {
+    class: 'virtual-scroll',
+    '[class.virtual-scroll--scrolling]': 'isScrolling() && !isAutoScroll()',
+  },
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -131,11 +133,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private stopSubEvent$ = new Subject<void>();
   private momentumAnimationFrame: number;
-
-  @HostBinding('class.virtual-scroll--scrolling')
-  get classScrolling() {
-    return this.isScrolling() && !this.isAutoScroll();
-  }
 
   isScrolling = computed(() => {
     return this.scrollingX() || this.scrollingY();
