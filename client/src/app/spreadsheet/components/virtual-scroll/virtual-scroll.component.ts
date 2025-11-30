@@ -93,6 +93,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   isLongScrollingX = signal<boolean>(false);
   isLongScrollingY = signal<boolean>(false);
   isScrollCompleted = signal<boolean>(true);
+  isAutoScroll = signal<boolean>(false);
 
   @ContentChild(VirtualScrollViewportComponent, { static: true })
   readonly viewport: VirtualScrollViewportComponent;
@@ -129,12 +130,11 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   private eleRef = inject(ElementRef);
   private destroyRef = inject(DestroyRef);
   private stopSubEvent$ = new Subject<void>();
-  private isAutoScroll = false;
   private momentumAnimationFrame: number;
 
   @HostBinding('class.virtual-scroll--scrolling')
   get classScrolling() {
-    return this.isScrolling && !this.isAutoScroll;
+    return this.isScrolling() && !this.isAutoScroll();
   }
 
   isScrolling = computed(() => {
@@ -341,7 +341,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         e2.preventDefault();
         stopScrollTimers.next();
 
-        if (!this.isAutoScroll) {
+        if (!this.isAutoScroll()) {
           const target = e2.target as HTMLElement;
           const holder = target.closest(`[${AUTO_SCROLL_HOLDER}]`);
 
@@ -349,7 +349,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
           dir = holder.getAttribute(AUTO_SCROLL_HOLDER);
         }
-        this.isAutoScroll = true;
+        this.isAutoScroll.set(true);
 
         if (currentAnimationFrame) {
           cancelAnimationFrame(currentAnimationFrame);
@@ -413,7 +413,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         this.stopSubEvent$.next();
         this.isScrollCompleted.set(true);
         stopScrollTimers.next();
-        this.isAutoScroll = false;
+        this.isAutoScroll.set(false);
       });
   }
 
@@ -442,7 +442,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
         e2.stopPropagation();
         e2.preventDefault();
 
-        this.isAutoScroll = true;
+        this.isAutoScroll.set(true);
 
         if (currentAnimationFrame) {
           cancelAnimationFrame(currentAnimationFrame);
@@ -474,7 +474,7 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
         this.stopSubEvent$.next();
 
-        this.isAutoScroll = false;
+        this.isAutoScroll.set(false);
 
         const momentum: () => void = () => {
           let isContinue = false;

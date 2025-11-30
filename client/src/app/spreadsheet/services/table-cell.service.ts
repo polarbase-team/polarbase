@@ -220,7 +220,7 @@ export class TableCellService extends TableBaseService {
       (this.host.isMouseHolding ||
         this.host.isMouseHiding ||
         !!this.tableService.layout.cell.invalid ||
-        !this.host.virtualScroll.isScrollCompleted ||
+        !this.host.virtualScroll.isScrollCompleted() ||
         this.fieldCellService.getSelectingState()?.isEditing) &&
       (e as PointerEvent).pointerType !== 'touch'
     ) {
