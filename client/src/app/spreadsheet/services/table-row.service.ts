@@ -213,7 +213,7 @@ export class TableRowService extends TableBaseService {
     }
     setTimeout(() => {
       this.tableService.positionFillHandle();
-    });
+    }, 200);
   }
 
   expandRow(row: TableRow) {

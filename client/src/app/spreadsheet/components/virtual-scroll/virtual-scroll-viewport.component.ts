@@ -6,8 +6,10 @@ import {
   computed,
   ContentChild,
   DoCheck,
+  effect,
   ElementRef,
   inject,
+  input,
   Input,
   IterableDiffer,
   IterableDiffers,
@@ -69,6 +71,8 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   @ContentChild(VSRightCWComponent, { static: true })
   rightWrapper: VSRightCWComponent;
 
+  rowHeight = input<number>();
+
   sizeUpdated = output<ViewportSizeUpdatedEvent>();
   sizeUpdated$ = outputToObservable(this.sizeUpdated);
 
@@ -89,7 +93,6 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   private rowDs: TableRow[];
   private _rootGroup: TableGroup;
   private groupDs: TableGroup[];
-  private _rowHeight: number;
   private groupDepth: number;
   private rawLeftWidth: number;
   private rawRightWidth: number;
@@ -215,16 +218,6 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     this.forcesUpdate ||= forcesUpdate;
   }
 
-  @Input()
-  get rowHeight() {
-    return this._rowHeight;
-  }
-  set rowHeight(height: number) {
-    this._rowHeight = height;
-
-    this.needsUpdate = this.forcesUpdate = true;
-  }
-
   get element() {
     return this.eleRef.nativeElement;
   }
@@ -242,6 +235,14 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   height = computed(() => {
     return this.element.clientHeight;
   });
+
+  constructor() {
+    effect(() => {
+      if (this.rowHeight() !== undefined) {
+        this.needsUpdate = this.forcesUpdate = true;
+      }
+    });
+  }
 
   ngAfterContentInit() {
     this.canCheckDiff = this.needsUpdate = true;
@@ -280,13 +281,13 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       if (this.isGrouping) {
         const [groupRange, rowRangeInGroup]: [TableGroup[], TableRow[]] = findGroupInsideViewport(
           this.groupDs,
-          this._rowHeight,
+          this.rowHeight(),
           [scrollTop, scrollTop + this.height()],
         );
         this.updateGroupRange(groupRange);
         rowRange = rowRangeInGroup;
       } else {
-        rowRange = findRowInsideViewport(this.rowDs, this._rowHeight, [scrollTop, this.height()]);
+        rowRange = findRowInsideViewport(this.rowDs, this.rowHeight(), [scrollTop, this.height()]);
       }
       this.updateRowRange(rowRange);
     }
@@ -365,11 +366,11 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
 
     if (shouldMakeUpGroupViewProps) {
       this.contentHeight.set(
-        makeUpGroupViewProps(this._rootGroup, this._rowHeight, Dimension.BlankRowHeight),
+        makeUpGroupViewProps(this._rootGroup, this.rowHeight(), Dimension.BlankRowHeight),
       );
     } else if (shouldMakeUpRowViewProps) {
       this.contentHeight.set(
-        makeUpRowViewProps(this.rowDs, this._rowHeight) + Dimension.BlankRowHeight,
+        makeUpRowViewProps(this.rowDs, this.rowHeight()) + Dimension.BlankRowHeight,
       );
     }
 
