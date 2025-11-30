@@ -691,6 +691,8 @@ export class TableCellService extends TableBaseService {
       }
     }
 
+    let count: number = 0;
+    let total: number = 0;
     for (let i = 0; i < targetMatrixCell.rowCount; i++) {
       const targetCells = targetValues[i];
       const pos = i + 1;
@@ -733,6 +735,8 @@ export class TableCellService extends TableBaseService {
 
         newData[column.id] = data;
 
+        count++;
+
         this.markColumnAsInteracted(column);
       }
 
@@ -741,10 +745,14 @@ export class TableCellService extends TableBaseService {
       }
     }
 
+    total = targetMatrixCell.count;
+
     this.emitCellDataAsEdited();
+
     this.toastService.add({
       severity: 'info',
       summary: 'Fill complete',
+      detail: `Fill complete ${count}/${total} cells`,
       life: 3000,
     });
   }
@@ -754,7 +762,6 @@ export class TableCellService extends TableBaseService {
     if (!selectingIdx) return;
 
     let { rowIndex, columnIndex } = selectingIdx;
-
     switch (direction) {
       case 'above':
         rowIndex--;
@@ -771,7 +778,6 @@ export class TableCellService extends TableBaseService {
     }
 
     const index = { rowIndex, columnIndex };
-
     if (!this.checkCellIndexValid(index)) return;
 
     this.selectCells(index, index, true);
