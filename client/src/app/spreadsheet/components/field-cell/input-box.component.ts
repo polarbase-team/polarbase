@@ -2,15 +2,13 @@ import _ from 'lodash';
 import {
   ChangeDetectionStrategy,
   Component,
+  effect,
   ElementRef,
-  EventEmitter,
   HostBinding,
   HostListener,
   inject,
-  Input,
-  OnChanges,
-  Output,
-  SimpleChanges,
+  input,
+  output,
 } from '@angular/core';
 
 const NUMBER_REPLACER = /^(-)|^e|^([0-9]+)([.e])[.e]*([0-9]*)[.e]*|[^0-9.e\n]+/gm;
@@ -18,11 +16,7 @@ const INTEGER_REPLACER = /^(-)|^e|^([0-9]+)(e)e*([0-9]*)e*|[^0-9e\n]+/gm;
 const POSITIVE_NUMBER_REPLACER = /^e|^([0-9]+)([.e])[.e]*([0-9]*)[.e]*|[^0-9.e\n]+/gm;
 const POSITIVE_INTEGER_REPLACER = /^e|^([0-9]+)(e)e*([0-9]*)e*|[^0-9e\n]+/gm;
 
-function omitNonNumericChars(
-  text: string,
-  allowNegative: boolean = true,
-  isInteger: boolean = false,
-): string {
+function omitNonNumericChars(text: string, allowNegative = true, isInteger = false) {
   return allowNegative
     ? text.replace(isInteger ? INTEGER_REPLACER : NUMBER_REPLACER, `$1$2$3$4`)
     : text.replace(isInteger ? POSITIVE_INTEGER_REPLACER : POSITIVE_NUMBER_REPLACER, `$1$2$3`);
@@ -43,27 +37,25 @@ export type InputBoxContent = string | number;
   selector: 'input-box',
   template: '',
   styleUrls: ['./input-box.scss'],
+  host: {
+    '[attr.type]': 'type()',
+    '[attr.placeholder]': 'placeholder()',
+  },
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-// export class InputBoxComponent implements AfterViewInit {
-export class InputBoxComponent implements OnChanges {
-  @HostBinding('attr.type')
-  @Input()
-  type: InputBoxType | string = InputBoxType.Text;
-  @Input() content: InputBoxContent;
-  @HostBinding('attr.placeholder')
-  @Input()
-  placeholder: string;
+export class InputBoxComponent {
+  type = input<InputBoxType | string>(InputBoxType.Text);
+  placeholder = input<string>();
+  content = input<InputBoxContent>();
 
-  @Output() edited = new EventEmitter<InputBoxContent>();
-  @Output() contentChange = new EventEmitter<string>();
+  edited = output<InputBoxContent>();
+  contentChange = output<string>();
 
   @HostBinding('attr.contenteditable')
   protected readonly attrContentEditable = 'plaintext-only';
 
   private eleRef = inject(ElementRef);
-
   private bkContent: InputBoxContent;
 
   get editor(): HTMLElement {
@@ -81,19 +73,20 @@ export class InputBoxComponent implements OnChanges {
     return document.activeElement === this.editor;
   }
 
-  get isGenericNumberType(): boolean {
+  get isGenericNumberType() {
+    const type = this.type();
     return (
-      this.type === InputBoxType.Number ||
-      this.type === InputBoxType.Integer ||
-      this.type === InputBoxType.PositiveNumber ||
-      this.type === InputBoxType.PositiveInteger
+      type === InputBoxType.Number ||
+      type === InputBoxType.Integer ||
+      type === InputBoxType.PositiveNumber ||
+      type === InputBoxType.PositiveInteger
     );
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['content']) {
-      this.writeContent((this.bkContent = this.content), false);
-    }
+  constructor() {
+    effect(() => {
+      this.writeContent((this.bkContent = this.content()), false);
+    });
   }
 
   revert() {
@@ -167,7 +160,7 @@ export class InputBoxComponent implements OnChanges {
   private writeContent(content: InputBoxContent, emitEvent = true) {
     let text = String(content ?? '');
     if (text) {
-      switch (this.type) {
+      switch (this.type()) {
         case InputBoxType.Number:
           text = omitNonNumericChars(text);
           break;
@@ -193,11 +186,11 @@ export class InputBoxComponent implements OnChanges {
   }
 
   private setCaretAtEnd() {
-    const range: Range = document.createRange();
+    const range = document.createRange();
     range.selectNodeContents(this.editor);
     range.collapse(false);
 
-    const selection: Selection = window.getSelection();
+    const selection = window.getSelection();
     selection.removeAllRanges();
     selection.addRange(range);
   }
