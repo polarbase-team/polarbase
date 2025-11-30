@@ -28,9 +28,9 @@
     <div
       #dragBoundary
       style="position: absolute; height: 1px; opacity: 0; visibility: hidden; pointer-events: none"
-      [style.left.px]="-virtualScroll.viewport.width / 2"
-      [style.right.px]="-virtualScroll.viewport.width / 2"
-      [style.width.px]="virtualScroll.viewport.width * 2"
+      [style.left.px]="-virtualScroll.viewport.width() / 2"
+      [style.right.px]="-virtualScroll.viewport.width() / 2"
+      [style.width.px]="virtualScroll.viewport.width() * 2"
     ></div>
     <ng-template #headerCellTemplate let-column="column" let-columnIndex="columnIndex">
       <div
@@ -881,12 +881,12 @@
       tableService.layout.freezeHandle.isHideHeadLine ||
       $any(tableColumnService.columns()?.[tableService.frozenCount()])?._isResizing;
     @let bodyLineHeight =
-      virtualScroll.viewport.height + virtualScroll.scrollTop() >
+      virtualScroll.viewport.height() + virtualScroll.scrollTop() >
       virtualScroll.viewport.contentHeight()
         ? virtualScroll.viewport.contentHeight() -
           virtualScroll.scrollTop() +
           Dimension.BodyVerticalPadding
-        : virtualScroll.viewport.height;
+        : virtualScroll.viewport.height();
     <div
       class="frozen-divider"
       cdkDrag

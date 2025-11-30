@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  computed,
   ContentChild,
   DoCheck,
   ElementRef,
@@ -228,19 +229,19 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     return this.eleRef.nativeElement;
   }
 
-  get offsetLeft() {
+  offsetLeft = computed(() => {
     return this.element.offsetLeft;
-  }
-  get offsetTop() {
+  });
+  offsetTop = computed(() => {
     return this.element.offsetTop;
-  }
+  });
 
-  get width() {
+  width = computed(() => {
     return this.element.clientWidth;
-  }
-  get height() {
+  });
+  height = computed(() => {
     return this.element.clientHeight;
-  }
+  });
 
   ngAfterContentInit() {
     this.canCheckDiff = this.needsUpdate = true;
@@ -270,7 +271,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       const leftColumnRange: TableColumn[] = this.leftColumnDs;
       const rightColumnRange: TableColumn[] = findColumnInsideViewport(this.rightColumnDs, [
         scrollLeft,
-        scrollLeft + (this.width - this.leftWidth()),
+        scrollLeft + (this.width() - this.leftWidth()),
       ]);
       this.updateColumnRange(leftColumnRange, rightColumnRange);
     }
@@ -282,12 +283,12 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
         const [groupRange, rowRangeInGroup]: [TableGroup[], TableRow[]] = findGroupInsideViewport(
           this.groupDs,
           this._rowHeight,
-          [scrollTop, scrollTop + this.height],
+          [scrollTop, scrollTop + this.height()],
         );
         this.updateGroupRange(groupRange);
         rowRange = rowRangeInGroup;
       } else {
-        rowRange = findRowInsideViewport(this.rowDs, this._rowHeight, [scrollTop, this.height]);
+        rowRange = findRowInsideViewport(this.rowDs, this._rowHeight, [scrollTop, this.height()]);
       }
 
       this.updateRowRange(rowRange);
@@ -420,8 +421,8 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
       updateOnWidth,
       updateOnHeight,
       size: {
-        width: this.width,
-        height: this.height,
+        width: this.width(),
+        height: this.height(),
         leftWidth: this.leftWidth(),
         rightWidth: this.rightWidth(),
         contentWidth: this.contentWidth(),

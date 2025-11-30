@@ -206,13 +206,11 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
           tap(() => {
             this.scrollingX.set(false);
             this.scrollingY.set(false);
-            this.markForCheck();
           }),
           debounceTime(300),
           tap(() => {
             this.isLongScrollingX.set(false);
             this.isLongScrollingY.set(false);
-            this.markForCheck();
           }),
           takeUntilDestroyed(this.destroyRef),
         )
@@ -629,8 +627,6 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
     this.scrollingY.set(!!scrollingY);
     this.isLongScrollingX.set(isLongScrollingX);
     this.isLongScrollingY.set(isLongScrollingY);
-    this.markForCheck();
-
     this.scrolling.emit({
       scrollLeft,
       scrollTop,
@@ -671,12 +667,12 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
     const scrollWidth = this.scrollWidth();
     if (scrollWidth) {
-      ratio = this.viewport.width / scrollWidth;
+      ratio = this.viewport.width() / scrollWidth;
       max = scrollWidth - ratio * scrollWidth;
       available = ratio < 1;
       trackOffsetX = this.scrollDivideOffset();
       trackOffsetY = this.eleRef.nativeElement.clientHeight - SCROLLBAR_TRACK_SIZE;
-      trackSize = this.viewport.width - this.scrollDivideOffset();
+      trackSize = this.viewport.width() - this.scrollDivideOffset();
       thumbSize = ratio * trackSize;
     }
 
@@ -705,12 +701,12 @@ export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
 
     const scrollHeight = this.scrollHeight();
     if (scrollHeight) {
-      ratio = this.viewport.height / scrollHeight;
+      ratio = this.viewport.height() / scrollHeight;
       max = scrollHeight - ratio * scrollHeight;
       available = ratio < 1;
       trackOffsetX = this.eleRef.nativeElement.clientWidth - SCROLLBAR_TRACK_SIZE;
-      trackOffsetY = this.viewport.offsetTop;
-      trackSize = this.viewport.height;
+      trackOffsetY = this.viewport.offsetTop();
+      trackSize = this.viewport.height();
       thumbSize = ratio * trackSize;
     }
 

@@ -1037,10 +1037,10 @@ export class TableCellService extends TableBaseService {
     const { width: cellWidth } = this.tableColumnService.columnAt(columnIndex);
     let left = scrollLeft();
     if (cellOffsetLeft >= horizontalTrackOffsetX) {
-      if (cellOffsetLeft - horizontalTrackOffsetX < scrollLeft()) {
-        left -= scrollLeft() - cellOffsetLeft + horizontalTrackOffsetX;
-      } else if (cellOffsetLeft + cellWidth > scrollLeft() + viewport.width) {
-        left += cellOffsetLeft + cellWidth - (scrollLeft() + viewport.width);
+      if (cellOffsetLeft - horizontalTrackOffsetX < left) {
+        left -= left - cellOffsetLeft + horizontalTrackOffsetX;
+      } else if (cellOffsetLeft + cellWidth > left + viewport.width()) {
+        left += cellOffsetLeft + cellWidth - (left + viewport.width());
       }
     }
 
@@ -1048,14 +1048,11 @@ export class TableCellService extends TableBaseService {
     const cellHeight = this.tableRowService.rowHeight();
     let top = scrollTop();
     if (cellOffsetTop >= verticalTrackOffsetY) {
-      if (cellOffsetTop - verticalTrackOffsetY < scrollTop()) {
-        top -= scrollTop() - cellOffsetTop + verticalTrackOffsetY - Dimension.BodyVerticalPadding;
-      } else if (cellOffsetTop + cellHeight > scrollTop() + viewport.height) {
+      if (cellOffsetTop - verticalTrackOffsetY < top) {
+        top -= top - cellOffsetTop + verticalTrackOffsetY - Dimension.BodyVerticalPadding;
+      } else if (cellOffsetTop + cellHeight > top + viewport.height()) {
         top +=
-          cellOffsetTop +
-          cellHeight -
-          (scrollTop() + viewport.height) +
-          Dimension.BodyVerticalPadding;
+          cellOffsetTop + cellHeight - (top + viewport.height()) + Dimension.BodyVerticalPadding;
       }
     }
 

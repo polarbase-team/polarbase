@@ -465,7 +465,7 @@ export class TableService extends TableBaseService {
       this.frozenCount(),
     );
     const offset = getColumnOffset(this.tableColumnService.columnAt(index));
-    if (offset / this.host.virtualScroll.viewport.width > this.config().column.maxFrozenRatio) {
+    if (offset / this.host.virtualScroll.viewport.width() > this.config().column.maxFrozenRatio) {
       return;
     }
     this.layout.freezeHandle.dragTargetIndex = index;
