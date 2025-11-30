@@ -66,11 +66,10 @@ export interface ViewportSizeUpdatedEvent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck, OnDestroy {
-  @ContentChild(VSLeftCWComponent, { static: true })
-  leftWrapper: VSLeftCWComponent;
-  @ContentChild(VSRightCWComponent, { static: true })
-  rightWrapper: VSRightCWComponent;
-
+  leftColumns = input<TableColumn[]>();
+  rightColumns = input<TableColumn[]>();
+  rows = input<TableRow[]>();
+  rootGroup = input<TableGroup>();
   rowHeight = input<number>();
 
   sizeUpdated = output<ViewportSizeUpdatedEvent>();
@@ -81,17 +80,18 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   contentWidth = signal<number>(0);
   contentHeight = signal<number>(Dimension.BlankRowHeight);
 
+  @ContentChild(VSLeftCWComponent, { static: true })
+  leftWrapper: VSLeftCWComponent;
+  @ContentChild(VSRightCWComponent, { static: true })
+  rightWrapper: VSRightCWComponent;
+
   private cdRef = inject(ChangeDetectorRef);
   private eleRef = inject(ElementRef);
   private iterableDiffers = inject(IterableDiffers);
   private resizeObserve = new ResizeObserver(this.onResized.bind(this));
-  private _leftColumns: TableColumn[];
-  private _rightColumns: TableColumn[];
   private leftColumnDs: TableColumn[];
   private rightColumnDs: TableColumn[];
-  private _rows: TableRow[];
   private rowDs: TableRow[];
-  private _rootGroup: TableGroup;
   private groupDs: TableGroup[];
   private groupDepth: number;
   private rawLeftWidth: number;
@@ -106,117 +106,6 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   private rowRangeDiffer: IterableDiffer<TableRow>;
   private groupDsDiffer: IterableDiffer<TableGroup>;
   private groupRangeDiffer: IterableDiffer<TableGroup>;
-
-  @Input()
-  get leftColumns() {
-    return this._leftColumns;
-  }
-  set leftColumns(columns: TableColumn[]) {
-    const isChanged: boolean = this._leftColumns !== columns;
-
-    this._leftColumns = columns;
-    this.leftColumnDs = columns || [];
-
-    if (!this.leftColumnDsDiffer) {
-      this.leftColumnDsDiffer = this.iterableDiffers
-        .find(this.leftColumnDs)
-        .create(COLUMN_TRACK_BY_FN);
-    }
-
-    if (isChanged && this.leftColumnDs.length) {
-      this.leftColumnDsDiffer.diff(null);
-    }
-
-    this.needsUpdate = true;
-  }
-
-  @Input()
-  get rightColumns() {
-    return this._rightColumns;
-  }
-  set rightColumns(columns: TableColumn[]) {
-    const isChanged: boolean = this._rightColumns !== columns;
-
-    this._rightColumns = columns;
-    this.rightColumnDs = columns || [];
-
-    if (!this.rightColumnDsDiffer) {
-      this.rightColumnDsDiffer = this.iterableDiffers
-        .find(this.rightColumnDs)
-        .create(COLUMN_TRACK_BY_FN);
-    }
-
-    if (isChanged && this.rightColumnDs.length) {
-      this.rightColumnDsDiffer.diff(null);
-    }
-
-    this.needsUpdate = true;
-  }
-
-  @Input()
-  get rows() {
-    return this._rows;
-  }
-  set rows(rows: TableRow[]) {
-    const isChanged: boolean = this._rows !== rows;
-
-    this._rows = rows;
-    this.rowDs = rows || [];
-
-    if (!this.rowDsDiffer) {
-      this.rowDsDiffer = this.iterableDiffers.find(this.rowDs).create(ROW_TRACK_BY_FN);
-    }
-
-    if (!this.rowRangeDiffer) {
-      this.rowRangeDiffer = this.iterableDiffers.find([]).create(ROW_TRACK_BY_FN);
-    }
-
-    if (isChanged && this.rowDs.length) {
-      this.rowDsDiffer.diff(null);
-    }
-
-    this.needsUpdate = true;
-  }
-
-  @Input()
-  get rootGroup() {
-    return this._rootGroup;
-  }
-  set rootGroup(group: TableGroup) {
-    const isChanged: boolean = this._rootGroup !== group;
-
-    this.isGrouping = !!group;
-    this._rootGroup = group;
-
-    let forcesUpdate: boolean;
-
-    if (this.isGrouping) {
-      forcesUpdate = this.groupDepth !== group.totalChildrenDepth;
-
-      this.groupDepth = group.totalChildrenDepth;
-      this.groupDs = group.children || [];
-      this.rowDs = [];
-    } else {
-      this.groupDepth = null;
-      this.groupDs = [];
-      this.rowDs = this._rows || [];
-    }
-
-    if (!this.groupDsDiffer) {
-      this.groupDsDiffer = this.iterableDiffers.find(this.groupDs).create(GROUP_TRACK_BY_FN);
-    }
-
-    if (!this.groupRangeDiffer) {
-      this.groupRangeDiffer = this.iterableDiffers.find([]).create(GROUP_TRACK_BY_FN);
-    }
-
-    if (isChanged && this.groupDs.length) {
-      this.groupDsDiffer.diff(null);
-    }
-
-    this.needsUpdate = true;
-    this.forcesUpdate ||= forcesUpdate;
-  }
 
   get element() {
     return this.eleRef.nativeElement;
@@ -237,6 +126,90 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   });
 
   constructor() {
+    effect(() => {
+      this.leftColumnDs = this.leftColumns() || [];
+
+      if (!this.leftColumnDsDiffer) {
+        this.leftColumnDsDiffer = this.iterableDiffers
+          .find(this.leftColumnDs)
+          .create(COLUMN_TRACK_BY_FN);
+      }
+
+      if (this.leftColumnDs.length) {
+        this.leftColumnDsDiffer.diff(null);
+      }
+
+      this.needsUpdate = true;
+    });
+
+    effect(() => {
+      this.rightColumnDs = this.rightColumns() || [];
+
+      if (!this.rightColumnDsDiffer) {
+        this.rightColumnDsDiffer = this.iterableDiffers
+          .find(this.rightColumnDs)
+          .create(COLUMN_TRACK_BY_FN);
+      }
+
+      if (this.rightColumnDs.length) {
+        this.rightColumnDsDiffer.diff(null);
+      }
+
+      this.needsUpdate = true;
+    });
+
+    effect(() => {
+      this.rowDs = this.rows() || [];
+
+      if (!this.rowDsDiffer) {
+        this.rowDsDiffer = this.iterableDiffers.find(this.rowDs).create(ROW_TRACK_BY_FN);
+      }
+
+      if (!this.rowRangeDiffer) {
+        this.rowRangeDiffer = this.iterableDiffers.find([]).create(ROW_TRACK_BY_FN);
+      }
+
+      if (this.rowDs.length) {
+        this.rowDsDiffer.diff(null);
+      }
+
+      this.needsUpdate = true;
+    });
+
+    effect(() => {
+      const group = this.rootGroup();
+      this.isGrouping = !!group;
+
+      let forcesUpdate: boolean;
+
+      if (this.isGrouping) {
+        forcesUpdate = this.groupDepth !== group.totalChildrenDepth;
+
+        this.groupDepth = group.totalChildrenDepth;
+        this.groupDs = group.children || [];
+        this.rowDs = [];
+      } else {
+        this.groupDepth = null;
+        this.groupDs = [];
+        this.rowDs = this.rows() || [];
+      }
+
+      if (!this.groupDsDiffer) {
+        this.groupDsDiffer = this.iterableDiffers.find(this.groupDs).create(GROUP_TRACK_BY_FN);
+      }
+
+      if (!this.groupRangeDiffer) {
+        this.groupRangeDiffer = this.iterableDiffers.find([]).create(GROUP_TRACK_BY_FN);
+      }
+
+      if (this.groupDs.length) {
+        this.groupDsDiffer.diff(null);
+      }
+
+      this.needsUpdate = true;
+      this.forcesUpdate ||= forcesUpdate;
+    });
+
     effect(() => {
       if (this.rowHeight() !== undefined) {
         this.needsUpdate = this.forcesUpdate = true;
@@ -350,7 +323,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
     }
 
     const totalGroupPadding = this.isGrouping
-      ? (this._rootGroup.totalChildrenDepth - 1) * Dimension.GroupPadding
+      ? (this.rootGroup().totalChildrenDepth - 1) * Dimension.GroupPadding
       : 0;
 
     if (shouldMakeUpColumnViewProps) {
@@ -366,7 +339,7 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
 
     if (shouldMakeUpGroupViewProps) {
       this.contentHeight.set(
-        makeUpGroupViewProps(this._rootGroup, this.rowHeight(), Dimension.BlankRowHeight),
+        makeUpGroupViewProps(this.rootGroup(), this.rowHeight(), Dimension.BlankRowHeight),
       );
     } else if (shouldMakeUpRowViewProps) {
       this.contentHeight.set(
