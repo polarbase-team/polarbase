@@ -165,7 +165,7 @@ export class SpreadsheetComponent
   tableCellService = inject(TableCellService);
   tableGroupService = inject(TableGroupService);
   isMouseHolding = false;
-  isMouseHiding = false;
+  isKeyboardNavigating = false;
   menuItems: MenuItem[] | undefined;
 
   protected Dimension = Dimension;
@@ -348,7 +348,7 @@ export class SpreadsheetComponent
     e.preventDefault();
   }
 
-  protected onScrolling() {
+  protected onViewportScrolling() {
     if (this.scrollAnimationFrame) {
       cancelAnimationFrame(this.scrollAnimationFrame);
     }
@@ -386,13 +386,13 @@ export class SpreadsheetComponent
           const type = el?.getAttribute('cell-type');
           switch (type) {
             case 'column':
-              this.openColumnActionMenu(e1);
+              this.openColumnContextMenu(e1);
               break;
             case 'row':
-              this.openRowActionMenu(e1);
+              this.openRowContextMenu(e1);
               break;
             case 'group':
-              this.openGroupActionMenu(e1);
+              this.openGroupContextMenu(e1);
               break;
           }
           return;
@@ -572,14 +572,14 @@ export class SpreadsheetComponent
     let currentAnimationFrame: number;
 
     const processAfterKeyMatch = (fn: () => void) => {
-      this.isMouseHiding = true;
+      this.isKeyboardNavigating = true;
 
       unlisten ||= this.renderer.listen(document, 'mousemove', () => {
         unlisten();
 
         unlisten = null;
 
-        this.isMouseHiding = false;
+        this.isKeyboardNavigating = false;
       });
 
       if (currentAnimationFrame) {
@@ -684,7 +684,7 @@ export class SpreadsheetComponent
       });
 
     this.keyboard.keyup$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.isMouseHiding = false;
+      this.isKeyboardNavigating = false;
     });
   }
 
@@ -762,7 +762,7 @@ export class SpreadsheetComponent
     return !!(target as HTMLElement)?.closest('.ng-trigger-overlayAnimation, .p-dialog-mask');
   }
 
-  private openColumnActionMenu(e: MouseEvent) {
+  private openColumnContextMenu(e: MouseEvent) {
     const index = this.tableCellService.findCellByElement(e.target as HTMLElement);
     if (!index) return;
 
@@ -773,7 +773,7 @@ export class SpreadsheetComponent
     });
   }
 
-  private openRowActionMenu(e: MouseEvent) {
+  private openRowContextMenu(e: MouseEvent) {
     const index = this.tableCellService.findCellByElement(e.target as HTMLElement);
     if (!index) return;
 
@@ -800,7 +800,7 @@ export class SpreadsheetComponent
     });
   }
 
-  private openGroupActionMenu(e: MouseEvent) {
+  private openGroupContextMenu(e: MouseEvent) {
     setTimeout(() => {
       this.tableGroupService.openContextMenu(e);
     });

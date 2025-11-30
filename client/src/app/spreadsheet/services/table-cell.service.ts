@@ -218,7 +218,7 @@ export class TableCellService extends TableBaseService {
   onCellHover(e: Event, index: CellIndex) {
     if (
       (this.host.isMouseHolding ||
-        this.host.isMouseHiding ||
+        this.host.isKeyboardNavigating ||
         !!this.tableService.layout.cell.invalid ||
         !this.host.virtualScroll.isScrollCompleted() ||
         this.fieldCellService.getSelectingState()?.isEditing) &&
