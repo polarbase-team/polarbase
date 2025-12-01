@@ -49,6 +49,7 @@ import { Message } from 'primeng/message';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { InputText } from 'primeng/inputtext';
 import { InputIcon } from 'primeng/inputicon';
+import { Button } from 'primeng/button';
 
 // Utils
 import { Clipboard } from './utils/clipboard';
@@ -124,6 +125,7 @@ const stack: SpreadsheetComponent[] = [];
     InputGroupAddon,
     InputIcon,
     Divider,
+    Button,
     VirtualScrollComponent,
     VirtualScrollViewportComponent,
     VirtualScrollGroupRepeaterDirective,

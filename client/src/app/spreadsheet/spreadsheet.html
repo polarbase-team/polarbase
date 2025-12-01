@@ -13,10 +13,15 @@
 </p-overlay>
 
 <div
+  class="flex"
   style="padding-top: 1rem"
   [style.paddingLeft.px]="tableService.config().sideSpacing"
   [style.paddingRight.px]="tableService.config().sideSpacing"
 >
+  <div class="flex flex-1 gap-2">
+    <p-button label="Group" variant="outlined" severity="secondary" icon="pi pi-list" />
+    <p-button label="Sort" variant="outlined" severity="secondary" icon="pi pi-sort" />
+  </div>
   <div class="flex justify-content-end">
     <p-inputgroup class="w-18rem">
       <p-inputgroup-addon>
@@ -313,11 +318,15 @@
                       [style.minWidth.px]="columnRect.width - tableService.config().column.minWidth"
                       [style.maxWidth.px]="columnRect.width - tableService.config().column.minWidth"
                     >
-                      @if (group.label) {
-                        {{ group.label }}
-                      } @else {
-                        <i class="text-sm text-color-secondary">Empty</i>
-                      }
+                      <div
+                        class="text-sm text-color-secondary white-space-nowrap overflow-hidden text-overflow-ellipsis"
+                      >
+                        @if (group.label) {
+                          {{ group.label }}
+                        } @else {
+                          <i>Empty</i>
+                        }
+                      </div>
                     </div>
                     <div
                       class="group-cell cell"

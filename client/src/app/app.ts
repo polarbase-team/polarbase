@@ -28,6 +28,14 @@ export class App {
     },
     {
       id: _.uniqueId(),
+      field: new TextField({ name: 'Text 1', required: true }),
+    },
+    {
+      id: _.uniqueId(),
+      field: new TextField({ name: 'Text 2', required: true }),
+    },
+    {
+      id: _.uniqueId(),
       field: new NumberField({ name: 'Number' }),
     },
     {
