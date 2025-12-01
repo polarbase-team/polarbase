@@ -568,9 +568,12 @@ export class TableRowService extends TableBaseService {
         rowIndex: insertedIndex,
         columnIndex: 0,
       };
-      this.tableCellService.selectCells(cellIndex, cellIndex, true);
+      this.tableCellService.selectCells(cellIndex, cellIndex);
       this.cdRef.detectChanges();
 
+      setTimeout(() => {
+        this.tableCellService.scrollToFocusedCell();
+      });
       setTimeout(() => {
         this.focusFirstCellOfNewRow(true);
       }, 17);

@@ -1,9 +1,9 @@
 import {
   AfterContentInit,
+  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  computed,
   ContentChild,
   DoCheck,
   effect,
@@ -64,7 +64,9 @@ export interface ViewportSizeUpdatedEvent {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck, OnDestroy {
+export class VirtualScrollViewportComponent
+  implements AfterContentInit, AfterViewInit, DoCheck, OnDestroy
+{
   leftColumns = input<TableColumn[]>();
   rightColumns = input<TableColumn[]>();
   rows = input<TableRow[]>();
@@ -208,6 +210,13 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   ngAfterContentInit() {
     this.canCheckDiff = this.needsUpdate = true;
     this.resizeObserve.observe(this.element);
+  }
+
+  ngAfterViewInit() {
+    this.offsetLeft.set(this.element.offsetLeft);
+    this.offsetTop.set(this.element.offsetTop);
+    this.width.set(this.element.clientWidth);
+    this.height.set(this.element.clientHeight);
   }
 
   ngDoCheck() {

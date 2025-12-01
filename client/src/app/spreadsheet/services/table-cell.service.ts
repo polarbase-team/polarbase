@@ -415,9 +415,7 @@ export class TableCellService extends TableBaseService {
       this.emitCellAsSelected(selectedCells);
 
       if (scrollToLastCell) {
-        try {
-          this.scrollToCellByIndex(end);
-        } catch {}
+        this.scrollToCellByIndex(end);
       }
 
       this.tableService.positionFillHandle(end);
