@@ -353,8 +353,6 @@ export class TableRowService extends TableBaseService {
     _.pull(rows, ...movedRows);
     rows.splice(newMovedIndex, 0, ...movedRows);
     this.rows.update(() => [...rows]);
-    this.cdRef.detectChanges();
-
     this.host.rowAction.emit({
       type: TableRowActionType.Move,
       payload: _.map(movedRows, (movedRow) => ({ row: movedRow, movedIndex })),
@@ -570,12 +568,9 @@ export class TableRowService extends TableBaseService {
         rowIndex: insertedIndex,
         columnIndex: 0,
       };
-      this.tableCellService.selectCells(cellIndex, cellIndex);
+      this.tableCellService.selectCells(cellIndex, cellIndex, true);
       this.cdRef.detectChanges();
 
-      setTimeout(() => {
-        this.tableCellService.scrollToFocusedCell();
-      });
       setTimeout(() => {
         this.focusFirstCellOfNewRow(true);
       }, 17);

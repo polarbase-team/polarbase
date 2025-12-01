@@ -399,7 +399,6 @@ export class TableService extends TableBaseService {
       group.isCollapsed = this.tableGroupService.collapsedGroupIds.has(group.id);
     });
     this.tableGroupService.rootGroup.set(rootGroup);
-    this.cdRef.detectChanges();
 
     this.sort();
     this.calculate();
