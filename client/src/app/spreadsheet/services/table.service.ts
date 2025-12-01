@@ -247,10 +247,18 @@ export class TableService extends TableBaseService {
     this.tableCellService.flushSelectingCellState();
   }, 1000);
 
+  onSearch = _.debounce(
+    (e: InputEvent) => {
+      this.search((e.target as HTMLInputElement).value);
+    },
+    400,
+    { leading: true },
+  );
+
   search(searchQuery: string) {
     let searchResults: [TableRow, TableColumn][];
-    let search;
-    let focused;
+    let search: Layout['cell']['search'];
+    let focused: Layout['cell']['focused'];
 
     if (searchQuery) {
       const data: [TableRow, TableColumn][] = [];
@@ -261,14 +269,10 @@ export class TableService extends TableBaseService {
         }
       }
 
-      searchResults = searchBy(
-        data,
-        searchQuery,
-        this.tableCellService.searchCellPredicate.bind(this),
-      );
+      searchResults = searchBy(data, searchQuery);
 
       if (searchResults.length) {
-        const found = new Map();
+        const matches = new Map();
         let focusedRowIndex: number;
         let focusedColumnIndex: number;
 
@@ -276,10 +280,10 @@ export class TableService extends TableBaseService {
           const [row, column] = searchResults[i];
           const rowID = row.id;
           const columnID = column.id;
-          const m = found.get(rowID) || new Map();
+          const m = matches.get(rowID) || new Map();
 
           m.set(columnID, { row, column });
-          found.set(rowID, m);
+          matches.set(rowID, m);
 
           if (i > 0) continue;
 
@@ -287,7 +291,7 @@ export class TableService extends TableBaseService {
           focusedColumnIndex = this.tableColumnService.findColumnIndex(column);
         }
 
-        search = { found, resultIndex: 0 };
+        search = { matches, currentMatchIndex: 0 };
         focused = {
           rowIndex: focusedRowIndex,
           columnIndex: focusedColumnIndex,
@@ -304,7 +308,9 @@ export class TableService extends TableBaseService {
     }
   }
 
-  searchPrevious(previousIndex: number) {
+  searchPrevious() {
+    const { search } = this.layout.cell;
+    const previousIndex = search.currentMatchIndex - 1;
     const searchResults = this.searchResults[previousIndex];
     if (!searchResults) return;
 
@@ -317,7 +323,9 @@ export class TableService extends TableBaseService {
     this.tableCellService.scrollToFocusedCell();
   }
 
-  searchNext(nextIndex: number) {
+  searchNext() {
+    const { search } = this.layout.cell;
+    const nextIndex = search.currentMatchIndex + 1;
     const searchResults = this.searchResults[nextIndex];
     if (!searchResults) return;
 
@@ -510,13 +518,14 @@ export class TableService extends TableBaseService {
     }
 
     const eleDOMRect = ele.getBoundingClientRect();
-    const containerDOMRect = this.eleRef.nativeElement.getBoundingClientRect();
+    const containerDOMRect = this.host.virtualScroll.viewport.element.getBoundingClientRect();
     const offset: CellOffset = {
       left: eleDOMRect.width + eleDOMRect.left - containerDOMRect.left,
       top:
         eleDOMRect.height +
         eleDOMRect.top -
         containerDOMRect.top +
+        Dimension.HeaderHeight +
         Dimension.BodyVerticalPadding / 2 -
         Dimension.FooterHeight,
     };

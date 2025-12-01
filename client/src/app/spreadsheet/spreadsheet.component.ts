@@ -47,6 +47,8 @@ import { ContextMenu } from 'primeng/contextmenu';
 import { Overlay } from 'primeng/overlay';
 import { Message } from 'primeng/message';
 import { ConfirmDialog } from 'primeng/confirmdialog';
+import { InputText } from 'primeng/inputtext';
+import { InputIcon } from 'primeng/inputicon';
 
 // Utils
 import { Clipboard } from './utils/clipboard';
@@ -85,6 +87,9 @@ import { TableColumn } from './models/table-column';
 import { TableRow } from './models/table-row';
 import { TableGroup } from './models/table-group';
 import { ParseCalculatedResultPipe } from './pipes/parse-calculated-result.pipe';
+import { InputGroup } from 'primeng/inputgroup';
+import { InputGroupAddon } from 'primeng/inputgroupaddon';
+import { Divider } from 'primeng/divider';
 
 const stack: SpreadsheetComponent[] = [];
 
@@ -114,6 +119,11 @@ const stack: SpreadsheetComponent[] = [];
     Overlay,
     Message,
     ConfirmDialog,
+    InputText,
+    InputGroup,
+    InputGroupAddon,
+    InputIcon,
+    Divider,
     VirtualScrollComponent,
     VirtualScrollViewportComponent,
     VirtualScrollGroupRepeaterDirective,

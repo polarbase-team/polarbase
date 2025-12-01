@@ -12,6 +12,46 @@
   </ng-template>
 </p-overlay>
 
+<div
+  style="padding-top: 1rem"
+  [style.paddingLeft.px]="tableService.config().sideSpacing"
+  [style.paddingRight.px]="tableService.config().sideSpacing"
+>
+  <div class="flex justify-content-end">
+    <p-inputgroup class="w-18rem">
+      <p-inputgroup-addon>
+        <p-inputicon class="pi pi-search" />
+      </p-inputgroup-addon>
+      <input
+        type="text"
+        pInputText
+        placeholder="Search"
+        (input)="tableService.onSearch($any($event))"
+        (keydown.enter)="tableService.searchNext()"
+      />
+      @if (tableService.searchResults?.length) {
+        <p-inputgroup-addon>
+          <div class="text-center">
+            <span class="text-sm font-medium">
+              {{ tableService.layout.cell.search.currentMatchIndex || 0 }}/{{
+                tableService.searchResults.length - 1
+              }}
+            </span>
+          </div>
+        </p-inputgroup-addon>
+        <p-inputgroup-addon>
+          <div class="flex gap-2 justify-content-space-around">
+            <i class="pi pi-chevron-up cursor-pointer" (click)="tableService.searchPrevious()"></i>
+            <i class="pi pi-chevron-down cursor-pointer" (click)="tableService.searchNext()"></i>
+          </div>
+        </p-inputgroup-addon>
+      }
+    </p-inputgroup>
+  </div>
+</div>
+
+<p-divider></p-divider>
+
 <virtual-scroll
   [sideSpacing]="tableService.config().sideSpacing"
   [disable]="disableScroll"

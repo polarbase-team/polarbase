@@ -993,10 +993,6 @@ export class TableCellService extends TableBaseService {
     this.emitCellDataAsEdited();
   }
 
-  searchCellPredicate(row: TableRow, column: TableColumn) {
-    return row.data?.[column.id] ?? '';
-  }
-
   private clearMatrixCell(matrixCell: MatrixCell) {
     matrixCell = this.filterExcludeCells(matrixCell, [
       ExcludeCellState.Required,

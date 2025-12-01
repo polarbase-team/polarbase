@@ -1,35 +1,43 @@
 import _ from 'lodash';
-import dayjs from 'dayjs';
 
-import { DataType } from '../field/interfaces/field.interface';
+import { TableRow } from '../models/table-row';
 import { TableColumn } from '../models/table-column';
 
-function search(str: string, match: string): boolean {
-  if (!_.isString(str)) return false;
+const ACCENTED_CHARACTER_MAP = {
+  a: '[aàảãáạăằẳẵắặâầẩẫấậ]',
+  d: '[dđ]',
+  e: '[eèẻẽéẹêềểễếệ]',
+  i: '[iìỉĩíị]',
+  o: '[oòỏõóọôồổỗốộơờởỡớợ]',
+  u: '[uùủũúụưừửữứự]',
+  y: '[yỳỷỹýỵ]',
+};
 
-  return true;
-
-  // const searchRegExp: RegExp = _.toSearchRegExp(match);
-
-  // return str.search(searchRegExp) >= 0;
+function escapeRegExp(str: string) {
+  return _.chain(str)
+    .replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
+    .replace(/-/g, '\\x2d')
+    .value();
 }
 
-export function searchBy(
-  data: any[],
-  searchQuery: string,
-  searchingPredicate?: (...args: any) => string,
-): any[] {
-  return _.filter(data, (i: any) => search(searchingPredicate.apply(null, i), searchQuery));
+function toSearchRegExp(str: string, flags = 'gi') {
+  if (!str?.length) return null;
+
+  const arr: string[] = str.split('');
+  arr.forEach((char, index) => {
+    arr[index] = ACCENTED_CHARACTER_MAP[char.toLowerCase()] || escapeRegExp(char);
+  });
+
+  return new RegExp(arr.join(''), flags);
 }
 
-export function parseSearchValue(data: string, column: TableColumn): string {
-  if (!data) return '';
+function search(str: string, searchQuery: string) {
+  const searchRegExp: RegExp = toSearchRegExp(searchQuery);
+  return str.search(searchRegExp) >= 0;
+}
 
-  switch (column.field.dataType) {
-    case DataType.Date:
-      data = dayjs(data).format();
-      break;
-  }
-
-  return String(data);
+export function searchBy(data: [TableRow, TableColumn][], searchQuery: string) {
+  return data.filter(([row, column]) =>
+    search(column.field.toString(row.data?.[column.id] ?? ''), searchQuery),
+  );
 }
