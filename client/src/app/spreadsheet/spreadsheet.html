@@ -1000,6 +1000,37 @@
       }
     </div>
   }
+
+  <!-- Column drag placeholder -->
+  @if (
+    tableService.layout.column.dragTargetIndex !== undefined &&
+    tableService.layout.column.dragTargetIndex !== null
+  ) {
+    <div
+      class="column-drag-placeholder"
+      [style.transform]="
+        'translate3d(' + tableService.layout.column.dragTargetOffsetX + 'px, 0, 0)'
+      "
+    ></div>
+    <div class="column-drag-overlay"></div>
+  }
+
+  <!-- Row drag placeholder -->
+  @if (
+    tableService.layout.row.dragTargetIndex !== undefined &&
+    tableService.layout.row.dragTargetIndex !== null
+  ) {
+    <div
+      class="row-drag-placeholder"
+      [style.transform]="'translate3d(0, ' + tableService.layout.row.dragTargetOffsetY + 'px, 0)'"
+    >
+      <p-chip
+        style="position: absolute; top: -14px; left: 10px"
+        [label]="(tableRowService.selectedRows.size || '1') + ' rows'"
+      />
+    </div>
+    <div class="row-drag-overlay"></div>
+  }
 </virtual-scroll>
 
 <!-- Empty block -->
@@ -1007,35 +1038,6 @@
   <div class="empty-block">
     <ng-content select="[emptyBlock]"></ng-content>
   </div>
-}
-
-<!-- Column drag placeholder -->
-@if (
-  tableService.layout.column.dragTargetIndex !== undefined &&
-  tableService.layout.column.dragTargetIndex !== null
-) {
-  <div
-    class="column-drag-placeholder"
-    [style.transform]="'translate3d(' + tableService.layout.column.dragTargetOffsetX + 'px, 0, 0)'"
-  ></div>
-  <div class="column-drag-overlay"></div>
-}
-
-<!-- Row drag placeholder -->
-@if (
-  tableService.layout.row.dragTargetIndex !== undefined &&
-  tableService.layout.row.dragTargetIndex !== null
-) {
-  <div
-    class="row-drag-placeholder"
-    [style.transform]="'translate3d(0, ' + tableService.layout.row.dragTargetOffsetY + 'px, 0)'"
-  >
-    <p-chip
-      style="margin-top: -10px; margin-left: 10px"
-      [label]="(tableRowService.selectedRows.size || '1') + ' rows'"
-    />
-  </div>
-  <div class="row-drag-overlay"></div>
 }
 
 <!-- Calculation -->

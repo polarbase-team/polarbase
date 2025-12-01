@@ -353,6 +353,8 @@ export class TableRowService extends TableBaseService {
     _.pull(rows, ...movedRows);
     rows.splice(newMovedIndex, 0, ...movedRows);
     this.rows.update(() => [...rows]);
+    this.cdRef.detectChanges();
+
     this.host.rowAction.emit({
       type: TableRowActionType.Move,
       payload: _.map(movedRows, (movedRow) => ({ row: movedRow, movedIndex })),
