@@ -1,22 +1,22 @@
 // Common Colors
-$color-white: var(--surface-a, #ffffff);
-$color-surface-c: var(--surface-c, #f4f4f7);
-$color-surface-d: var(--surface-d, #eaeaea);
-$color-surface-b: var(--surface-b, #f8f9fa);
+$color-white: var(--p-surface-a, #ffffff);
+$color-surface-c: var(--p-surface-c, #f4f4f7);
+$color-surface-d: var(--p-surface-d, #eaeaea);
+$color-surface-b: var(--p-surface-b, #f8f9fa);
 
-$color-highlight-primary: var(--highlight-bg, var(--primary-50, #e6e9f0));
-$color-highlight-orange: var(--highlight-bg, var(--orange-50, #fff7ed));
+$color-highlight-primary: var(--p-highlight-bg, var(--p-primary-50, #e6e9f0));
+$color-highlight-orange: var(--p-highlight-bg, var(--p-orange-50, #fff7ed));
 
 // PrimeNG Colors/Shared
-$color-primary: var(--primary-color, #6366f1);
-$color-primary-300: var(--primary-300, #a5b4fc);
-$color-yellow-100: var(--yellow-100, #fffde7);
-$color-yellow-500: var(--yellow-500, #fbc02d);
-$color-red-100: var(--red-100, #ffebee);
-$color-red-300: var(--red-300, #fca5a5);
-$color-red-500: var(--red-500, #f44336);
-$color-red-600: var(--red-600, #e53935);
-$color-border: var(--surface-border, #d1d5db);
+$color-primary: var(--p-primary-color, #6366f1);
+$color-primary-300: var(--p-primary-300, #a5b4fc);
+$color-yellow-100: var(--p-yellow-100, #fffde7);
+$color-yellow-500: var(--p-yellow-500, #fbc02d);
+$color-red-100: var(--p-red-100, #ffebee);
+$color-red-300: var(--p-red-300, #fca5a5);
+$color-red-500: var(--p-red-500, #f44336);
+$color-red-600: var(--p-red-600, #e53935);
+$color-border: var(--p-surface-border, #d1d5db);
 
 $border-width: 1px;
 $border-color: $color-border;
