@@ -1043,8 +1043,8 @@ export class TableCellService extends TableBaseService {
     if (cellOffsetLeft >= horizontalTrackOffsetX) {
       if (cellOffsetLeft - horizontalTrackOffsetX < left) {
         left -= left - cellOffsetLeft + horizontalTrackOffsetX;
-      } else if (cellOffsetLeft + cellWidth > left + viewport.width()) {
-        left += cellOffsetLeft + cellWidth - (left + viewport.width());
+      } else if (cellOffsetLeft + cellWidth > left + (viewport.width() - viewport.offsetLeft())) {
+        left += cellOffsetLeft + cellWidth - (left + viewport.width() - viewport.offsetLeft());
       }
     }
 
@@ -1054,9 +1054,12 @@ export class TableCellService extends TableBaseService {
     if (cellOffsetTop >= verticalTrackOffsetY) {
       if (cellOffsetTop - verticalTrackOffsetY < top) {
         top -= top - cellOffsetTop + verticalTrackOffsetY - Dimension.BodyVerticalPadding;
-      } else if (cellOffsetTop + cellHeight > top + viewport.height()) {
+      } else if (cellOffsetTop + cellHeight > top + (viewport.height() - viewport.offsetTop())) {
         top +=
-          cellOffsetTop + cellHeight - (top + viewport.height()) + Dimension.BodyVerticalPadding;
+          cellOffsetTop +
+          cellHeight -
+          (top + viewport.height() - viewport.offsetTop()) +
+          Dimension.BodyVerticalPadding;
       }
     }
 

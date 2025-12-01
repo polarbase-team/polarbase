@@ -976,7 +976,7 @@
   }
 
   <!-- Fill handle -->
-  @if (tableService.config().cell.fillable) {
+  @if (tableService.config().cell.fillable && !isKeyboardNavigating) {
     <div class="fill-handle-wrapper">
       @if (tableService.layout.fillHandle?.offset) {
         <div
