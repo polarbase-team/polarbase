@@ -78,6 +78,10 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   rightWidth = signal<number>(Dimension.ActionCellWidth);
   contentWidth = signal<number>(0);
   contentHeight = signal<number>(Dimension.BlankRowHeight);
+  offsetLeft = signal<number>(0);
+  offsetTop = signal<number>(0);
+  width = signal<number>(0);
+  height = signal<number>(0);
   element: HTMLElement;
 
   @ContentChild(VSLeftCWComponent, { static: true })
@@ -106,20 +110,6 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   private rowRangeDiffer: IterableDiffer<TableRow>;
   private groupDsDiffer: IterableDiffer<TableGroup>;
   private groupRangeDiffer: IterableDiffer<TableGroup>;
-
-  offsetLeft = computed(() => {
-    return this.element.offsetLeft;
-  });
-  offsetTop = computed(() => {
-    return this.element.offsetTop;
-  });
-
-  width = computed(() => {
-    return this.element.clientWidth;
-  });
-  height = computed(() => {
-    return this.element.clientHeight;
-  });
 
   constructor() {
     this.element = this.eleRef.nativeElement;
@@ -364,6 +354,11 @@ export class VirtualScrollViewportComponent implements AfterContentInit, DoCheck
   }
 
   private onResized(entries: ResizeObserverEntry[]) {
+    this.offsetLeft.set(this.element.offsetLeft);
+    this.offsetTop.set(this.element.offsetTop);
+    this.width.set(this.element.clientWidth);
+    this.height.set(this.element.clientHeight);
+
     let updateOnWidth = false;
     let updateOnHeight = false;
 
