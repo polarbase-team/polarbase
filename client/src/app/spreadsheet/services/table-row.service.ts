@@ -238,6 +238,9 @@ export class TableRowService extends TableBaseService {
   addNewRow(group?: TableGroup) {
     if (!this.canAddRow()) return;
 
+    this.tableCellService.flushSelectingCellState();
+    this.tableRowService.flushPendingRow();
+
     this.tableGroupService.isGrouped()
       ? this.tableGroupService.insertRowInGroup(group)
       : this.insertRow();
@@ -297,7 +300,7 @@ export class TableRowService extends TableBaseService {
     this.host.rowAction.emit({ type: TableRowActionType.Select, payload: [...this.selectedRows] });
   }
 
-  flushDraftRow() {
+  flushPendingRow() {
     if (!this.pendingRow) return;
 
     this.tableCellService.deselectAllCells();

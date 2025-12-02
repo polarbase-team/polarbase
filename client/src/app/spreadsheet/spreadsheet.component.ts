@@ -415,7 +415,7 @@ export class SpreadsheetComponent
           !document.contains(target);
 
         if (!isSafe) {
-          this.tableRowService.flushDraftRow();
+          this.tableRowService.flushPendingRow();
           this.tableCellService.deselectAllCells();
           this.tableColumnService.deselectAllColumns();
           return;
