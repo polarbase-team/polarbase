@@ -82,7 +82,6 @@ import { TableCellAction, TableCellActionType } from './events/table-cell';
 import { TableRowAction, TableRowActionType } from './events/table-row';
 import { TableColumnAction, TableColumnActionType } from './events/table-column';
 
-import { TableCell } from './models/table-cell';
 import { TableConfig } from './models/table';
 import { TableColumn } from './models/table-column';
 import { TableRow } from './models/table-row';
@@ -189,7 +188,7 @@ export class SpreadsheetComponent
   private confirmationService = inject(ConfirmationService);
   private fieldCellService = inject(FieldCellService);
   private keyboard: Keyboard;
-  private clipboard: Clipboard<TableCell>;
+  private clipboard: Clipboard;
   private scrollAnimationFrame: number;
 
   constructor() {

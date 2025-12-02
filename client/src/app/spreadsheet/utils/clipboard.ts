@@ -2,14 +2,8 @@ import _ from 'lodash';
 import { fromEvent, Subject, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
-export interface ClipboardItem<T = any> {
-  text: string;
-  data?: any;
-  metadata?: T;
-}
-
-export interface ClipboardData<T = any> {
-  matrix: ClipboardItem<T>[][] | null;
+export interface ClipboardData {
+  matrix: string[][] | null;
   rowCount: number;
   columnCount: number;
   count: number;
@@ -27,26 +21,26 @@ const EMPTY_REGEX: RegExp = /[^\n\t]/g;
 
 function splitTextIntoMatrix(text: string) {
   if (text.match(EMPTY_REGEX) === null) {
-    return [[{ text: '' }]];
+    return [['']];
   }
 
-  const matrix: ClipboardItem[][] = [];
+  const matrix: string[][] = [];
   for (const line of text.split(NEWLINE_CHAR)) {
-    const arr: ClipboardItem[] = [];
+    const arr: string[] = [];
     for (const t of line.split(TAB_CHAR)) {
-      arr.push({ text: t });
+      arr.push(t);
     }
     matrix.push(arr);
   }
   return matrix;
 }
 
-export class Clipboard<T = any> {
+export class Clipboard {
   readonly copy$ = new Subject<ClipboardEvent>();
-  readonly cut$ = new Subject<[ClipboardEvent, ClipboardData<T>]>();
-  readonly paste$ = new Subject<[ClipboardEvent, ClipboardData<T>]>();
+  readonly cut$ = new Subject<[ClipboardEvent, ClipboardData]>();
+  readonly paste$ = new Subject<[ClipboardEvent, ClipboardData]>();
 
-  private matrix: ClipboardItem<T>[][];
+  private matrix: string[][];
   private nativeText: string;
   private _isCutAction: boolean;
   private isDisabled: boolean;
@@ -131,7 +125,7 @@ export class Clipboard<T = any> {
   }
 
   read() {
-    const data: ClipboardData<T> = {
+    const data: ClipboardData = {
       matrix: null,
       rowCount: 0,
       columnCount: 0,
@@ -146,7 +140,7 @@ export class Clipboard<T = any> {
     return data;
   }
 
-  write(matrix: ClipboardItem<T>[][]) {
+  write(matrix: string[][]) {
     this.matrix = matrix;
 
     const t: string[] = [];

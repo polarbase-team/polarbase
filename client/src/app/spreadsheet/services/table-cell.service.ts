@@ -4,10 +4,9 @@ import { FORECAST } from '@formulajs/formulajs';
 import { Injectable, ElementRef, Renderer2, inject, ChangeDetectorRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
-import { Clipboard, ClipboardData, ClipboardItem } from '../utils/clipboard';
+import { Clipboard, ClipboardData } from '../utils/clipboard';
 import { EmitEventController } from '../utils/emit-event-controller';
 import { DataType } from '../field/interfaces/field.interface';
-import { parseClipboardExternal, parseClipboardInternal } from '../utils/paste';
 import { Dimension } from './table.service';
 import { FieldCellService } from '../components/field-cell/field-cell.service';
 import { FieldValidationErrors, FieldValidationKey } from '../field/objects/field.object';
@@ -42,18 +41,6 @@ export const Direction = {
   After: 'after',
 } as const;
 export type Direction = (typeof Direction)[keyof typeof Direction];
-
-function parseClipboardItemToData(column: TableColumn, item: ClipboardItem<TableCell>) {
-  const { text, data, metadata } = item;
-
-  if (data !== undefined && metadata !== undefined) {
-    return parseClipboardInternal(column, { text, data, metadata });
-  }
-  if (text?.length) {
-    return parseClipboardExternal(column.field, text);
-  }
-  return null;
-}
 
 export class MatrixCell {
   private _values: TableCell[][] = [];
@@ -443,7 +430,7 @@ export class TableCellService extends TableBaseService {
     });
   }
 
-  cutCells(clipboardData: ClipboardData<TableCell>) {
+  cutCells(clipboardData: ClipboardData) {
     const matrixCell = new MatrixCell();
 
     for (const items of clipboardData.matrix) {
@@ -460,7 +447,7 @@ export class TableCellService extends TableBaseService {
     });
   }
 
-  pasteCells(clipboardData: ClipboardData<TableCell>) {
+  pasteCells(clipboardData: ClipboardData) {
     let matrix: MatrixCell;
 
     if (this.tableService.layout.column.selectedIndices) {
@@ -532,9 +519,8 @@ export class TableCellService extends TableBaseService {
 
     for (let i = 0; i < matrix.rowCount; i++) {
       const cells = values[i];
-      const clipboardItems = clipboardData.matrix[i % clipboardData.rowCount];
+      const texts = clipboardData.matrix[i % clipboardData.rowCount];
       const newData: any = {};
-
       let rawData: any;
       let row: TableRow;
 
@@ -543,12 +529,10 @@ export class TableCellService extends TableBaseService {
         if (!cell) continue;
 
         const column = cell.column;
-        const clipboardItem = clipboardItems[j % clipboardData.columnCount];
-        if (!clipboardItem || (!clipboardItem?.text && column.field.required)) {
-          continue;
-        }
+        const text = texts[j % clipboardData.columnCount];
+        if (!text && column.field.required) continue;
 
-        const data = parseClipboardItemToData(column, clipboardItem);
+        const data = column.field.convertTextToData(text);
         if (data === undefined) {
           rawData ||= {};
           rawData[column.id] = cell.row.data[column.id];
@@ -938,11 +922,11 @@ export class TableCellService extends TableBaseService {
     const matrixCell = this.getInteractiveCells();
     if (!matrixCell?.count) return;
 
-    const matrix: ClipboardItem[][] = [];
+    const matrix: string[][] = [];
     let count = 0;
 
     for (const cells of matrixCell.values()) {
-      const items = [];
+      const items: string[] = [];
 
       for (const cell of cells) {
         if (!cell) continue;
@@ -951,12 +935,9 @@ export class TableCellService extends TableBaseService {
         let data = row.data?.[column.id];
         let text = '';
 
-        if (!_.isNil(data)) {
-          data = _.cloneDeep(data);
-          text = column.field.toString(data);
-        }
+        if (!_.isNil(data)) text = column.field.toString(data);
 
-        items.push({ text, data, metadata: cell });
+        items.push(text);
         count++;
       }
 
