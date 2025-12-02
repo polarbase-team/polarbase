@@ -10,6 +10,7 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
+    "@elysiajs/openapi": "^1.4.11",
     "dotenv": "^17.2.3",
     "elysia": "latest",
     "fastmcp": "^3.22.0",
