@@ -567,7 +567,7 @@
                         row !== tableRowService.pendingRow &&
                         ((tableService.isStreaming && !$any(row)._isStreamed) ||
                           (!tableService.config().cell.editable &&
-                            !column.editable &&
+                            column.editable !== true &&
                             row.editable !== true &&
                             row.editable?.[column.id] !== true))
                       "
@@ -793,7 +793,7 @@
                         row !== tableRowService.pendingRow &&
                         ((tableService.isStreaming && !$any(row)._isStreamed) ||
                           (!tableService.config().cell.editable &&
-                            !column.editable &&
+                            column.editable !== true &&
                             row.editable !== true &&
                             row.editable?.[column.id] !== true))
                       "

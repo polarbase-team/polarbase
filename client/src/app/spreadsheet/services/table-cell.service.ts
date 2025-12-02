@@ -1136,7 +1136,7 @@ export class TableCellService extends TableBaseService {
               : !_.isNil(row.data?.[column.id]))) &&
           (!excludeNonEditable ||
             this.tableService.config().cell.editable ||
-            column.editable ||
+            column.editable === true ||
             row.editable === true ||
             row.editable?.[column.id] === true)
         ) {
