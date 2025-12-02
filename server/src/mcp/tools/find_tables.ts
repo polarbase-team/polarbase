@@ -18,23 +18,11 @@ export default function register(server: FastMCP) {
     },
     async execute(args, { log }) {
       try {
-        let tables: any[] = [];
-        if (db.client.config.client === 'pg') {
-          const result = await db
-            .select('table_name')
-            .from('information_schema.tables')
-            .where({ table_schema: 'public' });
-          tables = result.map((row: any) => row.table_name);
-        } else if (db.client.config.client === 'mysql') {
-          const result = await db.raw('SHOW TABLES');
-          tables = result[0].map((row: any) => Object.values(row)[0]);
-        } else if (db.client.config.client === 'sqlite3') {
-          const result = await db
-            .select('name')
-            .from('sqlite_master')
-            .where({ type: 'table' });
-          tables = result.map((row: any) => row.name);
-        }
+        const result = await db
+          .select('table_name')
+          .from('information_schema.tables')
+          .where({ table_schema: 'public' });
+        const tables = result.map((row) => row.table_name);
         log.info('Fetched table list', { tables });
         return {
           content: [
