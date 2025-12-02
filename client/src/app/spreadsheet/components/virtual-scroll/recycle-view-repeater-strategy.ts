@@ -1,6 +1,6 @@
 import {
   Directive,
-  DoCheck,
+  AfterViewChecked,
   EmbeddedViewRef,
   inject,
   IterableChangeRecord,
@@ -164,7 +164,7 @@ export class RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
 }
 
 @Directive()
-export class ViewRepeater<R, C extends ViewContext<R>> implements DoCheck {
+export class ViewRepeater<R, C extends ViewContext<R>> implements AfterViewChecked {
   protected tmplRef = inject(TemplateRef);
   protected vcRef = inject(ViewContainerRef);
   protected differs = inject(IterableDiffers);
@@ -183,7 +183,7 @@ export class ViewRepeater<R, C extends ViewContext<R>> implements DoCheck {
     this.onDataSourceChanged();
   }
 
-  ngDoCheck() {
+  ngAfterViewChecked() {
     if (this.dsDiffer && this.needsUpdate) {
       const changes = this.dsDiffer.diff(this.dataSource);
       if (changes) {
