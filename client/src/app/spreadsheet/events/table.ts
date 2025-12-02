@@ -1,5 +1,8 @@
+import { TableColumn } from '../models/table-column';
+import { TableRow } from '../models/table-row';
+
 export interface TableSearchInfo {
-  total: number;
+  results: [TableRow, TableColumn][];
   current: number;
 }
 

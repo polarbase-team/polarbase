@@ -4,11 +4,11 @@ import { Overlay } from 'primeng/overlay';
 import { DatePicker } from 'primeng/datepicker';
 import dayjs from 'dayjs';
 
+import { DateValuePipe } from '../../../pipes/date-value.pipe';
 import { DateData } from '../../../field/interfaces/date-field.interface';
 import { DateField } from '../../../field/objects/date-field.object';
 import { CellTouchEvent } from '../field-cell-touchable';
 import { FieldCellEditable } from '../field-cell-editable';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'date-field-cell',
@@ -17,7 +17,7 @@ import { DatePipe } from '@angular/common';
   host: { class: 'date-field-cell' },
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Overlay, DatePicker, DatePipe],
+  imports: [FormsModule, Overlay, DatePicker, DateValuePipe],
 })
 export class DateFieldCellComponent extends FieldCellEditable<DateData> {
   declare field: DateField;

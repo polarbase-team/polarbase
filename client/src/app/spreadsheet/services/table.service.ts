@@ -1,12 +1,5 @@
 import _ from 'lodash';
-import {
-  ChangeDetectorRef,
-  computed,
-  DestroyRef,
-  ElementRef,
-  inject,
-  Injectable,
-} from '@angular/core';
+import { ChangeDetectorRef, computed, DestroyRef, inject, Injectable } from '@angular/core';
 import { CdkDragEnd, CdkDragMove } from '@angular/cdk/drag-drop';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
@@ -24,7 +17,7 @@ import { TableConfig } from '../models/table';
 import { TableRow } from '../models/table-row';
 import { TableColumn } from '../models/table-column';
 import { TableCell } from '../models/table-cell';
-import { TableActionType, TableSearchInfo } from '../events/table';
+import { TableActionType } from '../events/table';
 
 export const Dimension = {
   HeaderHeight: 36,
@@ -188,16 +181,8 @@ export class TableService extends TableBaseService {
   calcResults: Map<TableColumn['id'], any>;
 
   private cdRef = inject(ChangeDetectorRef);
-  private eleRef = inject(ElementRef);
   private destroyRef = inject(DestroyRef);
   private fieldCellService = inject(FieldCellService);
-
-  get searchInfo(): TableSearchInfo {
-    const total = this.searchResults?.length || 0;
-    const { search } = this.layout.cell;
-    const current = total > 0 ? search?.currentMatchIndex + 1 : 0;
-    return { current, total };
-  }
 
   override onInit() {
     if (!this.isStreaming) return;
@@ -303,6 +288,11 @@ export class TableService extends TableBaseService {
     this.layout.cell.search = search;
     this.layout.cell.focused = focused;
 
+    this.host.action.emit({
+      type: TableActionType.Search,
+      payload: searchResults ? { results: searchResults, current: 0 } : null,
+    });
+
     if (focused) {
       this.tableCellService.scrollToFocusedCell();
     }
@@ -310,6 +300,8 @@ export class TableService extends TableBaseService {
 
   searchPrevious() {
     const { search } = this.layout.cell;
+    if (!search) return;
+
     const previousIndex = search.currentMatchIndex - 1;
     const searchResults = this.searchResults[previousIndex];
     if (!searchResults) return;
@@ -320,11 +312,19 @@ export class TableService extends TableBaseService {
       rowIndex: this.tableRowService.findRowIndex(row),
       columnIndex: this.tableColumnService.findColumnIndex(column),
     };
+
+    this.host.action.emit({
+      type: TableActionType.Search,
+      payload: { results: this.searchResults, current: previousIndex },
+    });
+
     this.tableCellService.scrollToFocusedCell();
   }
 
   searchNext() {
     const { search } = this.layout.cell;
+    if (!search) return;
+
     const nextIndex = search.currentMatchIndex + 1;
     const searchResults = this.searchResults[nextIndex];
     if (!searchResults) return;
@@ -335,6 +335,12 @@ export class TableService extends TableBaseService {
       rowIndex: this.tableRowService.findRowIndex(row),
       columnIndex: this.tableColumnService.findColumnIndex(column),
     };
+
+    this.host.action.emit({
+      type: TableActionType.Search,
+      payload: { results: this.searchResults, current: nextIndex },
+    });
+
     this.tableCellService.scrollToFocusedCell();
   }
 
