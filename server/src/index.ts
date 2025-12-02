@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { restRouter } from './rest/router';
 import { mcpServer } from './mcp/server';
+import { enableCDC } from './realtime/cdc';
 import { WebSocket } from './plugins/web-socket';
 
 const app = new Elysia();
@@ -21,15 +22,19 @@ if (process.env.MCP_ENABLED === 'true') {
     });
 }
 
-app.ws('/ws', {
-  open(ws) {
-    WebSocket.addClient(ws as any);
-  },
-  close(ws) {
-    const { id } = ws.data.query;
-    WebSocket.removeClient(id);
-  },
-});
+if (process.env.REALTIME_ENABLED === 'true') {
+  enableCDC();
+
+  app.ws('/realtime', {
+    open(ws) {
+      WebSocket.addClient(ws as any);
+    },
+    close(ws) {
+      const { id } = ws.data.query;
+      WebSocket.removeClient(id);
+    },
+  });
+}
 
 const port = parseInt(process.env.PORT || '3000', 10);
 app.get('/', () => 'Hello Elysia').listen(port);

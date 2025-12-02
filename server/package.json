@@ -11,12 +11,14 @@
   },
   "dependencies": {
     "@elysiajs/openapi": "^1.4.11",
+    "@types/pg": "^8.15.6",
     "dotenv": "^17.2.3",
     "elysia": "latest",
     "fastmcp": "^3.22.0",
     "knex": "^3.1.0",
     "mysql": "^2.18.1",
     "pg": "^8.16.3",
+    "pg-logical-replication": "^2.2.1",
     "sqlite3": "^5.1.7",
     "zod": "^4.1.12"
   },
