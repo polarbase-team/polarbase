@@ -5,7 +5,7 @@
   },
   "mcpServers": {
     "chill-db-server": {
-      "httpUrl": "http://localhost:8080/mcp"
+      "httpUrl": "http://localhost:3001/mcp"
     }
   },
   "model": {
