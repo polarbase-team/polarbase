@@ -72,4 +72,8 @@ export class App {
     // groupBy: [[this.columns[2], 'asc']],
     // sortBy: [[this.columns[3], 'asc']],
   };
+
+  openAPIDocs() {
+    window.open('http://localhost:3000/rest/openapi/', '_blank');
+  }
 }
