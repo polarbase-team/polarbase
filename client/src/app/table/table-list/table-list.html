@@ -8,14 +8,16 @@
     <li>
       <a
         pRipple
-        class="flex items-center cursor-pointer p-4 text-surface-700 hover:bg-surface-100 duration-150 transition-colors p-ripple"
+        class="flex cursor-pointer p-4 text-surface-700 hover:bg-surface-100 duration-150 transition-colors p-ripple"
       >
-        <i class="pi pi-table text-surface-500 mr-2"></i>
+        <i class="pi pi-table text-surface-500 mr-2 mt-0.5"></i>
         <div>
-          <p class="font-semibold text-black">{{ table.tableName }}</p>
-          <i class="font-medium text-gray-500 text-xs">
-            {{ table.tableComment }}
-          </i>
+          <p class="font-medium">{{ table.tableName }}</p>
+          @if (table.tableComment) {
+            <i class="font-light text-gray-500 text-xs">
+              {{ table.tableComment }}
+            </i>
+          }
         </div>
       </a>
     </li>
