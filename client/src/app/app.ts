@@ -3,8 +3,8 @@ import { Component, signal } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Divider } from 'primeng/divider';
 
-import { AppTableList } from './table-list/table-list';
-import { AppTableDetail } from './table-detail/table-detail';
+import { AppTableList } from './table/table-list/table-list';
+import { AppTableDetail } from './table/table-detail/table-detail';
 
 @Component({
   selector: 'app-root',

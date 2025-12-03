@@ -1,10 +1,12 @@
 import { Elysia } from 'elysia';
+import { cors } from '@elysiajs/cors';
+
 import { restRouter } from './rest/router';
 import { mcpServer } from './mcp/server';
 import { enableCDC } from './realtime/cdc';
 import { WebSocket } from './plugins/web-socket';
 
-const app = new Elysia();
+const app = new Elysia().use(cors());
 
 if (process.env.REST_ENABLED === 'true') {
   app.use(restRouter);

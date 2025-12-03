@@ -2,16 +2,16 @@ import _ from 'lodash';
 import { Component } from '@angular/core';
 import { TabsModule } from 'primeng/tabs';
 
-import { TableColumn } from '../spreadsheet/models/table-column';
-import { TextField } from '../spreadsheet/field/objects/text-field.object';
-import { NumberField } from '../spreadsheet/field/objects/number-field.object';
-import { CheckboxField } from '../spreadsheet/field/objects/checkbox-field.object';
-import { DropdownField } from '../spreadsheet/field/objects/dropdown-field.object';
-import { DateField } from '../spreadsheet/field/objects/date-field.object';
-// import { CalculateType } from '../spreadsheet/utils/calculate';
-import { TableRow } from '../spreadsheet/models/table-row';
-import { TableConfig } from '../spreadsheet/models/table';
-import { SpreadsheetComponent } from '../spreadsheet/spreadsheet.component';
+import { TableColumn } from '../../spreadsheet/models/table-column';
+import { TextField } from '../../spreadsheet/field/objects/text-field.object';
+import { NumberField } from '../../spreadsheet/field/objects/number-field.object';
+import { CheckboxField } from '../../spreadsheet/field/objects/checkbox-field.object';
+import { DropdownField } from '../../spreadsheet/field/objects/dropdown-field.object';
+import { DateField } from '../../spreadsheet/field/objects/date-field.object';
+// import { CalculateType } from '../../spreadsheet/utils/calculate';
+import { TableRow } from '../../spreadsheet/models/table-row';
+import { TableConfig } from '../../spreadsheet/models/table';
+import { SpreadsheetComponent } from '../../spreadsheet/spreadsheet.component';
 
 @Component({
   selector: 'app-table-detail',
