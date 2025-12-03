@@ -100,20 +100,10 @@ export default function register(server: FastMCP) {
         }
 
         // Build Knex query
-        let query: Knex.QueryBuilder<any, any> | Knex.Raw<any> =
-          db(table).insert(data);
-        if (db.client.config.client === 'pg') {
-          query = query.onConflict(conflictTarget).merge(updateColumns);
-        } else if (db.client.config.client === 'mysql') {
-          const updateClause = updateColumns
-            .map((col) => `${col} = VALUES(${col})`)
-            .join(', ');
-          query = db.raw(
-            `${query.toSQL().sql} ON DUPLICATE KEY UPDATE ${updateClause}`
-          );
-        } else if (db.client.config.client === 'sqlite3') {
-          query = query.onConflict(conflictTarget).merge(updateColumns);
-        }
+        const query: Knex.QueryBuilder<any, any> | Knex.Raw<any> = db(table)
+          .insert(data)
+          .onConflict(conflictTarget)
+          .merge(updateColumns);
 
         // Execute query
         const result = await query;

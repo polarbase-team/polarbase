@@ -28,23 +28,11 @@ export default function register(server: FastMCP) {
         const { table } = args;
 
         // Validate table name
-        let tables: any[] = [];
-        if (db.client.config.client === 'pg') {
-          const result = await db
-            .select('table_name')
-            .from('information_schema.tables')
-            .where({ table_schema: 'public' });
-          tables = result.map((row: any) => row.table_name);
-        } else if (db.client.config.client === 'mysql') {
-          const result = await db.raw('SHOW TABLES');
-          tables = result[0].map((row: any) => Object.values(row)[0]);
-        } else if (db.client.config.client === 'sqlite3') {
-          const result = await db
-            .select('name')
-            .from('sqlite_master')
-            .where({ type: 'table' });
-          tables = result.map((row: any) => row.name);
-        }
+        const result = await db
+          .select('table_name')
+          .from('information_schema.tables')
+          .where({ table_schema: 'public' });
+        const tables = result.map((row) => row.table_name);
         if (!tables.includes(table)) {
           throw new UserError(
             `Table '${table}' does not exist. Use 'findTables' to get valid table names: ${JSON.stringify(
@@ -54,25 +42,10 @@ export default function register(server: FastMCP) {
         }
 
         // Fetch columns
-        let columns: any[] = [];
-        if (db.client.config.client === 'pg') {
-          columns = await db
-            .select('column_name', 'data_type')
-            .from('information_schema.columns')
-            .where({ table_schema: 'public', table_name: table });
-        } else if (db.client.config.client === 'mysql') {
-          const result = await db.raw(`SHOW COLUMNS FROM \`${table}\``);
-          columns = result[0].map((row: any) => ({
-            column_name: row.Field,
-            data_type: row.Type,
-          }));
-        } else if (db.client.config.client === 'sqlite3') {
-          const result = await db.raw(`PRAGMA table_info(${table})`);
-          columns = result.map((row: any) => ({
-            column_name: row.name,
-            data_type: row.type,
-          }));
-        }
+        const columns = await db
+          .select('column_name', 'data_type')
+          .from('information_schema.columns')
+          .where({ table_schema: 'public', table_name: table });
         if (columns.length === 0) {
           throw new UserError(`Table ${table} has no columns`);
         }
