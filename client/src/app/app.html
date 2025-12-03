@@ -1,7 +1,13 @@
 <div class="app">
   <div class="app-topbar flex items-center justify-between gap-2 pl-2 pr-4 py-2">
     <div class="flex items-center">
-      <p-button icon="pi pi-bars" severity="secondary" [text]="true" size="large" />
+      <p-button
+        icon="pi pi-bars"
+        severity="secondary"
+        [text]="true"
+        size="large"
+        (click)="toggleSideBar()"
+      />
       <div class="font-semibold">Chill Base</div>
     </div>
     <div class="flex items-center">
@@ -14,14 +20,13 @@
     </div>
   </div>
   <p-divider style="margin: 0" />
-  <div class="flex flex-1">
-    <div class="app-sidebar w-xs min-w-xs">
+  <div class="app-main flex flex-1" [class.inactive]="!sideBarVisible()">
+    <div class="app-sidebar flex">
       <app-table-list class="flex-1" />
+      <p-divider layout="vertical" style="margin: 0" />
     </div>
-    <p-divider layout="vertical" style="margin: 0" />
     <div class="app-content flex flex-1">
       <app-table-detail class="flex flex-1" />
-      <router-outlet></router-outlet>
     </div>
   </div>
 </div>

@@ -1,8 +1,39 @@
+$sidebar-width: 20rem;
+$transition-duration: 0.2s;
+
 :host {
   .app {
     display: flex;
     flex-direction: column;
     width: 100vw;
     height: 100vh;
+
+    .app-main {
+      position: relative;
+
+      &.inactive {
+        .app-sidebar {
+          left: -$sidebar-width;
+        }
+
+        .app-content {
+          margin-left: 0;
+        }
+      }
+    }
+
+    .app-sidebar {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: $sidebar-width;
+      transition: left $transition-duration;
+    }
+
+    .app-content {
+      margin-left: $sidebar-width;
+      transition: margin-left $transition-duration;
+    }
   }
 }
