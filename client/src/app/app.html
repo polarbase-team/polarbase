@@ -1,12 +1,84 @@
 <div class="app">
-  <spreadsheet
-    [config]="config"
-    [columns]="columns"
-    [rows]="rows"
-    (action)="console.log($event)"
-    (columnAction)="console.log($event)"
-    (rowAction)="console.log($event)"
-    (cellAction)="console.log($event)"
-  ></spreadsheet>
-  <router-outlet></router-outlet>
+  <div class="app-topbar flex items-center gap-2 pl-2 pr-4 py-2">
+    <p-button icon="pi pi-bars" severity="secondary" [text]="true" size="large" />
+    <div class="font-semibold">Chill Base</div>
+  </div>
+  <p-divider style="margin: 0" />
+  <div class="flex flex-1">
+    <div class="app-sidebar w-xs min-w-xs">
+      <div class="flex items-center justify-between px-4 py-2">
+        <div>Tables</div>
+        <p-button icon="pi pi-search" severity="secondary" [text]="true" />
+      </div>
+      <p-divider style="margin: 0" />
+      <ul class="list-none px-0 py-2 m-0 overflow-hidden">
+        <li>
+          <a
+            pRipple
+            class="flex items-center cursor-pointer p-4 text-surface-700 hover:bg-surface-100 duration-150 transition-colors p-ripple"
+          >
+            <i class="pi pi-table text-surface-500 mr-2"></i>
+            <div>
+              <p class="font-semibold text-black">categories</p>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a
+            pRipple
+            class="flex items-center cursor-pointer p-4 text-surface-700 hover:bg-surface-100 duration-150 transition-colors p-ripple"
+          >
+            <i class="pi pi-table text-surface-500 mr-2"></i>
+            <div>
+              <p class="font-semibold text-black">expenses</p>
+              <i class="font-medium text-gray-500 text-xs">
+                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
+                Ipsum has been the industry's standard dummy
+              </i>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <p-divider layout="vertical" style="margin: 0" />
+    <div class="app-content flex flex-1">
+      <p-tabs value="0" class="flex-1">
+        <p-tablist style="background: none">
+          <p-tab value="0">
+            <i class="pi pi-table mr-2"></i>
+            <span>categories</span>
+          </p-tab>
+          <p-tab value="1">
+            <i class="pi pi-sparkles mr-2"></i>
+            <span>AI Query</span>
+          </p-tab>
+        </p-tablist>
+        <p-tabpanels style="padding: 0" class="flex-1">
+          <p-tabpanel value="0" class="flex-1">
+            <spreadsheet
+              style="margin-left: 1px"
+              [config]="config"
+              [columns]="columns"
+              [rows]="rows"
+              (action)="console.log($event)"
+              (columnAction)="console.log($event)"
+              (rowAction)="console.log($event)"
+              (cellAction)="console.log($event)"
+            ></spreadsheet>
+            <router-outlet></router-outlet>
+          </p-tabpanel>
+          <p-tabpanel value="1">
+            <p class="m-0">
+              Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque
+              laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi
+              architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas
+              sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione
+              voluptatem sequi nesciunt. Consectetur, adipisci velit, sed quia non numquam eius
+              modi.
+            </p>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+  </div>
 </div>

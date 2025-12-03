@@ -12,10 +12,13 @@ import { DateField } from './spreadsheet/field/objects/date-field.object';
 import { TableRow } from './spreadsheet/models/table-row';
 import { TableConfig } from './spreadsheet/models/table';
 import { SpreadsheetComponent } from './spreadsheet/spreadsheet.component';
+import { Button } from 'primeng/button';
+import { TabsModule } from 'primeng/tabs';
+import { Divider } from 'primeng/divider';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SpreadsheetComponent],
+  imports: [RouterOutlet, TabsModule, Button, Divider, SpreadsheetComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -60,7 +63,7 @@ export class App {
   config: TableConfig = {
     // streamData: true,
     sideSpacing: 20,
-    row: { size: 'S', },
+    row: { size: 'S' },
     // calculateBy: [
     //   [this.columns[0], CalculateType.Empty],
     //   [this.columns[2], CalculateType.Sum],
