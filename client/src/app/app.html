@@ -1,10 +1,12 @@
-<spreadsheet
-  [config]="config"
-  [columns]="columns"
-  [rows]="rows"
-  (action)="console.log($event)"
-  (columnAction)="console.log($event)"
-  (rowAction)="console.log($event)"
-  (cellAction)="console.log($event)"
-></spreadsheet>
-<router-outlet></router-outlet>
+<div class="app">
+  <spreadsheet
+    [config]="config"
+    [columns]="columns"
+    [rows]="rows"
+    (action)="console.log($event)"
+    (columnAction)="console.log($event)"
+    (rowAction)="console.log($event)"
+    (cellAction)="console.log($event)"
+  ></spreadsheet>
+  <router-outlet></router-outlet>
+</div>
