@@ -55,11 +55,17 @@ export class TableService {
   }
 
   bulkCreateTableRecords(tableName: string, records: any[]) {
-    return this.http.post<any>(`${this.apiUrl}/${tableName}/bulk-create`, records);
+    return this.http.post<Response<{ insertedCount: number }>>(
+      `${this.apiUrl}/${tableName}/bulk-create`,
+      records,
+    );
   }
 
-  bulkDeleteTableRecords(tableName: string, recordIds: any) {
-    return this.http.post<any>(`${this.apiUrl}/${tableName}/bulk-delete`, { ids: recordIds });
+  bulkDeleteTableRecords(tableName: string, recordIds: any[]) {
+    return this.http.post<Response<{ deletedCount: number }>>(
+      `${this.apiUrl}/${tableName}/bulk-delete`,
+      { ids: recordIds },
+    );
   }
 
   getFieldType(pgType: string) {
@@ -115,6 +121,8 @@ export class TableService {
       name: column.columnName,
       description: column.comment,
       required: !column.isNullable,
+      initialData: column.defaultValue,
+      params: column,
     } as FieldConfig;
   }
 
