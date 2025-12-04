@@ -6,6 +6,7 @@ export interface TableColumn {
   id: string | number;
   field: Field;
   width?: number;
+  primary?: boolean;
   editable?: boolean;
   deletable?: boolean;
   hidden?: boolean;

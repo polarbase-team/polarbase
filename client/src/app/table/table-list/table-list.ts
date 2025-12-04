@@ -15,11 +15,11 @@ export class AppTableList {
 
   constructor(
     private destroyRef: DestroyRef,
-    private tableService: TableService,
+    private tblService: TableService,
   ) {}
 
   ngAfterViewInit() {
-    this.tableService
+    this.tblService
       .getTables()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((tables) => {
@@ -28,6 +28,6 @@ export class AppTableList {
   }
 
   onTableSelected(table: TableDefinition) {
-    this.tableService.selectedTable.set(table);
+    this.tblService.selectedTable.set(table);
   }
 }

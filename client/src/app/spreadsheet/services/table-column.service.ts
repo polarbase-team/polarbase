@@ -535,19 +535,17 @@ export class TableColumnService extends TableBaseService {
       }
     } else {
       if (config.freezable) {
-        items.push(
-          {
-            label: 'Freeze up to This Column',
-            icon: 'pi pi-sign-in',
-            command: () => {
-              this.tableService.setFrozenCount(columnIndex);
-            },
+        items.push({
+          label: 'Freeze up to This Column',
+          icon: 'pi pi-sign-in',
+          command: () => {
+            this.tableService.setFrozenCount(columnIndex);
           },
-          { separator: true },
-        );
+        });
       }
       if (config.sortable) {
         items.push(
+          { separator: true },
           {
             label: 'Sort up',
             icon: 'pi pi-sort-amount-up',
@@ -562,13 +560,13 @@ export class TableColumnService extends TableBaseService {
               this.sortByColumn(column, 'desc');
             },
           },
-          { separator: true },
         );
       }
       if (config.groupable) {
         items.push(
+          { separator: true },
           {
-            label: 'Group',
+            label: 'Group by',
             icon: 'pi pi-list',
             items: [
               {
@@ -585,11 +583,11 @@ export class TableColumnService extends TableBaseService {
               },
             ],
           },
-          { separator: true },
         );
       }
       if (config.hideable) {
         items.push(
+          { separator: true },
           {
             label: 'Hide',
             icon: 'pi pi-eye-slash',
@@ -597,22 +595,24 @@ export class TableColumnService extends TableBaseService {
               this.hideColumn(column);
             },
           },
-          { separator: true },
         );
       }
       if (config.deletable) {
-        items.push({
-          label: 'Delete',
-          icon: 'pi pi-trash',
-          command: () => {
-            this.host.deleteConfirmation(
-              'Do you want to delete this column?',
-              'Delete column',
-              () => this.deleteColumn(column),
-              void 0,
-            );
+        items.push(
+          { separator: true },
+          {
+            label: 'Delete',
+            icon: 'pi pi-trash',
+            command: () => {
+              this.host.deleteConfirmation(
+                'Do you want to delete this column?',
+                'Delete column',
+                () => this.deleteColumn(column),
+                void 0,
+              );
+            },
           },
-        });
+        );
       }
     }
 

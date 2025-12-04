@@ -54,6 +54,14 @@ export class TableService {
     return this.http.get<any>(`${this.apiUrl}/${tableName}`).pipe(map((res) => res.data));
   }
 
+  bulkCreateTableRecords(tableName: string, records: any[]) {
+    return this.http.post<any>(`${this.apiUrl}/${tableName}/bulk-create`, records);
+  }
+
+  bulkDeleteTableRecords(tableName: string, recordIds: any) {
+    return this.http.post<any>(`${this.apiUrl}/${tableName}/bulk-delete`, { ids: recordIds });
+  }
+
   getFieldType(pgType: string) {
     const normalizedType = pgType
       .toLowerCase()

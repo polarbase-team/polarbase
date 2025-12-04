@@ -421,9 +421,9 @@ export const restRouter = new Elysia({ prefix: '/rest' })
   )
 
   /**
-   * DELETE /rest/:table/bulk-delete → delete many records (by ids or where)
+   * POST /rest/:table/bulk-delete → delete many records (by ids or where)
    */
-  .delete(
+  .post(
     '/:table/bulk-delete',
     async ({ params: { table }, body }) => {
       let deleted = 0;
