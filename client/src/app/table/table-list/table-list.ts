@@ -1,14 +1,13 @@
 import { Component, DestroyRef, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Button } from 'primeng/button';
 import { Divider } from 'primeng/divider';
 
-import { TableService } from '../table.service';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TableService, TableDefinition } from '../table.service';
 
 @Component({
   selector: 'app-table-list',
   imports: [Button, Divider],
-  providers: [TableService],
   templateUrl: './table-list.html',
 })
 export class AppTableList {
@@ -23,8 +22,12 @@ export class AppTableList {
     this.tableService
       .getTables()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(({ data }: any) => {
-        this.tables.set(data);
+      .subscribe((tables) => {
+        this.tables.set(tables);
       });
+  }
+
+  onTableSelected(table: TableDefinition) {
+    this.tableService.selectedTable.set(table);
   }
 }

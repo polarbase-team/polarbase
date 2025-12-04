@@ -5,7 +5,7 @@
 <p-divider style="margin: 0" />
 <ul class="list-none px-0 py-2 m-0 overflow-y-auto max-h-full">
   @for (table of tables(); track table.name) {
-    <li>
+    <li (click)="onTableSelected(table)">
       <a
         pRipple
         class="flex cursor-pointer p-4 text-surface-700 hover:bg-surface-100 duration-150 transition-colors p-ripple"

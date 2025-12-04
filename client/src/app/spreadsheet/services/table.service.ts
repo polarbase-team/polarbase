@@ -101,7 +101,7 @@ const DEFAULT_CONFIG: TableConfig = {
     sortable: true,
   },
   row: {
-    size: 'M',
+    size: 'S',
     selectable: true,
     reorderable: true,
     expandable: true,
