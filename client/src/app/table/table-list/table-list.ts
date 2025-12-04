@@ -1,4 +1,4 @@
-import { Component, DestroyRef, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Button } from 'primeng/button';
 import { Divider } from 'primeng/divider';
@@ -11,12 +11,11 @@ import { TableService, TableDefinition } from '../table.service';
   templateUrl: './table-list.html',
 })
 export class AppTableList {
-  protected tables = signal<any>([]);
+  protected tables = signal<TableDefinition[]>([]);
 
-  constructor(
-    private destroyRef: DestroyRef,
-    private tblService: TableService,
-  ) {}
+  protected tblService = inject(TableService);
+
+  constructor(private destroyRef: DestroyRef) {}
 
   ngAfterViewInit() {
     this.tblService

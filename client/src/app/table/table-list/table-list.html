@@ -4,11 +4,12 @@
 </div>
 <p-divider style="margin: 0" />
 <ul class="list-none px-0 py-2 m-0 overflow-y-auto max-h-full">
-  @for (table of tables(); track table.name) {
+  @for (table of tables(); track table.tableName) {
     <li (click)="onTableSelected(table)">
       <a
         pRipple
         class="flex cursor-pointer p-4 text-surface-700 hover:bg-surface-100 duration-150 transition-colors p-ripple"
+        [class.bg-surface-100]="table.tableName === tblService.selectedTable()?.tableName"
       >
         <i class="pi pi-table text-surface-500 mr-2 mt-0.5"></i>
         <div>

@@ -7,7 +7,7 @@ import { buildField } from '../spreadsheet/field/field.helper';
 
 export interface TableDefinition {
   tableName: string;
-  tableCommemt: string;
+  tableComment: string;
 }
 
 export interface ColumnDefinition {
