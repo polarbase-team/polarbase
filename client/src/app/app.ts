@@ -21,6 +21,6 @@ export class App {
   }
 
   openAPIDocs() {
-    window.open('http://localhost:3000/rest/openapi/', '_blank');
+    window.open('http://localhost:3000/rest/openapi', '_blank');
   }
 }

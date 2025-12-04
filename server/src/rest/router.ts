@@ -408,15 +408,48 @@ export const restRouter = new Elysia({ prefix: '/rest' })
   .patch(
     '/:table/bulk-update',
     async ({ params: { table }, body }) => {
-      const { where, data } = body;
-      const affected = await knex(table).where(where).update(data);
-      return json({ updatedCount: affected });
+      const updates = body as Array<{
+        where: Record<string, any>;
+        data: Record<string, any>;
+      }>;
+
+      if (!Array.isArray(updates) || updates.length === 0) {
+        throw new Error('updates must be a non-empty array');
+      }
+
+      const results = await knex.transaction(async (trx) => {
+        const affectedRows = [];
+
+        for (const { where, data } of updates) {
+          if (!where || Object.keys(where).length === 0) {
+            throw new Error(
+              'Each update item must have a non-empty "where" clause'
+            );
+          }
+          if (!data || Object.keys(data).length === 0) {
+            throw new Error(
+              'Each update item must have a non-empty "data" object'
+            );
+          }
+
+          const affected = await trx(table).where(where).update(data);
+          affectedRows.push({ where, updatedCount: affected });
+        }
+
+        return affectedRows;
+      });
+
+      const totalUpdated = results.reduce((sum, r) => sum + r.updatedCount, 0);
+
+      return json({ updatedCount: totalUpdated });
     },
     {
-      body: t.Object({
-        where: t.Record(t.String(), t.Any(), { minProperties: 1 }),
-        data: t.Record(t.String(), t.Any(), { minProperties: 1 }),
-      }),
+      body: t.Array(
+        t.Object({
+          where: t.Record(t.String(), t.Any(), { minProperties: 1 }),
+          data: t.Record(t.String(), t.Any(), { minProperties: 1 }),
+        })
+      ),
     }
   )
 

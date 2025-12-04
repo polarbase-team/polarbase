@@ -11,7 +11,11 @@ import {
   TableRowActionType,
   TableRowAddedEvent,
 } from '../../spreadsheet/events/table-row';
-import { TableCellAction, TableCellActionType } from '../../spreadsheet/events/table-cell';
+import {
+  TableCellAction,
+  TableCellActionType,
+  TableCellEditedEvent,
+} from '../../spreadsheet/events/table-cell';
 import { TableService } from '../table.service';
 
 @Component({
@@ -58,8 +62,17 @@ export class AppTableDetail {
   }
 
   protected onCellAction(action: TableCellAction) {
+    const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
       case TableCellActionType.Edit:
+        const recordUpdates: { where: any; data: any }[] = [];
+        for (const { row, newData } of action.payload as TableCellEditedEvent[]) {
+          recordUpdates.push({ where: { id: row.id }, data: newData });
+        }
+        this.tblService
+          .bulkUpdateTableRecords(tableName, recordUpdates)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe();
         break;
     }
   }

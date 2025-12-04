@@ -61,6 +61,13 @@ export class TableService {
     );
   }
 
+  bulkUpdateTableRecords(tableName: string, recordUpdates: { where: any; data: any }[]) {
+    return this.http.patch<Response<{ updatedCount: number }>>(
+      `${this.apiUrl}/${tableName}/bulk-update`,
+      recordUpdates,
+    );
+  }
+
   bulkDeleteTableRecords(tableName: string, recordIds: any[]) {
     return this.http.post<Response<{ deletedCount: number }>>(
       `${this.apiUrl}/${tableName}/bulk-delete`,
