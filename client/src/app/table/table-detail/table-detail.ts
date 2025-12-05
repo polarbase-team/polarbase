@@ -25,7 +25,11 @@ import { TableService } from '../table.service';
   templateUrl: './table-detail.html',
 })
 export class AppTableDetail {
-  protected config = signal<TableConfig>({ sideSpacing: 20, column: { deletable: false } });
+  protected config = signal<TableConfig>({
+    sideSpacing: 20,
+    column: { deletable: false },
+    row: { insertable: false },
+  });
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
 

@@ -127,6 +127,12 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
     this.dataType = this.field.dataType;
     this.insertCmp();
     this.isCreated = true;
+
+    if (this.selecting) {
+      this.keepSelectingState();
+    } else {
+      this.resetSelectingState();
+    }
   }
 
   /**

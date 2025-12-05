@@ -20,7 +20,7 @@
 >
   <div class="flex flex-1 gap-2">
     <p-button label="Group" variant="outlined" severity="secondary" icon="pi pi-list" />
-    <p-button label="Sort" variant="outlined" severity="secondary" icon="pi pi-sort" />
+    <p-button label="Sort" variant="outlined" severity="secondary" icon="pi pi-sort-alt" />
   </div>
   <p-inputgroup class="w-xs max-w-xs">
     <p-inputgroup-addon>
@@ -408,7 +408,7 @@
               virtualScrollAutoScrollHolder="vertical"
               [attr.data-row-index]="rowIndex"
               [attr.data-row-id]="row.id"
-              [attr.row-size]="tableService.config().row.size"
+              [attr.row-size]="tableRowService.rowSize()"
               [style.top.px]="rowRect.top"
               [style.height.px]="rowRect.height"
               [class.row--selecting]="row.selected"
@@ -702,7 +702,7 @@
               virtualScrollAutoScrollHolder="vertical"
               [attr.data-row-index]="rowIndex"
               [attr.data-row-id]="row.id"
-              [attr.row-size]="tableService.config().row.size"
+              [attr.row-size]="tableRowService.rowSize()"
               [style.top.px]="rowRect.top"
               [style.height.px]="rowRect.height"
               [class.row--selecting]="row.selected"
