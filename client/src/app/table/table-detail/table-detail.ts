@@ -70,6 +70,9 @@ export class AppTableDetail {
     const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
       case TableCellActionType.Edit:
+      case TableCellActionType.Paste:
+      case TableCellActionType.Clear:
+      case TableCellActionType.Fill:
         const recordUpdates: { where: any; data: any }[] = [];
         for (const { row, newData } of action.payload as TableCellEditedEvent[]) {
           recordUpdates.push({ where: { id: row.id }, data: newData });

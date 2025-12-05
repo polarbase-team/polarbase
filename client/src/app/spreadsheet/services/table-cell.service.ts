@@ -134,21 +134,21 @@ export class TableCellService extends TableBaseService {
       if (pastePayload.length) {
         this.host.cellAction.emit({
           type: TableCellActionType.Paste,
-          payload: editPayload,
+          payload: pastePayload,
         });
       }
 
       if (clearPayload.length) {
         this.host.cellAction.emit({
           type: TableCellActionType.Clear,
-          payload: editPayload,
+          payload: clearPayload,
         });
       }
 
       if (fillPayload.length) {
         this.host.cellAction.emit({
           type: TableCellActionType.Fill,
-          payload: editPayload,
+          payload: fillPayload,
         });
       }
 
