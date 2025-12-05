@@ -222,7 +222,7 @@ export class TableRowService extends TableBaseService {
     }
     setTimeout(() => {
       this.tableService.positionFillHandle();
-    }, 200);
+    }, 17);
   }
 
   expandRow(row: TableRow) {
