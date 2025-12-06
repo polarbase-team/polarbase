@@ -37,19 +37,19 @@ import { fromEvent, map, merge, distinctUntilChanged, filter } from 'rxjs';
 
 // PrimeNG
 import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
-import { Chip } from 'primeng/chip';
-import { Toast } from 'primeng/toast';
-import { Tooltip } from 'primeng/tooltip';
-import { Skeleton } from 'primeng/skeleton';
-import { Checkbox } from 'primeng/checkbox';
-import { Menu } from 'primeng/menu';
-import { ContextMenu } from 'primeng/contextmenu';
-import { Overlay } from 'primeng/overlay';
-import { Message } from 'primeng/message';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { InputText } from 'primeng/inputtext';
-import { InputIcon } from 'primeng/inputicon';
-import { Button } from 'primeng/button';
+import { ChipModule } from 'primeng/chip';
+import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
+import { CheckboxModule } from 'primeng/checkbox';
+import { Menu, MenuModule } from 'primeng/menu';
+import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
+import { OverlayModule } from 'primeng/overlay';
+import { MessageModule } from 'primeng/message';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputIconModule } from 'primeng/inputicon';
+import { ButtonModule } from 'primeng/button';
 
 // Utils
 import { Clipboard } from './utils/clipboard';
@@ -87,9 +87,9 @@ import { TableColumn } from './models/table-column';
 import { TableRow } from './models/table-row';
 import { TableGroup } from './models/table-group';
 import { ParseCalculatedResultPipe } from './pipes/parse-calculated-result.pipe';
-import { InputGroup } from 'primeng/inputgroup';
-import { InputGroupAddon } from 'primeng/inputgroupaddon';
-import { Divider } from 'primeng/divider';
+import { InputGroup, InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddon, InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { Divider, DividerModule } from 'primeng/divider';
 
 const stack: SpreadsheetComponent[] = [];
 
@@ -109,22 +109,22 @@ const stack: SpreadsheetComponent[] = [];
     DragDropModule,
     ScrollingModule,
     ResizableModule,
-    Tooltip,
-    Skeleton,
-    Checkbox,
-    Chip,
-    Toast,
-    Menu,
-    ContextMenu,
-    Overlay,
-    Message,
-    ConfirmDialog,
-    InputText,
-    InputGroup,
-    InputGroupAddon,
-    InputIcon,
-    Divider,
-    Button,
+    TooltipModule,
+    SkeletonModule,
+    CheckboxModule,
+    ChipModule,
+    ToastModule,
+    MenuModule,
+    ContextMenuModule,
+    OverlayModule,
+    MessageModule,
+    ConfirmDialogModule,
+    InputTextModule,
+    InputGroupModule,
+    InputGroupAddonModule,
+    InputIconModule,
+    DividerModule,
+    ButtonModule,
     VirtualScrollComponent,
     VirtualScrollViewportComponent,
     VirtualScrollGroupRepeaterDirective,

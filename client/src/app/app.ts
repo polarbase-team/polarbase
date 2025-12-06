@@ -1,14 +1,13 @@
-import _ from 'lodash';
 import { Component, signal } from '@angular/core';
-import { Button } from 'primeng/button';
-import { Divider } from 'primeng/divider';
+import { ButtonModule } from 'primeng/button';
+import { DividerModule } from 'primeng/divider';
 
 import { AppTableList } from './table/table-list/table-list';
 import { AppTableDetail } from './table/table-detail/table-detail';
 
 @Component({
   selector: 'app-root',
-  imports: [Button, Divider, AppTableList, AppTableDetail],
+  imports: [ButtonModule, DividerModule, AppTableList, AppTableDetail],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   standalone: true,

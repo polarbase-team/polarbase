@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Overlay } from 'primeng/overlay';
-import { DatePicker } from 'primeng/datepicker';
+import { Overlay, OverlayModule } from 'primeng/overlay';
+import { DatePickerModule } from 'primeng/datepicker';
 import dayjs from 'dayjs';
 
 import { DateValuePipe } from '../../../pipes/date-value.pipe';
@@ -17,7 +17,7 @@ import { FieldCellEditable } from '../field-cell-editable';
   host: { class: 'date-field-cell' },
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Overlay, DatePicker, DateValuePipe],
+  imports: [FormsModule, OverlayModule, DatePickerModule, DateValuePipe],
 })
 export class DateFieldCellComponent extends FieldCellEditable<DateData> {
   declare field: DateField;

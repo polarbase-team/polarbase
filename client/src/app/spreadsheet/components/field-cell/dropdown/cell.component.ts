@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { Menu } from 'primeng/menu';
-import { Tag } from 'primeng/tag';
+import { Menu, MenuModule } from 'primeng/menu';
+import { TagModule } from 'primeng/tag';
 
 import { DropdownField } from '../../../field/objects/dropdown-field.object';
 import { DropdownData } from '../../../field/interfaces/dropdown-field.interface';
@@ -16,7 +16,7 @@ import { FieldCellEditable } from '../field-cell-editable';
   host: { class: 'dropdown-field-cell' },
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Menu, Tag],
+  imports: [MenuModule, TagModule],
 })
 export class DropdownFieldCellComponent extends FieldCellEditable<DropdownData> {
   declare field: DropdownField;
