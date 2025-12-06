@@ -3,6 +3,8 @@ import {
   LogicalReplicationService,
   PgoutputPlugin,
 } from 'pg-logical-replication';
+
+import { log } from '../utils/logger';
 import { pgConfig } from '../plugins/db';
 
 /**
@@ -31,18 +33,18 @@ async function setupReplication() {
 
   try {
     await client.connect();
-    console.log('Connected to PostgreSQL for replication setup...');
+    log.info('Connected to PostgreSQL for replication setup...');
 
     // Create publication for all tables
     try {
       await client.query(
         `CREATE PUBLICATION ${PUBLICATION_NAME} FOR ALL TABLES`
       );
-      console.log(`Publication "${PUBLICATION_NAME}" created successfully`);
+      log.info(`Publication "${PUBLICATION_NAME}" created successfully`);
     } catch (error) {
       const err = error as Error;
       if (err.message.includes('already exists')) {
-        console.log(`Publication "${PUBLICATION_NAME}" already exists → OK`);
+        log.info(`Publication "${PUBLICATION_NAME}" already exists → OK`);
       } else {
         throw err;
       }
@@ -53,13 +55,13 @@ async function setupReplication() {
       await client.query(
         `SELECT pg_create_logical_replication_slot('${SLOT_NAME}', 'pgoutput')`
       );
-      console.log(
+      log.info(
         `Replication slot "${SLOT_NAME}" created successfully (pgoutput)`
       );
     } catch (error) {
       const err = error as Error;
       if (err.message.includes('already exists')) {
-        console.log(`Slot "${SLOT_NAME}" already exists → OK`);
+        log.info(`Slot "${SLOT_NAME}" already exists → OK`);
       } else {
         throw err;
       }
@@ -95,24 +97,24 @@ async function startCDC() {
   service.on('data', (lsn, message) => {
     switch (message.tag) {
       case 'insert':
-        console.log(`INSERT → table: ${message.relation.name}`);
-        // console.log("   New row:", message.new.tuple);
+        log.info(`INSERT → table: ${message.relation.name}`);
+        // log.info("   New row:", message.new.tuple);
         break;
       case 'update':
-        console.log(`UPDATE → table: ${message.relation.name}`);
-        // console.log("   Old row:", message.old?.tuple);
-        // console.log("   New row:", message.new.tuple);
+        log.info(`UPDATE → table: ${message.relation.name}`);
+        // log.info("   Old row:", message.old?.tuple);
+        // log.info("   New row:", message.new.tuple);
         break;
       case 'delete':
-        console.log(`DELETE → table: ${message.relation.name}`);
-        // console.log("   Deleted row:", message.old.tuple);
+        log.info(`DELETE → table: ${message.relation.name}`);
+        // log.info("   Deleted row:", message.old.tuple);
         break;
       // Transaction begin/commit messages are ignored in this simple example
       // case "begin":
       // case "commit":
       //   break;
       default:
-        // console.log("Other message:", message);
+        // log.info("Other message:", message);
         break;
     }
   });
@@ -131,14 +133,14 @@ async function startCDC() {
   const subscribeWithRetry = async () => {
     while (true) {
       try {
-        console.log('Connecting to CDC stream...');
+        log.info('Connecting to CDC stream...');
         await service.subscribe(plugin, SLOT_NAME);
-        console.log('CDC stream connected successfully!');
+        log.info('CDC stream connected successfully!');
         return; // Success – exit retry loop
       } catch (error) {
         const err = error as Error;
         console.error('Failed to connect CDC stream:', err.message);
-        console.log('Retrying in 5 seconds...');
+        log.info('Retrying in 5 seconds...');
         await new Promise((r) => setTimeout(r, 5000));
       }
     }

@@ -1,13 +1,19 @@
 import { Elysia, t, ValidationError } from 'elysia';
 import { openapi, fromTypes } from '@elysiajs/openapi';
 import { Knex } from 'knex';
+
 import knex from '../plugins/db';
+
+const REST_RATE_LIMIT = parseInt(process.env.REST_RATE_LIMIT!, 10);
+const REST_PREFIX = process.env.REST_PREFIX;
 
 /**
  * List of table names that are forbidden to access via this REST API.
- * Configured via environment variable BLACKLISTED_TABLES (comma-separated).
+ * Configured via environment variable REST_BLACKLISTED_TABLES (comma-separated).
  */
-const BLACKLISTED_TABLES = (process.env.BLACKLISTED_TABLES || '').split(',');
+const REST_BLACKLISTED_TABLES = (
+  process.env.REST_BLACKLISTED_TABLES || ''
+).split(',');
 
 /**
  * Simple in-memory rate limiter (per IP).
@@ -19,7 +25,7 @@ const checkRateLimit = (ip: string): boolean => {
   const now = Date.now();
   const rec = rateLimit.get(ip) || { count: 0, reset: now + 60_000 };
   if (now > rec.reset) rec.count = 0;
-  if (rec.count >= 300) return false;
+  if (rec.count >= REST_RATE_LIMIT) return false;
   rec.count++;
   rateLimit.set(ip, rec);
   return true;
@@ -63,8 +69,8 @@ const getTableList = () => {
       'c.relkind': 'r', // r = ordinary table
     })
     .modify((qb) => {
-      if (BLACKLISTED_TABLES.length > 0) {
-        qb.whereNotIn('c.relname', BLACKLISTED_TABLES);
+      if (REST_BLACKLISTED_TABLES.length > 0) {
+        qb.whereNotIn('c.relname', REST_BLACKLISTED_TABLES);
       }
     })
     .orderBy('c.relname');
@@ -229,7 +235,7 @@ const getTableSchema = async (tableName: string) => {
 /**
  * Main REST router exposing CRUD + bulk operations for all public tables.
  */
-export const restRouter = new Elysia({ prefix: '/rest' })
+export const restRouter = new Elysia({ prefix: REST_PREFIX })
   .use(
     openapi({
       references: fromTypes(),
@@ -304,7 +310,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
    * Block access to blacklisted tables
    */
   .derive(({ params, set }) => {
-    if (params?.table && BLACKLISTED_TABLES.includes(params.table)) {
+    if (params?.table && REST_BLACKLISTED_TABLES.includes(params.table)) {
       set.status = 403;
       throw new Error(`Table "${params.table}" is not allowed`);
     }

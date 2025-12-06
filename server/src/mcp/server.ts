@@ -1,4 +1,6 @@
 import { FastMCP } from 'fastmcp';
+
+import { log } from '../utils/logger';
 import registerTablesResource from './resources/tables';
 import registerColumnsResource from './resources/columns';
 import registerSuggestTableStructureTool from './tools/suggest_table_structure';
@@ -14,6 +16,7 @@ import registerDeleteFromTableTool from './tools/delete_from_table';
 export const mcpServer = new FastMCP({
   name: 'Database Server',
   version: '1.0.0',
+  logger: log as any,
   instructions: `
     I am an AI assistant for managing a database through tools and prompts.
     To understand the database structure:
