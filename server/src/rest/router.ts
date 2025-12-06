@@ -176,7 +176,42 @@ const getTableSchema = async (tableName: string) => {
     }
   }
 
-  // 5. Combine everything into a clean schema object
+  // 5. Fetch foreign key information
+  const foreignKeys = await knex('information_schema.key_column_usage as kcu')
+    .select(
+      'kcu.column_name',
+      'tc.table_name as referenced_table_name',
+      'ccu.column_name as referenced_column_name'
+    )
+    .join('information_schema.table_constraints as tc', function () {
+      this.on('tc.constraint_name', '=', 'kcu.constraint_name')
+        .andOn('tc.table_schema', '=', 'kcu.table_schema')
+        .andOn('tc.table_name', '=', 'kcu.table_name');
+    })
+    .join('information_schema.constraint_column_usage as ccu', function () {
+      this.on('ccu.constraint_name', '=', 'tc.constraint_name').andOn(
+        'ccu.table_schema',
+        '=',
+        'tc.table_schema'
+      );
+    })
+    .where({
+      'kcu.table_schema': 'public',
+      'kcu.table_name': tableName,
+      'tc.constraint_type': 'FOREIGN KEY',
+    });
+
+  const foreignKeyMap = Object.fromEntries(
+    foreignKeys.map((fk: any) => [
+      fk.column_name,
+      {
+        table: fk.referenced_table_name,
+        column: fk.referenced_column_name || 'id',
+      },
+    ])
+  );
+
+  // 6. Combine everything into a clean schema object
   return columns.map((col) => ({
     columnName: col.column_name,
     dataType: col.data_type,
@@ -187,6 +222,7 @@ const getTableSchema = async (tableName: string) => {
     defaultValue: col.default_value,
     comment: commentMap[col.column_name] ?? null,
     enumValues: enumMap[col.column_name] ?? null,
+    foreignKey: foreignKeyMap[col.column_name] || null,
   }));
 };
 
