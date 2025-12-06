@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 
@@ -7,7 +8,7 @@ import { AppTableDetail } from './table/table-detail/table-detail';
 
 @Component({
   selector: 'app-root',
-  imports: [ButtonModule, DividerModule, AppTableList, AppTableDetail],
+  imports: [ToastModule, ButtonModule, DividerModule, AppTableList, AppTableDetail],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   standalone: true,

@@ -1,4 +1,4 @@
-import { Elysia, t } from 'elysia';
+import { Elysia, t, ValidationError } from 'elysia';
 import { openapi, fromTypes } from '@elysiajs/openapi';
 import { Knex } from 'knex';
 import knex from '../plugins/db';
@@ -248,6 +248,59 @@ export const restRouter = new Elysia({ prefix: '/rest' })
   })
 
   /**
+   * Auto-wrap successful responses with json()
+   */
+  .onAfterHandle(({ response, set }) => {
+    if (
+      response !== null &&
+      typeof response === 'object' &&
+      !('success' in response)
+    ) {
+      return json(response);
+    }
+
+    return response;
+  })
+
+  /**
+   * Global error handler
+   */
+  .onError(({ code, error, set }) => {
+    if (code === 'VALIDATION') {
+      set.status = 400;
+
+      const validationError = error as ValidationError;
+      const firstError = [...(validationError.value as any).entries()][0];
+
+      if (firstError) {
+        const [path, errors] = firstError;
+        const msg =
+          errors[0]?.summary ||
+          errors[0]?.message ||
+          `Invalid value for ${path}`;
+        return err(msg);
+      }
+
+      return err('Invalid request data');
+    }
+
+    if (error instanceof Error) {
+      const status = (error as any).cause ?? 500;
+      set.status = status;
+
+      const message =
+        process.env.NODE_ENV === 'production' && status >= 500
+          ? 'Internal server error'
+          : error.message;
+
+      return err(message, status);
+    }
+
+    set.status = 500;
+    return err('Unknown error');
+  })
+
+  /**
    * Block access to blacklisted tables
    */
   .derive(({ params, set }) => {
@@ -262,7 +315,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
    */
   .get('/tables', async () => {
     const allowedTables = await getTableList();
-    return json(allowedTables);
+    return allowedTables;
   })
 
   /**
@@ -278,7 +331,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
       }
 
       const schema = await getTableSchema(table);
-      return json(schema);
+      return schema;
     },
     {
       params: t.Object({ table: t.String() }),
@@ -357,7 +410,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
         .where({ id: Number(id) })
         .first();
       if (!record) throw new Error('Not found');
-      return json(record);
+      return record;
     },
     { params: t.Object({ table: t.String(), id: t.Numeric() }) }
   )
@@ -370,7 +423,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
     async ({ params: { table }, body }) => {
       const [{ id }] = await knex(table).insert(body).returning('id');
       const record = await knex(table).where({ id }).first();
-      return json(record);
+      return record;
     },
     { body: t.Record(t.String(), t.Any(), { minProperties: 1 }) }
   )
@@ -388,7 +441,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
       const record = await knex(table)
         .where({ id: Number(id) })
         .first();
-      return json(record);
+      return record;
     },
     {
       params: t.Object({ table: t.String(), id: t.Numeric() }),
@@ -406,7 +459,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
         .where({ id: Number(id) })
         .del();
       if (!deleted) throw new Error('Not found');
-      return json(null);
+      return null;
     },
     { params: t.Object({ table: t.String(), id: t.Numeric() }) }
   )
@@ -428,7 +481,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
         }
       });
 
-      return json({ insertedCount: inserted });
+      return { insertedCount: inserted };
     },
     {
       body: t.Array(t.Record(t.String(), t.Any(), { minProperties: 1 }), {
@@ -476,8 +529,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
       });
 
       const totalUpdated = results.reduce((sum, r) => sum + r.updatedCount, 0);
-
-      return json({ updatedCount: totalUpdated });
+      return { updatedCount: totalUpdated };
     },
     {
       body: t.Array(
@@ -509,7 +561,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
         throw err('Provide ids[] or where{}');
       }
 
-      return json({ deletedCount: deleted });
+      return { deletedCount: deleted };
     },
     {
       body: t.Union([
