@@ -101,7 +101,7 @@ export class TableGroupService extends TableBaseService {
   collapsedGroupIds = new Set<number>();
 
   groupDepth = computed(() => {
-    return this.rootGroup().totalChildrenDepth;
+    return this.rootGroup()?.totalChildrenDepth;
   });
 
   isGrouped = computed(() => {

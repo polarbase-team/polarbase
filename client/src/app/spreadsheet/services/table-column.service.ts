@@ -207,7 +207,7 @@ export class TableColumnService extends TableBaseService {
   }
 
   uncalculateByColumn(column: TableColumn) {
-    if (!column || !this.calculatedColumns.has(column.id)) return;
+    if (!column?.calculateType) return;
 
     delete column.calculateType;
     this.calculatedColumns.delete(column.id);
@@ -243,7 +243,7 @@ export class TableColumnService extends TableBaseService {
   }
 
   ungroupByColumn(column: TableColumn) {
-    if (!column?.id || !this.groupedColumns.has(column.id)) return;
+    if (!column?.groupSortType) return;
 
     delete column.groupSortType;
     this.groupedColumns.delete(column.id);
@@ -280,7 +280,7 @@ export class TableColumnService extends TableBaseService {
   }
 
   unsortByColumn(column: TableColumn) {
-    if (!column?.id || !this.sortedColumns.has(column.id)) return;
+    if (!column?.sortType) return;
 
     delete column.sortType;
     this.sortedColumns.delete(column.id);
@@ -565,6 +565,15 @@ export class TableColumnService extends TableBaseService {
             },
           },
         );
+        if (column.sortType) {
+          items.push({
+            label: 'Clear sorting',
+            icon: 'pi pi-times',
+            command: () => {
+              this.unsortByColumn(column);
+            },
+          });
+        }
       }
       if (config.groupable) {
         items.push(
@@ -588,6 +597,15 @@ export class TableColumnService extends TableBaseService {
             ],
           },
         );
+        if (column.groupSortType) {
+          items.push({
+            label: 'Clear grouping',
+            icon: 'pi pi-times',
+            command: () => {
+              this.ungroupByColumn(column);
+            },
+          });
+        }
       }
       if (config.hideable) {
         items.push(

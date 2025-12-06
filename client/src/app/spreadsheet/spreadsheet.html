@@ -115,7 +115,7 @@
             <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
           }
           <div
-            class="text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis flex-1"
+            class="text-sm white-space-nowrap overflow-hidden truncate flex-1"
             [attr.title]="column.field.name"
           >
             {{ column.field.name }}
@@ -144,7 +144,7 @@
           <i class="pi pi-key" style="color: var(--p-primary-color)"></i>
         }
         <div
-          class="text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis"
+          class="text-sm white-space-nowrap overflow-hidden truncate"
           [attr.title]="column.field.name"
         >
           {{ column.field.name }}
@@ -320,7 +320,7 @@
                       [style.maxWidth.px]="columnRect.width - tableService.config().column.minWidth"
                     >
                       <div
-                        class="text-sm text-color-secondary white-space-nowrap overflow-hidden text-overflow-ellipsis"
+                        class="text-sm text-color-secondary white-space-nowrap overflow-hidden truncate"
                       >
                         @if (group.label) {
                           {{ group.label }}
@@ -1054,17 +1054,12 @@
       (click)="tableColumnService.openAggregateMenu($event, column)"
     >
       @if (column.calculateType) {
-        <div
-          class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
-          title="column.calculateType"
-        >
+        <div class="white-space-nowrap overflow-hidden truncate" title="column.calculateType">
           {{ column.calculateType }}:
         </div>
         <b>
           @if (tableService.isStreaming) {
-            <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
-              >Calculating...</span
-            >
+            <span class="white-space-nowrap overflow-hidden truncate">Calculating...</span>
           } @else {
             {{ calcResults | parseCalculatedResult: column.calculateType }}
           }
@@ -1075,17 +1070,12 @@
     </div>
   } @else if (column.calculateType) {
     <div class="calculation-block calculation-block--viewonly">
-      <div
-        class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
-        title="column.calculateType"
-      >
+      <div class="white-space-nowrap overflow-hidden truncate" title="column.calculateType">
         {{ column.calculateType }}:
       </div>
       <b>
         @if (tableService.isStreaming) {
-          <span class="white-space-nowrap overflow-hidden text-overflow-ellipsis"
-            >Calculating...</span
-          >
+          <span class="white-space-nowrap overflow-hidden truncate">Calculating...</span>
         } @else {
           {{ calcResults | parseCalculatedResult: column.calculateType }}
         }
