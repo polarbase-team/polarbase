@@ -517,12 +517,20 @@ export class TableService extends TableBaseService {
         of([1, 2, 3])
           .pipe(delay(500), take(1))
           .subscribe(() => {
-            this.positionFillHandle(index);
+            this._positionFillHandle(index);
           });
       }
       return;
     }
 
+    this._positionFillHandle(index);
+    setTimeout(() => {
+      this._positionFillHandle(index);
+    }, 17);
+  }
+
+  private _positionFillHandle(index: CellIndex) {
+    const ele = this.tableCellService.cellElementAt(index);
     const eleDOMRect = ele.getBoundingClientRect();
     const containerDOMRect = this.host.virtualScroll.viewport.element.getBoundingClientRect();
     const offset: CellOffset = {

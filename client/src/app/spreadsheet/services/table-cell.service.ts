@@ -405,9 +405,7 @@ export class TableCellService extends TableBaseService {
         this.scrollToCellByIndex(end);
       }
 
-      setTimeout(() => {
-        this.tableService.positionFillHandle(end);
-      }, 17);
+      this.tableService.positionFillHandle(end);
     });
 
     return this.getCellMatrix(start, end);

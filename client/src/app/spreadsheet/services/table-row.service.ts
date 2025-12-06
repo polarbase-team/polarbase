@@ -220,9 +220,7 @@ export class TableRowService extends TableBaseService {
     if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.updateGroupState();
     }
-    setTimeout(() => {
-      this.tableService.positionFillHandle();
-    }, 17);
+    this.tableService.positionFillHandle();
   }
 
   expandRow(row: TableRow) {

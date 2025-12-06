@@ -565,14 +565,13 @@
                       [field]="column.field"
                       [data]="row.data?.[column.id] ?? null"
                       [readonly]="
-                        row !== tableRowService.pendingRow &&
-                        ((tableService.isStreaming && !$any(row)._isStreamed) ||
-                          !(
-                            row.editable?.[column.id] !== false &&
-                            row.editable !== false &&
-                            column.editable !== false &&
-                            !!tableService.config().cell.editable
-                          ))
+                        (tableService.isStreaming && !$any(row)._isStreamed) ||
+                        !(
+                          row.editable?.[column.id] !== false &&
+                          row.editable !== false &&
+                          column.editable !== false &&
+                          !!tableService.config().cell.editable
+                        )
                       "
                       [selecting]="
                         !!tableService.layout.cell.selection &&
@@ -793,14 +792,13 @@
                       [field]="column.field"
                       [data]="row.data?.[column.id] ?? null"
                       [readonly]="
-                        row !== tableRowService.pendingRow &&
-                        ((tableService.isStreaming && !$any(row)._isStreamed) ||
-                          !(
-                            row.editable?.[column.id] !== false &&
-                            row.editable !== false &&
-                            column.editable !== false &&
-                            !!tableService.config().cell.editable
-                          ))
+                        (tableService.isStreaming && !$any(row)._isStreamed) ||
+                        !(
+                          row.editable?.[column.id] !== false &&
+                          row.editable !== false &&
+                          column.editable !== false &&
+                          !!tableService.config().cell.editable
+                        )
                       "
                       [selecting]="
                         !!tableService.layout.cell.selection &&
