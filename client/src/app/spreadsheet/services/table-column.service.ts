@@ -47,17 +47,21 @@ export function getAggregateMenuItems(
   common.forEach((t) => allowed.add(t));
 
   const dataType = column.field.dataType;
-  if (dataType === DataType.Date) {
-    allowed.add(CalculateType.EarliestDate);
-    allowed.add(CalculateType.LatestDate);
-    allowed.add(CalculateType.DateRange);
-  } else if (dataType === DataType.Number) {
-    allowed.add(CalculateType.Sum);
-    allowed.add(CalculateType.Average);
-    allowed.add(CalculateType.Median);
-    allowed.add(CalculateType.Min);
-    allowed.add(CalculateType.Max);
-    allowed.add(CalculateType.Range);
+  switch (dataType) {
+    case DataType.Date:
+      allowed.add(CalculateType.EarliestDate);
+      allowed.add(CalculateType.LatestDate);
+      allowed.add(CalculateType.DateRange);
+      break;
+    case DataType.Integer:
+    case DataType.Number:
+      allowed.add(CalculateType.Sum);
+      allowed.add(CalculateType.Average);
+      allowed.add(CalculateType.Median);
+      allowed.add(CalculateType.Min);
+      allowed.add(CalculateType.Max);
+      allowed.add(CalculateType.Range);
+      break;
   }
 
   return Array.from(allowed).map((type) => ({

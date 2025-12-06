@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
 import { DataType, FieldConfig } from '../spreadsheet/field/interfaces/field.interface';
-import { buildField } from '../spreadsheet/field/field.helper';
+import { buildField } from '../spreadsheet/field/utils';
 
 export interface TableDefinition {
   tableName: string;
@@ -85,18 +85,17 @@ export class TableService {
 
     const mapping = {
       // Integer
-      smallint: DataType.Number,
-      integer: DataType.Number,
-      bigint: DataType.Number,
-      smallserial: DataType.Number,
-      serial: DataType.Number,
-      bigserial: DataType.Number,
+      smallint: DataType.Integer,
+      integer: DataType.Integer,
+      bigint: DataType.Integer,
+      smallserial: DataType.Integer,
+      serial: DataType.Integer,
+      bigserial: DataType.Integer,
 
       // Number
       numeric: DataType.Number,
       real: DataType.Number,
       'double precision': DataType.Number,
-      money: DataType.Number,
 
       // Text
       character: DataType.Text,

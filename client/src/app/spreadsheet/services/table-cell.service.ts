@@ -610,6 +610,7 @@ export class TableCellService extends TableBaseService {
           const dataType = column.field.dataType;
 
           switch (dataType) {
+            case DataType.Integer:
             case DataType.Number: {
               const prev = sourceData[i - 1]?.[j];
               let metadata = prev?.metadata;

@@ -20,10 +20,11 @@ import { DataType } from '../../field/interfaces/field.interface';
 import { Field } from '../../field/objects/field.object';
 import { FieldCell } from './field-cell';
 import { FieldCellEditable } from './field-cell-editable';
-import { CheckboxFieldCellComponent } from './checkbox/cell.component';
-import { DateFieldCellComponent } from './date/cell.component';
-import { NumberFieldCellComponent } from './number/cell.component';
 import { TextFieldCellComponent } from './text/cell.component';
+import { IntegerFieldCellComponent } from './integer/cell.component';
+import { NumberFieldCellComponent } from './number/cell.component';
+import { DateFieldCellComponent } from './date/cell.component';
+import { CheckboxFieldCellComponent } from './checkbox/cell.component';
 import { DropdownFieldCellComponent } from './dropdown/cell.component';
 import { FieldCellSelectingState, FieldCellService } from './field-cell.service';
 import { TableRow } from '../../models/table-row';
@@ -31,10 +32,11 @@ import { TableColumn } from '../../models/table-column';
 import { TableCell } from '../../models/table-cell';
 
 const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
-  [DataType.Checkbox, CheckboxFieldCellComponent],
-  [DataType.Date, DateFieldCellComponent],
-  [DataType.Number, NumberFieldCellComponent],
   [DataType.Text, TextFieldCellComponent],
+  [DataType.Integer, IntegerFieldCellComponent],
+  [DataType.Number, NumberFieldCellComponent],
+  [DataType.Date, DateFieldCellComponent],
+  [DataType.Checkbox, CheckboxFieldCellComponent],
   [DataType.Dropdown, DropdownFieldCellComponent],
 ]) as ReadonlyMap<DataType, Type<FieldCell>>;
 
