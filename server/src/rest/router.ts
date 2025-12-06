@@ -275,15 +275,10 @@ export const restRouter = new Elysia({ prefix: REST_PREFIX })
     if (code === 'VALIDATION') {
       set.status = 400;
 
-      const validationError = error as ValidationError;
-      const firstError = [...(validationError.value as any).entries()][0];
-
+      const firstError = error.all[0];
       if (firstError) {
-        const [path, errors] = firstError;
-        const msg =
-          errors[0]?.summary ||
-          errors[0]?.message ||
-          `Invalid value for ${path}`;
+        const { summary, message, path } = firstError as any;
+        const msg = summary || message || `Invalid value for ${path}`;
         return err(msg);
       }
 
