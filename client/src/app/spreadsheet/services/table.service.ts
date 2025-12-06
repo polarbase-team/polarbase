@@ -23,7 +23,7 @@ export const Dimension = {
   HeaderHeight: 36,
   BodyVerticalPadding: 12,
   FooterHeight: 42,
-  FreezeDividerDragHandleHeight: 40,
+  FrozenDividerDragHandleHeight: 40,
   IndexCellWidth: 64,
   IndexCellSmallWidth: 56,
   ActionCellWidth: 56,
@@ -116,7 +116,7 @@ const DEFAULT_CONFIG: TableConfig = {
   },
 };
 
-function calculateFreezeDividerDragPlaceholderIndex(
+function calculateFrozenDividerDragPlaceholderIndex(
   columns: TableColumn[],
   offsetX: number,
   scrollLeft: number,
@@ -456,23 +456,23 @@ export class TableService extends TableBaseService {
     }
   }
 
-  onFreezeDividerMousemove(e: MouseEvent) {
+  onFrozenDividerMousemove(e: MouseEvent) {
     this.layout.freezeHandle.isHovered = true;
-    this.layout.freezeHandle.dragOffsetY = e.offsetY - Dimension.FreezeDividerDragHandleHeight / 2;
+    this.layout.freezeHandle.dragOffsetY = e.offsetY - Dimension.FrozenDividerDragHandleHeight / 2;
   }
 
-  onFreezeDividerMouseleave() {
+  onFrozenDividerMouseleave() {
     this.layout.freezeHandle.isHovered = false;
   }
 
-  onFreezeDividerDragStarted() {
+  onFrozenDividerDragStarted() {
     this.host.virtualScroll.scrollToLeft();
     this.layout.freezeHandle.isDragging = true;
   }
 
-  onFreezeDividerDragMoved(e: CdkDragMove) {
+  onFrozenDividerDragMoved(e: CdkDragMove) {
     const { x: pointerOffsetX } = this.host.virtualScroll.measurePointerOffset(e.pointerPosition);
-    const index = calculateFreezeDividerDragPlaceholderIndex(
+    const index = calculateFrozenDividerDragPlaceholderIndex(
       this.tableColumnService.columns(),
       pointerOffsetX,
       this.host.virtualScroll.scrollLeft(),
@@ -486,7 +486,7 @@ export class TableService extends TableBaseService {
     this.layout.freezeHandle.dragTargetOffsetX = offset + this.config().sideSpacing;
   }
 
-  onFreezeDividerDragEnded(e: CdkDragEnd) {
+  onFrozenDividerDragEnded(e: CdkDragEnd) {
     const { dragTargetIndex } = this.layout.freezeHandle;
     if (dragTargetIndex === null) return;
 

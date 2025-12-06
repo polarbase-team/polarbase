@@ -97,6 +97,7 @@ export class AppTableDetail {
         const columns: TableColumn[] = columnDefs.map((c) => ({
           id: c.columnName,
           primary: c.isPrimary,
+          editable: !c.isPrimary,
           field: this.tblService.buildField(c),
         }));
         this.columns.set(null);

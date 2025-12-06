@@ -567,10 +567,12 @@
                       [readonly]="
                         row !== tableRowService.pendingRow &&
                         ((tableService.isStreaming && !$any(row)._isStreamed) ||
-                          (!tableService.config().cell.editable &&
-                            column.editable !== true &&
-                            row.editable !== true &&
-                            row.editable?.[column.id] !== true))
+                          !(
+                            row.editable?.[column.id] !== false &&
+                            row.editable !== false &&
+                            column.editable !== false &&
+                            !!tableService.config().cell.editable
+                          ))
                       "
                       [selecting]="
                         !!tableService.layout.cell.selection &&
@@ -793,10 +795,12 @@
                       [readonly]="
                         row !== tableRowService.pendingRow &&
                         ((tableService.isStreaming && !$any(row)._isStreamed) ||
-                          (!tableService.config().cell.editable &&
-                            column.editable !== true &&
-                            row.editable !== true &&
-                            row.editable?.[column.id] !== true))
+                          !(
+                            row.editable?.[column.id] !== false &&
+                            row.editable !== false &&
+                            column.editable !== false &&
+                            !!tableService.config().cell.editable
+                          ))
                       "
                       [selecting]="
                         !!tableService.layout.cell.selection &&
@@ -946,9 +950,9 @@
       [class.frozen-divider--dragging]="tableService.layout.freezeHandle.isDragging"
       [class.frozen-divider--disabled]="!tableService.config().column.freezable || isHideHeadLine"
       [cdkDragDisabled]="!tableService.config().column.freezable"
-      (cdkDragStarted)="tableService.onFreezeDividerDragStarted()"
-      (cdkDragMoved)="tableService.onFreezeDividerDragMoved($event)"
-      (cdkDragEnded)="tableService.onFreezeDividerDragEnded($event)"
+      (cdkDragStarted)="tableService.onFrozenDividerDragStarted()"
+      (cdkDragMoved)="tableService.onFrozenDividerDragMoved($event)"
+      (cdkDragEnded)="tableService.onFrozenDividerDragEnded($event)"
     >
       <div
         class="frozen-divider__line frozen-divider__head-line"
@@ -959,8 +963,8 @@
         cdkDragHandle
         [style.height.px]="bodyLineHeight"
         [class.hidden]="!virtualScroll.viewport.contentHeight()"
-        (mousemove)="tableService.onFreezeDividerMousemove($event)"
-        (mouseleave)="tableService.onFreezeDividerMouseleave()"
+        (mousemove)="tableService.onFrozenDividerMousemove($event)"
+        (mouseleave)="tableService.onFrozenDividerMouseleave()"
       >
         <span
           class="frozen-divider__drag-handle"

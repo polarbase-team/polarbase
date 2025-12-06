@@ -426,11 +426,11 @@ export class SpreadsheetComponent
         let isTouchEvent: boolean;
         let delayEditCellFn: number;
 
-        const isFillHandlerActive = !!this.fillHandle?.nativeElement.contains(target);
+        const isFillHandleActive = !!this.fillHandle?.nativeElement.contains(target);
         const currSelection = this.tableService.layout.cell.selection;
         const anchorCellIdxInSelection = currSelection?.anchor;
 
-        if (isFillHandlerActive) {
+        if (isFillHandleActive) {
           startCellIdx = {
             rowIndex: Math.max(currSelection.start.rowIndex, anchorCellIdxInSelection.rowIndex),
             columnIndex: Math.min(
@@ -502,7 +502,7 @@ export class SpreadsheetComponent
 
             if (compared === 0) return;
 
-            if (isFillHandlerActive) {
+            if (isFillHandleActive) {
               endCellIdx.columnIndex = currSelection.end.columnIndex;
 
               const isReverse = compared === 1;
@@ -549,7 +549,7 @@ export class SpreadsheetComponent
 
           this.isMouseHolding = false;
 
-          if (isFillHandlerActive) {
+          if (isFillHandleActive) {
             const cellFilling = this.tableService.layout.cell.fill;
 
             cellFilling.isReverse

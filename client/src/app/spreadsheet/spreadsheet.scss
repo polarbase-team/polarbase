@@ -92,7 +92,7 @@ $blank-row-height: 32px;
       }
 
       &:has(input-box:focus) {
-        .fill-handler {
+        .fill-handle {
           display: none;
         }
       }
