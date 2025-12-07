@@ -1,9 +1,9 @@
 {
-  "name": "child-db-client",
+  "name": "cozy-db-client",
   "version": "1.0.0",
   "keywords": [],
   "author": "Qui Nguyen",
-  "license": "BUSL-1.1",
+  "license": "MIT",
   "description": "Talk to your database, chill while AI handles the SQL",
   "scripts": {
     "ng": "ng",

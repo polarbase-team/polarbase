@@ -4,7 +4,7 @@
     "exclude": ["ShellTool(rm -rf)"]
   },
   "mcpServers": {
-    "chill-db-server": {
+    "cozy-db-server": {
       "httpUrl": "http://localhost:3001/mcp"
     }
   },

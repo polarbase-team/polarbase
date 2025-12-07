@@ -1,9 +1,9 @@
 {
-  "name": "chill-db",
+  "name": "cozy-db",
   "version": "1.0.0",
   "keywords": [],
   "author": "Qui Nguyen",
-  "license": "BUSL-1.1",
+  "license": "MIT",
   "description": "Talk to your database, chill while AI handles the SQL",
   "scripts": {
     "start": "concurrently \"npm run dev --prefix server\" \"npm run start --prefix client\"",

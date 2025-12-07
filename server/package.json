@@ -1,9 +1,9 @@
 {
-  "name": "chill-db-server",
+  "name": "cozy-db-server",
   "version": "1.0.0",
   "keywords": [],
   "author": "Qui Nguyen",
-  "license": "BUSL-1.1",
+  "license": "MIT",
   "description": "Talk to your database, chill while AI handles the SQL",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
