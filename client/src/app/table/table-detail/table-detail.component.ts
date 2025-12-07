@@ -18,6 +18,7 @@ import {
   TableCellEditedEvent,
 } from '../../common/spreadsheet/events/table-cell';
 import { TableService } from '../table.service';
+import { TableRealtimeService } from '../table-realtime.service';
 
 @Component({
   selector: 'app-table-detail',
@@ -35,15 +36,44 @@ export class AppTableDetail {
 
   protected tblService = inject(TableService);
 
-  constructor(private destroyRef: DestroyRef) {
+  constructor(
+    private destroyRef: DestroyRef,
+    private tblRealtimeService: TableRealtimeService,
+  ) {
     effect(() => {
       const selectedTable = this.tblService.selectedTable();
-      if (!selectedTable) {
-        return;
-      }
+      if (!selectedTable) return;
 
       this.loadTable(selectedTable.tableName);
     });
+  }
+
+  ngOnInit() {
+    this.tblRealtimeService
+      .enable()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ tableKeyColumn, action, record }) => {
+          switch (action) {
+            case 'insert': {
+              this.rows.update((arr) => [...arr, record.new as any]);
+              break;
+            }
+            case 'update': {
+              this.rows.update((rows) =>
+                rows.map((r) =>
+                  r.id === record.new[tableKeyColumn] ? { ...r, data: record.new } : r,
+                ),
+              );
+              break;
+            }
+            case 'delete': {
+              this.rows.update((arr) => arr.filter((r) => r.id !== record.key[tableKeyColumn]));
+              break;
+            }
+          }
+        },
+      });
   }
 
   protected onRowAction(action: TableRowAction) {

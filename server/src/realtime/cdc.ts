@@ -6,6 +6,7 @@ import {
 
 import { log } from '../utils/logger';
 import { pgConfig } from '../plugins/db';
+import { WebSocket } from '../plugins/web-socket';
 
 /**
  * Name of the logical replication slot used for CDC.
@@ -69,7 +70,6 @@ async function setupReplication() {
   } catch (error) {
     const err = error as Error;
     console.error('Error during replication setup:', err.message);
-    process.exit(1);
   } finally {
     await client.end();
   }
@@ -97,24 +97,9 @@ async function startCDC() {
   service.on('data', (lsn, message) => {
     switch (message.tag) {
       case 'insert':
-        log.info(`INSERT → table: ${message.relation.name}`);
-        // log.info("   New row:", message.new.tuple);
-        break;
       case 'update':
-        log.info(`UPDATE → table: ${message.relation.name}`);
-        // log.info("   Old row:", message.old?.tuple);
-        // log.info("   New row:", message.new.tuple);
-        break;
       case 'delete':
-        log.info(`DELETE → table: ${message.relation.name}`);
-        // log.info("   Deleted row:", message.old.tuple);
-        break;
-      // Transaction begin/commit messages are ignored in this simple example
-      // case "begin":
-      // case "commit":
-      //   break;
-      default:
-        // log.info("Other message:", message);
+        WebSocket.broadcast(message);
         break;
     }
   });
