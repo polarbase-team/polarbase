@@ -14,7 +14,7 @@ import { MenuItem } from 'primeng/api';
 
 import { TableColumn } from '../../models/table-column';
 
-export interface OrderItem {
+export interface OrderingRule {
   column: TableColumn;
   asc: boolean;
 }
@@ -41,20 +41,21 @@ export class DataViewOptionsComponent {
   currentColumns = input<TableColumn[]>([]);
   limit = input<number>();
 
-  apply = output<OrderItem[]>();
+  apply = output<OrderingRule[]>();
 
-  items = signal<OrderItem[]>([]);
+  rules = signal<OrderingRule[]>([]);
 
   protected isGroupType = computed(() => {
     return this.type() === 'group';
   });
 
   protected isReachLimitColumn = computed<boolean>(() => {
-    return this.items().length >= this.limit();
+    const limit = this.limit();
+    return limit !== undefined && this.rules().length >= limit;
   });
 
   protected menuItems = computed<MenuItem[]>(() => {
-    const currentItems = this.items().map((i) => i.column.id);
+    const currentItems = this.rules().map((i) => i.column.id);
     const columns = this.sourceColumns().filter((f) => !currentItems.includes(f.id));
 
     return columns.map((column) => ({
@@ -68,35 +69,33 @@ export class DataViewOptionsComponent {
   constructor() {
     effect(() => {
       const isGroupType = this.isGroupType();
-      const items = this.currentColumns().map((column) => ({
+      const rules = this.currentColumns().map((column) => ({
         column,
         asc: (isGroupType ? column.groupSortType : column.sortType) === 'asc',
       }));
-      this.items.set(items);
+      this.rules.set(rules);
     });
   }
 
   protected addColumn(column: TableColumn) {
-    this.items.update((arr) => [...arr, { column, asc: true }]);
+    this.rules.update((arr) => [...arr, { column, asc: true }]);
   }
 
   protected removeColumn(index: number) {
-    this.items.update((arr) => arr.filter((_, i) => i !== index));
+    this.rules.update((arr) => arr.filter((_, i) => i !== index));
   }
 
-  protected toggleAsc(item: OrderItem) {
-    this.items.update((arr) =>
-      arr.map((i) => (i.column.id === item.column.id ? { ...i, asc: !i.asc } : i)),
-    );
+  protected toggleAsc(item: OrderingRule) {
+    this.rules.update((arr) => arr.map((i) => (i === item ? { ...i, asc: !i.asc } : i)));
   }
 
   protected applyChanges() {
-    this.apply.emit(this.items());
+    this.apply.emit([...this.rules()]);
   }
 
-  protected onDropped(event: CdkDragDrop<OrderItem[]>) {
-    const newItems = [...this.items()];
+  protected onDropped(event: CdkDragDrop<OrderingRule[]>) {
+    const newItems = [...this.rules()];
     moveItemInArray(newItems, event.previousIndex, event.currentIndex);
-    this.items.set(newItems);
+    this.rules.set(newItems);
   }
 }

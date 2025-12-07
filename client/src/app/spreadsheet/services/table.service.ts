@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 
 import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
-import { OrderItem } from '../components/view-options/data-view-options.component';
+import { OrderingRule } from '../components/view-options/data-view-options.component';
 import { calculateBy, makeUpCalculatedData } from '../utils/calculate';
 import { groupBy } from '../utils/group';
 import { sortBy } from '../utils/sort';
@@ -457,30 +457,30 @@ export class TableService extends TableBaseService {
     this.tableColumnService.sortedColumns.set([]);
   }
 
-  onApplyGroup(items: OrderItem[]) {
-    if (!items.length) {
+  onApplyGroup(rules: OrderingRule[]) {
+    if (!rules.length) {
       this.ungroup();
       return;
     }
 
     const columns: TableColumn[] = [];
-    for (const item of items) {
-      item.column.groupSortType = item.asc ? 'asc' : 'desc';
-      columns.push(item.column);
+    for (const rule of rules) {
+      rule.column.groupSortType = rule.asc ? 'asc' : 'desc';
+      columns.push(rule.column);
     }
     this.group(columns);
   }
 
-  onApplySort(items: OrderItem[]) {
-    if (!items.length) {
+  onApplySort(rules: OrderingRule[]) {
+    if (!rules.length) {
       this.unsort();
       return;
     }
 
     const columns: TableColumn[] = [];
-    for (const item of items) {
-      item.column.sortType = item.asc ? 'asc' : 'desc';
-      columns.push(item.column);
+    for (const rule of rules) {
+      rule.column.sortType = rule.asc ? 'asc' : 'desc';
+      columns.push(rule.column);
     }
     this.sort(columns);
   }

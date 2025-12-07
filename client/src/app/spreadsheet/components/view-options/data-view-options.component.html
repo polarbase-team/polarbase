@@ -4,10 +4,10 @@
   <div class="w-md">
     <!-- Body -->
     <div>
-      @if (items().length) {
+      @if (rules().length) {
         <div cdkDropList (cdkDropListDropped)="onDropped($event)" class="flex flex-col gap-2">
           <div
-            *ngFor="let item of items(); let i = index; let first = first"
+            *ngFor="let item of rules(); let i = index; let first = first"
             cdkDrag
             cdkDragLockAxis="y"
             class="flex items-center justify-between"
