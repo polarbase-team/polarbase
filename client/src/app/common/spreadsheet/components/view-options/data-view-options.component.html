@@ -1,0 +1,117 @@
+<p-menu #columnMenu [model]="menuItems()" [popup]="true" appendTo="body" />
+
+<p-popover #popover [dismissable]="!columnMenu.visible">
+  <div class="w-md">
+    <!-- Body -->
+    <div class="overflow-y-auto max-h-100">
+      @if (rules().length) {
+        <div cdkDropList (cdkDropListDropped)="onDropped($event)" class="flex flex-col gap-2">
+          <div
+            *ngFor="let item of rules(); let i = index; let first = first"
+            cdkDrag
+            cdkDragLockAxis="y"
+            class="flex items-center justify-between gap-6"
+          >
+            <div class="flex min-w-0 items-center gap-2">
+              <!-- Drag handle -->
+              <div cdkDragHandle>
+                <img src="/icons/drag-dots.svg" />
+              </div>
+
+              <!-- Field name -->
+              <span class="break-all">
+                {{ first ? (isGroupType() ? 'group by' : 'sort by') : 'then by' }}
+                <span class="font-medium">
+                  {{ item.column.field.name }}
+                </span>
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <!-- ASC/DESC -->
+              <div class="flex items-center gap-2">
+                <label for="switch">ascending:</label>
+                <p-toggleswitch
+                  inputId="switch"
+                  [ngModel]="item.asc"
+                  (onChange)="toggleAsc(item)"
+                />
+              </div>
+
+              <!-- Remove -->
+              <p-button
+                variant="text"
+                severity="secondary"
+                icon="pi pi-times"
+                (click)="removeColumn(i)"
+              />
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="leading-6">
+          <p class="font-medium">
+            {{ isGroupType() ? 'No groups applied to this view' : 'No sorts applied to this view' }}
+          </p>
+          <p class="text-surface-500 text-sm">
+            {{
+              isGroupType()
+                ? 'Add a column below to group the view'
+                : 'Add a column below to sort the view'
+            }}
+          </p>
+        </div>
+      }
+    </div>
+
+    <p-divider />
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between">
+      @if (menuItems().length) {
+        <p-button
+          variant="text"
+          [label]="isReachLimitColumn() ? 'Limit reached' : 'Add column'"
+          severity="secondary"
+          icon="pi pi-chevron-down"
+          iconPos="right"
+          [disabled]="isReachLimitColumn()"
+          (click)="columnMenu.show($event)"
+        />
+      } @else {
+        All columns have been added
+      }
+      <p-button label="Apply changes" (click)="applyChanges(); popover.hide()" />
+    </div>
+  </div>
+</p-popover>
+
+@if (isGroupType()) {
+  <p-button
+    [label]="
+      rules().length === 1
+        ? `Grouped by 1 rule`
+        : rules().length > 1
+          ? `Grouped by ${rules().length} rules`
+          : 'Group'
+    "
+    icon="pi pi-list"
+    variant="outlined"
+    [severity]="rules().length ? 'primary' : 'secondary'"
+    (click)="popover.show($event)"
+  />
+} @else {
+  <p-button
+    [label]="
+      rules().length === 1
+        ? `Sorted by 1 rule`
+        : rules().length > 1
+          ? `Sorted by ${rules().length} rules`
+          : 'Sort'
+    "
+    icon="pi pi-sort-alt"
+    variant="outlined"
+    [severity]="rules().length ? 'primary' : 'secondary'"
+    (click)="popover.show($event)"
+  />
+}

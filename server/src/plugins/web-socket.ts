@@ -1,6 +1,8 @@
 import { ServerWebSocket } from 'bun';
 import { Context } from 'elysia';
 
+import { log } from '../utils/logger';
+
 const clients = new Map<
   string,
   ServerWebSocket<{ id: string; data: Context }>
@@ -10,12 +12,12 @@ export class WebSocket {
   static addClient(ws: ServerWebSocket<{ id: string; data: Context }>) {
     const id = ws.data.id;
     clients.set(id, ws);
-    console.log(`Client ${id} added to service`);
+    log.debug(`Client ${id} added to service`);
   }
 
   static removeClient(id: string) {
     clients.delete(id);
-    console.log(`Client ${id} removed from service`);
+    log.debug(`Client ${id} removed from service`);
   }
 
   static sendToClient(id: string, data: any) {

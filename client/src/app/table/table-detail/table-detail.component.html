@@ -1,0 +1,49 @@
+@if (tblService.selectedTable()) {
+  <p-tabs value="0" class="flex-1">
+    <p-tablist style="background: none">
+      <p-tab value="0">
+        <div class="flex items-center">
+          <i class="pi pi-table mr-2"></i>
+          <span>{{ tblService.selectedTable().tableName }}</span>
+        </div>
+      </p-tab>
+      <!-- <p-tab value="1">
+        <div class="flex items-center">
+          <i class="pi pi-sparkles mr-2"></i>
+          <span>AI Query</span>
+        </div>
+      </p-tab> -->
+    </p-tablist>
+    <p-tabpanels style="padding: 0" class="flex-1">
+      <p-tabpanel value="0" class="flex-1">
+        @if (columns()) {
+          <spreadsheet
+            style="margin-left: 1px"
+            [config]="config()"
+            [columns]="columns()"
+            [rows]="rows()"
+            (rowAction)="onRowAction($event)"
+            (cellAction)="onCellAction($event)"
+          ></spreadsheet>
+        }
+      </p-tabpanel>
+      <!-- <p-tabpanel value="1">
+        <p class="m-0">
+          Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque
+          laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi
+          architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit
+          aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione
+          voluptatem sequi nesciunt. Consectetur, adipisci velit, sed quia non numquam eius modi.
+        </p>
+      </p-tabpanel> -->
+    </p-tabpanels>
+  </p-tabs>
+} @else {
+  <div class="flex flex-1 flex-col items-center justify-center m-1">
+    <p-image src="assets/images/chill-guy.png" alt="Image" width="320" />
+    <p class="text-gray-500 italic flex items-center">
+      <i class="pi pi-hand-point-right mr-2"></i>
+      <span>Unlock insights by picking any table to explore its data!</span>
+    </p>
+  </div>
+}

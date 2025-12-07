@@ -1,13 +1,19 @@
-import { Elysia, t } from 'elysia';
+import { Elysia, t, ValidationError } from 'elysia';
 import { openapi, fromTypes } from '@elysiajs/openapi';
 import { Knex } from 'knex';
+
 import knex from '../plugins/db';
+
+const REST_RATE_LIMIT = parseInt(process.env.REST_RATE_LIMIT!, 10);
+const REST_PREFIX = process.env.REST_PREFIX;
 
 /**
  * List of table names that are forbidden to access via this REST API.
- * Configured via environment variable BLACKLISTED_TABLES (comma-separated).
+ * Configured via environment variable REST_BLACKLISTED_TABLES (comma-separated).
  */
-const BLACKLISTED_TABLES = (process.env.BLACKLISTED_TABLES || '').split(',');
+const REST_BLACKLISTED_TABLES = (
+  process.env.REST_BLACKLISTED_TABLES || ''
+).split(',');
 
 /**
  * Simple in-memory rate limiter (per IP).
@@ -19,7 +25,7 @@ const checkRateLimit = (ip: string): boolean => {
   const now = Date.now();
   const rec = rateLimit.get(ip) || { count: 0, reset: now + 60_000 };
   if (now > rec.reset) rec.count = 0;
-  if (rec.count >= 300) return false;
+  if (rec.count >= REST_RATE_LIMIT) return false;
   rec.count++;
   rateLimit.set(ip, rec);
   return true;
@@ -63,8 +69,8 @@ const getTableList = () => {
       'c.relkind': 'r', // r = ordinary table
     })
     .modify((qb) => {
-      if (BLACKLISTED_TABLES.length > 0) {
-        qb.whereNotIn('c.relname', BLACKLISTED_TABLES);
+      if (REST_BLACKLISTED_TABLES.length > 0) {
+        qb.whereNotIn('c.relname', REST_BLACKLISTED_TABLES);
       }
     })
     .orderBy('c.relname');
@@ -176,7 +182,42 @@ const getTableSchema = async (tableName: string) => {
     }
   }
 
-  // 5. Combine everything into a clean schema object
+  // 5. Fetch foreign key information
+  const foreignKeys = await knex('information_schema.key_column_usage as kcu')
+    .select(
+      'kcu.column_name',
+      'tc.table_name as referenced_table_name',
+      'ccu.column_name as referenced_column_name'
+    )
+    .join('information_schema.table_constraints as tc', function () {
+      this.on('tc.constraint_name', '=', 'kcu.constraint_name')
+        .andOn('tc.table_schema', '=', 'kcu.table_schema')
+        .andOn('tc.table_name', '=', 'kcu.table_name');
+    })
+    .join('information_schema.constraint_column_usage as ccu', function () {
+      this.on('ccu.constraint_name', '=', 'tc.constraint_name').andOn(
+        'ccu.table_schema',
+        '=',
+        'tc.table_schema'
+      );
+    })
+    .where({
+      'kcu.table_schema': 'public',
+      'kcu.table_name': tableName,
+      'tc.constraint_type': 'FOREIGN KEY',
+    });
+
+  const foreignKeyMap = Object.fromEntries(
+    foreignKeys.map((fk: any) => [
+      fk.column_name,
+      {
+        table: fk.referenced_table_name,
+        column: fk.referenced_column_name || 'id',
+      },
+    ])
+  );
+
+  // 6. Combine everything into a clean schema object
   return columns.map((col) => ({
     columnName: col.column_name,
     dataType: col.data_type,
@@ -187,13 +228,14 @@ const getTableSchema = async (tableName: string) => {
     defaultValue: col.default_value,
     comment: commentMap[col.column_name] ?? null,
     enumValues: enumMap[col.column_name] ?? null,
+    foreignKey: foreignKeyMap[col.column_name] || null,
   }));
 };
 
 /**
  * Main REST router exposing CRUD + bulk operations for all public tables.
  */
-export const restRouter = new Elysia({ prefix: '/rest' })
+export const restRouter = new Elysia({ prefix: REST_PREFIX })
   .use(
     openapi({
       references: fromTypes(),
@@ -212,10 +254,58 @@ export const restRouter = new Elysia({ prefix: '/rest' })
   })
 
   /**
+   * Auto-wrap successful responses with json()
+   */
+  .onAfterHandle(({ response, set }) => {
+    if (
+      response !== null &&
+      typeof response === 'object' &&
+      !('success' in response)
+    ) {
+      return json(response);
+    }
+
+    return response;
+  })
+
+  /**
+   * Global error handler
+   */
+  .onError(({ code, error, set }) => {
+    if (code === 'VALIDATION') {
+      set.status = 400;
+
+      const firstError = error.all[0];
+      if (firstError) {
+        const { summary, message, path } = firstError as any;
+        const msg = summary || message || `Invalid value for ${path}`;
+        return err(msg);
+      }
+
+      return err('Invalid request data');
+    }
+
+    if (error instanceof Error) {
+      const status = (error as any).cause ?? 500;
+      set.status = status;
+
+      const message =
+        process.env.NODE_ENV === 'production' && status >= 500
+          ? 'Internal server error'
+          : error.message;
+
+      return err(message, status);
+    }
+
+    set.status = 500;
+    return err('Unknown error');
+  })
+
+  /**
    * Block access to blacklisted tables
    */
   .derive(({ params, set }) => {
-    if (params?.table && BLACKLISTED_TABLES.includes(params.table)) {
+    if (params?.table && REST_BLACKLISTED_TABLES.includes(params.table)) {
       set.status = 403;
       throw new Error(`Table "${params.table}" is not allowed`);
     }
@@ -226,7 +316,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
    */
   .get('/tables', async () => {
     const allowedTables = await getTableList();
-    return json(allowedTables);
+    return allowedTables;
   })
 
   /**
@@ -242,7 +332,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
       }
 
       const schema = await getTableSchema(table);
-      return json(schema);
+      return schema;
     },
     {
       params: t.Object({ table: t.String() }),
@@ -321,7 +411,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
         .where({ id: Number(id) })
         .first();
       if (!record) throw new Error('Not found');
-      return json(record);
+      return record;
     },
     { params: t.Object({ table: t.String(), id: t.Numeric() }) }
   )
@@ -334,7 +424,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
     async ({ params: { table }, body }) => {
       const [{ id }] = await knex(table).insert(body).returning('id');
       const record = await knex(table).where({ id }).first();
-      return json(record);
+      return record;
     },
     { body: t.Record(t.String(), t.Any(), { minProperties: 1 }) }
   )
@@ -352,7 +442,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
       const record = await knex(table)
         .where({ id: Number(id) })
         .first();
-      return json(record);
+      return record;
     },
     {
       params: t.Object({ table: t.String(), id: t.Numeric() }),
@@ -370,7 +460,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
         .where({ id: Number(id) })
         .del();
       if (!deleted) throw new Error('Not found');
-      return json(null);
+      return null;
     },
     { params: t.Object({ table: t.String(), id: t.Numeric() }) }
   )
@@ -392,7 +482,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
         }
       });
 
-      return json({ insertedCount: inserted });
+      return { insertedCount: inserted };
     },
     {
       body: t.Array(t.Record(t.String(), t.Any(), { minProperties: 1 }), {
@@ -408,22 +498,54 @@ export const restRouter = new Elysia({ prefix: '/rest' })
   .patch(
     '/:table/bulk-update',
     async ({ params: { table }, body }) => {
-      const { where, data } = body;
-      const affected = await knex(table).where(where).update(data);
-      return json({ updatedCount: affected });
+      const updates = body as Array<{
+        where: Record<string, any>;
+        data: Record<string, any>;
+      }>;
+
+      if (!Array.isArray(updates) || updates.length === 0) {
+        throw new Error('updates must be a non-empty array');
+      }
+
+      const results = await knex.transaction(async (trx) => {
+        const affectedRows = [];
+
+        for (const { where, data } of updates) {
+          if (!where || Object.keys(where).length === 0) {
+            throw new Error(
+              'Each update item must have a non-empty "where" clause'
+            );
+          }
+          if (!data || Object.keys(data).length === 0) {
+            throw new Error(
+              'Each update item must have a non-empty "data" object'
+            );
+          }
+
+          const affected = await trx(table).where(where).update(data);
+          affectedRows.push({ where, updatedCount: affected });
+        }
+
+        return affectedRows;
+      });
+
+      const totalUpdated = results.reduce((sum, r) => sum + r.updatedCount, 0);
+      return { updatedCount: totalUpdated };
     },
     {
-      body: t.Object({
-        where: t.Record(t.String(), t.Any(), { minProperties: 1 }),
-        data: t.Record(t.String(), t.Any(), { minProperties: 1 }),
-      }),
+      body: t.Array(
+        t.Object({
+          where: t.Record(t.String(), t.Any(), { minProperties: 1 }),
+          data: t.Record(t.String(), t.Any(), { minProperties: 1 }),
+        })
+      ),
     }
   )
 
   /**
-   * DELETE /rest/:table/bulk-delete → delete many records (by ids or where)
+   * POST /rest/:table/bulk-delete → delete many records (by ids or where)
    */
-  .delete(
+  .post(
     '/:table/bulk-delete',
     async ({ params: { table }, body }) => {
       let deleted = 0;
@@ -440,7 +562,7 @@ export const restRouter = new Elysia({ prefix: '/rest' })
         throw err('Provide ids[] or where{}');
       }
 
-      return json({ deletedCount: deleted });
+      return { deletedCount: deleted };
     },
     {
       body: t.Union([

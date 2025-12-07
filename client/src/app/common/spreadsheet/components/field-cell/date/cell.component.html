@@ -1,0 +1,17 @@
+@if (data !== undefined && data !== null) {
+  <div class="field-cell__text-content">
+    {{ data | dateValue }}
+  </div>
+}
+@if (selecting) {
+  <p-overlay
+    #calendar
+    appendTo="body"
+    [(visible)]="calendarVisible"
+    [target]="eleRef.nativeElement"
+    (onShow)="onMenuOpened()"
+    (onHide)="onMenuClosed()"
+  >
+    <p-datepicker [inline]="true" [ngModel]="data" (ngModelChange)="onDatePicked($event)" />
+  </p-overlay>
+}

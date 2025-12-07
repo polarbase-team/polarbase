@@ -11,5 +11,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2"
   }
 }
