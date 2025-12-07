@@ -3,7 +3,7 @@
 <p-popover #popover [dismissable]="!columnMenu.visible">
   <div class="w-md">
     <!-- Body -->
-    <div>
+    <div class="overflow-y-auto max-h-100">
       @if (rules().length) {
         <div cdkDropList (cdkDropListDropped)="onDropped($event)" class="flex flex-col gap-2">
           <div
@@ -53,7 +53,7 @@
           <p class="font-medium">
             {{ isGroupType() ? 'No groups applied to this view' : 'No sorts applied to this view' }}
           </p>
-          <p class="text-surface-500">
+          <p class="text-surface-500 text-sm">
             {{
               isGroupType()
                 ? 'Add a column below to group the view'
@@ -86,10 +86,32 @@
   </div>
 </p-popover>
 
-<p-button
-  [label]="isGroupType() ? 'Group' : 'Sort'"
-  [icon]="`pi ${isGroupType() ? 'pi-list' : 'pi-sort-alt'}`"
-  variant="outlined"
-  severity="secondary"
-  (click)="popover.show($event)"
-/>
+@if (isGroupType()) {
+  <p-button
+    [label]="
+      rules().length === 1
+        ? `Grouped by 1 rule`
+        : rules().length > 1
+          ? `Grouped by ${rules().length} rules`
+          : 'Group'
+    "
+    icon="pi pi-list"
+    variant="outlined"
+    [severity]="rules().length ? 'primary' : 'secondary'"
+    (click)="popover.show($event)"
+  />
+} @else {
+  <p-button
+    [label]="
+      rules().length === 1
+        ? `Sorted by 1 rule`
+        : rules().length > 1
+          ? `Sorted by ${rules().length} rules`
+          : 'Sort'
+    "
+    icon="pi pi-sort-alt"
+    variant="outlined"
+    [severity]="rules().length ? 'primary' : 'secondary'"
+    (click)="popover.show($event)"
+  />
+}

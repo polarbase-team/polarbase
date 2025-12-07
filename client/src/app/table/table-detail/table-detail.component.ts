@@ -98,6 +98,7 @@ export class AppTableDetail {
           id: c.columnName,
           primary: c.isPrimary,
           editable: !c.isPrimary,
+          hidden: c.isPrimary,
           field: this.tblService.buildField(c),
         }));
         this.columns.set(null);

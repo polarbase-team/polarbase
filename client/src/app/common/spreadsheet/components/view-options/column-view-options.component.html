@@ -1,7 +1,7 @@
 <p-popover #popover>
   <div class="w-3xs">
     <!-- Body -->
-    <div>
+    <div class="overflow-y-auto max-h-100">
       <div cdkDropList (cdkDropListDropped)="onDropped($event)" class="flex flex-col gap-2">
         <div
           *ngFor="let column of columns()"
