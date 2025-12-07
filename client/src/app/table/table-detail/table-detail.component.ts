@@ -3,20 +3,20 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TabsModule } from 'primeng/tabs';
 import { ImageModule } from 'primeng/image';
 
-import { TableColumn } from '../../spreadsheet/models/table-column';
-import { TableRow } from '../../spreadsheet/models/table-row';
-import { TableConfig } from '../../spreadsheet/models/table';
-import { SpreadsheetComponent } from '../../spreadsheet/spreadsheet.component';
+import { TableColumn } from '../../common/spreadsheet/models/table-column';
+import { TableRow } from '../../common/spreadsheet/models/table-row';
+import { TableConfig } from '../../common/spreadsheet/models/table';
+import { SpreadsheetComponent } from '../../common/spreadsheet/spreadsheet.component';
 import {
   TableRowAction,
   TableRowActionType,
   TableRowAddedEvent,
-} from '../../spreadsheet/events/table-row';
+} from '../../common/spreadsheet/events/table-row';
 import {
   TableCellAction,
   TableCellActionType,
   TableCellEditedEvent,
-} from '../../spreadsheet/events/table-cell';
+} from '../../common/spreadsheet/events/table-cell';
 import { TableService } from '../table.service';
 
 @Component({

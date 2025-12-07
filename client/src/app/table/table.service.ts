@@ -2,8 +2,8 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-import { DataType, FieldConfig } from '../spreadsheet/field/interfaces/field.interface';
-import { buildField } from '../spreadsheet/field/utils';
+import { DataType, FieldConfig } from '../common/spreadsheet/field/interfaces/field.interface';
+import { buildField } from '../common/spreadsheet/field/utils';
 
 export interface TableDefinition {
   tableName: string;
