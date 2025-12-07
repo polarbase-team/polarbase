@@ -36,7 +36,7 @@ export type InputBoxContent = string | number;
 @Component({
   selector: 'input-box',
   template: '',
-  styleUrls: ['./input-box.scss'],
+  styleUrls: ['./input-box.component.scss'],
   host: {
     '[attr.type]': 'type()',
     '[attr.placeholder]': 'placeholder()',

@@ -7,7 +7,7 @@ import { InputBoxComponent } from '../input-box.component';
 
 @Component({
   selector: 'number-field-cell',
-  templateUrl: './cell.html',
+  templateUrl: './cell.component.html',
   styleUrls: ['../field-cell.scss', '../field-cell-inputable.scss'],
   host: { class: 'number-field-cell' },
   standalone: true,

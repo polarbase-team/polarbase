@@ -1,7 +1,7 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TabsModule } from 'primeng/tabs';
-import { Image, ImageModule } from 'primeng/image';
+import { ImageModule } from 'primeng/image';
 
 import { TableColumn } from '../../spreadsheet/models/table-column';
 import { TableRow } from '../../spreadsheet/models/table-row';
@@ -22,7 +22,7 @@ import { TableService } from '../table.service';
 @Component({
   selector: 'app-table-detail',
   imports: [TabsModule, ImageModule, SpreadsheetComponent],
-  templateUrl: './table-detail.html',
+  templateUrl: './table-detail.component.html',
 })
 export class AppTableDetail {
   protected config = signal<TableConfig>({

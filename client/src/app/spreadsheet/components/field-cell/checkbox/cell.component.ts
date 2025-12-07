@@ -8,8 +8,8 @@ import { CellTouchEvent } from '../field-cell-touchable';
 
 @Component({
   selector: 'checkbox-field-cell',
-  templateUrl: './cell.html',
-  styleUrls: ['../field-cell.scss', './cell.scss'],
+  templateUrl: './cell.component.html',
+  styleUrls: ['../field-cell.scss', './cell.component.scss'],
   host: { class: 'checkbox-field-cell' },
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,

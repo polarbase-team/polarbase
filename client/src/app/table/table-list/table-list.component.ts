@@ -8,7 +8,7 @@ import { TableService, TableDefinition } from '../table.service';
 @Component({
   selector: 'app-table-list',
   imports: [ButtonModule, DividerModule],
-  templateUrl: './table-list.html',
+  templateUrl: './table-list.component.html',
 })
 export class AppTableList {
   protected tables = signal<TableDefinition[]>([]);

@@ -3,8 +3,8 @@ import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 
-import { AppTableList } from './table/table-list/table-list';
-import { AppTableDetail } from './table/table-detail/table-detail';
+import { AppTableList } from './table/table-list/table-list.component';
+import { AppTableDetail } from './table/table-detail/table-detail.component';
 
 @Component({
   selector: 'app-root',

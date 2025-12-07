@@ -12,7 +12,7 @@ import { FieldCellEditable } from '../field-cell-editable';
 
 @Component({
   selector: 'date-field-cell',
-  templateUrl: './cell.html',
+  templateUrl: './cell.component.html',
   styleUrls: ['../field-cell.scss'],
   host: { class: 'date-field-cell' },
   standalone: true,

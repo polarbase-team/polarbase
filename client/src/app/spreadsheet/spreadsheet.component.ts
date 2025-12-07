@@ -95,8 +95,8 @@ const stack: SpreadsheetComponent[] = [];
 
 @Component({
   selector: 'spreadsheet',
-  templateUrl: './spreadsheet.html',
-  styleUrls: ['./spreadsheet.scss'],
+  templateUrl: './spreadsheet.component.html',
+  styleUrls: ['./spreadsheet.component.scss'],
   host: {
     class: 'spreadsheet',
     '[class.spreadsheet--right-scrolled]': 'virtualScroll.scrollLeft() > 0',
