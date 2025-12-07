@@ -112,11 +112,20 @@ $blank-row-height: 32px;
       }
     }
 
+    .spreadsheet__toolbar,
     .spreadsheet__header,
     .spreadsheet__body,
     .spreadsheet__footer {
       width: 100%;
       opacity: 0.99;
+    }
+
+    .spreadsheet__toolbar {
+      display: flex;
+      padding: {
+        top: 16px;
+        bottom: 16px;
+      }
     }
 
     .spreadsheet__header {

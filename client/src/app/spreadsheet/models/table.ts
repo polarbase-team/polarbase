@@ -1,7 +1,3 @@
-import { CalculateType } from '../utils/calculate';
-import { SortType } from '../utils/sort';
-import { TableColumn } from './table-column';
-
 export const TableRowSize = {
   S: 32,
   M: 56,
@@ -13,9 +9,6 @@ export type TableRowSize = keyof typeof TableRowSize;
 export interface TableConfig {
   sideSpacing?: number;
   dataStream?: boolean;
-  aggregations?: [TableColumn | TableColumn['id'], CalculateType][];
-  grouping?: [TableColumn | TableColumn['id'], SortType][];
-  sorting?: [TableColumn | TableColumn['id'], SortType][];
   column?: {
     frozenCount?: number | null;
     maxFrozenRatio?: number;

@@ -49,6 +49,8 @@ import { MessageModule } from 'primeng/message';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputIconModule } from 'primeng/inputicon';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { ButtonModule } from 'primeng/button';
 
 // Utils
@@ -56,9 +58,10 @@ import { Clipboard } from './utils/clipboard';
 import { Keyboard } from './utils/keyboard';
 
 // Components & Directives
-import { FieldCellService } from './components/field-cell/field-cell.service';
 import { VirtualScrollComponent } from './components/virtual-scroll/virtual-scroll.component';
 import { VirtualScrollViewportComponent } from './components/virtual-scroll/virtual-scroll-viewport.component';
+import { DataViewOptionsComponent } from './components/view-options/data-view-options.component';
+import { FieldCellService } from './components/field-cell/field-cell.service';
 
 import { VirtualScrollGroupRepeaterDirective } from './components/virtual-scroll/virtual-scroll-group-repeater.directive';
 import { VirtualScrollColumnRepeaterDirective } from './components/virtual-scroll/virtual-scroll-column-repeater.directive';
@@ -87,9 +90,6 @@ import { TableColumn } from './models/table-column';
 import { TableRow } from './models/table-row';
 import { TableGroup } from './models/table-group';
 import { ParseCalculatedResultPipe } from './pipes/parse-calculated-result.pipe';
-import { InputGroup, InputGroupModule } from 'primeng/inputgroup';
-import { InputGroupAddon, InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { Divider, DividerModule } from 'primeng/divider';
 
 const stack: SpreadsheetComponent[] = [];
 
@@ -123,7 +123,6 @@ const stack: SpreadsheetComponent[] = [];
     InputGroupModule,
     InputGroupAddonModule,
     InputIconModule,
-    DividerModule,
     ButtonModule,
     VirtualScrollComponent,
     VirtualScrollViewportComponent,
@@ -133,6 +132,7 @@ const stack: SpreadsheetComponent[] = [];
     VirtualScrollLeftContentWrapperComponent,
     VirtualScrollRightContentWrapperComponent,
     FieldCellFactoryDirective,
+    DataViewOptionsComponent,
     ParseCalculatedResultPipe,
   ],
   providers: [

@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 
 import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { OrderItem } from '../components/view-options/data-view-options.component';
 import { calculateBy, makeUpCalculatedData } from '../utils/calculate';
 import { groupBy } from '../utils/group';
 import { sortBy } from '../utils/sort';
@@ -211,7 +212,7 @@ export class TableService extends TableBaseService {
   refreshView = _.throttle(() => {
     if (this.isStreaming) return;
 
-    if (this.tableColumnService.groupedColumns.size > 0) {
+    if (this.tableColumnService.groupedColumns().length > 0) {
       this.group();
     } else {
       this.sort();
@@ -346,13 +347,14 @@ export class TableService extends TableBaseService {
 
   calculate(columns?: TableColumn[]) {
     if (columns) {
-      this.tableColumnService.calculatedColumns.clear();
+      const calculatedColumns: TableColumn[] = [];
       for (const column of columns) {
         if (!column.calculateType) continue;
-        this.tableColumnService.calculatedColumns.set(column.id, column);
+        calculatedColumns.push(column);
       }
-    } else if (this.tableColumnService.calculatedColumns.size) {
-      columns = [...this.tableColumnService.calculatedColumns.values()];
+      this.tableColumnService.calculatedColumns.set(calculatedColumns);
+    } else if (this.tableColumnService.calculatedColumns().length) {
+      columns = [...this.tableColumnService.calculatedColumns()];
     }
 
     if (this.isStreaming || !columns?.length) return;
@@ -378,25 +380,26 @@ export class TableService extends TableBaseService {
   }
 
   uncalculate() {
-    for (const column of this.tableColumnService.calculatedColumns.values()) {
+    this.calcResults.clear();
+
+    for (const column of this.tableColumnService.calculatedColumns()) {
       delete column.calculateType;
     }
-
-    this.tableColumnService.calculatedColumns.clear();
-    this.calcResults.clear();
+    this.tableColumnService.calculatedColumns.set([]);
   }
 
   group(columns?: TableColumn[]) {
     if (columns) {
-      this.tableColumnService.groupedColumns.clear();
       this.tableGroupService.collapsedGroupIds.clear();
 
+      const groupedColumns: TableColumn[] = [];
       for (const column of columns) {
         if (!column.groupSortType) continue;
-        this.tableColumnService.groupedColumns.set(column.id, column);
+        groupedColumns.push(column);
       }
-    } else if (this.tableColumnService.groupedColumns.size) {
-      columns = [...this.tableColumnService.groupedColumns.values()];
+      this.tableColumnService.groupedColumns.set(groupedColumns);
+    } else if (this.tableColumnService.groupedColumns().length) {
+      columns = [...this.tableColumnService.groupedColumns()];
     }
 
     if (this.isStreaming || !columns?.length) return;
@@ -412,25 +415,24 @@ export class TableService extends TableBaseService {
 
   ungroup() {
     this.tableGroupService.rootGroup.set(null);
+    this.tableGroupService.collapsedGroupIds.clear();
 
-    for (const column of this.tableColumnService.groupedColumns.values()) {
+    for (const column of this.tableColumnService.groupedColumns()) {
       delete column.groupSortType;
     }
-
-    this.tableColumnService.groupedColumns.clear();
-    this.tableGroupService.collapsedGroupIds.clear();
+    this.tableColumnService.groupedColumns.set([]);
   }
 
   sort(columns?: TableColumn[]) {
     if (columns) {
-      this.tableColumnService.sortedColumns.clear();
-
+      const sortedColumns: TableColumn[] = [];
       for (const column of columns) {
         if (!column.sortType) continue;
-        this.tableColumnService.sortedColumns.set(column.id, column);
+        sortedColumns.push(column);
       }
-    } else if (this.tableColumnService.sortedColumns.size) {
-      columns = [...this.tableColumnService.sortedColumns.values()];
+      this.tableColumnService.sortedColumns.set(sortedColumns);
+    } else if (this.tableColumnService.sortedColumns().length) {
+      columns = [...this.tableColumnService.sortedColumns()];
     }
 
     if (this.isStreaming || !columns?.length) return;
@@ -443,17 +445,44 @@ export class TableService extends TableBaseService {
   }
 
   unsort() {
-    for (const column of this.tableColumnService.sortedColumns.values()) {
-      delete column.sortType;
-    }
-
-    this.tableColumnService.sortedColumns.clear();
-
     if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.unsortInGroup();
     } else {
       this.tableRowService.rows.set(this.host.sourceRows());
     }
+
+    for (const column of this.tableColumnService.sortedColumns()) {
+      delete column.sortType;
+    }
+    this.tableColumnService.sortedColumns.set([]);
+  }
+
+  onApplyGroup(items: OrderItem[]) {
+    if (!items.length) {
+      this.ungroup();
+      return;
+    }
+
+    const columns: TableColumn[] = [];
+    for (const item of items) {
+      item.column.groupSortType = item.asc ? 'asc' : 'desc';
+      columns.push(item.column);
+    }
+    this.group(columns);
+  }
+
+  onApplySort(items: OrderItem[]) {
+    if (!items.length) {
+      this.unsort();
+      return;
+    }
+
+    const columns: TableColumn[] = [];
+    for (const item of items) {
+      item.column.sortType = item.asc ? 'asc' : 'desc';
+      columns.push(item.column);
+    }
+    this.sort(columns);
   }
 
   onFrozenDividerMousemove(e: MouseEvent) {

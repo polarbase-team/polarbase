@@ -1,0 +1,93 @@
+<p-menu #columnMenu [model]="menuItems()" [popup]="true" appendTo="body" />
+
+<p-popover #popover [dismissable]="!columnMenu.visible">
+  <div class="w-md">
+    <!-- Body -->
+    <div>
+      @if (items().length) {
+        <div cdkDropList (cdkDropListDropped)="onDropped($event)" class="flex flex-col gap-2">
+          <div
+            *ngFor="let item of items(); let i = index; let first = first"
+            cdkDrag
+            cdkDragLockAxis="y"
+            class="flex items-center justify-between"
+          >
+            <div class="flex items-center gap-2">
+              <!-- Drag handle -->
+              <i class="pi pi-bars text-surface-500 cursor-move text-lg" cdkDragHandle></i>
+
+              <!-- Field name -->
+              <span>
+                {{ first ? (isGroupType() ? 'group by' : 'sort by') : 'then by' }}
+                <span class="font-medium">
+                  {{ item.column.field.name }}
+                </span>
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <!-- ASC/DESC -->
+              <div class="flex items-center gap-2">
+                <label for="switch">ascending:</label>
+                <p-toggleswitch
+                  inputId="switch"
+                  [ngModel]="item.asc"
+                  (onChange)="toggleAsc(item)"
+                />
+              </div>
+
+              <!-- Remove -->
+              <p-button
+                variant="text"
+                severity="secondary"
+                icon="pi pi-times"
+                (click)="removeColumn(i)"
+              />
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="leading-6">
+          <p class="font-medium">
+            {{ isGroupType() ? 'No groups applied to this view' : 'No sorts applied to this view' }}
+          </p>
+          <p class="text-surface-500">
+            {{
+              isGroupType()
+                ? 'Add a column below to group the view'
+                : 'Add a column below to sort the view'
+            }}
+          </p>
+        </div>
+      }
+    </div>
+
+    <p-divider />
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between">
+      @if (menuItems().length) {
+        <p-button
+          variant="text"
+          [label]="isReachLimitColumn() ? 'Limit reached' : 'Add column'"
+          severity="secondary"
+          icon="pi pi-chevron-down"
+          iconPos="right"
+          [disabled]="isReachLimitColumn()"
+          (click)="columnMenu.show($event)"
+        />
+      } @else {
+        All columns have been added
+      }
+      <p-button label="Apply changes" (click)="applyChanges(); popover.hide()" />
+    </div>
+  </div>
+</p-popover>
+
+<p-button
+  [label]="isGroupType() ? 'Group' : 'Sort'"
+  [icon]="`pi ${isGroupType() ? 'pi-list' : 'pi-sort-alt'}`"
+  variant="outlined"
+  severity="secondary"
+  (click)="popover.show($event)"
+/>

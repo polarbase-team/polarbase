@@ -115,9 +115,9 @@ export class TableColumnService extends TableBaseService {
   columns = signal<TableColumn[]>([]);
   frozenColumns = signal<TableColumn[]>([]);
   scrollableColumns = signal<TableColumn[]>([]);
-  calculatedColumns = new Map<TableColumn['id'], TableColumn>();
-  groupedColumns = new Map<TableColumn['id'], TableColumn>();
-  sortedColumns = new Map<TableColumn['id'], TableColumn>();
+  calculatedColumns = signal<TableColumn[]>([]);
+  groupedColumns = signal<TableColumn[]>([]);
+  sortedColumns = signal<TableColumn[]>([]);
 
   private columnById = new Map<TableColumn['id'], TableColumn>();
 
@@ -125,43 +125,30 @@ export class TableColumnService extends TableBaseService {
     super();
 
     effect(() => {
-      const config = this.tableService.config();
-      if (config.aggregations) {
-        for (const [c, t] of config.aggregations) {
-          const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
-          if (!column) continue;
-          column.calculateType = t;
-          this.calculatedColumns.set(column.id, column);
-        }
-      }
-      if (config.grouping) {
-        for (const [c, t] of config.grouping) {
-          const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
-          if (!column) continue;
-          column.groupSortType = t;
-          this.groupedColumns.set(column.id, column);
-        }
-      }
-      if (config.sorting) {
-        for (const [c, t] of config.sorting) {
-          const column = _.isString(c) ? this.findColumnByID(c) : (c as TableColumn);
-          if (!column) continue;
-          column.sortType = t;
-          this.sortedColumns.set(column.id, column);
-        }
-      }
-    });
-
-    effect(() => {
       const columns = this.host.sourceColumns();
+      const calculatedColumns: TableColumn[] = [];
+      const groupedColumns: TableColumn[] = [];
+      const sortedColumns: TableColumn[] = [];
       for (const column of columns) {
         if (!this.columnById.has(column.id)) {
           column.id ??= _.uniqueId();
           column.width ??= this.tableService.config().column.defaultWidth;
           this.columnById.set(column.id, column);
         }
+        if (column.calculateType) {
+          calculatedColumns.push(column);
+        }
+        if (column.groupSortType) {
+          groupedColumns.push(column);
+        }
+        if (column.sortType) {
+          sortedColumns.push(column);
+        }
       }
       this.columns.set(_.filter(columns, (c) => !c.hidden));
+      this.calculatedColumns.set(calculatedColumns);
+      this.groupedColumns.set(groupedColumns);
+      this.sortedColumns.set(sortedColumns);
     });
 
     effect(() => {
@@ -195,10 +182,10 @@ export class TableColumnService extends TableBaseService {
   }
 
   calculateByColumn(column: TableColumn, calculateType: CalculateType) {
-    if (!column || !calculateType || column.calculateType === calculateType) return;
+    if (column.calculateType === calculateType) return;
 
     column.calculateType = calculateType;
-    this.calculatedColumns.set(column.id, column);
+    this.calculatedColumns.update((arr) => [...arr, column]);
     this.tableService.calculate();
     this.host.columnAction.emit({
       type: TableColumnActionType.Calculate,
@@ -207,34 +194,21 @@ export class TableColumnService extends TableBaseService {
   }
 
   uncalculateByColumn(column: TableColumn) {
-    if (!column?.calculateType) return;
+    if (!column.calculateType) return;
 
     delete column.calculateType;
-    this.calculatedColumns.delete(column.id);
+    this.calculatedColumns.update((arr) => _.without(arr, column));
     this.host.columnAction.emit({
       type: TableColumnActionType.Uncalculate,
       payload: column,
     });
   }
 
-  groupByColumn(column: TableColumn, sortType: SortType = 'asc', replaceColumn?: TableColumn) {
-    if (!column?.id || !sortType || column.groupSortType === sortType) return;
+  groupByColumn(column: TableColumn, sortType: SortType = 'asc') {
+    if (column.groupSortType === sortType) return;
 
     column.groupSortType = sortType;
-    if (replaceColumn) {
-      delete replaceColumn.groupSortType;
-      const groupedColumns = new Map<TableColumn['id'], TableColumn>();
-      for (const [key, value] of this.groupedColumns) {
-        if (key === replaceColumn.id) {
-          groupedColumns.set(column.id, column);
-          continue;
-        }
-        groupedColumns.set(key, value);
-      }
-      this.groupedColumns = groupedColumns;
-    } else {
-      this.groupedColumns.set(column.id, column);
-    }
+    this.groupedColumns.update((arr) => [...arr, column]);
     this.tableService.group();
     this.host.columnAction.emit({
       type: TableColumnActionType.Group,
@@ -243,35 +217,23 @@ export class TableColumnService extends TableBaseService {
   }
 
   ungroupByColumn(column: TableColumn) {
-    if (!column?.groupSortType) return;
+    if (!column.groupSortType) return;
 
     delete column.groupSortType;
-    this.groupedColumns.delete(column.id);
-    this.groupedColumns.size ? this.tableService.group() : this.tableService.ungroup();
+    const newArr = _.without(this.groupedColumns(), column);
+    this.groupedColumns.set(newArr);
+    newArr.length ? this.tableService.group() : this.tableService.ungroup();
     this.host.columnAction.emit({
       type: TableColumnActionType.Ungroup,
       payload: column,
     });
   }
 
-  sortByColumn(column: TableColumn, sortType: SortType = 'asc', replaceColumn?: TableColumn) {
-    if (!column?.id || !sortType || column.sortType === sortType) return;
+  sortByColumn(column: TableColumn, sortType: SortType = 'asc') {
+    if (column.sortType === sortType) return;
 
     column.sortType = sortType;
-    if (replaceColumn) {
-      delete replaceColumn.sortType;
-      const sortedColumns = new Map<TableColumn['id'], TableColumn>();
-      for (const [key, value] of this.sortedColumns) {
-        if (key === replaceColumn.id) {
-          sortedColumns.set(column.id, column);
-          continue;
-        }
-        sortedColumns.set(key, value);
-      }
-      this.sortedColumns = sortedColumns;
-    } else {
-      this.sortedColumns.set(column.id, column);
-    }
+    this.sortedColumns.update((arr) => [...arr, column]);
     this.tableService.sort();
     this.host.columnAction.emit({
       type: TableColumnActionType.Sort,
@@ -280,11 +242,12 @@ export class TableColumnService extends TableBaseService {
   }
 
   unsortByColumn(column: TableColumn) {
-    if (!column?.sortType) return;
+    if (!column.sortType) return;
 
     delete column.sortType;
-    this.sortedColumns.delete(column.id);
-    this.sortedColumns.size ? this.tableService.sort() : this.tableService.unsort();
+    const newArr = _.without(this.sortedColumns(), column);
+    this.sortedColumns.set(newArr);
+    newArr.length ? this.tableService.sort() : this.tableService.unsort();
     this.host.columnAction.emit({
       type: TableColumnActionType.Unsort,
       payload: column,
@@ -296,7 +259,7 @@ export class TableColumnService extends TableBaseService {
       row.data ||= {};
       row.data[column.id] = null;
     }
-    if (this.groupedColumns.size > 0) {
+    if (this.groupedColumns().length > 0) {
       if (column.groupSortType) {
         this.tableService.group();
       }

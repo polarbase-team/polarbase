@@ -27,8 +27,8 @@ import { TableService } from '../table.service';
 export class AppTableDetail {
   protected config = signal<TableConfig>({
     sideSpacing: 20,
-    column: { deletable: false },
-    row: { insertable: false },
+    column: { addable: false, deletable: false },
+    row: { insertable: false, reorderable: false },
   });
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);

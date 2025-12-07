@@ -13,14 +13,24 @@
 </p-overlay>
 
 <div
-  class="flex"
-  style="padding-top: 1rem"
+  class="spreadsheet__toolbar"
   [style.paddingLeft.px]="tableService.config().sideSpacing"
   [style.paddingRight.px]="tableService.config().sideSpacing"
 >
   <div class="flex flex-1 gap-2">
-    <p-button label="Group" variant="outlined" severity="secondary" icon="pi pi-list" />
-    <p-button label="Sort" variant="outlined" severity="secondary" icon="pi pi-sort-alt" />
+    <data-view-options
+      type="group"
+      [sourceColumns]="sourceColumns()"
+      [currentColumns]="tableColumnService.groupedColumns()"
+      [limit]="3"
+      (apply)="tableService.onApplyGroup($event)"
+    />
+    <data-view-options
+      type="sort"
+      [sourceColumns]="sourceColumns()"
+      [currentColumns]="tableColumnService.sortedColumns()"
+      (apply)="tableService.onApplySort($event)"
+    />
   </div>
   <p-inputgroup class="w-xs max-w-xs">
     <p-inputgroup-addon>
@@ -52,8 +62,6 @@
     }
   </p-inputgroup>
 </div>
-
-<p-divider></p-divider>
 
 <virtual-scroll
   [sideSpacing]="tableService.config().sideSpacing"
