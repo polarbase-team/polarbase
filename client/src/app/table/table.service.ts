@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
 import { DataType, FieldConfig } from '../common/spreadsheet/field/interfaces/field.interface';
+import { DropdownFieldConfig } from '../common/spreadsheet/field/interfaces/dropdown-field.interface';
 import { buildField } from '../common/spreadsheet/field/utils';
 
 export interface TableDefinition {
@@ -27,6 +28,41 @@ interface Response<T = any> {
   message: string;
   data: T;
 }
+
+const PG_TYPE_MAPPING = {
+  // Integer
+  smallint: DataType.Integer,
+  integer: DataType.Integer,
+  bigint: DataType.Integer,
+  smallserial: DataType.Integer,
+  serial: DataType.Integer,
+  bigserial: DataType.Integer,
+
+  // Number
+  numeric: DataType.Number,
+  real: DataType.Number,
+  'double precision': DataType.Number,
+
+  // Text
+  character: DataType.Text,
+  'character varying': DataType.Text,
+  text: DataType.Text,
+  uuid: DataType.Text,
+  bit: DataType.Text,
+  'bit varying': DataType.Text,
+
+  // Checkbox
+  boolean: DataType.Checkbox,
+
+  // Date
+  date: DataType.Date,
+  timestamp: DataType.Date,
+  time: DataType.Date,
+
+  // JSON
+  json: DataType.Text,
+  jsonb: DataType.Text,
+};
 
 @Injectable({
   providedIn: 'root',
@@ -75,66 +111,30 @@ export class TableService {
     );
   }
 
-  getFieldType(pgType: string) {
-    const normalizedType = pgType
-      .toLowerCase()
-      .split('(')[0]
-      .trim()
-      .split(' without')[0]
-      .split(' with')[0];
-
-    const mapping = {
-      // Integer
-      smallint: DataType.Integer,
-      integer: DataType.Integer,
-      bigint: DataType.Integer,
-      smallserial: DataType.Integer,
-      serial: DataType.Integer,
-      bigserial: DataType.Integer,
-
-      // Number
-      numeric: DataType.Number,
-      real: DataType.Number,
-      'double precision': DataType.Number,
-
-      // Text
-      character: DataType.Text,
-      'character varying': DataType.Text,
-      text: DataType.Text,
-      uuid: DataType.Text,
-      bit: DataType.Text,
-      'bit varying': DataType.Text,
-
-      // Checkbox
-      boolean: DataType.Checkbox,
-
-      // Date
-      date: DataType.Date,
-      timestamp: DataType.Date,
-      time: DataType.Date,
-
-      // JSON
-      json: DataType.Text,
-      jsonb: DataType.Text,
-    };
-
-    return mapping[normalizedType] || DataType.Text;
-  }
-
-  getFieldConfig(column: ColumnDefinition) {
-    return {
-      id: column.columnName,
+  buildField(column: ColumnDefinition) {
+    let dataType: DataType;
+    const config: FieldConfig = {
       name: column.columnName,
       description: column.comment,
       required: !column.isNullable,
       initialData: column.defaultValue,
       params: column,
-    } as FieldConfig;
-  }
+    };
 
-  buildField(column: ColumnDefinition) {
-    const dataType = this.getFieldType(column.dataType);
-    const config = this.getFieldConfig(column);
+    if (column.enumValues) {
+      dataType = DataType.Dropdown;
+      (config as DropdownFieldConfig).options = column.enumValues;
+    } else {
+      const pgType = column.rawType;
+      const normalizedType = pgType
+        .toLowerCase()
+        .split('(')[0]
+        .trim()
+        .split(' without')[0]
+        .split(' with')[0];
+      dataType = PG_TYPE_MAPPING[normalizedType] || DataType.Text;
+    }
+
     return buildField(dataType, config);
   }
 }
