@@ -10,14 +10,16 @@
             *ngFor="let item of rules(); let i = index; let first = first"
             cdkDrag
             cdkDragLockAxis="y"
-            class="flex items-center justify-between"
+            class="flex items-center justify-between gap-6"
           >
-            <div class="flex items-center gap-2">
+            <div class="flex min-w-0 items-center gap-2">
               <!-- Drag handle -->
-              <i class="pi pi-bars text-surface-500 cursor-move text-lg" cdkDragHandle></i>
+              <div cdkDragHandle>
+                <img src="/icons/drag-dots.svg" />
+              </div>
 
               <!-- Field name -->
-              <span>
+              <span class="break-all">
                 {{ first ? (isGroupType() ? 'group by' : 'sort by') : 'then by' }}
                 <span class="font-medium">
                   {{ item.column.field.name }}

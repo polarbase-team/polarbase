@@ -7,7 +7,6 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { PopoverModule } from 'primeng/popover';
 import { ButtonModule } from 'primeng/button';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { PanelModule } from 'primeng/panel';
 import { DividerModule } from 'primeng/divider';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
@@ -29,7 +28,6 @@ export interface OrderingRule {
     PopoverModule,
     ButtonModule,
     ToggleSwitchModule,
-    PanelModule,
     DividerModule,
     MenuModule,
   ],

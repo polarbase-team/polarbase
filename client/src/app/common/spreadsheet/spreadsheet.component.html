@@ -18,6 +18,16 @@
   [style.paddingRight.px]="tableService.config().sideSpacing"
 >
   <div class="flex flex-1 gap-2">
+    <column-view-options
+      [sourceColumns]="sourceColumns()"
+      [visibleColumns]="tableColumnService.columns()"
+      (toggle)="
+        $event.hidden
+          ? tableColumnService.hideColumn($event.column)
+          : tableColumnService.showColumn($event.column)
+      "
+      (move)="tableColumnService.moveColumn($event.column, $event.newIndex)"
+    />
     <data-view-options
       type="group"
       [sourceColumns]="sourceColumns()"

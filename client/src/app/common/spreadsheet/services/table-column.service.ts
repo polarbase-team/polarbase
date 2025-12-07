@@ -334,15 +334,7 @@ export class TableColumnService extends TableBaseService {
       this.tableService.layout.column.dragTargetOffsetX = null;
     if (previousIndex === currentIndex) return;
 
-    moveItemInArray(this.columns(), previousIndex, currentIndex);
-    this.columns.update((arr) => [...arr]);
-    this.host.columnAction.emit({
-      type: TableColumnActionType.Move,
-      payload: {
-        column: this.columnAt(currentIndex),
-        position: currentIndex,
-      },
-    });
+    this.moveColumnAt(previousIndex, currentIndex);
   }
 
   onColumnResizing(column: TableColumn, event: ResizeEvent) {
@@ -448,6 +440,23 @@ export class TableColumnService extends TableBaseService {
     this.host.columnAction.emit({
       type: TableColumnActionType.Hide,
       payload: columns,
+    });
+  }
+
+  moveColumn(column: TableColumn, newIndex: number) {
+    const index = this.findColumnIndex(column);
+    this.moveColumnAt(index, newIndex);
+  }
+
+  moveColumnAt(index: number, newIndex: number) {
+    moveItemInArray(this.columns(), index, newIndex);
+    this.columns.update((arr) => [...arr]);
+    this.host.columnAction.emit({
+      type: TableColumnActionType.Move,
+      payload: {
+        column: this.columnAt(newIndex),
+        position: newIndex,
+      },
     });
   }
 

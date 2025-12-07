@@ -90,6 +90,7 @@ import { TableColumn } from './models/table-column';
 import { TableRow } from './models/table-row';
 import { TableGroup } from './models/table-group';
 import { ParseCalculatedResultPipe } from './pipes/parse-calculated-result.pipe';
+import { ColumnViewOptionsComponent } from "./components/view-options/column-view-options.component";
 
 const stack: SpreadsheetComponent[] = [];
 
@@ -134,7 +135,8 @@ const stack: SpreadsheetComponent[] = [];
     FieldCellFactoryDirective,
     DataViewOptionsComponent,
     ParseCalculatedResultPipe,
-  ],
+    ColumnViewOptionsComponent
+],
   providers: [
     MessageService,
     ConfirmationService,
