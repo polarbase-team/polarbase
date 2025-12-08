@@ -1,7 +1,7 @@
 <div class="w-full h-full bg-gray-50 relative">
   <p-scrollpanel #scrollContainer class="w-full h-full">
-    <div class="w-full h-full px-6 py-8 mb-30">
-      <div class="flex flex-col gap-8 w-full h-full">
+    <div class="w-full h-full px-6 py-8">
+      <div class="flex flex-col gap-8 w-full h-full" [class.mb-30]="messages().length">
         @for (msg of messages(); track msg.timestamp) {
           <div
             class="flex"
@@ -18,7 +18,7 @@
             </div>
           </div>
         } @empty {
-          <div class="w-full h-full flex items-center mt-30 flex flex-col gap-4">
+          <div class="w-full h-full flex items-center mt-50 flex flex-col gap-4">
             <p-image src="assets/images/chatbot.png" alt="Image" width="80" />
             <div class="text-center">
               <p class="text-2xl font-medium">Ask about your database</p>
