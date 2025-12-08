@@ -59,6 +59,15 @@ const getTableList = () => {
     .select({
       tableName: 'c.relname',
       tableComment: 'descr.description',
+      tableColumnPk: knex.raw(`
+        (
+          SELECT a.attname
+          FROM pg_index i
+          JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+          WHERE i.indrelid = c.oid AND i.indisprimary
+          LIMIT 1
+        )
+      `),
     })
     .leftJoin('pg_namespace as ns', 'c.relnamespace', 'ns.oid')
     .leftJoin('pg_description as descr', function () {
@@ -422,8 +431,7 @@ export const restRouter = new Elysia({ prefix: REST_PREFIX })
   .post(
     '/:table',
     async ({ params: { table }, body }) => {
-      const [{ id }] = await knex(table).insert(body).returning('id');
-      const record = await knex(table).where({ id }).first();
+      const record = await knex(table).insert(body).returning('*');
       return record;
     },
     { body: t.Record(t.String(), t.Any(), { minProperties: 1 }) }
@@ -435,13 +443,11 @@ export const restRouter = new Elysia({ prefix: REST_PREFIX })
   .patch(
     '/:table/:id',
     async ({ params: { table, id }, body }) => {
-      const count = await knex(table)
-        .where({ id: Number(id) })
-        .update(body);
-      if (count === 0) throw new Error('Not found');
       const record = await knex(table)
         .where({ id: Number(id) })
-        .first();
+        .update(body)
+        .returning('*');
+      if (!record) throw new Error('Not found');
       return record;
     },
     {
@@ -472,17 +478,19 @@ export const restRouter = new Elysia({ prefix: REST_PREFIX })
     '/:table/bulk-create',
     async ({ params: { table }, body }) => {
       const records = body as any[];
+      const returning = [] as any[];
       const chunk = 500;
-      let inserted = 0;
 
       await knex.transaction(async (trx: Knex.Transaction) => {
         for (let i = 0; i < records.length; i += chunk) {
-          await trx(table).insert(records.slice(i, i + chunk));
-          inserted += records.slice(i, i + chunk).length;
+          const inserted = await trx(table)
+            .insert(records.slice(i, i + chunk))
+            .returning('*');
+          returning.push(...inserted);
         }
       });
 
-      return { insertedCount: inserted };
+      return { insertedCount: returning.length, returning };
     },
     {
       body: t.Array(t.Record(t.String(), t.Any(), { minProperties: 1 }), {
@@ -522,15 +530,17 @@ export const restRouter = new Elysia({ prefix: REST_PREFIX })
             );
           }
 
-          const affected = await trx(table).where(where).update(data);
-          affectedRows.push({ where, updatedCount: affected });
+          const affected = await trx(table)
+            .where(where)
+            .update(data)
+            .returning('*');
+          affectedRows.push(...affected);
         }
 
         return affectedRows;
       });
 
-      const totalUpdated = results.reduce((sum, r) => sum + r.updatedCount, 0);
-      return { updatedCount: totalUpdated };
+      return { updatedCount: results.length, returning: results };
     },
     {
       body: t.Array(

@@ -17,7 +17,8 @@ import {
   TableCellActionType,
   TableCellEditedEvent,
 } from '../../common/spreadsheet/events/table-cell';
-import { TableService } from '../table.service';
+import { TableDefinition, TableService } from '../table.service';
+import { TableRealtimeService } from '../table-realtime.service';
 
 @Component({
   selector: 'app-table-detail',
@@ -35,26 +36,70 @@ export class AppTableDetail {
 
   protected tblService = inject(TableService);
 
-  constructor(private destroyRef: DestroyRef) {
+  constructor(
+    private destroyRef: DestroyRef,
+    private tblRealtimeService: TableRealtimeService,
+  ) {
     effect(() => {
       const selectedTable = this.tblService.selectedTable();
-      if (!selectedTable) {
-        return;
-      }
+      if (!selectedTable) return;
 
-      this.loadTable(selectedTable.tableName);
+      this.loadTable(selectedTable);
     });
   }
 
+  ngOnInit() {
+    this.tblRealtimeService
+      .enable()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ tableKeyColumn, action, record }) => {
+          switch (action) {
+            case 'insert': {
+              const recordPk = record.new[tableKeyColumn];
+              if (this.rows().find((row) => row.id === recordPk)) return;
+
+              this.rows.update((arr) => [...arr, { id: recordPk, data: record.new }]);
+              break;
+            }
+            case 'update': {
+              const recordPk = record.new[tableKeyColumn];
+              this.rows.update((rows) =>
+                rows.map((row) => (row.id === recordPk ? { ...row, data: record.new } : row)),
+              );
+              break;
+            }
+            case 'delete': {
+              const recordPk = record.new[tableKeyColumn];
+              this.rows.update((arr) => arr.filter((row) => row.id !== recordPk));
+              break;
+            }
+          }
+        },
+      });
+  }
+
   protected onRowAction(action: TableRowAction) {
-    const { tableName } = this.tblService.selectedTable();
+    const { tableName, tableColumnPk } = this.tblService.selectedTable();
     switch (action.type) {
       case TableRowActionType.Add:
-        const records = (action.payload as TableRowAddedEvent[]).map(({ row }) => row.data);
+        const rows = [];
+        const records = [];
+        for (const { row } of action.payload as TableRowAddedEvent[]) {
+          rows.push(row);
+          records.push(row.data);
+        }
         this.tblService
           .bulkCreateTableRecords(tableName, records)
           .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe();
+          .subscribe(({ data }) => {
+            for (let i = 0; i < rows.length; i++) {
+              const row = rows[i];
+              row.id = data.returning[i][tableColumnPk || 'id'];
+              row.data = data.returning[i];
+            }
+            this.rows.update((arr) => [...arr]);
+          });
         break;
       case TableRowActionType.Delete:
         const recordIds = (action.payload as TableRow[]).map((row) => row.id);
@@ -85,13 +130,13 @@ export class AppTableDetail {
     }
   }
 
-  private loadTable(tableName: string) {
-    this.loadTableSchema(tableName);
+  private loadTable(table: TableDefinition) {
+    this.loadTableSchema(table);
   }
 
-  private loadTableSchema(tableName: string) {
+  private loadTableSchema(table: TableDefinition) {
     this.tblService
-      .getTableSchema(tableName)
+      .getTableSchema(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((columnDefs) => {
         const columns: TableColumn[] = columnDefs.map((c) => ({
@@ -105,17 +150,17 @@ export class AppTableDetail {
         setTimeout(() => this.columns.set(columns));
         if (!columns.length) return;
 
-        this.loadTableData(tableName);
+        this.loadTableData(table);
       });
   }
 
-  private loadTableData(tableName: string) {
+  private loadTableData(table: TableDefinition) {
     this.tblService
-      .getTableData(tableName)
+      .getTableData(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((arr) => {
         const rows: TableRow[] = arr.map((it: any) => ({
-          id: it.id,
+          id: it[table.tableColumnPk || 'id'],
           data: it,
         }));
         this.rows.set(rows);

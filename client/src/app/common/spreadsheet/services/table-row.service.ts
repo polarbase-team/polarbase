@@ -135,33 +135,6 @@ export class TableRowService extends TableBaseService {
     this.rowAddedController.flush();
   }
 
-  // pushRows(rows: TableRow[]) {
-  //   this.host.rawRows = this.host.rawRows ? [...this.host.rawRows, ...rows] : rows;
-  //   this.rows() = [...this.host.rawRows];
-
-  //   for (const row of rows) {
-  //     if (!('_isInit' in row && (row as any)._isInit)) {
-  //       (row as any)._isInit = true;
-  //       row.id ||= _.uniqueId();
-  //     }
-  //     if (row.selected) this.selectedRows.add(row);
-  //     this.rowById.set(row.id, row);
-  //   }
-
-  //   this.tableService.refreshView();
-  //   this.cdr.markForCheck();
-  // }
-
-  // updateRows(rows: TableRow[], shouldCheckSelectedState?: boolean) {
-  //   if (shouldCheckSelectedState) {
-  //     for (const row of rows) {
-  //       row.selected ? this.selectedRows.add(row) : this.selectedRows.delete(row);
-  //     }
-  //   }
-  //   this.tableService.refreshView();
-  //   this.cdr.markForCheck();
-  // }
-
   onRowDragStarted(e: CdkDragStart<TableRow>) {
     this.tableCellService.deselectAllCells();
     const draggingRow = e.source.data;
