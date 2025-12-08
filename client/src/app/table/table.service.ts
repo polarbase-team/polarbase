@@ -9,6 +9,7 @@ import { buildField } from '../common/spreadsheet/field/utils';
 export interface TableDefinition {
   tableName: string;
   tableComment: string;
+  tableColumnPk: string;
 }
 
 export interface ColumnDefinition {
@@ -91,14 +92,14 @@ export class TableService {
   }
 
   bulkCreateTableRecords(tableName: string, records: any[]) {
-    return this.http.post<Response<{ insertedCount: number }>>(
+    return this.http.post<Response<{ insertedCount: number; returning: any[] }>>(
       `${this.apiUrl}/${tableName}/bulk-create`,
       records,
     );
   }
 
   bulkUpdateTableRecords(tableName: string, recordUpdates: { where: any; data: any }[]) {
-    return this.http.patch<Response<{ updatedCount: number }>>(
+    return this.http.patch<Response<{ updatedCount: number; returning: any[] }>>(
       `${this.apiUrl}/${tableName}/bulk-update`,
       recordUpdates,
     );
