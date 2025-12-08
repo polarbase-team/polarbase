@@ -17,7 +17,7 @@
   [style.paddingLeft.px]="tableService.config().sideSpacing"
   [style.paddingRight.px]="tableService.config().sideSpacing"
 >
-  <div class="flex flex-1 gap-2">
+  <div class="flex w-full gap-2">
     <column-view-options
       [sourceColumns]="sourceColumns()"
       [visibleColumns]="tableColumnService.columns()"
@@ -133,7 +133,7 @@
             <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
           }
           <div
-            class="text-sm white-space-nowrap overflow-hidden truncate flex-1"
+            class="text-sm white-space-nowrap overflow-hidden truncate w-full"
             [attr.title]="column.field.name"
           >
             {{ column.field.name }}

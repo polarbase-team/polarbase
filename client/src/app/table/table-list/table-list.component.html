@@ -1,8 +1,7 @@
-<div class="flex items-center justify-between px-4 py-2">
+<div class="flex items-center justify-between px-4 py-2 border-b-1 border-surface-200">
   <div>Tables</div>
   <p-button icon="pi pi-search" severity="secondary" [text]="true" />
 </div>
-<p-divider style="margin: 0" />
 <ul class="list-none px-0 py-2 m-0 overflow-y-auto max-h-full">
   @for (table of tables(); track table.tableName) {
     <li (click)="onTableSelected(table)">

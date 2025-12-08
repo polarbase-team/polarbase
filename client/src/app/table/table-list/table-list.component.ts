@@ -1,13 +1,12 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
-import { DividerModule } from 'primeng/divider';
 
 import { TableService, TableDefinition } from '../table.service';
 
 @Component({
   selector: 'app-table-list',
-  imports: [ButtonModule, DividerModule],
+  imports: [ButtonModule],
   templateUrl: './table-list.component.html',
 })
 export class AppTableList {

@@ -1,26 +1,31 @@
 import { Component, signal } from '@angular/core';
 import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
-import { DividerModule } from 'primeng/divider';
 
 import { AppTableList } from './table/table-list/table-list.component';
 import { AppTableDetail } from './table/table-detail/table-detail.component';
+import { AppChatBot } from './chatbot/chatbot.component';
 
 @Component({
   selector: 'app-root',
-  imports: [ToastModule, ButtonModule, DividerModule, AppTableList, AppTableDetail],
+  imports: [ToastModule, ButtonModule, AppTableList, AppTableDetail, AppChatBot],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   standalone: true,
 })
 export class App {
-  sideBarVisible = signal<boolean>(true);
+  sidebarVisible = signal<boolean>(true);
+  chatbotVisible = signal<boolean>(false);
 
-  toggleSideBar() {
-    this.sideBarVisible.update((v) => !v);
+  protected toggleSidebar() {
+    this.sidebarVisible.update((v) => !v);
   }
 
-  openAPIDocs() {
+  protected toggleChatbot() {
+    this.chatbotVisible.update((v) => !v);
+  }
+
+  protected openAPIDocs() {
     window.open('http://localhost:3000/rest/openapi', '_blank');
   }
 }

@@ -1,0 +1,63 @@
+<div class="w-full h-full bg-gray-50 relative">
+  <p-scrollpanel #scrollContainer class="w-full h-full">
+    <div class="w-full h-full px-6 py-8 mb-30">
+      <div class="flex flex-col gap-8 w-full h-full">
+        @for (msg of messages(); track msg.timestamp) {
+          <div
+            class="flex"
+            [ngClass]="{
+              'flex-row-reverse': msg.role === 'user',
+            }"
+          >
+            <div
+              [ngClass]="{
+                'p-4 rounded-2xl bg-primary text-primary-contrast': msg.role === 'user',
+              }"
+            >
+              <p class="m-0 white-space-pre-wrap">{{ msg.content }}</p>
+            </div>
+          </div>
+        } @empty {
+          <div class="w-full h-full flex items-center mt-30 flex flex-col gap-4">
+            <p-image src="assets/images/chatbot.png" alt="Image" width="80" />
+            <div class="text-center">
+              <p class="text-2xl font-medium">Ask about your database</p>
+              <p class="text-sm text-gray-500">AI responses may be inaccurate.</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (isTyping()) {
+        <div class="mt-4">
+          <p-progress-spinner
+            strokeWidth="8"
+            fill="transparent"
+            animationDuration=".5s"
+            [style]="{ width: '20px', height: '20px' }"
+          />
+        </div>
+      }
+    </div>
+  </p-scrollpanel>
+
+  <div
+    class="px-4 py-2 bg-white rounded-4xl border-1 border-surface-300 absolute z-1 bottom-8 left-6 right-6 flex gap-3 items-center"
+  >
+    <p-button icon="pi pi-paperclip" [rounded]="true" [text]="true" severity="secondary" />
+    <div
+      #editor
+      contenteditable="true"
+      data-placeholder="How can I help?"
+      class="w-full h-fit outline-0 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-500 empty:before:pointer-events-none"
+      (input)="onInput($any($event))"
+      (keydown.enter)="onEnter($any($event))"
+    ></div>
+    <p-button
+      icon="pi pi-send"
+      [rounded]="true"
+      [disabled]="!inputText().length"
+      (click)="sendMessage()"
+    />
+  </div>
+</div>
