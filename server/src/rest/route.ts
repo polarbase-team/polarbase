@@ -244,7 +244,7 @@ const getTableSchema = async (tableName: string) => {
 /**
  * Main REST router exposing CRUD + bulk operations for all public tables.
  */
-export const restRouter = new Elysia({ prefix: REST_PREFIX })
+export const restRoute = new Elysia({ prefix: REST_PREFIX })
   .use(
     openapi({
       references: fromTypes(),

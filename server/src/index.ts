@@ -2,7 +2,7 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import chalk from 'chalk';
 
-import { restRouter } from './rest/router';
+import { restRoute } from './rest/route';
 import { agentRouter } from './agent/route';
 import { mcpServer } from './mcp/server';
 import { enableCDC } from './realtime/cdc';
@@ -19,62 +19,66 @@ const logService = (name: string, status: boolean, extra?: string) => {
   );
 };
 
-const APP_NAME = 'CozyDB';
+const APP_NAME = process.env.NAME || 'CozyDB';
+const APP_HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
 const APP_PORT = Number(process.env.PORT || '3000');
 const CORS_ORIGINS = process.env.CORS_ORIGINS;
-
-const REST_ENABLED = process.env.REST_ENABLED === 'true';
-const REST_PREFIX = process.env.REST_PREFIX;
-
-const AGENT_ENABLED = process.env.AGENT_ENABLED === 'true';
-const AGENT_PREFIX = process.env.AGENT_PREFIX;
-
-const MCP_ENABLED = process.env.MCP_ENABLED === 'true';
-const MCP_PATH = process.env.MCP_PATH;
-const MCP_PORT = Number(process.env.MCP_PORT || '8080');
-
-const REALTIME_ENABLED = process.env.REALTIME_ENABLED === 'true';
-const REALTIME_PATH = process.env.REALTIME_PATH;
 
 (async () => {
   console.log('');
   console.log(chalk.bold.cyan(`   Starting ${APP_NAME} services...`));
   console.log('');
 
-  const app = new Elysia({ name: APP_NAME }).use(
-    cors({ origin: CORS_ORIGINS })
-  );
+  const app = new Elysia({
+    name: APP_NAME,
+    serve: { hostname: APP_HOSTNAME },
+  }).use(cors({ origin: CORS_ORIGINS }));
 
   let allGood = true;
 
   // 1. REST API
+  const REST_ENABLED = process.env.REST_ENABLED === 'true';
+  const REST_PREFIX = process.env.REST_PREFIX;
   if (REST_ENABLED) {
-    app.use(restRouter);
-    logService('REST API', true, `http://localhost:${APP_PORT}${REST_PREFIX}`);
+    app.use(restRoute);
+    logService(
+      'REST API',
+      true,
+      `http://${APP_HOSTNAME}:${APP_PORT}${REST_PREFIX}`
+    );
   } else {
     logService('REST API', false);
   }
 
   // 2. AGENT API
+  const AGENT_ENABLED = process.env.AGENT_ENABLED === 'true';
+  const AGENT_PREFIX = process.env.AGENT_PREFIX;
   if (AGENT_ENABLED) {
     app.use(agentRouter);
     logService(
       'AGENT API',
       true,
-      `http://localhost:${APP_PORT}${AGENT_PREFIX}`
+      `http://${APP_HOSTNAME}:${APP_PORT}${AGENT_PREFIX}`
     );
   } else {
     logService('AGENT API', false);
   }
 
   // 3. MCP Server
+  const MCP_ENABLED = process.env.MCP_ENABLED === 'true';
+  const MCP_PATH = process.env.MCP_PATH;
+  const MCP_PORT = Number(process.env.MCP_PORT || '8080');
   if (MCP_ENABLED) {
     try {
       await mcpServer.start({
         transportType: 'httpStream',
         httpStream: { port: MCP_PORT },
       });
-      logService('MCP Server', true, `http://localhost:${MCP_PORT}${MCP_PATH}`);
+      logService(
+        'MCP Server',
+        true,
+        `http://${APP_HOSTNAME}:${MCP_PORT}${MCP_PATH}`
+      );
     } catch (err: any) {
       allGood = false;
       logService('MCP Server', false);
@@ -88,6 +92,8 @@ const REALTIME_PATH = process.env.REALTIME_PATH;
   }
 
   // 4. Realtime
+  const REALTIME_ENABLED = process.env.REALTIME_ENABLED === 'true';
+  const REALTIME_PATH = process.env.REALTIME_PATH;
   if (REALTIME_ENABLED) {
     enableCDC();
     app.ws(`${REALTIME_PATH}`, {
@@ -102,7 +108,7 @@ const REALTIME_PATH = process.env.REALTIME_PATH;
     logService(
       'Realtime (WS+CDC)',
       true,
-      `ws://localhost:${APP_PORT}${REALTIME_PATH}`
+      `ws://${APP_HOSTNAME}:${APP_PORT}${REALTIME_PATH}`
     );
   } else {
     logService('Realtime (WS+CDC)', false);
@@ -115,6 +121,7 @@ const REALTIME_PATH = process.env.REALTIME_PATH;
     timestamp: new Date().toISOString(),
     services: {
       rest: REST_ENABLED,
+      agent: AGENT_ENABLED,
       mcp: MCP_ENABLED,
       realtime: REALTIME_ENABLED,
     },
