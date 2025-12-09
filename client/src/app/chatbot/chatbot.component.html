@@ -1,44 +1,47 @@
 <div class="w-full h-full bg-gray-50 relative">
   <p-scrollpanel #scrollContainer class="w-full h-full">
-    <div class="w-full h-full px-6 py-8">
-      <div class="flex flex-col gap-8 w-full h-full" [class.mb-30]="messages().length">
-        @for (msg of messages(); track msg.timestamp) {
-          <div
-            class="flex"
-            [ngClass]="{
-              'flex-row-reverse': msg.role === 'user',
-            }"
-          >
+    @if (messages().length) {
+      <div class="px-6 py-8 mb-30">
+        <div class="flex flex-col gap-4">
+          @for (msg of messages(); track msg.timestamp) {
             <div
+              class="flex"
               [ngClass]="{
-                'p-4 rounded-2xl bg-primary text-primary-contrast': msg.role === 'user',
+                'flex-row-reverse': msg.role === 'user',
               }"
             >
-              <p class="m-0 white-space-pre-wrap">{{ msg.content }}</p>
+              <div
+                [ngClass]="{
+                  'p-4 rounded-2xl bg-primary text-primary-contrast': msg.role === 'user',
+                  'leading-6': msg.role !== 'user',
+                }"
+              >
+                <p class="m-0 white-space-pre-wrap" [innerHTML]="msg.content | safeHtml"></p>
+              </div>
             </div>
-          </div>
-        } @empty {
-          <div class="w-full h-full flex items-center mt-50 flex flex-col gap-4">
-            <p-image src="assets/images/chatbot.png" alt="Image" width="80" />
-            <div class="text-center">
-              <p class="text-2xl font-medium">Ask about your database</p>
-              <p class="text-sm text-gray-500">AI responses may be inaccurate.</p>
-            </div>
+          }
+        </div>
+
+        @if (isTyping()) {
+          <div class="mt-4">
+            <p-progress-spinner
+              strokeWidth="8"
+              fill="transparent"
+              animationDuration=".5s"
+              [style]="{ width: '20px', height: '20px' }"
+            />
           </div>
         }
       </div>
-
-      @if (isTyping()) {
-        <div class="mt-4">
-          <p-progress-spinner
-            strokeWidth="8"
-            fill="transparent"
-            animationDuration=".5s"
-            [style]="{ width: '20px', height: '20px' }"
-          />
+    } @else {
+      <div class="w-full h-full flex items-center pt-80 flex flex-col gap-4">
+        <p-image src="assets/images/chatbot.png" alt="Image" width="80" />
+        <div class="text-center">
+          <p class="text-2xl font-medium">Ask about your database</p>
+          <p class="text-sm text-gray-500">AI responses may be inaccurate.</p>
         </div>
-      }
-    </div>
+      </div>
+    }
   </p-scrollpanel>
 
   <div
@@ -51,12 +54,12 @@
       data-placeholder="How can I help?"
       class="w-full h-fit outline-0 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-500 empty:before:pointer-events-none"
       (input)="onInput($any($event))"
-      (keydown.enter)="onEnter($any($event))"
+      (keydown.enter)="!isStreaming() ? onEnter($any($event)) : false"
     ></div>
     <p-button
       icon="pi pi-send"
       [rounded]="true"
-      [disabled]="!inputText().length"
+      [disabled]="!inputText().length || isStreaming()"
       (click)="sendMessage()"
     />
   </div>
