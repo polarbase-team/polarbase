@@ -56,12 +56,12 @@ $name: '.virtual-scroll';
       min-height: 10px;
       box-shadow: rgb(255, 255, 255) 0 0 0 1px inset;
       border-radius: 7px;
-      background-color: var(--p-surface-400);
+      background-color: var(--p-surface-300);
       will-change: transform;
 
       &:hover,
       &:active {
-        background-color: var(--p-surface-500);
+        background-color: var(--p-surface-400);
       }
     }
   }
