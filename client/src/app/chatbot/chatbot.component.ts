@@ -73,8 +73,6 @@ export class AppChatBot {
       .chat(text)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((event) => {
-        this.isTyping.set(false);
-
         if (event.type === HttpEventType.DownloadProgress) {
           const progressEvent = event as HttpDownloadProgressEvent;
           message.content = progressEvent.partialText || '';
@@ -82,8 +80,9 @@ export class AppChatBot {
         } else if (event.type === HttpEventType.Response) {
           message.content = event.body as string;
           this.messages.update((m) => [...m]);
-          this.isStreaming.set(true);
+          this.isStreaming.set(false);
         }
+        this.isTyping.set(false);
       });
   }
 
