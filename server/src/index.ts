@@ -3,6 +3,7 @@ import { cors } from '@elysiajs/cors';
 import chalk from 'chalk';
 
 import { restRouter } from './rest/router';
+import { agentRouter } from './agent/route';
 import { mcpServer } from './mcp/server';
 import { enableCDC } from './realtime/cdc';
 import { WebSocket } from './plugins/web-socket';
@@ -24,6 +25,9 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
 
 const REST_ENABLED = process.env.REST_ENABLED === 'true';
 const REST_PREFIX = process.env.REST_PREFIX;
+
+const AGENT_ENABLED = process.env.AGENT_ENABLED === 'true';
+const AGENT_PREFIX = process.env.AGENT_PREFIX;
 
 const MCP_ENABLED = process.env.MCP_ENABLED === 'true';
 const MCP_PATH = process.env.MCP_PATH;
@@ -51,7 +55,19 @@ const REALTIME_PATH = process.env.REALTIME_PATH;
     logService('REST API', false);
   }
 
-  // 2. MCP Server
+  // 2. AGENT API
+  if (AGENT_ENABLED) {
+    app.use(agentRouter);
+    logService(
+      'AGENT API',
+      true,
+      `http://localhost:${APP_PORT}${AGENT_PREFIX}`
+    );
+  } else {
+    logService('AGENT API', false);
+  }
+
+  // 3. MCP Server
   if (MCP_ENABLED) {
     try {
       await mcpServer.start({
@@ -71,7 +87,7 @@ const REALTIME_PATH = process.env.REALTIME_PATH;
     logService('MCP Server', false);
   }
 
-  // 3. Realtime
+  // 4. Realtime
   if (REALTIME_ENABLED) {
     enableCDC();
     app.ws(`${REALTIME_PATH}`, {

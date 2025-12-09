@@ -10,9 +10,14 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.53",
+    "@ai-sdk/google": "^2.0.44",
+    "@ai-sdk/mcp": "^0.0.11",
+    "@ai-sdk/openai": "^2.0.80",
     "@elysiajs/cors": "^1.4.0",
     "@elysiajs/openapi": "^1.4.11",
     "@types/pg": "^8.15.6",
+    "ai": "^5.0.108",
     "dotenv": "^17.2.3",
     "elysia": "latest",
     "fastmcp": "^3.22.0",

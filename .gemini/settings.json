@@ -5,7 +5,7 @@
   },
   "mcpServers": {
     "cozy-db-server": {
-      "httpUrl": "http://localhost:3001/mcp"
+      "httpUrl": "http://localhost:8080/mcp"
     }
   },
   "model": {
