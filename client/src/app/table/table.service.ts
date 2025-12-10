@@ -58,7 +58,6 @@ const PG_TYPE_MAPPING = {
   // Date
   date: DataType.Date,
   timestamp: DataType.Date,
-  timestamptz: DataType.Date,
   time: DataType.Date,
 
   // JSON
@@ -127,7 +126,7 @@ export class TableService {
       dataType = DataType.Dropdown;
       (config as DropdownFieldConfig).options = column.enumValues;
     } else {
-      const pgType = column.rawType;
+      const pgType = column.dataType;
       const normalizedType = pgType
         .toLowerCase()
         .split('(')[0]
