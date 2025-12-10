@@ -13,13 +13,13 @@ export class JSONField extends Field<JSONData> {
 
   override convertTextToData(text: string) {
     try {
-      return !_.isNil(text) && text.length > 0 ? JSON.parse(text) : text;
+      return !_.isNil(text) && text.length > 0 ? JSON.parse(text) : null;
     } catch {
       return null;
     }
   }
 
   override toString(data = this.data): string {
-    return !_.isNil(data) ? JSON.stringify(data) : '';
+    return !_.isNil(data) && !_.isString(data) ? JSON.stringify(data) : '';
   }
 }
