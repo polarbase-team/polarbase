@@ -58,6 +58,7 @@ const PG_TYPE_MAPPING = {
   // Date
   date: DataType.Date,
   timestamp: DataType.Date,
+  timestamptz: DataType.Date,
   time: DataType.Date,
 
   // JSON

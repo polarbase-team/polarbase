@@ -12,8 +12,9 @@ import {
 } from '@angular/core';
 import * as ace from 'ace-builds';
 
+ace.config.set('basePath', 'ace-builds/src-noconflict');
+
 import 'ace-builds/src-noconflict/mode-json';
-import 'ace-builds/src-noconflict/theme-github';
 
 @Component({
   selector: 'json-editor',
@@ -44,7 +45,7 @@ export class JSONEditorComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     this.editor = ace.edit(this.editorContainer()!.nativeElement, {
       mode: 'ace/mode/json',
-      theme: 'ace/theme/monokai',
+      theme: 'ace/theme/textmate',
       showPrintMargin: false,
       fontSize: '14px',
       tabSize: 2,
