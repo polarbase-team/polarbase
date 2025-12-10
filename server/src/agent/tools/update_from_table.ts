@@ -83,7 +83,7 @@ export const updateFromTableTool = {
       const result = await query;
 
       // Log update completion
-      log.info('Update completed', { table, rowCount: result });
+      log.info('Update completed', { table, rowCount: result.rowCount });
 
       // Return success response
       return {
@@ -94,8 +94,8 @@ export const updateFromTableTool = {
               {
                 status: 'success',
                 table,
-                rowCount: result,
-                message: `Updated ${result} record(s) in '${table}'.`,
+                rowCount: result.rowCount,
+                message: `Updated ${result.rowCount} record(s) in '${table}'.`,
               },
               null,
               2
