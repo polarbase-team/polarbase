@@ -17,6 +17,12 @@
     <p-tabpanels class="flex-1 !p-0">
       <p-tabpanel value="0">
         @if (columns()) {
+          <record-detail-drawer
+            [(visible)]="visibleRecordDetail"
+            [fields]="fields()"
+            [data]="expandedRow?.data"
+            (closed)="expandedRow = null"
+          />
           <spreadsheet
             [config]="config()"
             [columns]="columns()"

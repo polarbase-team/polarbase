@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   effect,
   inject,
@@ -26,12 +27,13 @@ import {
 } from '../../common/spreadsheet/events/table-cell';
 import { TableDefinition, TableService } from '../table.service';
 import { TableRealtimeService } from '../table-realtime.service';
+import { RecordDetailDrawerComponent } from '../../common/record-detail/record-detail-drawer.component';
 
 @Component({
   selector: 'app-table-detail',
   templateUrl: './table-detail.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TabsModule, ImageModule, SpreadsheetComponent],
+  imports: [TabsModule, ImageModule, SpreadsheetComponent, RecordDetailDrawerComponent],
 })
 export class AppTableDetail {
   protected config = signal<TableConfig>({
@@ -42,13 +44,22 @@ export class AppTableDetail {
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
 
+  protected fields = computed(() => {
+    return this.columns().map((c) => c.field);
+  });
+
   protected tblService = inject(TableService);
+
+  protected expandedRow: TableRow;
+  protected visibleRecordDetail: boolean;
 
   constructor(
     private destroyRef: DestroyRef,
     private tblRealtimeService: TableRealtimeService,
   ) {
     effect(() => {
+      this.visibleRecordDetail = false;
+
       const selectedTable = this.tblService.selectedTable();
       if (!selectedTable) return;
 
@@ -115,6 +126,10 @@ export class AppTableDetail {
           .bulkDeleteTableRecords(tableName, recordIds)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
+        break;
+      case TableRowActionType.Expand:
+        this.expandedRow = action.payload as TableRow;
+        this.visibleRecordDetail = true;
         break;
     }
   }

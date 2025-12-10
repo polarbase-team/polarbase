@@ -1,0 +1,134 @@
+<ng-template #fieldTmpl let-field="field">
+  <div class="grid grid-cols-3 w-full gap-12">
+    <label [attr.for]="field.name" class="col-span-1">
+      <p class="font-medium">{{ field.name }}</p>
+      <p class="text-surface-400 text-sm">{{ field.params.rawType }}</p>
+    </label>
+    @switch (field.dataType) {
+      @case (DataType.Integer) {
+        <p-inputnumber
+          [attr.inputId]="field.name"
+          [(ngModel)]="internalData[field.name]"
+          [useGrouping]="false"
+          [readonly]="viewOnly()"
+          class="col-span-2"
+          placeholder="Input here..."
+        />
+      }
+      @case (DataType.Number) {
+        <p-inputnumber
+          [attr.inputId]="field.name"
+          [(ngModel)]="internalData[field.name]"
+          [useGrouping]="false"
+          mode="decimal"
+          [minFractionDigits]="0"
+          [maxFractionDigits]="5"
+          [readonly]="viewOnly()"
+          class="col-span-2"
+          placeholder="Input here..."
+        />
+      }
+      @case (DataType.Dropdown) {
+        <p-select
+          [attr.inputId]="field.name"
+          [options]="field.options"
+          [readonly]="viewOnly()"
+          class="col-span-2"
+          placeholder="Select here..."
+        />
+      }
+      @case (DataType.Checkbox) {
+        <p-checkbox
+          [attr.inputId]="field.name"
+          [(ngModel)]="internalData[field.name]"
+          [readonly]="viewOnly()"
+          [binary]="true"
+          size="large"
+        />
+      }
+      @case (DataType.Date) {
+        <p-datepicker
+          [attr.inputId]="field.name"
+          [(ngModel)]="internalData[field.name]"
+          [readonlyInput]="viewOnly()"
+          [disabled]="viewOnly()"
+          class="flex flex-col col-span-2"
+          appendTo="body"
+          placeholder="Select here..."
+        />
+      }
+      @case (DataType.Text) {
+        <textarea
+          pTextarea
+          [attr.inputId]="field.name"
+          [(ngModel)]="internalData[field.name]"
+          [readonly]="viewOnly()"
+          rows="1"
+          class="col-span-2"
+          placeholder="Input here..."
+        ></textarea>
+      }
+      @case (DataType.JSON) {
+        <div class="relative col-span-2">
+          <textarea
+            pTextarea
+            [attr.inputId]="field.name"
+            [ngModel]="internalData[field.name] | json"
+            [readonly]="viewOnly()"
+            rows="5"
+            cols="30"
+            class="w-full"
+            placeholder="Input here..."
+          ></textarea>
+          <div
+            class="absolute top-1 right-1 hover:bg-surface-50 text-surface-500 cursor-pointer w-8 h-8 rounded-md flex items-center justify-center"
+            (click)="openJSONEditor(field)"
+          >
+            <i class="pi pi-arrow-up-right-and-arrow-down-left-from-center"></i>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</ng-template>
+
+<p-drawer
+  [(visible)]="visible"
+  position="right"
+  header="Edit record"
+  [modal]="false"
+  styleClass="!w-150 record-detail-drawer"
+  (onShow)="onShow()"
+  (onHide)="onHide()"
+>
+  <ng-template #content>
+    <p-toast />
+    <rich-text-editor-drawer />
+    <json-editor-drawer
+      [(visible)]="visibleJSONEditor"
+      [(value)]="editingJSONText"
+      (saved)="internalData[editingJSONField?.name] = $event"
+    />
+    <div class="flex flex-col gap-12">
+      @for (field of requiredFields(); track field.name) {
+        <ng-container *ngTemplateOutlet="fieldTmpl; context: { field }" />
+      }
+    </div>
+    <p-divider class="!my-10" />
+    <div class="mb-10">
+      <p class="text-xl font-medium">Optional Fields</p>
+      <p class="text-surface-500">These are columns that do not need any value</p>
+    </div>
+    <div class="flex flex-col gap-12">
+      @for (field of optionalFields(); track field.name) {
+        <ng-container *ngTemplateOutlet="fieldTmpl; context: { field }" />
+      }
+    </div>
+  </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" (click)="visible.set(false)" />
+      <p-button label="Save" (click)="save()" />
+    </div>
+  </ng-template>
+</p-drawer>
