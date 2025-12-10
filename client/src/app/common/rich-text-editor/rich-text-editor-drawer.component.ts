@@ -1,18 +1,18 @@
 import { Component, output, model, input, ChangeDetectionStrategy } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
-
-import { JSONEditorComponent } from './json-editor.component';
+import { EditorModule } from 'primeng/editor';
 
 @Component({
-  selector: 'json-editor-drawer',
-  templateUrl: './json-editor-drawer.component.html',
-  styleUrl: './json-editor-drawer.component.scss',
+  selector: 'rich-text-editor-drawer',
+  templateUrl: './rich-text-editor-drawer.component.html',
+  styleUrl: './rich-text-editor-drawer.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DrawerModule, ButtonModule, JSONEditorComponent],
+  imports: [FormsModule, DrawerModule, ButtonModule, EditorModule],
 })
-export class JSONEditorDrawerComponent {
+export class RichTextEditorDrawerComponent {
   value = model('');
   visible = model(false);
   viewOnly = input(false);

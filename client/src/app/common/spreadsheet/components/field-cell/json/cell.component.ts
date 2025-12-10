@@ -30,6 +30,8 @@ export class JSONFieldCellComponent extends FieldCellInputable<JSONData> {
       data = this.field.convertTextToData(data);
     }
 
+    this.jsonText = this.field.toString(data);
+
     super.save(data);
   }
 }

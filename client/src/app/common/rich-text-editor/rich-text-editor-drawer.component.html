@@ -1,11 +1,11 @@
 <p-drawer
   [(visible)]="visible"
   position="right"
-  header="JSON Editor"
+  header="Rich Text Editor"
   [modal]="false"
-  styleClass="!w-150 json-editor-drawer"
+  styleClass="!w-180 rich-text-editor-drawer"
 >
-  <json-editor [(value)]="value" />
+  <p-editor [(ngModel)]="value" class="h-full !flex flex-col" />
   <ng-template #footer>
     <div class="flex justify-end gap-2">
       <p-button label="Cancel" severity="secondary" (click)="cancel()" />

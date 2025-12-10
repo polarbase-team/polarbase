@@ -9,7 +9,22 @@
     (contentChange)="onInputBoxChange($event)"
   />
 } @else {
-  <div class="field-cell__text-content">
-    {{ data }}
+  <div class="flex items-start justify-between w-full">
+    <div class="field-cell__text-content">
+      {{ data }}
+    </div>
+    @if (selecting) {
+      <rich-text-editor-drawer
+        [(visible)]="visibleRichTextEditor"
+        [value]="data"
+        (saved)="save($any($event))"
+      />
+      <div
+        class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
+        (click)="visibleRichTextEditor = true"
+      >
+        <i class="pi pi-arrow-up-right-and-arrow-down-left-from-center"></i>
+      </div>
+    }
   </div>
 }
