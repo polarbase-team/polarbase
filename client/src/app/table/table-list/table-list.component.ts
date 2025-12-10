@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -11,8 +11,9 @@ import { TableService, TableDefinition } from '../table.service';
 
 @Component({
   selector: 'app-table-list',
-  imports: [FormsModule, ButtonModule, IconFieldModule, InputIconModule, InputTextModule],
   templateUrl: './table-list.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormsModule, ButtonModule, IconFieldModule, InputIconModule, InputTextModule],
 })
 export class AppTableList {
   protected tables = signal<TableDefinition[]>([]);

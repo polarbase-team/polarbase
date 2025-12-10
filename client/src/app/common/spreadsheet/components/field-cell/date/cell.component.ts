@@ -13,7 +13,7 @@ import { FieldCellEditable } from '../field-cell-editable';
 @Component({
   selector: 'date-field-cell',
   templateUrl: './cell.component.html',
-  styleUrls: ['../field-cell.scss'],
+  styleUrl: '../field-cell.scss',
   host: { class: 'date-field-cell' },
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,4 +1,12 @@
-import { Component, signal, effect, viewChild, ElementRef, DestroyRef } from '@angular/core';
+import {
+  Component,
+  signal,
+  effect,
+  viewChild,
+  ElementRef,
+  DestroyRef,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { HttpDownloadProgressEvent, HttpEventType } from '@angular/common/http';
@@ -19,7 +27,9 @@ interface Message {
 
 @Component({
   selector: 'app-chatbot',
+  templateUrl: './chatbot.component.html',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -30,7 +40,6 @@ interface Message {
     SafeHtmlPipe,
   ],
   providers: [AgentService],
-  templateUrl: './chatbot.component.html',
 })
 export class AppChatBot {
   messages = signal<Message[]>([]);

@@ -1,4 +1,11 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TabsModule } from 'primeng/tabs';
 import { ImageModule } from 'primeng/image';
@@ -22,8 +29,9 @@ import { TableRealtimeService } from '../table-realtime.service';
 
 @Component({
   selector: 'app-table-detail',
-  imports: [TabsModule, ImageModule, SpreadsheetComponent],
   templateUrl: './table-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TabsModule, ImageModule, SpreadsheetComponent],
 })
 export class AppTableDetail {
   protected config = signal<TableConfig>({

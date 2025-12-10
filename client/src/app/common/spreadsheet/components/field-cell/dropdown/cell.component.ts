@@ -12,7 +12,7 @@ import { FieldCellEditable } from '../field-cell-editable';
 @Component({
   selector: 'dropdown-field-cell',
   templateUrl: './cell.component.html',
-  styleUrls: ['../field-cell.scss'],
+  styleUrl: '../field-cell.scss',
   host: { class: 'dropdown-field-cell' },
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,

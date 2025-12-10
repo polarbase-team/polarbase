@@ -72,7 +72,7 @@ const SCROLL_LONG_DISTANCE = 1200;
 @Component({
   selector: 'virtual-scroll, [virtualScroll]',
   templateUrl: './virtual-scroll.component.html',
-  styleUrls: ['./virtual-scroll.component.scss'],
+  styleUrl: './virtual-scroll.component.scss',
   host: {
     class: 'virtual-scroll',
     '[class.virtual-scroll--scrolling]': 'isScrolling() && !isAutoScroll()',
