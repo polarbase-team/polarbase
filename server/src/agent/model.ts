@@ -2,6 +2,7 @@ import { streamText, ModelMessage, tool } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
+import { createXai } from '@ai-sdk/xai';
 
 import { createTableTool } from './tools/create_table';
 import { deleteFromTableTool } from './tools/delete_from_table';
@@ -24,20 +25,30 @@ const google = createGoogleGenerativeAI({
 const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+const xai = createXai({
+  apiKey: process.env.XAI_API_KEY,
+});
 
 function resolveModel(modelId: SupportedModel) {
   const map: Record<string, any> = {
     // OpenAI
     'gpt-4o': openai('gpt-4o'),
     'gpt-4o-mini': openai('gpt-4o-mini'),
+    'gpt-5': openai('gpt-5'),
 
     // Google Gemini
     'gemini-2.5-flash': google('gemini-2.5-flash'),
     'gemini-2.5-pro': google('gemini-2.5-pro'),
+    'gemini-3-pro-preview': google('gemini-3-pro-preview'),
 
     // Anthropic
-    'claude-3-5-sonnet': anthropic('claude-3-5-sonnet-20241022'),
-    'claude-3-opus': anthropic('claude-3-opus-20240229'),
+    'claude-opus-4-5': anthropic('claude-opus-4-5'),
+    'claude-sonnet-4-5': anthropic('claude-sonnet-4-5'),
+
+    // xAI
+    'grok-3': xai('grok-3'),
+    'grok-4': xai('grok-4'),
+    'grok-4-fast': xai('grok-4-fast'),
   };
 
   if (!map[modelId]) {
