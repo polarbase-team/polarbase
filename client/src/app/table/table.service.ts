@@ -61,8 +61,8 @@ const PG_TYPE_MAPPING = {
   time: DataType.Date,
 
   // JSON
-  json: DataType.Text,
-  jsonb: DataType.Text,
+  json: DataType.JSON,
+  jsonb: DataType.JSON,
 };
 
 @Injectable({

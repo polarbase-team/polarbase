@@ -10,8 +10,6 @@ export class TextField extends Field<TextData> {
   }
 
   override convertTextToData(text: string) {
-    if (this.validate(text) !== null) return null;
-
     return text;
   }
 }

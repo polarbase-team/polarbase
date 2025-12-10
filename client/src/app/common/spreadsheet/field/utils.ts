@@ -6,6 +6,7 @@ import { NumberField } from './objects/number-field.object';
 import { DateField } from './objects/date-field.object';
 import { CheckboxField } from './objects/checkbox-field.object';
 import { DropdownField } from './objects/dropdown-field.object';
+import { JSONField } from './objects/json-field.object';
 
 export const FIELD_MAP = new Map([
   [DataType.Text, TextField as any],
@@ -14,6 +15,7 @@ export const FIELD_MAP = new Map([
   [DataType.Date, DateField],
   [DataType.Checkbox, CheckboxField],
   [DataType.Dropdown, DropdownField],
+  [DataType.JSON, JSONField],
 ]);
 
 export function buildField<T = Field>(dataType: DataType, config: FieldConfig<T>) {

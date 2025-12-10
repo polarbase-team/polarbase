@@ -1,0 +1,15 @@
+::ng-deep {
+  .json-editor-drawer {
+    .p-drawer-header {
+      border-bottom: 1px solid var(--p-surface-200);
+    }
+
+    .p-drawer-content {
+      padding: 0;
+    }
+
+    .p-drawer-footer {
+      border-top: 1px solid var(--p-surface-200);
+    }
+  }
+}

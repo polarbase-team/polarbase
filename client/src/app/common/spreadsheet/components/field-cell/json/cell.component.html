@@ -1,0 +1,30 @@
+@if (isInputting) {
+  <input-box
+    type="text"
+    [content]="jsonText"
+    (edited)="onInputBoxEdited($event)"
+    (input)="onInputBoxInput($event)"
+    (focus)="onInputBoxFocus($event)"
+    (blur)="onInputBoxBlur($event)"
+    (contentChange)="onInputBoxChange($event)"
+  />
+} @else {
+  <div class="flex items-start justify-between w-full">
+    <div class="field-cell__text-content">
+      {{ jsonText }}
+    </div>
+    @if (selecting) {
+      <json-editor-drawer
+        [(visible)]="visibleJSONEditor"
+        [value]="jsonText"
+        (saved)="save($any($event))"
+      />
+      <div
+        class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
+        (click)="visibleJSONEditor = true"
+      >
+        <i class="pi pi-arrow-up-right-and-arrow-down-left-from-center"></i>
+      </div>
+    }
+  </div>
+}

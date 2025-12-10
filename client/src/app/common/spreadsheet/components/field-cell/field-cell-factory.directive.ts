@@ -26,6 +26,7 @@ import { NumberFieldCellComponent } from './number/cell.component';
 import { DateFieldCellComponent } from './date/cell.component';
 import { CheckboxFieldCellComponent } from './checkbox/cell.component';
 import { DropdownFieldCellComponent } from './dropdown/cell.component';
+import { JSONFieldCellComponent } from './json/cell.component';
 import { FieldCellSelectingState, FieldCellService } from './field-cell.service';
 import { TableRow } from '../../models/table-row';
 import { TableColumn } from '../../models/table-column';
@@ -38,6 +39,7 @@ const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
   [DataType.Date, DateFieldCellComponent],
   [DataType.Checkbox, CheckboxFieldCellComponent],
   [DataType.Dropdown, DropdownFieldCellComponent],
+  [DataType.JSON, JSONFieldCellComponent],
 ]) as ReadonlyMap<DataType, Type<FieldCell>>;
 
 @Directive({
