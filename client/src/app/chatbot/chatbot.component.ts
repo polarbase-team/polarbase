@@ -97,7 +97,7 @@ export class AppChatBot {
   }
 
   protected onEnter(event: KeyboardEvent) {
-    if (!event.shiftKey) {
+    if (!event.shiftKey && !event.isComposing) {
       event.preventDefault();
       this.sendMessage();
     }
