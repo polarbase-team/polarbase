@@ -5,6 +5,7 @@ import db from '../../plugins/db';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 import { loadColumns } from '../resources/columns';
+import { Result } from 'pg';
 
 const inputSchema = z.object({
   table: z
@@ -87,8 +88,8 @@ export const upsertIntoTableTool = {
       }
 
       // Build Knex query
-      const query: Knex.QueryBuilder<any, any> | Knex.Raw<any> = db(table)
-        .insert(data)
+      const query = db(table)
+        .insert<any, Result>(data, '*')
         .onConflict(conflictTarget)
         .merge(updateColumns);
 
@@ -98,7 +99,7 @@ export const upsertIntoTableTool = {
       // Log upsert completion
       log.info('Upsert completed', {
         table,
-        rowCount: result.length || result,
+        rowCount: result.rowCount,
       });
 
       // Return success response
@@ -110,10 +111,8 @@ export const upsertIntoTableTool = {
               {
                 status: 'success',
                 table,
-                rowCount: result.length || result,
-                message: `Upserted ${
-                  result.length || result
-                } record(s) into '${table}'.`,
+                rowCount: result.rowCount,
+                message: `Upserted ${result.rowCount} record(s) into '${table}'.`,
               },
               null,
               2

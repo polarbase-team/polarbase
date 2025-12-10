@@ -4,6 +4,7 @@ import db from '../../plugins/db';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 import { loadColumns } from '../resources/columns';
+import { Result } from 'pg';
 
 const inputSchema = z.object({
   table: z
@@ -59,14 +60,13 @@ export const deleteFromTableTool = {
       }
 
       // Build Knex query
-      const query = db(table).where(where).delete();
-      ``;
+      const query = db(table).where(where).delete<any, Result>('*');
 
       // Execute query
       const result = await query;
 
       // Log delete completion
-      log.info('Delete completed', { table, rowCount: result });
+      log.info('Delete completed', { table, rowCount: result.rowCount });
 
       // Return success response
       return {
@@ -77,8 +77,8 @@ export const deleteFromTableTool = {
               {
                 status: 'success',
                 table,
-                rowCount: result,
-                message: `Deleted ${result} record(s) from '${table}'.`,
+                rowCount: result.rowCount,
+                message: `Deleted ${result.rowCount} record(s) from '${table}'.`,
               },
               null,
               2

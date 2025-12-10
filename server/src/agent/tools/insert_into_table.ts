@@ -4,6 +4,7 @@ import db from '../../plugins/db';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 import { loadColumns } from '../resources/columns';
+import { Result } from 'pg';
 
 const inputSchema = z.object({
   table: z
@@ -59,7 +60,7 @@ export const insertIntoTableTool = {
       }
 
       // Build Knex query
-      const query = db(table).insert(data);
+      const query = db(table).insert<any, Result>(data, '*');
 
       // Execute query
       const result = await query;
@@ -67,7 +68,7 @@ export const insertIntoTableTool = {
       // Log insert completion
       log.info('Insert completed', {
         table,
-        rowCount: result.length || result,
+        rowCount: result.rowCount,
       });
 
       // Return success response
@@ -79,10 +80,8 @@ export const insertIntoTableTool = {
               {
                 status: 'success',
                 table,
-                rowCount: result.length || result,
-                message: `Inserted ${
-                  result.length || result
-                } record(s) into '${table}'.`,
+                rowCount: result.rowCount,
+                message: `Inserted ${result.rowCount} record(s) into '${table}'.`,
               },
               null,
               2

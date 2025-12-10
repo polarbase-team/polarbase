@@ -4,6 +4,7 @@ import db from '../../plugins/db';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 import { loadColumns } from '../resources/columns';
+import { Result } from 'pg';
 
 const inputSchema = z.object({
   table: z
@@ -76,7 +77,7 @@ export const updateFromTableTool = {
       }
 
       // Build Knex query
-      const query = db(table).update(data).where(where);
+      const query = db(table).update<any, Result>(data, '*').where(where);
 
       // Execute query
       const result = await query;
