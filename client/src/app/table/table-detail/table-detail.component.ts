@@ -25,9 +25,12 @@ import {
   TableCellActionType,
   TableCellEditedEvent,
 } from '../../common/spreadsheet/events/table-cell';
+import {
+  RecordDetailDrawerComponent,
+  RecordDetailUpdatedEvent,
+} from '../../common/record-detail/record-detail-drawer.component';
 import { TableDefinition, TableService } from '../table.service';
 import { TableRealtimeService } from '../table-realtime.service';
-import { RecordDetailDrawerComponent } from '../../common/record-detail/record-detail-drawer.component';
 
 @Component({
   selector: 'app-table-detail',
@@ -151,6 +154,23 @@ export class AppTableDetail {
           .subscribe();
         break;
     }
+  }
+
+  protected onRecordUpdated(event: RecordDetailUpdatedEvent) {
+    const selectedTable = this.tblService.selectedTable();
+    this.tblService
+      .bulkUpdateTableRecords(selectedTable.tableName, [
+        {
+          where: { [selectedTable.tableColumnPk]: event.id },
+          data: event.data,
+        },
+      ])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.rows.update((rows) =>
+          rows.map((row) => (row.id === event.id ? { ...row, data: event.data } : row)),
+        );
+      });
   }
 
   private loadTable(table: TableDefinition) {

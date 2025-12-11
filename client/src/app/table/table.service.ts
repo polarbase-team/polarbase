@@ -89,25 +89,28 @@ export class TableService {
       .pipe(map((res) => res.data));
   }
 
-  getTableData(tableName: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${tableName}`).pipe(map((res) => res.data));
+  getTableData(tableName: string): Observable<Record<string, any>[]> {
+    return this.http.get(`${this.apiUrl}/${tableName}`).pipe(map((res) => res['data']));
   }
 
-  bulkCreateTableRecords(tableName: string, records: any[]) {
-    return this.http.post<Response<{ insertedCount: number; returning: any[] }>>(
+  bulkCreateTableRecords(tableName: string, records: Record<string, any>[]) {
+    return this.http.post<Response<{ insertedCount: number; returning: Record<string, any>[] }>>(
       `${this.apiUrl}/${tableName}/bulk-create`,
       records,
     );
   }
 
-  bulkUpdateTableRecords(tableName: string, recordUpdates: { where: any; data: any }[]) {
+  bulkUpdateTableRecords(
+    tableName: string,
+    recordUpdates: { where: Record<string, any>; data: Record<string, any> }[],
+  ) {
     return this.http.patch<Response<{ updatedCount: number; returning: any[] }>>(
       `${this.apiUrl}/${tableName}/bulk-update`,
       recordUpdates,
     );
   }
 
-  bulkDeleteTableRecords(tableName: string, recordIds: any[]) {
+  bulkDeleteTableRecords(tableName: string, recordIds: (string | number)[]) {
     return this.http.post<Response<{ deletedCount: number }>>(
       `${this.apiUrl}/${tableName}/bulk-delete`,
       { ids: recordIds },

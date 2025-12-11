@@ -26,6 +26,11 @@ import { RichTextEditorDrawerComponent } from '../rich-text-editor/rich-text-edi
 import { DataType } from '../spreadsheet/field/interfaces/field.interface';
 import { Field } from '../spreadsheet/field/objects/field.object';
 
+export interface RecordDetailUpdatedEvent {
+  id: string | number;
+  data: Record<string, any>;
+}
+
 @Component({
   selector: 'record-detail-drawer',
   templateUrl: './record-detail-drawer.component.html',
@@ -51,20 +56,21 @@ import { Field } from '../spreadsheet/field/objects/field.object';
   providers: [MessageService],
 })
 export class RecordDetailDrawerComponent {
+  id = input<string | number>();
   fields = input<Field[]>([]);
   data = input({});
   viewOnly = input(false);
   visible = model(false);
 
-  saved = output<any>();
+  saved = output<RecordDetailUpdatedEvent>();
   canceled = output();
   opened = output();
   closed = output();
 
-  protected requiredFields = signal<any>([]);
-  protected optionalFields = signal<any>([]);
+  protected requiredFields = signal<Field[]>([]);
+  protected optionalFields = signal<Field[]>([]);
   protected DataType = DataType;
-  protected internalData: any = {};
+  protected internalData: Record<string, any> = {};
   protected visibleJSONEditor = false;
   protected editingJSONField: Field;
   protected editingJSONText = '';
@@ -99,7 +105,7 @@ export class RecordDetailDrawerComponent {
 
   protected save() {
     const isInvalid = this.requiredFields().find(
-      (field: any) =>
+      (field: Field) =>
         this.internalData[field.name] === undefined || this.internalData[field.name] === null,
     );
 
@@ -114,7 +120,7 @@ export class RecordDetailDrawerComponent {
     }
 
     this.visible.set(false);
-    this.saved.emit(this.internalData);
+    this.saved.emit({ id: this.id(), data: this.internalData });
   }
 
   protected cancel() {
