@@ -358,7 +358,7 @@ export const restRoute = new Elysia({ prefix: REST_PREFIX })
         page = '1',
         limit = '20',
         search,
-        order = 'id:desc',
+        order = 'id:asc',
         where,
         fields,
       } = query;

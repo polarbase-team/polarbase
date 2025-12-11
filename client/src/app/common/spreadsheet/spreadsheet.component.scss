@@ -610,7 +610,8 @@ $blank-row-height: 32px;
       &.row--hover {
         &:not(.row--pending) {
           .row__select-handle,
-          .row__drag-handle {
+          .row__drag-handle,
+          .row__expand-handle {
             visibility: visible;
             opacity: 1;
           }
@@ -704,7 +705,8 @@ $blank-row-height: 32px;
         }
       }
       .row__select-handle,
-      .row__drag-handle {
+      .row__drag-handle,
+      .row__expand-handle {
         visibility: hidden;
         opacity: 0;
       }
@@ -723,6 +725,12 @@ $blank-row-height: 32px;
         top: 8px;
         z-index: 2;
         cursor: grab;
+      }
+      .row__expand-handle {
+        position: absolute;
+        right: 6px;
+        top: 8px;
+        cursor: pointer;
       }
     }
 

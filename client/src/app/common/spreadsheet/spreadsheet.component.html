@@ -498,6 +498,17 @@
                           ></p-checkbox>
                         </div>
                       }
+                      @if (tableService.config().row.expandable) {
+                        <div class="row__expand-handle">
+                          <i
+                            class="pi pi-arrow-up-right-and-arrow-down-left-from-center text-surface-500"
+                            style="font-size: 12px"
+                            [pTooltip]="'View Detail'"
+                            tooltipPosition="top"
+                            (click)="tableRowService.expandRow(row)"
+                          ></i>
+                        </div>
+                      }
                     </div>
                   </div>
                 </div>

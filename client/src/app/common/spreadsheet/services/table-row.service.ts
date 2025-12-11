@@ -471,18 +471,6 @@ export class TableRowService extends TableBaseService {
         },
         { separator: true },
       );
-      if (this.tableService.config().row.expandable) {
-        items.push(
-          {
-            label: 'Expand',
-            icon: 'pi pi-external-link',
-            command: () => {
-              this.expandRow(row);
-            },
-          },
-          { separator: true },
-        );
-      }
       if (this.tableService.config().row.insertable) {
         items.push(
           {
