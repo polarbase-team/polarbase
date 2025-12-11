@@ -945,7 +945,7 @@ export class TableCellService extends TableBaseService {
       matrix.push(items);
     }
 
-    clipboard.write(matrix as any);
+    clipboard.write(matrix);
 
     this.toastService.add({
       severity: 'success',

@@ -144,8 +144,8 @@ export class Clipboard {
     this.matrix = matrix;
 
     const t: string[] = [];
-    for (const items of matrix) {
-      t.push(_.map(items, 'text').join(TAB_CHAR));
+    for (const texts of matrix) {
+      t.push(texts.join(TAB_CHAR));
     }
     navigator.clipboard.writeText((this.nativeText = t.join(NEWLINE_CHAR)));
   }
