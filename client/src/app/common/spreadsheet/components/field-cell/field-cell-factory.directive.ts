@@ -21,6 +21,7 @@ import { Field } from '../../field/objects/field.object';
 import { FieldCell } from './field-cell';
 import { FieldCellEditable } from './field-cell-editable';
 import { TextFieldCellComponent } from './text/cell.component';
+import { LongTextFieldCellComponent } from './long-text/cell.component';
 import { IntegerFieldCellComponent } from './integer/cell.component';
 import { NumberFieldCellComponent } from './number/cell.component';
 import { DateFieldCellComponent } from './date/cell.component';
@@ -34,6 +35,7 @@ import { TableCell } from '../../models/table-cell';
 
 const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
   [DataType.Text, TextFieldCellComponent],
+  [DataType.LongText, LongTextFieldCellComponent],
   [DataType.Integer, IntegerFieldCellComponent],
   [DataType.Number, NumberFieldCellComponent],
   [DataType.Date, DateFieldCellComponent],

@@ -5,6 +5,27 @@
       <p class="text-surface-400 text-sm">{{ field.params.rawType }}</p>
     </label>
     @switch (field.dataType) {
+      @case (DataType.Text) {
+        <input
+          pInputText
+          [attr.inputId]="field.name"
+          [(ngModel)]="internalData[field.name]"
+          [readonly]="viewOnly()"
+          class="col-span-2"
+          placeholder="Input here..."
+        />
+      }
+      @case (DataType.LongText) {
+        <textarea
+          pTextarea
+          [attr.inputId]="field.name"
+          [(ngModel)]="internalData[field.name]"
+          [readonly]="viewOnly()"
+          rows="5"
+          class="col-span-2"
+          placeholder="Input here..."
+        ></textarea>
+      }
       @case (DataType.Integer) {
         <p-inputnumber
           [attr.inputId]="field.name"
@@ -56,17 +77,6 @@
           appendTo="body"
           placeholder="Select here..."
         />
-      }
-      @case (DataType.Text) {
-        <textarea
-          pTextarea
-          [attr.inputId]="field.name"
-          [(ngModel)]="internalData[field.name]"
-          [readonly]="viewOnly()"
-          rows="1"
-          class="col-span-2"
-          placeholder="Input here..."
-        ></textarea>
       }
       @case (DataType.JSON) {
         <div class="relative col-span-2">

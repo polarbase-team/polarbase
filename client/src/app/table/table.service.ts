@@ -47,10 +47,12 @@ const PG_TYPE_MAPPING = {
   // Text
   character: DataType.Text,
   'character varying': DataType.Text,
-  text: DataType.Text,
   uuid: DataType.Text,
   bit: DataType.Text,
   'bit varying': DataType.Text,
+
+  // Long Text
+  text: DataType.LongText,
 
   // Checkbox
   boolean: DataType.Checkbox,
