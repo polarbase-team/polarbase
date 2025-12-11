@@ -102,8 +102,15 @@ export const selectFromTableTool = {
       // Execute query
       const results = await query;
 
+      // Slice results
+      const MAX_ROWS_TO_RETURN = 10;
+      const slicedResults = results.slice(0, MAX_ROWS_TO_RETURN);
+
       // Log query completion
-      log.info('Query completed', { rowCount: results.length });
+      log.info('Query completed', {
+        totalRowsFromDB: results.length,
+        returnedRows: slicedResults.length,
+      });
 
       // Return results
       return {
@@ -113,7 +120,9 @@ export const selectFromTableTool = {
             text: JSON.stringify(
               {
                 status: 'success',
-                data: results,
+                total_rows_from_db: results.length,
+                returned_rows: slicedResults.length,
+                data: slicedResults,
               },
               null,
               2
