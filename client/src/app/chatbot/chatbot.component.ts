@@ -98,11 +98,11 @@ export class AppChatBot {
   protected onInput(event: InputEvent) {
     const target: any = event.target;
 
-    const text = target.innerHTML;
+    const text = target.innerText;
     this.inputText.set(text);
 
     const trimmed = target.innerText.trim();
-    if (trimmed === '') target.innerHTML = '';
+    if (trimmed === '') target.innerText = '';
   }
 
   protected onEnter(event: KeyboardEvent) {

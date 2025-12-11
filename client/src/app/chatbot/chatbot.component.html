@@ -10,14 +10,15 @@
                 'flex-row-reverse': msg.role === 'user',
               }"
             >
-              <div
-                [ngClass]="{
-                  'p-4 rounded-2xl bg-primary text-primary-contrast': msg.role === 'user',
-                  'leading-6': msg.role !== 'user',
-                }"
-              >
-                <p class="m-0 white-space-pre-wrap" [innerHTML]="msg.content | safeHtml"></p>
-              </div>
+              @if (msg.role === 'user') {
+                <div class="p-4 rounded-2xl bg-primary text-primary-contrast">
+                  <p class="m-0 white-space-pre-wrap">{{ msg.content }}</p>
+                </div>
+              } @else {
+                <div class="leading-6">
+                  <p class="m-0 white-space-pre-wrap" [innerHTML]="msg.content | safeHtml"></p>
+                </div>
+              }
             </div>
           }
         </div>
@@ -52,7 +53,7 @@
       #editor
       contenteditable="true"
       data-placeholder="How can I help?"
-      class="w-full h-fit outline-0 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-500 empty:before:pointer-events-none"
+      class="w-full min-w-0 h-fit outline-0 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-500 empty:before:pointer-events-none"
       (input)="onInput($any($event))"
       (keydown.enter)="!isStreaming() ? onEnter($any($event)) : false"
     ></div>
