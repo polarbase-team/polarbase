@@ -93,8 +93,12 @@ export class TableService {
     return this.http.post<Response>(`${this.apiUrl}/tables`, table);
   }
 
-  updateTable(table: TableDefinition) {
-    return this.http.put<Response>(`${this.apiUrl}/tables/${table.tableName}`, table);
+  updateTable(tableName: string, table: TableDefinition) {
+    return this.http.put<Response>(`${this.apiUrl}/tables/${tableName}`, table);
+  }
+
+  deleteTable(tableName: string, casecade = false) {
+    return this.http.delete<Response>(`${this.apiUrl}/tables/${tableName}?cascade=${casecade}`);
   }
 
   getRecords(tableName: string): Observable<Record<string, any>[]> {

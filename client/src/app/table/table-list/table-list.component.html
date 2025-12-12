@@ -1,3 +1,31 @@
+<p-confirmdialog>
+  <ng-template #message let-message>
+    <div class="flex flex-col gap-4">
+      <div>{{ message.message }}</div>
+      <div class="flex items-center gap-2">
+        <p-checkbox
+          [(ngModel)]="isCascadeDeleteEnabled"
+          inputId="cascade"
+          name="size"
+          value="true"
+          [binary]="true"
+        />
+        <label for="cascade" class="text-sm">
+          Drop table with cascade?
+          <p class="text-surface-500">Deletes the table and its dependent objects</p>
+        </label>
+      </div>
+      @if (isCascadeDeleteEnabled) {
+        <p-message severity="warn" class="w-xs">
+          <p>This will also delete all dependent objects such as views, foreign keys, etc.</p>
+        </p-message>
+      }
+    </div>
+  </ng-template>
+</p-confirmdialog>
+
+<p-menu #tableMenu [model]="menuItems" [popup]="true" />
+
 <p-drawer
   [(visible)]="visibleTableEditorDrawer"
   position="right"
@@ -14,8 +42,8 @@
         <input
           pInputText
           inputId="name"
+          [pAutoFocus]="true"
           [(ngModel)]="updatedTable.tableName"
-          ,
           class="col-span-2"
           placeholder="Input here..."
         />
@@ -38,7 +66,7 @@
   <ng-template #footer>
     <div class="flex justify-end gap-2">
       <p-button label="Cancel" severity="secondary" (click)="visibleTableEditorDrawer = false" />
-      <p-button label="Save" [loading]="isSaving()" (click)="saveTable()" />
+      <p-button label="Save" [loading]="isSaving" (click)="saveUpdatedTable()" />
     </div>
   </ng-template>
 </p-drawer>
@@ -49,17 +77,17 @@
     <p-button
       icon="pi pi-refresh"
       severity="secondary"
+      size="small"
       [text]="true"
-      [rounded]="true"
-      [disabled]="isLoading()"
+      [disabled]="isLoading"
       (click)="refreshTables()"
     />
     <p-button
       icon="pi pi-plus"
       severity="secondary"
+      size="small"
       [text]="true"
-      [rounded]="true"
-      [disabled]="isLoading()"
+      [disabled]="isLoading"
       (click)="visibleTableEditorDrawer = true"
     />
   </div>
@@ -86,14 +114,24 @@
         [class.bg-surface-100]="table.tableName === tblService.selectedTable()?.tableName"
       >
         <i class="pi pi-table text-surface-500 mr-2 mt-0.5"></i>
-        <div>
+        <div class="flex-1">
           <p class="font-medium">{{ table.tableName }}</p>
-          @if (table.tableComment) {
-            <i class="font-light text-gray-500 text-xs">
+          <p class="font-light text-surface-500 text-xs">
+            @if (table.tableComment) {
               {{ table.tableComment }}
-            </i>
-          }
+            } @else {
+              <i>No description</i>
+            }
+          </p>
         </div>
+        <p-button
+          icon="pi pi-ellipsis-v"
+          severity="secondary"
+          size="small"
+          [text]="true"
+          [disabled]="isLoading"
+          (click)="openTableActionMenu($event, table, tableMenu)"
+        />
       </a>
     </li>
   }

@@ -337,7 +337,6 @@ export class SpreadsheetComponent
         label: 'Delete',
         severity: 'danger',
       },
-
       accept: onAccept,
       reject: onReject,
     });

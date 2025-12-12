@@ -346,9 +346,11 @@ export class TableService {
   async deleteTable({
     schemaName = 'public',
     tableName,
+    cascade = false,
   }: {
     schemaName?: string;
     tableName: string;
+    cascade?: boolean;
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
 
@@ -357,7 +359,13 @@ export class TableService {
       throw new Error(`Table ${fullTableName} not found`);
     }
 
-    await knex.schema.withSchema(schemaName).dropTable(tableName);
+    if (cascade) {
+      await knex.raw(
+        `DROP TABLE IF EXISTS "${schemaName}"."${tableName}" CASCADE;`
+      );
+    } else {
+      await knex.schema.withSchema(schemaName).dropTable(tableName);
+    }
 
     return { message: `Table ${fullTableName} deleted successfully` };
   }

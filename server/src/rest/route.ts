@@ -211,11 +211,12 @@ export const restRoute = new Elysia({ prefix: REST_PREFIX })
    */
   .delete(
     '/tables/:table',
-    async ({ params: { table } }) => {
-      return await tableService.deleteTable({ tableName: table });
+    async ({ params: { table }, query: { cascade } }) => {
+      return await tableService.deleteTable({ tableName: table, cascade });
     },
     {
       params: t.Object({ table: t.String() }),
+      query: t.Object({ cascade: t.Optional(t.Boolean()) }),
     }
   )
 
