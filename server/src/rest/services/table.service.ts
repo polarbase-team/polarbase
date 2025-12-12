@@ -203,12 +203,18 @@ const getTableSchema = async (tableName: string, schemaName = 'public') => {
  * Main REST router exposing CRUD + bulk operations for all public tables.
  */
 export class TableService {
-  async getAll(schemaName = 'public') {
+  async getAll({ schemaName = 'public' }: { schemaName?: string } = {}) {
     const allowedTables = await getTableList(schemaName);
     return allowedTables;
   }
 
-  async getSchema(tableName: string, schemaName = 'public') {
+  async getSchema({
+    schemaName = 'public',
+    tableName,
+  }: {
+    schemaName?: string;
+    tableName: string;
+  }) {
     const exists = await knex.schema.hasTable(tableName);
     if (!exists) throw new Error('Table not found');
 
@@ -217,13 +223,14 @@ export class TableService {
   }
 
   async createTable({
-    tableName,
-    columns,
-    tableComment,
     schemaName = 'public',
+    tableName,
+    tableComment,
+    columns,
   }: {
     tableName: string;
-    columns: Array<{
+    tableComment?: string;
+    columns?: Array<{
       name: string;
       type: string;
       nullable?: boolean;
@@ -233,7 +240,6 @@ export class TableService {
       enumValues?: string[];
       comment?: string;
     }>;
-    tableComment?: string;
     schemaName?: string;
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
@@ -246,7 +252,7 @@ export class TableService {
     await knex.schema.withSchema(schemaName).createTable(tableName, (table) => {
       table.increments('id').primary();
 
-      columns.forEach((col) => {
+      columns?.forEach((col) => {
         let columnBuilder;
 
         switch (col.type.toLowerCase()) {
@@ -293,7 +299,71 @@ export class TableService {
     return { message: `Table ${fullTableName} created successfully` };
   }
 
+  async updateTable({
+    schemaName = 'public',
+    tableName,
+    newTableName,
+    newTableComment,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    newTableName?: string;
+    newTableComment?: string;
+  }) {
+    const fullTableName = `${schemaName}.${tableName}`;
+
+    const exists = await knex.schema.withSchema(schemaName).hasTable(tableName);
+    if (!exists) {
+      throw new Error(`Table ${fullTableName} not found`);
+    }
+
+    let finalTableName = tableName;
+    if (newTableName && newTableName !== tableName) {
+      const newExists = await knex.schema
+        .withSchema(schemaName)
+        .hasTable(newTableName);
+      if (newExists) {
+        throw new Error(`Table ${schemaName}.${newTableName} already exists`);
+      }
+
+      await knex.schema
+        .withSchema(schemaName)
+        .renameTable(tableName, newTableName);
+      finalTableName = newTableName;
+    }
+
+    if (newTableComment !== undefined) {
+      await knex.schema
+        .withSchema(schemaName)
+        .table(finalTableName, (table) => {
+          table.comment(newTableComment);
+        });
+    }
+
+    return { message: `Table ${fullTableName} updated successfully` };
+  }
+
+  async deleteTable({
+    schemaName = 'public',
+    tableName,
+  }: {
+    schemaName?: string;
+    tableName: string;
+  }) {
+    const fullTableName = `${schemaName}.${tableName}`;
+
+    const exists = await knex.schema.withSchema(schemaName).hasTable(tableName);
+    if (!exists) {
+      throw new Error(`Table ${fullTableName} not found`);
+    }
+
+    await knex.schema.withSchema(schemaName).dropTable(tableName);
+
+    return { message: `Table ${fullTableName} deleted successfully` };
+  }
+
   async addColumn({
+    schemaName = 'public',
     tableName,
     columnName,
     type,
@@ -302,7 +372,6 @@ export class TableService {
     default: def,
     enumValues,
     comment,
-    schemaName = 'public',
   }: {
     schemaName?: string;
     tableName: string;

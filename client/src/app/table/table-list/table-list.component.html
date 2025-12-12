@@ -1,3 +1,48 @@
+<p-drawer
+  [(visible)]="visibleTableEditorDrawer"
+  position="right"
+  [header]="updatedTableMode === 'edit' ? `Edit table: ${updatedTable.tableName}` : 'New table'"
+  [modal]="false"
+  styleClass="!w-150 custom-drawer"
+>
+  <ng-template #content>
+    <div class="flex flex-col gap-12">
+      <div class="grid grid-cols-3 w-full gap-12">
+        <label for="name" class="col-span-1">
+          <p class="font-medium">Name</p>
+        </label>
+        <input
+          pInputText
+          inputId="name"
+          [(ngModel)]="updatedTable.tableName"
+          ,
+          class="col-span-2"
+          placeholder="Input here..."
+        />
+      </div>
+      <div class="grid grid-cols-3 w-full gap-12">
+        <label for="description" class="col-span-1">
+          <p class="font-medium">Description</p>
+        </label>
+        <textarea
+          pTextarea
+          inputId="description"
+          [(ngModel)]="updatedTable.tableComment"
+          rows="5"
+          class="col-span-2"
+          placeholder="Input here..."
+        ></textarea>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" (click)="visibleTableEditorDrawer = false" />
+      <p-button label="Save" [loading]="isSaving()" (click)="saveTable()" />
+    </div>
+  </ng-template>
+</p-drawer>
+
 <div class="flex items-center justify-between px-4 py-2 border-b-1 border-surface-200">
   <div>Tables</div>
   <div class="flex">
@@ -8,6 +53,14 @@
       [rounded]="true"
       [disabled]="isLoading()"
       (click)="refreshTables()"
+    />
+    <p-button
+      icon="pi pi-plus"
+      severity="secondary"
+      [text]="true"
+      [rounded]="true"
+      [disabled]="isLoading()"
+      (click)="visibleTableEditorDrawer = true"
     />
   </div>
 </div>

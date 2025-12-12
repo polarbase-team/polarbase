@@ -89,6 +89,14 @@ export class TableService {
       .pipe(map((res) => res.data));
   }
 
+  createTable(table: TableDefinition) {
+    return this.http.post<Response>(`${this.apiUrl}/tables`, table);
+  }
+
+  updateTable(table: TableDefinition) {
+    return this.http.put<Response>(`${this.apiUrl}/tables/${table.tableName}`, table);
+  }
+
   getRecords(tableName: string): Observable<Record<string, any>[]> {
     return this.http.get(`${this.apiUrl}/${tableName}`).pipe(map((res) => res['data']['rows']));
   }

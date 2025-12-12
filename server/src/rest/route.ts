@@ -151,7 +151,68 @@ export const restRoute = new Elysia({ prefix: REST_PREFIX })
         return err('Table not found');
       }
 
-      return await tableService.getSchema(table);
+      return await tableService.getSchema({ tableName: table });
+    },
+    {
+      params: t.Object({ table: t.String() }),
+    }
+  )
+
+  /**
+   * POST /rest/tables → create new table
+   */
+  .post(
+    '/tables',
+    async ({ body }) => {
+      return await tableService.createTable(body);
+    },
+    {
+      body: t.Object({
+        tableName: t.String(),
+        tableComment: t.Optional(t.String()),
+        columns: t.Optional(
+          t.Array(
+            t.Object({
+              name: t.String(),
+              type: t.String(),
+              nullable: t.Optional(t.Boolean()),
+              unique: t.Optional(t.Boolean()),
+              primary: t.Optional(t.Boolean()),
+              enumValues: t.Optional(t.Array(t.String(), { minItems: 1 })),
+              default: t.Optional(t.Any()),
+              comment: t.Optional(t.String()),
+            }),
+            { minItems: 1 }
+          )
+        ),
+      }),
+    }
+  )
+
+  /**
+   * POST /rest/tables → partial update of table (rename, update comment)
+   */
+  .patch(
+    '/tables',
+    async ({ body }) => {
+      return await tableService.updateTable(body);
+    },
+    {
+      body: t.Object({
+        tableName: t.String(),
+        newTableName: t.Optional(t.String()),
+        newTableComment: t.Optional(t.String()),
+      }),
+    }
+  )
+
+  /**
+   * DELETE /rest/tables/:table → delete table
+   */
+  .delete(
+    '/tables/:table',
+    async ({ params: { table } }) => {
+      return await tableService.deleteTable({ tableName: table });
     },
     {
       params: t.Object({ table: t.String() }),
@@ -202,7 +263,7 @@ export const restRoute = new Elysia({ prefix: REST_PREFIX })
   )
 
   /**
-   * PATCH /rest/:table/:id → partial update
+   * PATCH /rest/:table/:id → partial update single record
    */
   .patch(
     '/:table/:id',
