@@ -112,7 +112,7 @@ export class AppTableDetail {
           records.push(row.data);
         }
         this.tblService
-          .bulkCreateTableRecords(tableName, records)
+          .bulkCreateRecords(tableName, records)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe(({ data }) => {
             for (let i = 0; i < rows.length; i++) {
@@ -126,7 +126,7 @@ export class AppTableDetail {
       case TableRowActionType.Delete:
         const recordIds = (action.payload as TableRow[]).map((row) => row.id);
         this.tblService
-          .bulkDeleteTableRecords(tableName, recordIds)
+          .bulkDeleteRecords(tableName, recordIds)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;
@@ -149,7 +149,7 @@ export class AppTableDetail {
           recordUpdates.push({ where: { id: row.id }, data: newData });
         }
         this.tblService
-          .bulkUpdateTableRecords(tableName, recordUpdates)
+          .bulkUpdateRecords(tableName, recordUpdates)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;
@@ -159,7 +159,7 @@ export class AppTableDetail {
   protected onRecordUpdated(event: RecordDetailUpdatedEvent) {
     const selectedTable = this.tblService.selectedTable();
     this.tblService
-      .bulkUpdateTableRecords(selectedTable.tableName, [
+      .bulkUpdateRecords(selectedTable.tableName, [
         {
           where: { [selectedTable.tableColumnPk]: event.id },
           data: event.data,
@@ -199,7 +199,7 @@ export class AppTableDetail {
 
   private loadTableData(table: TableDefinition) {
     this.tblService
-      .getTableData(table.tableName)
+      .getRecords(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((arr) => {
         const rows: TableRow[] = arr.map((it: any) => ({

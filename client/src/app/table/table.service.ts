@@ -89,18 +89,18 @@ export class TableService {
       .pipe(map((res) => res.data));
   }
 
-  getTableData(tableName: string): Observable<Record<string, any>[]> {
+  getRecords(tableName: string): Observable<Record<string, any>[]> {
     return this.http.get(`${this.apiUrl}/${tableName}`).pipe(map((res) => res['data']['rows']));
   }
 
-  bulkCreateTableRecords(tableName: string, records: Record<string, any>[]) {
+  bulkCreateRecords(tableName: string, records: Record<string, any>[]) {
     return this.http.post<Response<{ insertedCount: number; returning: Record<string, any>[] }>>(
       `${this.apiUrl}/${tableName}/bulk-create`,
       records,
     );
   }
 
-  bulkUpdateTableRecords(
+  bulkUpdateRecords(
     tableName: string,
     recordUpdates: { where: Record<string, any>; data: Record<string, any> }[],
   ) {
@@ -110,7 +110,7 @@ export class TableService {
     );
   }
 
-  bulkDeleteTableRecords(tableName: string, recordIds: (string | number)[]) {
+  bulkDeleteRecords(tableName: string, recordIds: (string | number)[]) {
     return this.http.post<Response<{ deletedCount: number }>>(
       `${this.apiUrl}/${tableName}/bulk-delete`,
       { ids: recordIds },
