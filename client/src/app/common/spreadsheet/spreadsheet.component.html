@@ -19,62 +19,67 @@
 >
   <ng-container *ngTemplateOutlet="toolbarTemplate()"></ng-container>
   <div class="flex w-full gap-2">
-    <column-view-options
-      [sourceColumns]="sourceColumns()"
-      [visibleColumns]="tableColumnService.columns()"
-      (toggle)="
-        $event.hidden
-          ? tableColumnService.hideColumn($event.column)
-          : tableColumnService.showColumn($event.column)
-      "
-      (move)="tableColumnService.moveColumn($event.column, $event.newIndex)"
-    />
-    <data-view-options
-      type="group"
-      [sourceColumns]="sourceColumns()"
-      [currentColumns]="tableColumnService.groupedColumns()"
-      [limit]="3"
-      (apply)="tableService.onApplyGroup($event)"
-    />
-    <data-view-options
-      type="sort"
-      [sourceColumns]="sourceColumns()"
-      [currentColumns]="tableColumnService.sortedColumns()"
-      (apply)="tableService.onApplySort($event)"
-    />
+    <div class="flex w-full gap-2">
+      <column-view-options
+        [sourceColumns]="sourceColumns()"
+        [visibleColumns]="tableColumnService.columns()"
+        (toggle)="
+          $event.hidden
+            ? tableColumnService.hideColumn($event.column)
+            : tableColumnService.showColumn($event.column)
+        "
+        (move)="tableColumnService.moveColumn($event.column, $event.newIndex)"
+      />
+      <data-view-options
+        type="group"
+        [sourceColumns]="sourceColumns()"
+        [currentColumns]="tableColumnService.groupedColumns()"
+        [limit]="3"
+        (apply)="tableService.onApplyGroup($event)"
+      />
+      <data-view-options
+        type="sort"
+        [sourceColumns]="sourceColumns()"
+        [currentColumns]="tableColumnService.sortedColumns()"
+        (apply)="tableService.onApplySort($event)"
+      />
+    </div>
+    <p-inputgroup class="w-xs max-w-xs">
+      <p-inputgroup-addon class="relative">
+        <p-inputicon class="icon icon-search" />
+      </p-inputgroup-addon>
+      <input
+        type="text"
+        pInputText
+        placeholder="Search"
+        (input)="tableService.onSearch($any($event))"
+        (keydown.enter)="tableService.searchNext()"
+      />
+      @if (tableService.searchResults?.length) {
+        <p-inputgroup-addon>
+          <div class="text-center">
+            <span class="text-sm font-medium">
+              {{ tableService.layout.cell.search.currentMatchIndex || 0 }}/{{
+                tableService.searchResults.length - 1
+              }}
+            </span>
+          </div>
+        </p-inputgroup-addon>
+        <p-inputgroup-addon>
+          <div class="flex gap-2 justify-content-space-around">
+            <i
+              class="icon icon-chevron-up cursor-pointer"
+              (click)="tableService.searchPrevious()"
+            ></i>
+            <i
+              class="icon icon-chevron-down cursor-pointer"
+              (click)="tableService.searchNext()"
+            ></i>
+          </div>
+        </p-inputgroup-addon>
+      }
+    </p-inputgroup>
   </div>
-  <p-inputgroup class="w-xs max-w-xs">
-    <p-inputgroup-addon class="relative">
-      <p-inputicon class="icon icon-search" />
-    </p-inputgroup-addon>
-    <input
-      type="text"
-      pInputText
-      placeholder="Search"
-      (input)="tableService.onSearch($any($event))"
-      (keydown.enter)="tableService.searchNext()"
-    />
-    @if (tableService.searchResults?.length) {
-      <p-inputgroup-addon>
-        <div class="text-center">
-          <span class="text-sm font-medium">
-            {{ tableService.layout.cell.search.currentMatchIndex || 0 }}/{{
-              tableService.searchResults.length - 1
-            }}
-          </span>
-        </div>
-      </p-inputgroup-addon>
-      <p-inputgroup-addon>
-        <div class="flex gap-2 justify-content-space-around">
-          <i
-            class="icon icon-chevron-up cursor-pointer"
-            (click)="tableService.searchPrevious()"
-          ></i>
-          <i class="icon icon-chevron-down cursor-pointer" (click)="tableService.searchNext()"></i>
-        </div>
-      </p-inputgroup-addon>
-    }
-  </p-inputgroup>
 </div>
 
 <virtual-scroll
