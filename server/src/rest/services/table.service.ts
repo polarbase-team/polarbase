@@ -308,14 +308,16 @@ export class TableService {
   async updateTable({
     schemaName = 'public',
     tableName,
-    newTableName,
-    newTableComment,
+    data,
   }: {
     schemaName?: string;
     tableName: string;
-    newTableName?: string;
-    newTableComment?: string;
+    data: {
+      tableName?: string;
+      tableComment?: string;
+    };
   }) {
+    const { tableName: newTableName, tableComment: newTableComment } = data;
     const fullTableName = `${schemaName}.${tableName}`;
 
     const exists = await knex.schema.withSchema(schemaName).hasTable(tableName);

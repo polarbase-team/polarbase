@@ -102,7 +102,7 @@ export class TableService {
   }
 
   updateTable(tableName: string, table: Pick<TableCreation, 'tableName' | 'tableComment'>) {
-    return this.http.put<Response>(`${this.apiUrl}/tables/${tableName}`, table);
+    return this.http.patch<Response>(`${this.apiUrl}/tables/${tableName}`, table);
   }
 
   deleteTable(tableName: string, casecade = false) {

@@ -192,19 +192,21 @@ export const restRoute = new Elysia({ prefix: REST_PREFIX })
   )
 
   /**
-   * POST /rest/tables → partial update of table (rename, update comment)
+   * POST /rest/tables/:table → partial update of table (rename, update comment)
    */
   .patch(
-    '/tables',
-    async ({ body }) => {
-      return await tableService.updateTable(body);
+    '/tables/:table',
+    async ({ params: { table }, body }) => {
+      return await tableService.updateTable({ tableName: table, data: body });
     },
     {
-      body: t.Object({
-        tableName: t.String(),
-        newTableName: t.Optional(t.String()),
-        newTableComment: t.Optional(t.String()),
-      }),
+      body: t.Object(
+        {
+          tableName: t.Optional(t.String()),
+          tableComment: t.Optional(t.String()),
+        },
+        { minProperties: 1 }
+      ),
     }
   )
 

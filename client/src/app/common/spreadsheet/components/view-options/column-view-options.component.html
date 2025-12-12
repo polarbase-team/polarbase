@@ -18,7 +18,9 @@
             <!-- Field name -->
             <div class="flex items-center gap-2">
               @if (column.primary) {
-                <i class="icon icon-key" style="color: var(--p-primary-color)"></i>
+                <i class="icon icon-key rotate-45" style="color: var(--p-primary-color)"></i>
+              } @else {
+                <i [class]="`${column.field.icon}`"></i>
               }
               <span class="font-medium break-all">
                 {{ column.field.name }}

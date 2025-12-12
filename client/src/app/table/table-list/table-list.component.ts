@@ -100,11 +100,15 @@ export class AppTableList {
       fn = this.tblService.createTable(this.updatedTable);
     }
 
-    fn.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.updatedTable = {} as TableDefinition;
-      this.isSaving = false;
-      this.visibleTableEditorDrawer = false;
-      this.refreshTables();
+    fn.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.updatedTable = {} as TableDefinition;
+        this.visibleTableEditorDrawer = false;
+        this.refreshTables();
+      },
+      complete: () => {
+        this.isSaving = false;
+      },
     });
   }
 
@@ -144,9 +148,13 @@ export class AppTableList {
         this.tblService
           .deleteTable(table.tableName, this.isCascadeDeleteEnabled)
           .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe(() => {
-            this.isLoading = false;
-            this.refreshTables();
+          .subscribe({
+            next: () => {
+              this.refreshTables();
+            },
+            complete: () => {
+              this.isLoading = false;
+            },
           });
         this.isCascadeDeleteEnabled = false;
       },
@@ -177,11 +185,15 @@ export class AppTableList {
     this.tblService
       .getTables()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((tables) => {
-        this.tables.set(tables);
-        this.filteredTables.set(tables);
-        this.searchQuery = '';
-        this.isLoading = false;
+      .subscribe({
+        next: (tables) => {
+          this.tables.set(tables);
+          this.filteredTables.set(tables);
+          this.searchQuery = '';
+        },
+        complete: () => {
+          this.isLoading = false;
+        },
       });
   }
 }
