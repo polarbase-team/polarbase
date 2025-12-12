@@ -144,8 +144,7 @@
           </div>
           @if (column.field.description?.length) {
             <i
-              class="icon icon-info"
-              style="color: var(--p-surface-500); font-size: 12px"
+              class="icon icon-info text-surface-500"
               [pTooltip]="column.field.description"
               tooltipPosition="bottom"
             ></i>
@@ -176,8 +175,7 @@
         }
         @if (column.field.description?.length) {
           <i
-            class="icon icon-info"
-            style="color: var(--p-surface-500); font-size: 12px"
+            class="icon icon-info text-surface-500"
             [pTooltip]="column.field.description"
             tooltipPosition="bottom"
           ></i>
@@ -312,8 +310,7 @@
                 <div class="group-cell cell index-cell" cell-type="group">
                   <div class="index-block">
                     <i
-                      class="icon cursor-pointer"
-                      style="color: var(--p-surface-500); font-size: 12px"
+                      class="icon cursor-pointer text-surface-500"
                       [ngClass]="group.isCollapsed ? 'icon-chevron-right' : 'icon-chevron-down'"
                       (click)="
                         group.isCollapsed

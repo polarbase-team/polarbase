@@ -9,9 +9,16 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 import Aura from '@primeuix/themes/aura';
+import { definePreset, palette } from '@primeuix/themes';
 
 import { httpErrorInterceptor } from './http-error.interceptor';
 import { routes } from './app.routes';
+
+const AuraSky = definePreset(Aura, {
+  semantic: {
+    primary: palette('{sky}'), // Use the 'sky' palette
+  },
+});
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([httpErrorInterceptor])),
     providePrimeNG({
       theme: {
-        preset: Aura,
+        preset: AuraSky,
         options: {
           darkModeSelector: false,
         },
