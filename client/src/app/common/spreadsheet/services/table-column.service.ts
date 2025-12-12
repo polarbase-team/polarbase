@@ -182,7 +182,11 @@ export class TableColumnService extends TableBaseService {
   }
 
   calculateByColumn(column: TableColumn, calculateType: CalculateType) {
-    if (column.calculateType === calculateType) return;
+    if (
+      column.calculateType === calculateType ||
+      this.calculatedColumns().find((c) => c.id === column.id)
+    )
+      return;
 
     column.calculateType = calculateType;
     this.calculatedColumns.update((arr) => [...arr, column]);
@@ -205,7 +209,8 @@ export class TableColumnService extends TableBaseService {
   }
 
   groupByColumn(column: TableColumn, sortType: SortType = 'asc') {
-    if (column.groupSortType === sortType) return;
+    if (column.groupSortType === sortType || this.groupedColumns().find((c) => c.id === column.id))
+      return;
 
     column.groupSortType = sortType;
     this.groupedColumns.update((arr) => [...arr, column]);
@@ -230,7 +235,8 @@ export class TableColumnService extends TableBaseService {
   }
 
   sortByColumn(column: TableColumn, sortType: SortType = 'asc') {
-    if (column.sortType === sortType) return;
+    if (column.sortType === sortType || this.sortedColumns().find((c) => c.id === column.id))
+      return;
 
     column.sortType = sortType;
     this.sortedColumns.update((arr) => [...arr, column]);
