@@ -34,7 +34,6 @@ export interface RecordDetailUpdatedEvent {
 @Component({
   selector: 'record-detail-drawer',
   templateUrl: './record-detail-drawer.component.html',
-  styleUrl: './record-detail-drawer.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
