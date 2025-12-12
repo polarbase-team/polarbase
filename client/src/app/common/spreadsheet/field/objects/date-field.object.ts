@@ -8,6 +8,8 @@ import { Field } from './field.object';
 export class DateField extends Field<DateData> {
   static readonly dataType = DataType.Date;
 
+  readonly icon = 'icon icon-calendar';
+
   get dataType() {
     return DateField.dataType;
   }

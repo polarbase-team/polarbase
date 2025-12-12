@@ -5,6 +5,8 @@ import { Field } from './field.object';
 export class TextField extends Field<TextData> {
   static readonly dataType = DataType.Text;
 
+  readonly icon = 'icon icon-case-sensitive';
+
   get dataType() {
     return TextField.dataType;
   }

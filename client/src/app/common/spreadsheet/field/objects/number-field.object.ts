@@ -7,6 +7,8 @@ import { Field, FieldValidationKey } from './field.object';
 export class NumberField extends Field<NumberData> {
   static readonly dataType = DataType.Number;
 
+  readonly icon = 'icon icon-decimals-arrow-right';
+
   allowNegative: boolean | undefined;
 
   get dataType() {

@@ -23,6 +23,8 @@ export abstract class Field<T = any> {
   initialData: T | undefined;
   params: any;
 
+  abstract icon: string;
+
   abstract get dataType(): DataType;
 
   constructor(config: FieldConfig<T>) {

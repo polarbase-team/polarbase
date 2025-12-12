@@ -133,15 +133,19 @@
           [style.minWidth.px]="column.width"
           [style.maxWidth.px]="column.width"
         >
-          @if (column.field.required) {
-            <i class="icon icon-asterisk text-red-500"></i>
+          @if (column.primary) {
+            <i class="icon icon-key" style="color: var(--p-primary-color)"></i>
           }
+          <i [class]="`${column.field.icon}`"></i>
           <div
-            class="text-sm white-space-nowrap overflow-hidden truncate w-full"
+            class="text-sm white-space-nowrap overflow-hidden truncate"
             [attr.title]="column.field.name"
           >
             {{ column.field.name }}
           </div>
+          @if (column.field.required) {
+            <i class="icon icon-asterisk text-red-500"></i>
+          }
           @if (column.field.description?.length) {
             <i
               class="icon icon-info text-surface-500"
@@ -164,6 +168,7 @@
         @if (column.primary) {
           <i class="icon icon-key" style="color: var(--p-primary-color)"></i>
         }
+        <i [class]="`${column.field.icon}`"></i>
         <div
           class="text-sm white-space-nowrap overflow-hidden truncate"
           [attr.title]="column.field.name"

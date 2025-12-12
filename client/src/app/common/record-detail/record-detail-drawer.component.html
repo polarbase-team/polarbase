@@ -5,9 +5,16 @@
         @if (field.params.isPrimary) {
           <i class="icon icon-key" style="color: var(--p-primary-color)"></i>
         }
+        <i [class]="`${field.icon}`"></i>
         <p class="font-medium">{{ field.name }}</p>
       </div>
-      <p class="text-surface-400 text-sm">{{ field.description }}</p>
+      <p class="text-surface-500 text-sm">
+        @if (field.description) {
+          {{ field.description }}
+        } @else {
+          <i>No description</i>
+        }
+      </p>
     </label>
     @switch (field.dataType) {
       @case (DataType.Text) {

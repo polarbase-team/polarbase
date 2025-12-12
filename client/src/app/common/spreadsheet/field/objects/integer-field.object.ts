@@ -7,6 +7,8 @@ import { Field, FieldValidationKey } from './field.object';
 export class IntegerField extends Field<IntegerData> {
   static readonly dataType = DataType.Integer;
 
+  readonly icon = 'icon icon-hash';
+
   allowNegative: boolean | undefined;
 
   get dataType() {

@@ -5,6 +5,8 @@ import { Field } from './field.object';
 export class LongTextField extends Field<LongTextData> {
   static readonly dataType = DataType.LongText;
 
+  readonly icon = 'icon icon-text-initial';
+
   get dataType() {
     return LongTextField.dataType;
   }

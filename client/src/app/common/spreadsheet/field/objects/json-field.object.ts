@@ -7,6 +7,8 @@ import { Field } from './field.object';
 export class JSONField extends Field<JSONData> {
   static readonly dataType = DataType.JSON;
 
+  readonly icon = 'icon icon-braces';
+
   get dataType() {
     return JSONField.dataType;
   }

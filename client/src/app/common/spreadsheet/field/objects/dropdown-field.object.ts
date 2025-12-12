@@ -9,6 +9,8 @@ import { Field } from './field.object';
 export class DropdownField extends Field<DropdownData> {
   static readonly dataType = DataType.Dropdown;
 
+  readonly icon = 'icon icon-square-check';
+
   options: DropdownOption[] | undefined;
 
   get dataType() {
