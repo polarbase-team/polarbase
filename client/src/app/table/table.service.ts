@@ -90,7 +90,7 @@ export class TableService {
   }
 
   getTableData(tableName: string): Observable<Record<string, any>[]> {
-    return this.http.get(`${this.apiUrl}/${tableName}`).pipe(map((res) => res['data']));
+    return this.http.get(`${this.apiUrl}/${tableName}`).pipe(map((res) => res['data']['rows']));
   }
 
   bulkCreateTableRecords(tableName: string, records: Record<string, any>[]) {
