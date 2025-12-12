@@ -58,6 +58,7 @@ export class DataViewOptionsComponent {
 
     return columns.map((column) => ({
       label: column.field.name,
+      icon: column.field.icon,
       command: () => {
         this.addColumn(column);
       },
