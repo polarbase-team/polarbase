@@ -92,7 +92,7 @@ export class AppTableDetail {
               break;
             }
             case 'delete': {
-              const recordPk = record.new[tableKeyColumn];
+              const recordPk = record.key[tableKeyColumn];
               this.rows.update((arr) => arr.filter((row) => row.id !== recordPk));
               break;
             }
