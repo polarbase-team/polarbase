@@ -17,6 +17,7 @@
   [style.paddingLeft.px]="tableService.config().sideSpacing"
   [style.paddingRight.px]="tableService.config().sideSpacing"
 >
+  <ng-container *ngTemplateOutlet="toolbarTemplate()"></ng-container>
   <div class="flex w-full gap-2">
     <column-view-options
       [sourceColumns]="sourceColumns()"

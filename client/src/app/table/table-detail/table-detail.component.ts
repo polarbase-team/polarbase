@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,8 +10,11 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { TabsModule } from 'primeng/tabs';
 import { ImageModule } from 'primeng/image';
+import { ButtonModule } from 'primeng/button';
+import { DividerModule } from 'primeng/divider';
 
 import { TableColumn } from '../../common/spreadsheet/models/table-column';
 import { TableRow } from '../../common/spreadsheet/models/table-row';
@@ -27,7 +32,7 @@ import {
 } from '../../common/spreadsheet/events/table-cell';
 import {
   RecordDetailDrawerComponent,
-  RecordDetailUpdatedEvent,
+  RecordDetailSavedEvent,
 } from '../../common/record-detail/record-detail-drawer.component';
 import { TableDefinition, TableService } from '../table.service';
 import { TableRealtimeService } from '../table-realtime.service';
@@ -36,7 +41,14 @@ import { TableRealtimeService } from '../table-realtime.service';
   selector: 'app-table-detail',
   templateUrl: './table-detail.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TabsModule, ImageModule, SpreadsheetComponent, RecordDetailDrawerComponent],
+  imports: [
+    TabsModule,
+    ImageModule,
+    ButtonModule,
+    DividerModule,
+    SpreadsheetComponent,
+    RecordDetailDrawerComponent,
+  ],
 })
 export class AppTableDetail {
   protected config = signal<TableConfig>({
@@ -53,7 +65,8 @@ export class AppTableDetail {
 
   protected tblService = inject(TableService);
 
-  protected expandedRow: TableRow;
+  protected updatedRow: TableRow;
+  protected updatedRowMode: 'add' | 'edit' | 'view' = 'add';
   protected visibleRecordDetail: boolean;
 
   constructor(
@@ -131,7 +144,8 @@ export class AppTableDetail {
           .subscribe();
         break;
       case TableRowActionType.Expand:
-        this.expandedRow = action.payload as TableRow;
+        this.updatedRow = action.payload as TableRow;
+        this.updatedRowMode = 'edit';
         this.visibleRecordDetail = true;
         break;
     }
@@ -156,21 +170,49 @@ export class AppTableDetail {
     }
   }
 
-  protected onRecordUpdated(event: RecordDetailUpdatedEvent) {
-    const selectedTable = this.tblService.selectedTable();
+  protected onRecordSaved(event: RecordDetailSavedEvent) {
+    const { tableName, tableColumnPk } = this.tblService.selectedTable();
+    const id = event.id ?? undefined;
+    const data = { ...event.data };
+
+    if (this.updatedRowMode === 'add') {
+      if (_.isNil(data[tableColumnPk])) {
+        data[tableColumnPk] = id;
+      }
+
+      this.tblService
+        .bulkCreateRecords(tableName, [data])
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(({ data }) => {
+          const returningdRow = data.returning[0];
+          const newRow: TableRow = {
+            id: returningdRow[tableColumnPk],
+            data: returningdRow,
+          };
+          this.rows.update((arr) => [...arr, newRow]);
+        });
+      return;
+    }
+
     this.tblService
-      .bulkUpdateRecords(selectedTable.tableName, [
+      .bulkUpdateRecords(tableName, [
         {
-          where: { [selectedTable.tableColumnPk]: event.id },
-          data: event.data,
+          where: { [tableColumnPk]: id },
+          data,
         },
       ])
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.rows.update((rows) =>
-          rows.map((row) => (row.id === event.id ? { ...row, data: event.data } : row)),
+          rows.map((row) => (row.id === event.id ? { ...row, data } : row)),
         );
       });
+  }
+
+  protected addNewRecord() {
+    this.updatedRow = { data: {} } as TableRow;
+    this.updatedRowMode = 'add';
+    this.visibleRecordDetail = true;
   }
 
   private loadTable(table: TableDefinition) {

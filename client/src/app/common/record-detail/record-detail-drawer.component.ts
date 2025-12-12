@@ -1,6 +1,9 @@
+import _ from 'lodash';
+
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   input,
   model,
@@ -9,6 +12,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
 import { DrawerModule } from 'primeng/drawer';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
@@ -20,14 +24,15 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { AutoFocusModule } from 'primeng/autofocus';
 
 import { JSONEditorDrawerComponent } from '../json-editor/json-editor-drawer.component';
 import { RichTextEditorDrawerComponent } from '../rich-text-editor/rich-text-editor-drawer.component';
 import { DataType } from '../spreadsheet/field/interfaces/field.interface';
 import { Field } from '../spreadsheet/field/objects/field.object';
 
-export interface RecordDetailUpdatedEvent {
-  id: string | number;
+export interface RecordDetailSavedEvent {
+  id?: string | number;
   data: Record<string, any>;
 }
 
@@ -49,6 +54,7 @@ export interface RecordDetailUpdatedEvent {
     CheckboxModule,
     DatePickerModule,
     ToastModule,
+    AutoFocusModule,
     RichTextEditorDrawerComponent,
     JSONEditorDrawerComponent,
   ],
@@ -58,14 +64,15 @@ export class RecordDetailDrawerComponent {
   id = input<string | number>();
   fields = input<Field[]>([]);
   data = input({});
-  viewOnly = input(false);
+  mode = input<'add' | 'edit' | 'view'>('add');
   visible = model(false);
 
-  saved = output<RecordDetailUpdatedEvent>();
+  saved = output<RecordDetailSavedEvent>();
   canceled = output();
   opened = output();
   closed = output();
 
+  protected viewOnly = computed(() => this.mode() === 'view');
   protected requiredFields = signal<Field[]>([]);
   protected optionalFields = signal<Field[]>([]);
   protected DataType = DataType;
@@ -104,8 +111,7 @@ export class RecordDetailDrawerComponent {
 
   protected save() {
     const isInvalid = this.requiredFields().find(
-      (field: Field) =>
-        this.internalData[field.name] === undefined || this.internalData[field.name] === null,
+      (field: Field) => !field.params.isPrimary && _.isNil(this.internalData[field.name]),
     );
 
     if (isInvalid) {

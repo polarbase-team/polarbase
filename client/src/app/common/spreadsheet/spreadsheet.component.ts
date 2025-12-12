@@ -7,6 +7,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  contentChild,
   DestroyRef,
   ElementRef,
   HostListener,
@@ -18,6 +19,7 @@ import {
   output,
   Renderer2,
   SimpleChanges,
+  TemplateRef,
   ViewChild,
 } from '@angular/core';
 
@@ -166,6 +168,8 @@ export class SpreadsheetComponent
   columnAction = output<TableColumnAction>();
   rowAction = output<TableRowAction>();
   cellAction = output<TableCellAction>();
+
+  toolbarTemplate = contentChild<TemplateRef<any>>('toolbar');
 
   @ViewChild('menu', { static: true }) menu: Menu;
   @ViewChild('contextMenu', { static: true }) contextMenu: ContextMenu;

@@ -19,11 +19,11 @@
         @if (columns()) {
           <record-detail-drawer
             [(visible)]="visibleRecordDetail"
-            [id]="expandedRow?.id"
+            [id]="updatedRow?.id"
             [fields]="fields()"
-            [data]="expandedRow?.data"
-            (saved)="onRecordUpdated($event)"
-            (closed)="expandedRow = null"
+            [data]="updatedRow?.data"
+            (saved)="onRecordSaved($event)"
+            (closed)="updatedRow = null"
           />
           <spreadsheet
             [config]="config()"
@@ -31,7 +31,19 @@
             [rows]="rows()"
             (rowAction)="onRowAction($event)"
             (cellAction)="onCellAction($event)"
-          ></spreadsheet>
+          >
+            <ng-template #toolbar>
+              <div class="flex">
+                <p-button
+                  icon="pi pi-plus"
+                  label="New Record"
+                  [style]="{ 'white-space': 'nowrap' }"
+                  (click)="addNewRecord()"
+                />
+                <p-divider layout="vertical" />
+              </div>
+            </ng-template>
+          </spreadsheet>
         }
       </p-tabpanel>
       <!-- <p-tabpanel value="1">

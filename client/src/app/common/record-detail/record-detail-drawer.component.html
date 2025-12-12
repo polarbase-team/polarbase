@@ -1,7 +1,12 @@
-<ng-template #fieldTmpl let-field="field">
+<ng-template #fieldTmpl let-field="field" let-first="first">
   <div class="grid grid-cols-3 w-full gap-12">
     <label [attr.for]="field.name" class="col-span-1">
-      <p class="font-medium">{{ field.name }}</p>
+      <div class="flex items-center gap-2">
+        @if (field.params.isPrimary) {
+          <i class="pi pi-key" style="color: var(--p-primary-color)"></i>
+        }
+        <p class="font-medium">{{ field.name }}</p>
+      </div>
       <p class="text-surface-400 text-sm">{{ field.params.rawType }}</p>
     </label>
     @switch (field.dataType) {
@@ -9,6 +14,7 @@
         <input
           pInputText
           [attr.inputId]="field.name"
+          [pAutoFocus]="first"
           [(ngModel)]="internalData[field.name]"
           [readonly]="viewOnly()"
           class="col-span-2"
@@ -19,6 +25,7 @@
         <textarea
           pTextarea
           [attr.inputId]="field.name"
+          [pAutoFocus]="first"
           [(ngModel)]="internalData[field.name]"
           [readonly]="viewOnly()"
           rows="5"
@@ -29,6 +36,7 @@
       @case (DataType.Integer) {
         <p-inputnumber
           [attr.inputId]="field.name"
+          [pAutoFocus]="first"
           [(ngModel)]="internalData[field.name]"
           [useGrouping]="false"
           [readonly]="viewOnly()"
@@ -39,6 +47,7 @@
       @case (DataType.Number) {
         <p-inputnumber
           [attr.inputId]="field.name"
+          [pAutoFocus]="first"
           [(ngModel)]="internalData[field.name]"
           [useGrouping]="false"
           mode="decimal"
@@ -52,6 +61,7 @@
       @case (DataType.Dropdown) {
         <p-select
           [attr.inputId]="field.name"
+          [pAutoFocus]="first"
           [options]="field.options"
           [readonly]="viewOnly()"
           class="col-span-2"
@@ -62,6 +72,7 @@
         <div class="col-span-2">
           <p-checkbox
             [attr.inputId]="field.name"
+            [pAutoFocus]="first"
             [(ngModel)]="internalData[field.name]"
             [readonly]="viewOnly()"
             [binary]="true"
@@ -72,6 +83,7 @@
       @case (DataType.Date) {
         <p-datepicker
           [attr.inputId]="field.name"
+          [pAutoFocus]="first"
           [(ngModel)]="internalData[field.name]"
           [readonlyInput]="viewOnly()"
           [disabled]="viewOnly()"
@@ -85,6 +97,7 @@
           <textarea
             pTextarea
             [attr.inputId]="field.name"
+            [pAutoFocus]="first"
             [ngModel]="internalData[field.name] | json"
             [readonly]="viewOnly()"
             rows="5"
@@ -107,7 +120,7 @@
 <p-drawer
   [(visible)]="visible"
   position="right"
-  header="Edit record"
+  [header]="mode() === 'view' ? 'View Record' : mode() === 'edit' ? 'Edit Record' : 'Add Record'"
   [modal]="false"
   styleClass="!w-150 custom-drawer"
   (onShow)="onShow()"
@@ -122,8 +135,8 @@
       (saved)="internalData[editingJSONField?.name] = $event"
     />
     <div class="flex flex-col gap-12">
-      @for (field of requiredFields(); track field.name) {
-        <ng-container *ngTemplateOutlet="fieldTmpl; context: { field }" />
+      @for (field of requiredFields(); let first = $first; track field.name) {
+        <ng-container *ngTemplateOutlet="fieldTmpl; context: { field, first }" />
       }
     </div>
     <p-divider class="!my-10" />
