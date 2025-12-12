@@ -77,6 +77,9 @@ export class RecordDetailDrawerComponent {
   protected optionalFields = signal<Field[]>([]);
   protected DataType = DataType;
   protected internalData: Record<string, any> = {};
+  protected visibleRichTextEditor = false;
+  protected editingRichTextField: Field;
+  protected editingRichText = '';
   protected visibleJSONEditor = false;
   protected editingJSONField: Field;
   protected editingJSONText = '';
@@ -131,6 +134,12 @@ export class RecordDetailDrawerComponent {
   protected cancel() {
     this.visible.set(false);
     this.canceled.emit();
+  }
+
+  protected openRichTextEditor(field: Field) {
+    this.editingRichTextField = field;
+    this.editingRichText = field.toString(this.internalData[field.name]);
+    this.visibleRichTextEditor = true;
   }
 
   protected openJSONEditor(field: Field) {

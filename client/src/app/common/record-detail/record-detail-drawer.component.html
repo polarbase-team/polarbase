@@ -7,7 +7,7 @@
         }
         <p class="font-medium">{{ field.name }}</p>
       </div>
-      <p class="text-surface-400 text-sm">{{ field.params.rawType }}</p>
+      <p class="text-surface-400 text-sm">{{ field.description }}</p>
     </label>
     @switch (field.dataType) {
       @case (DataType.Text) {
@@ -22,16 +22,26 @@
         />
       }
       @case (DataType.LongText) {
-        <textarea
-          pTextarea
-          [attr.inputId]="field.name"
-          [pAutoFocus]="first"
-          [(ngModel)]="internalData[field.name]"
-          [readonly]="viewOnly()"
-          rows="5"
-          class="col-span-2"
-          placeholder="Input here..."
-        ></textarea>
+        <div class="relative col-span-2">
+          <textarea
+            pTextarea
+            [attr.inputId]="field.name"
+            [pAutoFocus]="first"
+            [(ngModel)]="internalData[field.name]"
+            [readonly]="viewOnly()"
+            rows="5"
+            class="w-full"
+            placeholder="Input here..."
+          ></textarea>
+          <p-button
+            icon="icon icon-maximize-2"
+            severity="secondary"
+            size="small"
+            class="absolute top-0.5 right-0.5"
+            [text]="true"
+            (click)="openRichTextEditor(field)"
+          />
+        </div>
       }
       @case (DataType.Integer) {
         <p-inputnumber
@@ -105,12 +115,14 @@
             class="w-full"
             placeholder="Input here..."
           ></textarea>
-          <div
-            class="absolute top-1 right-1 hover:bg-surface-50 text-surface-500 cursor-pointer w-8 h-8 rounded-md flex items-center justify-center"
+          <p-button
+            icon="icon icon-maximize-2"
+            severity="secondary"
+            size="small"
+            class="absolute top-0.5 right-0.5"
+            [text]="true"
             (click)="openJSONEditor(field)"
-          >
-            <i class="icon icon-maximize-2"></i>
-          </div>
+          />
         </div>
       }
     }
@@ -128,7 +140,11 @@
 >
   <ng-template #content>
     <p-toast />
-    <rich-text-editor-drawer />
+    <rich-text-editor-drawer
+      [(visible)]="visibleRichTextEditor"
+      [(value)]="editingRichText"
+      (saved)="internalData[editingRichTextField?.name] = $event"
+    />
     <json-editor-drawer
       [(visible)]="visibleJSONEditor"
       [(value)]="editingJSONText"
