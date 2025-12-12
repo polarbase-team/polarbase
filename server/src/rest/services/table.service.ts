@@ -12,7 +12,7 @@ const REST_BLACKLISTED_TABLES = (
  * Retrieves the list of tables in the public schema (excluding blacklisted ones)
  * along with their comments.
  */
-const getTableList = () => {
+const getTableList = (schemaName = 'pubic') => {
   return knex('pg_class as c')
     .select({
       tableName: 'c.relname',
@@ -32,7 +32,7 @@ const getTableList = () => {
       this.on('descr.objoid', 'c.oid').andOn(knex.raw('descr.objsubid = 0'));
     })
     .where({
-      'ns.nspname': 'public',
+      'ns.nspname': schemaName,
       'c.relkind': 'r', // r = ordinary table
     })
     .modify((qb) => {
@@ -50,7 +50,7 @@ const getTableList = () => {
  * - column comments
  * - enum values for enum types
  */
-const getTableSchema = async (tableName: string) => {
+const getTableSchema = async (tableName: string, schemaName = 'public') => {
   // 1. Basic column information
   const columns = await knex('information_schema.columns')
     .select(
@@ -88,7 +88,7 @@ const getTableSchema = async (tableName: string) => {
         );
     })
     .where({
-      'pg_namespace.nspname': 'public',
+      'pg_namespace.nspname': schemaName,
       'pg_class.relname': tableName,
     });
 
@@ -203,16 +203,160 @@ const getTableSchema = async (tableName: string) => {
  * Main REST router exposing CRUD + bulk operations for all public tables.
  */
 export class TableService {
-  async getAll() {
-    const allowedTables = await getTableList();
+  async getAll(schemaName = 'public') {
+    const allowedTables = await getTableList(schemaName);
     return allowedTables;
   }
 
-  async getSchema(tableName: string) {
+  async getSchema(tableName: string, schemaName = 'public') {
     const exists = await knex.schema.hasTable(tableName);
     if (!exists) throw new Error('Table not found');
 
-    const schema = await getTableSchema(tableName);
+    const schema = await getTableSchema(tableName, schemaName);
     return schema;
+  }
+
+  async createTable({
+    tableName,
+    columns,
+    tableComment,
+    schemaName = 'public',
+  }: {
+    tableName: string;
+    columns: Array<{
+      name: string;
+      type: string;
+      nullable?: boolean;
+      primary?: boolean;
+      unique?: boolean;
+      default?: any;
+      enumValues?: string[];
+      comment?: string;
+    }>;
+    tableComment?: string;
+    schemaName?: string;
+  }) {
+    const fullTableName = `${schemaName}.${tableName}`;
+
+    const exists = await knex.schema.withSchema(schemaName).hasTable(tableName);
+    if (exists) {
+      throw new Error(`Table ${fullTableName} already exists`);
+    }
+
+    await knex.schema.withSchema(schemaName).createTable(tableName, (table) => {
+      table.increments('id').primary();
+
+      columns.forEach((col) => {
+        let columnBuilder;
+
+        switch (col.type.toLowerCase()) {
+          case 'string':
+          case 'varchar':
+            columnBuilder = table.string(col.name);
+            break;
+          case 'text':
+            columnBuilder = table.text(col.name);
+            break;
+          case 'integer':
+            columnBuilder = table.integer(col.name);
+            break;
+          case 'boolean':
+            columnBuilder = table.boolean(col.name);
+            break;
+          case 'timestamp':
+            columnBuilder = table.timestamp(col.name);
+            break;
+          case 'enum':
+            if (!col.enumValues?.length) {
+              throw new Error(`enumValues is required for column ${col.name}`);
+            }
+            columnBuilder = table.enum(col.name, col.enumValues);
+            break;
+          default:
+            throw new Error(`Unsupported column type: ${col.type}`);
+        }
+
+        if (col.nullable === false) columnBuilder.notNullable();
+        if (col.unique) columnBuilder.unique();
+        if (col.default !== undefined) columnBuilder.defaultTo(col.default);
+        if (col.primary) columnBuilder.primary();
+        if (col.comment) columnBuilder.comment(col.comment);
+      });
+
+      table.timestamps();
+
+      if (tableComment) {
+        table.comment(tableComment);
+      }
+    });
+
+    return { message: `Table ${fullTableName} created successfully` };
+  }
+
+  async addColumn({
+    tableName,
+    columnName,
+    type,
+    nullable = true,
+    unique = false,
+    default: def,
+    enumValues,
+    comment,
+    schemaName = 'public',
+  }: {
+    schemaName?: string;
+    tableName: string;
+    columnName: string;
+    type: string;
+    nullable?: boolean;
+    unique?: boolean;
+    default?: any;
+    enumValues?: string[];
+    comment?: string;
+  }) {
+    const fullTableName = `${schemaName}.${tableName}`;
+
+    const exists = await knex.schema.withSchema(schemaName).hasTable(tableName);
+    if (!exists) {
+      throw new Error(`Table ${fullTableName} not found`);
+    }
+
+    await knex.schema.withSchema(schemaName).table(tableName, (table) => {
+      let columnBuilder;
+
+      switch (type.toLowerCase()) {
+        case 'string':
+        case 'varchar':
+          columnBuilder = table.string(columnName);
+          break;
+        case 'text':
+          columnBuilder = table.text(columnName);
+          break;
+        case 'integer':
+          columnBuilder = table.integer(columnName);
+          break;
+        case 'boolean':
+          columnBuilder = table.boolean(columnName);
+          break;
+        case 'timestamp':
+          columnBuilder = table.timestamp(columnName);
+          break;
+        case 'enum':
+          if (!enumValues?.length) {
+            throw new Error(`enumValues is required for column ${columnName}`);
+          }
+          columnBuilder = table.enum(columnName, enumValues);
+          break;
+        default:
+          throw new Error(`Unsupported column type: ${type}`);
+      }
+
+      if (nullable === false) columnBuilder.notNullable();
+      if (unique) columnBuilder.unique();
+      if (def !== undefined) columnBuilder.defaultTo(def);
+      if (comment) columnBuilder.comment(comment);
+    });
+
+    return { message: `Column ${columnName} added to ${fullTableName}` };
   }
 }

@@ -3,7 +3,11 @@ import { Knex } from 'knex';
 import knex from '../../plugins/db';
 
 export class TableRecordService {
-  async getAll(tableName: string, query: Record<string, any>) {
+  async getAll(
+    tableName: string,
+    query: Record<string, any>,
+    schemaName = 'public'
+  ) {
     const {
       page = '1',
       limit = '20',
@@ -16,10 +20,10 @@ export class TableRecordService {
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(1000, Math.max(1, Number(limit)));
 
-    let qb = knex(tableName);
+    let qb = knex(tableName).withSchema(schemaName);
     if (where) qb = qb.where(JSON.parse(where as string));
     if (search) {
-      const cols = await knex(tableName).columnInfo();
+      const cols = await knex(tableName).withSchema(schemaName).columnInfo();
       qb = qb.where((b) =>
         Object.keys(cols).forEach((col) =>
           b.orWhere(col, 'like', `%${search}%`)
@@ -50,23 +54,35 @@ export class TableRecordService {
     };
   }
 
-  async getOne(tableName: string, id: string | number) {
-    const record = await knex(tableName).where({ id }).first();
+  async getOne(tableName: string, id: string | number, schemaName = 'public') {
+    const record = await knex(tableName)
+      .withSchema(schemaName)
+      .where({ id })
+      .first();
     if (!record) throw new Error('Not found');
     return record;
   }
 
-  async create(tableName: string, body: Record<string, any>) {
-    const record = await knex(tableName).insert(body).returning('*');
+  async create(
+    tableName: string,
+    body: Record<string, any>,
+    schemaName = 'public'
+  ) {
+    const record = await knex(tableName)
+      .withSchema(schemaName)
+      .insert(body)
+      .returning('*');
     return record;
   }
 
   async update(
     tableName: string,
     id: string | number,
-    body: Record<string, any>
+    body: Record<string, any>,
+    schemaName = 'public'
   ) {
     const record = await knex(tableName)
+      .withSchema(schemaName)
       .where({ id: Number(id) })
       .update(body)
       .returning('*');
@@ -74,19 +90,27 @@ export class TableRecordService {
     return record;
   }
 
-  async delete(tableName: string, id: string | number) {
-    const deleted = await knex(tableName).where({ id }).del();
+  async delete(tableName: string, id: string | number, schemaName = 'public') {
+    const deleted = await knex(tableName)
+      .withSchema(schemaName)
+      .where({ id })
+      .del();
     if (!deleted) throw new Error('Not found');
     return null;
   }
 
-  async bulkCreate(tableName: string, records: Record<string, any>[]) {
+  async bulkCreate(
+    tableName: string,
+    records: Record<string, any>[],
+    schemaName = 'public'
+  ) {
     const returning = [] as any[];
     const chunk = 500;
 
     await knex.transaction(async (trx: Knex.Transaction) => {
       for (let i = 0; i < records.length; i += chunk) {
         const inserted = await trx(tableName)
+          .withSchema(schemaName)
           .insert(records.slice(i, i + chunk))
           .returning('*');
         returning.push(...inserted);
@@ -98,7 +122,8 @@ export class TableRecordService {
 
   async bulkUpdate(
     tableName: string,
-    updates: Array<{ where: Record<string, any>; data: Record<string, any> }>
+    updates: Array<{ where: Record<string, any>; data: Record<string, any> }>,
+    schemaName = 'public'
   ) {
     if (!Array.isArray(updates) || updates.length === 0) {
       throw new Error('updates must be a non-empty array');
@@ -120,6 +145,7 @@ export class TableRecordService {
         }
 
         const affected = await trx(tableName)
+          .withSchema(schemaName)
           .where(where)
           .update(data)
           .returning('*');
@@ -134,15 +160,22 @@ export class TableRecordService {
 
   async bulkDelete(
     tableName: string,
-    body: { ids?: number[]; where?: { [x: string]: any } }
+    body: { ids?: number[]; where?: { [x: string]: any } },
+    schemaName = 'public'
   ) {
     let deleted = 0;
 
     const { ids, where } = body;
     if (ids?.length) {
-      deleted = await knex(tableName).whereIn('id', ids).delete();
+      deleted = await knex(tableName)
+        .withSchema(schemaName)
+        .whereIn('id', ids)
+        .delete();
     } else if (where && Object.keys(where).length) {
-      deleted = await knex(tableName).where(where).delete();
+      deleted = await knex(tableName)
+        .withSchema(schemaName)
+        .where(where)
+        .delete();
     } else {
       throw new Error('Provide ids[] or where{}');
     }
