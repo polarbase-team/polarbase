@@ -182,11 +182,12 @@ export class AppTableDetail {
       .getTableSchema(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((columnDefs) => {
+        const length = columnDefs.length;
         const columns: TableColumn[] = columnDefs.map((c) => ({
           id: c.columnName,
           primary: c.isPrimary,
           editable: !c.isPrimary,
-          hidden: c.isPrimary,
+          hidden: c.isPrimary && length > 1,
           field: this.tblService.buildField(c),
         }));
         this.columns.set(null);

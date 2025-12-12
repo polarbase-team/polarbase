@@ -19,7 +19,8 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { AutoFocusModule } from 'primeng/autofocus';
 
-import { TableService, TableDefinition } from '../table.service';
+import { TableService, TableDefinition, TableCreation } from '../table.service';
+import { DividerModule } from 'primeng/divider';
 
 @Component({
   selector: 'app-table-list',
@@ -38,6 +39,7 @@ import { TableService, TableDefinition } from '../table.service';
     CheckboxModule,
     MessageModule,
     AutoFocusModule,
+    DividerModule,
   ],
   providers: [ConfirmationService],
 })
@@ -51,7 +53,7 @@ export class AppTableList {
   protected menuItems: MenuItem[] | undefined;
   protected visibleTableEditorDrawer = false;
   protected updatedTableName: string;
-  protected updatedTable: TableDefinition = {} as TableDefinition;
+  protected updatedTable: TableCreation = {} as TableCreation;
   protected updatedTableMode: 'add' | 'edit' = 'add';
   protected isCascadeDeleteEnabled = false;
 
@@ -104,6 +106,15 @@ export class AppTableList {
       this.visibleTableEditorDrawer = false;
       this.refreshTables();
     });
+  }
+
+  protected addNewTable() {
+    this.updatedTable = {
+      autoAddingPrimaryKey: true,
+      timestamps: true,
+    } as TableCreation;
+    this.updatedTableMode = 'add';
+    this.visibleTableEditorDrawer = true;
   }
 
   protected editTable(table: TableDefinition) {

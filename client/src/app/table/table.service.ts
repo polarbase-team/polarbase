@@ -24,6 +24,14 @@ export interface ColumnDefinition {
   enumValues: string[] | null;
 }
 
+export interface TableCreation {
+  tableName: string;
+  tableComment?: string;
+  columns?: ColumnDefinition[];
+  autoAddingPrimaryKey?: boolean;
+  timestamps?: boolean;
+}
+
 interface Response<T = any> {
   success: boolean;
   message: string;
@@ -89,11 +97,11 @@ export class TableService {
       .pipe(map((res) => res.data));
   }
 
-  createTable(table: TableDefinition) {
+  createTable(table: TableCreation) {
     return this.http.post<Response>(`${this.apiUrl}/tables`, table);
   }
 
-  updateTable(tableName: string, table: TableDefinition) {
+  updateTable(tableName: string, table: Pick<TableCreation, 'tableName' | 'tableComment'>) {
     return this.http.put<Response>(`${this.apiUrl}/tables/${tableName}`, table);
   }
 

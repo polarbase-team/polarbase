@@ -185,6 +185,8 @@ export const restRoute = new Elysia({ prefix: REST_PREFIX })
             { minItems: 1 }
           )
         ),
+        autoAddingPrimaryKey: t.Optional(t.Boolean()),
+        timestamps: t.Optional(t.Boolean()),
       }),
     }
   )

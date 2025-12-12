@@ -61,6 +61,50 @@
           placeholder="Input here..."
         ></textarea>
       </div>
+      <p-divider align="center" type="solid">
+        <b>Advanced settings</b>
+      </p-divider>
+      @if (updatedTableMode === 'edit') {
+        <p-message severity="info" class="w-full">
+          <p>
+            Note: To modify columns or other advanced settings, please use the Table Editor after
+            saving the table details.
+          </p>
+        </p-message>
+      } @else {
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label for="description" class="col-span-1">
+            <p class="font-medium">Auto-Adding P. Key</p>
+            <p class="text-surface-500 text-xs">
+              Enable automatic primary key "id" column for this table.
+            </p>
+          </label>
+          <div class="col-span-2">
+            <p-checkbox
+              inputId="timestamps"
+              [(ngModel)]="updatedTable.autoAddingPrimaryKey"
+              [binary]="true"
+              size="large"
+            />
+          </div>
+        </div>
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label for="description" class="col-span-1">
+            <p class="font-medium">Timestamps</p>
+            <p class="text-surface-500 text-xs">
+              Enable automatic createdAt and updatedAt columns for this table.
+            </p>
+          </label>
+          <div class="col-span-2">
+            <p-checkbox
+              inputId="timestamps"
+              [(ngModel)]="updatedTable.timestamps"
+              [binary]="true"
+              size="large"
+            />
+          </div>
+        </div>
+      }
     </div>
   </ng-template>
   <ng-template #footer>
@@ -88,7 +132,7 @@
       size="small"
       [text]="true"
       [disabled]="isLoading"
-      (click)="visibleTableEditorDrawer = true"
+      (click)="addNewTable()"
     />
   </div>
 </div>

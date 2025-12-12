@@ -59,13 +59,15 @@
         />
       }
       @case (DataType.Checkbox) {
-        <p-checkbox
-          [attr.inputId]="field.name"
-          [(ngModel)]="internalData[field.name]"
-          [readonly]="viewOnly()"
-          [binary]="true"
-          size="large"
-        />
+        <div class="col-span-2">
+          <p-checkbox
+            [attr.inputId]="field.name"
+            [(ngModel)]="internalData[field.name]"
+            [readonly]="viewOnly()"
+            [binary]="true"
+            size="large"
+          />
+        </div>
       }
       @case (DataType.Date) {
         <p-datepicker

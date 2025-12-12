@@ -227,7 +227,10 @@ export class TableService {
     tableName,
     tableComment,
     columns,
+    autoAddingPrimaryKey = true,
+    timestamps = true,
   }: {
+    schemaName?: string;
     tableName: string;
     tableComment?: string;
     columns?: Array<{
@@ -240,7 +243,8 @@ export class TableService {
       enumValues?: string[];
       comment?: string;
     }>;
-    schemaName?: string;
+    autoAddingPrimaryKey?: boolean;
+    timestamps?: boolean;
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
 
@@ -250,7 +254,7 @@ export class TableService {
     }
 
     await knex.schema.withSchema(schemaName).createTable(tableName, (table) => {
-      table.increments('id').primary();
+      if (autoAddingPrimaryKey) table.increments('id').primary();
 
       columns?.forEach((col) => {
         let columnBuilder;
@@ -289,7 +293,9 @@ export class TableService {
         if (col.comment) columnBuilder.comment(col.comment);
       });
 
-      table.timestamps();
+      if (timestamps) {
+        table.timestamps();
+      }
 
       if (tableComment) {
         table.comment(tableComment);
