@@ -315,14 +315,14 @@ export class TableGroupService extends TableBaseService {
     const items: MenuItem[] = [
       {
         label: 'Expand all',
-        icon: 'pi pi-arrow-up-right-and-arrow-down-left-from-center',
+        icon: 'icon icon-maximize-2',
         command: () => {
           this.expandAllGroups(this.rootGroup());
         },
       },
       {
         label: 'Collapse all',
-        icon: 'pi pi-arrow-down-left-and-arrow-up-right-to-center',
+        icon: 'icon icon-arrow-down-left-and-arrow-up-right-to-center',
         command: () => {
           this.collapseAllGroups(this.rootGroup());
         },

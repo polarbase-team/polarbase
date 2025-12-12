@@ -14,8 +14,8 @@
           >
             <div class="flex min-w-0 items-center gap-2">
               <!-- Drag handle -->
-              <div cdkDragHandle>
-                <img src="/icons/drag-dots.svg" />
+              <div cdkDragHandle class="mt-2">
+                <i class="icon icon-grip-vertical"></i>
               </div>
 
               <!-- Field name -->
@@ -42,7 +42,8 @@
               <p-button
                 variant="text"
                 severity="secondary"
-                icon="pi pi-times"
+                size="small"
+                icon="icon icon-x"
                 (click)="removeColumn(i)"
               />
             </div>
@@ -73,7 +74,7 @@
           variant="text"
           [label]="isReachLimitColumn() ? 'Limit reached' : 'Add column'"
           severity="secondary"
-          icon="pi pi-chevron-down"
+          icon="icon icon-chevron-down"
           iconPos="right"
           [disabled]="isReachLimitColumn()"
           (click)="columnMenu.show($event)"
@@ -95,7 +96,7 @@
           ? `Grouped by ${rules().length} rules`
           : 'Group'
     "
-    icon="pi pi-list"
+    icon="icon icon-group"
     variant="outlined"
     [severity]="rules().length ? 'primary' : 'secondary'"
     (click)="popover.show($event)"
@@ -109,7 +110,7 @@
           ? `Sorted by ${rules().length} rules`
           : 'Sort'
     "
-    icon="pi pi-sort-alt"
+    icon="icon icon-arrow-down-a-z"
     variant="outlined"
     [severity]="rules().length ? 'primary' : 'secondary'"
     (click)="popover.show($event)"

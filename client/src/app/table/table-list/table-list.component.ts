@@ -158,12 +158,12 @@ export class AppTableList {
     this.menuItems = [
       {
         label: 'Edit',
-        icon: 'pi pi-pencil',
+        icon: 'icon icon-pencil',
         command: () => this.editTable(table),
       },
       {
         label: 'Delete',
-        icon: 'pi pi-trash',
+        icon: 'icon icon-trash',
         command: () => this.deleteTable(table),
       },
     ];

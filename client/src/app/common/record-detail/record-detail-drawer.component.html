@@ -3,7 +3,7 @@
     <label [attr.for]="field.name" class="col-span-1">
       <div class="flex items-center gap-2">
         @if (field.params.isPrimary) {
-          <i class="pi pi-key" style="color: var(--p-primary-color)"></i>
+          <i class="icon icon-key" style="color: var(--p-primary-color)"></i>
         }
         <p class="font-medium">{{ field.name }}</p>
       </div>
@@ -109,7 +109,7 @@
             class="absolute top-1 right-1 hover:bg-surface-50 text-surface-500 cursor-pointer w-8 h-8 rounded-md flex items-center justify-center"
             (click)="openJSONEditor(field)"
           >
-            <i class="pi pi-arrow-up-right-and-arrow-down-left-from-center"></i>
+            <i class="icon icon-maximize-2"></i>
           </div>
         </div>
       }

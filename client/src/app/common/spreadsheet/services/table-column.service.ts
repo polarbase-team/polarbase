@@ -490,7 +490,7 @@ export class TableColumnService extends TableBaseService {
     if (this.tableService.layout.column.selectedIndices?.size > 1) {
       items.push({
         label: 'Hide selected columns',
-        icon: 'pi pi-eye-slash',
+        icon: 'icon icon-eye-closed',
         command: () => {
           this.hideSelectedColumns();
         },
@@ -498,7 +498,7 @@ export class TableColumnService extends TableBaseService {
       if (config.deletable) {
         items.push({
           label: 'Delete selected columns',
-          icon: 'pi pi-trash',
+          icon: 'icon icon-trash',
           command: () => {
             this.host.deleteConfirmation(
               'Do you want to delete the selected columns?',
@@ -513,7 +513,7 @@ export class TableColumnService extends TableBaseService {
       if (config.freezable) {
         items.push({
           label: 'Freeze up to This Column',
-          icon: 'pi pi-sign-in',
+          icon: 'icon icon-panel-right-close',
           command: () => {
             this.tableService.setFrozenCount(columnIndex);
           },
@@ -524,14 +524,14 @@ export class TableColumnService extends TableBaseService {
           { separator: true },
           {
             label: 'Sort up',
-            icon: 'pi pi-sort-amount-up',
+            icon: 'icon icon-arrow-up-a-z',
             command: () => {
               this.sortByColumn(column, 'asc');
             },
           },
           {
             label: 'Sort down',
-            icon: 'pi pi-sort-amount-down',
+            icon: 'icon icon-arrow-down-z-a',
             command: () => {
               this.sortByColumn(column, 'desc');
             },
@@ -540,7 +540,7 @@ export class TableColumnService extends TableBaseService {
         if (column.sortType) {
           items.push({
             label: 'Clear sorting',
-            icon: 'pi pi-times',
+            icon: 'icon icon-x',
             command: () => {
               this.unsortByColumn(column);
             },
@@ -552,7 +552,7 @@ export class TableColumnService extends TableBaseService {
           { separator: true },
           {
             label: 'Group by',
-            icon: 'pi pi-list',
+            icon: 'icon icon-group',
             items: [
               {
                 label: 'Ascending',
@@ -572,7 +572,7 @@ export class TableColumnService extends TableBaseService {
         if (column.groupSortType) {
           items.push({
             label: 'Clear grouping',
-            icon: 'pi pi-times',
+            icon: 'icon icon-x',
             command: () => {
               this.ungroupByColumn(column);
             },
@@ -584,7 +584,7 @@ export class TableColumnService extends TableBaseService {
           { separator: true },
           {
             label: 'Hide',
-            icon: 'pi pi-eye-slash',
+            icon: 'icon icon-eye-closed',
             command: () => {
               this.hideColumn(column);
             },
@@ -596,7 +596,7 @@ export class TableColumnService extends TableBaseService {
           { separator: true },
           {
             label: 'Delete',
-            icon: 'pi pi-trash',
+            icon: 'icon icon-trash',
             command: () => {
               this.host.deleteConfirmation(
                 'Do you want to delete this column?',

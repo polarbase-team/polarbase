@@ -54,7 +54,7 @@
   <div
     class="px-4 py-2 bg-white rounded-4xl border-1 border-surface-300 absolute z-1 bottom-8 left-6 right-6 flex gap-3 items-center"
   >
-    <p-button icon="pi pi-paperclip" [rounded]="true" [text]="true" severity="secondary" />
+    <p-button icon="icon icon-paperclip" [rounded]="true" [text]="true" severity="secondary" />
     <div
       #editor
       contenteditable="true"
@@ -64,7 +64,7 @@
       (keydown.enter)="!isStreaming() ? onEnter($any($event)) : false"
     ></div>
     <p-button
-      icon="pi pi-send"
+      icon="icon icon-send"
       [rounded]="true"
       [disabled]="!inputText().length || isStreaming()"
       (click)="sendMessage()"

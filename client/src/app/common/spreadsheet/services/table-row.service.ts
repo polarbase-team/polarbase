@@ -427,7 +427,7 @@ export class TableRowService extends TableBaseService {
     if (this.selectedRows?.size > 1) {
       items.push({
         label: 'Delete selected rows',
-        icon: 'pi pi-trash',
+        icon: 'icon icon-trash',
         command: () => {
           this.host.deleteConfirmation(
             'Do you want to delete the selected rows?',
@@ -441,7 +441,7 @@ export class TableRowService extends TableBaseService {
       items.push(
         {
           label: 'Change row size',
-          icon: 'pi pi-bars',
+          icon: 'icon icon-ruler',
           items: [
             {
               label: 'Small',
@@ -475,7 +475,7 @@ export class TableRowService extends TableBaseService {
         items.push(
           {
             label: 'Insert row above',
-            icon: 'pi pi-arrow-up',
+            icon: 'icon icon-arrow-up',
             command: () => {
               this.tableGroupService.isGrouped()
                 ? this.tableGroupService.insertRowInGroup(group, rowGroupIndex)
@@ -484,7 +484,7 @@ export class TableRowService extends TableBaseService {
           },
           {
             label: 'Insert row below',
-            icon: 'pi pi-arrow-down',
+            icon: 'icon icon-arrow-down',
             command: () => {
               this.tableGroupService.isGrouped()
                 ? this.tableGroupService.insertRowInGroup(group, rowGroupIndex + 1)
@@ -497,7 +497,7 @@ export class TableRowService extends TableBaseService {
       if (this.tableService.config().row.deletable) {
         items.push({
           label: 'Delete',
-          icon: 'pi pi-trash',
+          icon: 'icon icon-trash',
           command: () => {
             this.host.deleteConfirmation(
               'Do you want to delete this row?',

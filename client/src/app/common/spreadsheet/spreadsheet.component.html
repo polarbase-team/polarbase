@@ -45,7 +45,7 @@
   </div>
   <p-inputgroup class="w-xs max-w-xs">
     <p-inputgroup-addon class="relative">
-      <p-inputicon class="pi pi-search" />
+      <p-inputicon class="icon icon-search" />
     </p-inputgroup-addon>
     <input
       type="text"
@@ -66,8 +66,11 @@
       </p-inputgroup-addon>
       <p-inputgroup-addon>
         <div class="flex gap-2 justify-content-space-around">
-          <i class="pi pi-chevron-up cursor-pointer" (click)="tableService.searchPrevious()"></i>
-          <i class="pi pi-chevron-down cursor-pointer" (click)="tableService.searchNext()"></i>
+          <i
+            class="icon icon-chevron-up cursor-pointer"
+            (click)="tableService.searchPrevious()"
+          ></i>
+          <i class="icon icon-chevron-down cursor-pointer" (click)="tableService.searchNext()"></i>
         </div>
       </p-inputgroup-addon>
     }
@@ -131,7 +134,7 @@
           [style.maxWidth.px]="column.width"
         >
           @if (column.field.required) {
-            <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
+            <i class="icon icon-asterisk text-red-500"></i>
           }
           <div
             class="text-sm white-space-nowrap overflow-hidden truncate w-full"
@@ -141,7 +144,7 @@
           </div>
           @if (column.field.description?.length) {
             <i
-              class="pi pi-info-circle"
+              class="icon icon-info-circle"
               style="color: var(--p-surface-500); font-size: 12px"
               [pTooltip]="column.field.description"
               tooltipPosition="bottom"
@@ -160,7 +163,7 @@
           [style.maxHeight.%]="100"
         ></div>
         @if (column.primary) {
-          <i class="pi pi-key" style="color: var(--p-primary-color)"></i>
+          <i class="icon icon-key" style="color: var(--p-primary-color)"></i>
         }
         <div
           class="text-sm white-space-nowrap overflow-hidden truncate"
@@ -169,11 +172,11 @@
           {{ column.field.name }}
         </div>
         @if (column.field.required) {
-          <i class="pi pi-asterisk text-red-500" style="font-size: 6px"></i>
+          <i class="icon icon-asterisk text-red-500"></i>
         }
         @if (column.field.description?.length) {
           <i
-            class="pi pi-info-circle"
+            class="icon icon-info-circle"
             style="color: var(--p-surface-500); font-size: 12px"
             [pTooltip]="column.field.description"
             tooltipPosition="bottom"
@@ -252,7 +255,7 @@
         }
         @if (tableService.config().column.addable) {
           <div class="header-cell cell header-action-cell">
-            <i class="pi pi-plus-circle"></i>
+            <i class="icon icon-circle-plus"></i>
           </div>
         }
       </div>
@@ -309,9 +312,9 @@
                 <div class="group-cell cell index-cell" cell-type="group">
                   <div class="index-block">
                     <i
-                      class="pi cursor-pointer"
+                      class="icon cursor-pointer"
                       style="color: var(--p-surface-500); font-size: 12px"
-                      [ngClass]="group.isCollapsed ? 'pi-chevron-right' : 'pi-chevron-down'"
+                      [ngClass]="group.isCollapsed ? 'icon-chevron-right' : 'icon-chevron-down'"
                       (click)="
                         group.isCollapsed
                           ? this.tableGroupService.expandGroup(group)
@@ -403,7 +406,7 @@
                         [attr.disabled]="tableService.isStreaming"
                         (click)="tableRowService.addNewRow(group)"
                       >
-                        <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
+                        <i class="icon icon-circle-plus" style="margin-left: 11px"></i>
                       </div>
                     </div>
                   }
@@ -474,7 +477,7 @@
                   >
                     @if (tableService.config().row.reorderable) {
                       <div class="row__drag-handle" cdkDragHandle>
-                        <img src="/icons/drag-dots.svg" />
+                        <i class="icon icon-grip-vertical"></i>
                       </div>
                     }
                     <div class="index-block">
@@ -502,8 +505,7 @@
                       @if (tableService.config().row.expandable) {
                         <div class="row__expand-handle">
                           <i
-                            class="pi pi-arrow-up-right-and-arrow-down-left-from-center text-surface-500"
-                            style="font-size: 12px"
+                            class="icon icon-maximize-2 text-surface-500"
                             [pTooltip]="'View Detail'"
                             tooltipPosition="top"
                             (click)="tableRowService.expandRow(row)"
@@ -624,7 +626,7 @@
                 [attr.disabled]="tableService.isStreaming"
                 (click)="tableRowService.addNewRow()"
               >
-                <i class="pi pi-plus-circle" style="margin-left: 11px"></i>
+                <i class="icon icon-circle-plus" style="margin-left: 11px"></i>
               </div>
             </div>
           }
@@ -907,8 +909,8 @@
                   (click)="isHideSummaryLabel = !isHideSummaryLabel"
                 >
                   <i
-                    class="pi"
-                    [ngClass]="isHideSummaryLabel ? 'pi-chevron-right' : 'pi-chevron-left'"
+                    class="icon"
+                    [ngClass]="isHideSummaryLabel ? 'icon-chevron-right' : 'icon-chevron-left'"
                     style="font-size: 9px"
                   ></i>
                 </div>

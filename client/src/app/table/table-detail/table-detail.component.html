@@ -3,13 +3,13 @@
     <p-tablist>
       <p-tab value="0">
         <div class="flex items-center">
-          <i class="pi pi-table mr-2"></i>
+          <i class="icon icon-table-2 mr-2"></i>
           <span>{{ tblService.selectedTable().tableName }}</span>
         </div>
       </p-tab>
       <!-- <p-tab value="1">
         <div class="flex items-center">
-          <i class="pi pi-sparkles mr-2"></i>
+          <i class="icon icon-sparkles mr-2"></i>
           <span>AI Query</span>
         </div>
       </p-tab> -->
@@ -35,7 +35,7 @@
             <ng-template #toolbar>
               <div class="flex">
                 <p-button
-                  icon="pi pi-plus"
+                  icon="icon icon-plus"
                   label="New Record"
                   [style]="{ 'white-space': 'nowrap' }"
                   (click)="addNewRecord()"
@@ -61,7 +61,6 @@
   <div class="flex flex-col w-full h-full items-center justify-center m-1">
     <p-image src="assets/images/chill-guy.png" alt="Image" width="320" />
     <p class="text-surface-500 italic flex items-center">
-      <i class="pi pi-hand-point-right mr-2"></i>
       <span>Unlock insights by picking any table to explore its data!</span>
     </p>
   </div>
