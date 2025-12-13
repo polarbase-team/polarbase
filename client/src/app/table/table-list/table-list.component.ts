@@ -1,6 +1,13 @@
 import _ from 'lodash';
 
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
@@ -21,6 +28,7 @@ import { AutoFocusModule } from 'primeng/autofocus';
 
 import { TableService, TableDefinition, TableCreation } from '../table.service';
 import { DividerModule } from 'primeng/divider';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-table-list',
@@ -59,8 +67,28 @@ export class AppTableList {
 
   constructor(
     private destroyRef: DestroyRef,
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
     private confirmationService: ConfirmationService,
-  ) {}
+  ) {
+    let tableFromQueryParam: string;
+
+    this.activatedRoute.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        tableFromQueryParam = params['table'];
+      });
+
+    effect(() => {
+      const tables = this.tables();
+      if (tableFromQueryParam && tables.length) {
+        const table = tables.find((t) => t.tableName === tableFromQueryParam);
+        if (table) {
+          this.tblService.selectedTable.set(table);
+        }
+      }
+    });
+  }
 
   ngAfterViewInit() {
     this.tblService
@@ -87,6 +115,11 @@ export class AppTableList {
 
   protected onTableSelected(table: TableDefinition) {
     this.tblService.selectedTable.set(table);
+    this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams: { table: table.tableName },
+      queryParamsHandling: 'merge',
+    });
   }
 
   protected saveUpdatedTable() {
