@@ -33,8 +33,8 @@ export class ColumnViewOptionsComponent {
   sourceColumns = input.required<TableColumn[]>();
   visibleColumns = input.required<TableColumn[]>();
 
-  toggle = output<{ column: TableColumn; hidden: boolean }>();
-  move = output<{ column: TableColumn; newIndex: number }>();
+  onToggle = output<{ column: TableColumn; hidden: boolean }>();
+  onMove = output<{ column: TableColumn; newIndex: number }>();
 
   columns = signal<TableColumn[]>([]);
 
@@ -45,7 +45,7 @@ export class ColumnViewOptionsComponent {
   }
 
   protected toggleHidden(column: TableColumn) {
-    this.toggle.emit({ column, hidden: !column.hidden });
+    this.onToggle.emit({ column, hidden: !column.hidden });
   }
 
   protected onDropped(event: CdkDragDrop<TableColumn[]>) {
@@ -64,6 +64,6 @@ export class ColumnViewOptionsComponent {
       if (visibleColumns.has(newColumns[i])) newIndex++;
     }
 
-    this.move.emit({ column, newIndex });
+    this.onMove.emit({ column, newIndex });
   }
 }

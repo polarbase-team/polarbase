@@ -39,7 +39,7 @@ export class DataViewOptionsComponent {
   currentColumns = input<TableColumn[]>([]);
   limit = input<number>();
 
-  apply = output<OrderingRule[]>();
+  onApply = output<OrderingRule[]>();
 
   rules = signal<OrderingRule[]>([]);
 
@@ -89,7 +89,7 @@ export class DataViewOptionsComponent {
   }
 
   protected applyChanges() {
-    this.apply.emit([...this.rules()]);
+    this.onApply.emit([...this.rules()]);
   }
 
   protected onDropped(event: CdkDragDrop<OrderingRule[]>) {

@@ -23,25 +23,25 @@
       <column-view-options
         [sourceColumns]="sourceColumns()"
         [visibleColumns]="tableColumnService.columns()"
-        (toggle)="
+        (onToggle)="
           $event.hidden
             ? tableColumnService.hideColumn($event.column)
             : tableColumnService.showColumn($event.column)
         "
-        (move)="tableColumnService.moveColumn($event.column, $event.newIndex)"
+        (onMove)="tableColumnService.moveColumn($event.column, $event.newIndex)"
       />
       <data-view-options
         type="group"
         [sourceColumns]="sourceColumns()"
         [currentColumns]="tableColumnService.groupedColumns()"
         [limit]="3"
-        (apply)="tableService.onApplyGroup($event)"
+        (onApply)="tableService.onApplyGroup($event)"
       />
       <data-view-options
         type="sort"
         [sourceColumns]="sourceColumns()"
         [currentColumns]="tableColumnService.sortedColumns()"
-        (apply)="tableService.onApplySort($event)"
+        (onApply)="tableService.onApplySort($event)"
       />
     </div>
     <p-inputgroup class="w-xs max-w-xs">

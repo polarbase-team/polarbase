@@ -40,7 +40,7 @@
       <app-chatbot
         [visible]="chatbotVisible()"
         (fullscreen)="chatbotFullscreen.set($event)"
-        (closed)="chatbotVisible.set(false)"
+        (onClose)="chatbotVisible.set(false)"
       />
     </div>
   </div>

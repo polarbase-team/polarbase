@@ -17,26 +17,26 @@ export class RichTextEditorDrawerComponent {
   visible = model(false);
   viewOnly = input(false);
 
-  saved = output<string>();
-  canceled = output();
-  opened = output();
-  closed = output();
+  onSave = output<string>();
+  onCancel = output();
+  onOpen = output();
+  onClose = output();
 
   protected onShow() {
-    this.opened.emit();
+    this.onOpen.emit();
   }
 
   protected onHide() {
-    this.closed.emit();
+    this.onClose.emit();
   }
 
   protected save() {
     this.visible.set(false);
-    this.saved.emit(this.value());
+    this.onSave.emit(this.value());
   }
 
   protected cancel() {
     this.visible.set(false);
-    this.canceled.emit();
+    this.onCancel.emit();
   }
 }

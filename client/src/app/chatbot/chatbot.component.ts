@@ -48,7 +48,7 @@ export class AppChatBot {
   visible = input(false);
 
   fullscreen = output<boolean>();
-  closed = output<void>();
+  onClose = output<void>();
 
   messages = signal<Message[]>([]);
   inputText = signal('');
@@ -92,7 +92,7 @@ export class AppChatBot {
   protected closeChatbot() {
     this.isFullscreen = false;
     this.fullscreen.emit(this.isFullscreen);
-    this.closed.emit();
+    this.onClose.emit();
   }
 
   protected startNewChat() {
