@@ -314,7 +314,7 @@ export class TableService {
     tableName: string;
     data: {
       tableName?: string;
-      tableComment?: string;
+      tableComment?: string | null;
     };
   }) {
     const { tableName: newTableName, tableComment: newTableComment } = data;
@@ -344,7 +344,7 @@ export class TableService {
       await knex.schema
         .withSchema(schemaName)
         .table(finalTableName, (table) => {
-          table.comment(newTableComment);
+          table.comment(newTableComment ?? '');
         });
     }
 

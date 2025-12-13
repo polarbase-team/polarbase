@@ -203,7 +203,7 @@ export const restRoute = new Elysia({ prefix: REST_PREFIX })
       body: t.Object(
         {
           tableName: t.Optional(t.String()),
-          tableComment: t.Optional(t.String()),
+          tableComment: t.Optional(t.Nullable(t.String())),
         },
         { minProperties: 1 }
       ),

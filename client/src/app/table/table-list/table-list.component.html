@@ -39,6 +39,9 @@
         <div class="grid grid-cols-3 w-full gap-12">
           <label for="name" class="col-span-1">
             <p class="font-medium">Name</p>
+            <p class="text-surface-500 text-xs">
+              Only letters, numbers, _, $ allowed and must start with a letter or _.
+            </p>
           </label>
           <div class="flex flex-col gap-1 col-span-2">
             <input
@@ -58,8 +61,7 @@
                 @if (tableName.errors['required']) {
                   Table name is required.
                 } @else if (tableName.errors?.['pattern']) {
-                  Invalid table name. Only letters, numbers, _, $ allowed and must start with a
-                  letter or _.
+                  Invalid table name.
                 }
               </p-message>
             }
