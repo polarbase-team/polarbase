@@ -2,6 +2,8 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import chalk from 'chalk';
 
+import { apiKeyAuth } from './api-keys/auth';
+import { apiKeyRoute } from './api-keys/route';
 import { restRoute } from './rest/route';
 import { agentRouter } from './agent/route';
 import { mcpServer } from './mcp/server';
@@ -32,7 +34,9 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
   const app = new Elysia({
     name: APP_NAME,
     serve: { hostname: APP_HOSTNAME },
-  }).use(cors({ origin: CORS_ORIGINS }));
+  })
+    .use(cors({ origin: CORS_ORIGINS }))
+    .use(apiKeyRoute);
 
   let allGood = true;
 
@@ -96,15 +100,26 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
   const REALTIME_PATH = process.env.REALTIME_PATH;
   if (REALTIME_ENABLED) {
     enableCDC();
+
     app.ws(`${REALTIME_PATH}`, {
       open(ws) {
-        WebSocket.addClient(ws as any);
+        const apiKey = ws.data.headers['x-api-key'];
+        if (!apiKey) {
+          ws.close(1008, 'Missing API Key');
+          return;
+        }
+        apiKeyAuth(apiKey)
+          .then(() => {
+            WebSocket.addClient(ws as any);
+          })
+          .catch(() => ws.close(1008, 'Invalid API Key'));
       },
       close(ws) {
         const { id } = (ws as any).data.query || {};
         if (id) WebSocket.removeClient(id);
       },
     });
+
     logService(
       'Realtime (WS+CDC)',
       true,

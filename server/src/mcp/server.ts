@@ -1,6 +1,7 @@
 import { FastMCP } from 'fastmcp';
 
 import { log } from '../utils/logger';
+import { apiKeyAuth } from '../api-keys/auth';
 import instructions from '../agent/instructions';
 import registerTablesResource from './resources/tables';
 import registerColumnsResource from './resources/columns';
@@ -19,6 +20,17 @@ export const mcpServer = new FastMCP({
   version: '1.0.0',
   logger: log as any,
   instructions,
+  authenticate: async (request) => {
+    const apiKey = request.headers['x-api-key'];
+    try {
+      return await apiKeyAuth(apiKey as string);
+    } catch {
+      throw new Response(null, {
+        status: 401,
+        statusText: 'Unauthorized',
+      });
+    }
+  },
 });
 
 // Register resources

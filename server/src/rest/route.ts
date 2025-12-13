@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { openapi, fromTypes } from '@elysiajs/openapi';
 
 import knex from '../plugins/db';
+import { apiKeyAuth } from '../api-keys/auth';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
 
@@ -72,6 +73,20 @@ export const restRoute = new Elysia({ prefix: REST_PREFIX })
     if (!checkRateLimit(ip)) {
       set.status = 429;
       return err('Too many requests', 429);
+    }
+  })
+
+  /**
+   * Global API key authentication middleware (401 if invalid)
+   */
+  .onBeforeHandle(async ({ headers, set }) => {
+    try {
+      const apiKey = headers['x-api-key'];
+      if (!apiKey) throw new Error();
+      return await apiKeyAuth(apiKey);
+    } catch {
+      set.status = 401;
+      return { error: 'Invalid or missing x-api-key' };
     }
   })
 

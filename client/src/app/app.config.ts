@@ -11,6 +11,7 @@ import { MessageService } from 'primeng/api';
 import Aura from '@primeuix/themes/aura';
 import { definePreset, palette } from '@primeuix/themes';
 
+import { httpApiKeyInterceptor } from './http-api-key.interceptor';
 import { httpErrorInterceptor } from './http-error.interceptor';
 import { routes } from './app.routes';
 
@@ -25,7 +26,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([httpErrorInterceptor])),
+    provideHttpClient(withInterceptors([httpApiKeyInterceptor, httpErrorInterceptor])),
     providePrimeNG({
       theme: {
         preset: AuraSky,
