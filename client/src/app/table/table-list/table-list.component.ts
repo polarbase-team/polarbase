@@ -11,7 +11,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
-import { Observable } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -55,8 +55,8 @@ export class AppTableList {
   protected tblService = inject(TableService);
   protected tables = signal<TableDefinition[]>([]);
   protected filteredTables = signal<TableDefinition[]>([]);
-  protected isLoading = false;
-  protected isSaving = false;
+  protected isLoading = signal(false);
+  protected isSaving = signal(false);
   protected searchQuery = '';
   protected menuItems: MenuItem[] | undefined;
   protected visibleTableEditorDrawer = false;
@@ -123,7 +123,7 @@ export class AppTableList {
   }
 
   protected saveUpdatedTable() {
-    this.isSaving = true;
+    this.isSaving.set(true);
 
     let fn: Observable<any>;
 
@@ -133,15 +133,13 @@ export class AppTableList {
       fn = this.tblService.createTable(this.updatedTable);
     }
 
-    fn.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.updatedTable = {} as TableDefinition;
-        this.visibleTableEditorDrawer = false;
-        this.refreshTables();
-      },
-      complete: () => {
-        this.isSaving = false;
-      },
+    fn.pipe(
+      finalize(() => this.isSaving.set(false)),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => {
+      this.updatedTable = {} as TableDefinition;
+      this.visibleTableEditorDrawer = false;
+      this.refreshTables();
     });
   }
 
@@ -177,17 +175,15 @@ export class AppTableList {
         severity: 'danger',
       },
       accept: () => {
-        this.isLoading = true;
+        this.isLoading.set(true);
         this.tblService
           .deleteTable(table.tableName, this.isCascadeDeleteEnabled)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe({
-            next: () => {
-              this.refreshTables();
-            },
-            complete: () => {
-              this.isLoading = false;
-            },
+          .pipe(
+            finalize(() => this.isLoading.set(false)),
+            takeUntilDestroyed(this.destroyRef),
+          )
+          .subscribe(() => {
+            this.refreshTables();
           });
         this.isCascadeDeleteEnabled = false;
       },
@@ -214,19 +210,17 @@ export class AppTableList {
   protected refreshTables = _.debounce(() => this.getTables(), 1000, { leading: true });
 
   private getTables() {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.tblService
       .getTables()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (tables) => {
-          this.tables.set(tables);
-          this.filteredTables.set(tables);
-          this.searchQuery = '';
-        },
-        complete: () => {
-          this.isLoading = false;
-        },
+      .pipe(
+        finalize(() => this.isLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((tables) => {
+        this.tables.set(tables);
+        this.filteredTables.set(tables);
+        this.searchQuery = '';
       });
   }
 }

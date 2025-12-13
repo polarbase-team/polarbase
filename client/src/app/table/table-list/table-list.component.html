@@ -110,7 +110,7 @@
   <ng-template #footer>
     <div class="flex justify-end gap-2">
       <p-button label="Cancel" severity="secondary" (click)="visibleTableEditorDrawer = false" />
-      <p-button label="Save" [loading]="isSaving" (click)="saveUpdatedTable()" />
+      <p-button label="Save" [loading]="isSaving()" (click)="saveUpdatedTable()" />
     </div>
   </ng-template>
 </p-drawer>
@@ -123,7 +123,7 @@
       severity="secondary"
       size="small"
       [text]="true"
-      [disabled]="isLoading"
+      [disabled]="isLoading()"
       (click)="refreshTables()"
     />
     <p-button
@@ -131,7 +131,7 @@
       severity="secondary"
       size="small"
       [text]="true"
-      [disabled]="isLoading"
+      [disabled]="isLoading()"
       (click)="addNewTable()"
     />
   </div>
@@ -173,7 +173,7 @@
           severity="secondary"
           size="small"
           [text]="true"
-          [disabled]="isLoading"
+          [disabled]="isLoading()"
           (click)="openTableActionMenu($event, table, tableMenu)"
         />
       </a>
