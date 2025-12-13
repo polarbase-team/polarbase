@@ -14,7 +14,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { finalize, Observable, tap } from 'rxjs';
+import { finalize, Observable, map } from 'rxjs';
 
 import { DrawerModule } from 'primeng/drawer';
 import { InputTextModule } from 'primeng/inputtext';
@@ -130,7 +130,7 @@ export class RecordEditorDrawerComponent {
         if (_.isNil(data[tableColumnPk])) data[tableColumnPk] = id;
         fn = this.tblService
           .bulkCreateRecords(tableName, [data])
-          .pipe(tap(({ data }) => data.returning[0]));
+          .pipe(map(({ data }) => data.returning[0]));
         break;
       case 'edit':
         fn = this.tblService.bulkUpdateRecords(tableName, [
