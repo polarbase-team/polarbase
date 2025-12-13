@@ -17,13 +17,12 @@
     <p-tabpanels class="flex-1 !p-0">
       <p-tabpanel value="0">
         @if (columns()) {
-          <record-detail-drawer
-            [(visible)]="visibleRecordDetail"
-            [id]="updatedRow?.id"
+          <record-editor-drawer
+            [(visible)]="visibleRecordEditor"
             [fields]="fields()"
-            [data]="updatedRow?.data"
-            (saved)="onRecordSaved($event)"
-            (closed)="updatedRow = null"
+            [record]="updatedRecord"
+            [mode]="updatedRecordMode"
+            (onSave)="onRecordSave($event)"
           />
           <spreadsheet
             [config]="config()"

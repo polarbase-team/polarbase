@@ -30,10 +30,7 @@ import {
   TableCellActionType,
   TableCellEditedEvent,
 } from '../../common/spreadsheet/events/table-cell';
-import {
-  RecordDetailDrawerComponent,
-  RecordDetailSavedEvent,
-} from '../../common/record-detail/record-detail-drawer.component';
+import { RecordEditorDrawerComponent } from '../record-editor/record-editor-drawer.component';
 import { TableDefinition, TableService } from '../table.service';
 import { TableRealtimeService } from '../table-realtime.service';
 
@@ -48,7 +45,7 @@ import { TableRealtimeService } from '../table-realtime.service';
     ButtonModule,
     DividerModule,
     SpreadsheetComponent,
-    RecordDetailDrawerComponent,
+    RecordEditorDrawerComponent,
   ],
 })
 export class AppTableDetail {
@@ -59,23 +56,20 @@ export class AppTableDetail {
   });
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
-
   protected fields = computed(() => {
     return this.columns().map((c) => c.field);
   });
-
   protected tblService = inject(TableService);
-
-  protected updatedRow: TableRow;
-  protected updatedRowMode: 'add' | 'edit' | 'view' = 'add';
-  protected visibleRecordDetail: boolean;
+  protected updatedRecord: Record<string, any>;
+  protected updatedRecordMode: 'add' | 'edit' | 'view' = 'add';
+  protected visibleRecordEditor: boolean;
 
   constructor(
     private destroyRef: DestroyRef,
     private tblRealtimeService: TableRealtimeService,
   ) {
     effect(() => {
-      this.visibleRecordDetail = false;
+      this.visibleRecordEditor = false;
 
       const selectedTable = this.tblService.selectedTable();
       if (!selectedTable) return;
@@ -145,9 +139,9 @@ export class AppTableDetail {
           .subscribe();
         break;
       case TableRowActionType.Expand:
-        this.updatedRow = action.payload as TableRow;
-        this.updatedRowMode = 'edit';
-        this.visibleRecordDetail = true;
+        this.updatedRecord = action.payload['data'];
+        this.updatedRecordMode = 'edit';
+        this.visibleRecordEditor = true;
         break;
     }
   }
@@ -171,49 +165,27 @@ export class AppTableDetail {
     }
   }
 
-  protected onRecordSaved(event: RecordDetailSavedEvent) {
-    const { tableName, tableColumnPk } = this.tblService.selectedTable();
-    const id = event.id ?? undefined;
-    const data = { ...event.data };
+  protected onRecordSave(record: Record<string, any>) {
+    const { tableColumnPk } = this.tblService.selectedTable();
+    const recordId = record[tableColumnPk];
 
-    if (this.updatedRowMode === 'add') {
-      if (_.isNil(data[tableColumnPk])) {
-        data[tableColumnPk] = id;
-      }
-
-      this.tblService
-        .bulkCreateRecords(tableName, [data])
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(({ data }) => {
-          const returningdRow = data.returning[0];
-          const newRow: TableRow = {
-            id: returningdRow[tableColumnPk],
-            data: returningdRow,
-          };
-          this.rows.update((arr) => [...arr, newRow]);
-        });
-      return;
+    if (this.updatedRecordMode === 'add') {
+      const newRow: TableRow = {
+        id: recordId,
+        data: record,
+      };
+      this.rows.update((arr) => [...arr, newRow]);
+    } else {
+      this.rows.update((rows) =>
+        rows.map((row) => (row.id === recordId ? { ...row, data: record } : row)),
+      );
     }
-
-    this.tblService
-      .bulkUpdateRecords(tableName, [
-        {
-          where: { [tableColumnPk]: id },
-          data,
-        },
-      ])
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.rows.update((rows) =>
-          rows.map((row) => (row.id === event.id ? { ...row, data } : row)),
-        );
-      });
   }
 
   protected addNewRecord() {
-    this.updatedRow = { data: {} } as TableRow;
-    this.updatedRowMode = 'add';
-    this.visibleRecordDetail = true;
+    this.updatedRecord = {} as TableRow;
+    this.updatedRecordMode = 'add';
+    this.visibleRecordEditor = true;
   }
 
   private loadTable(table: TableDefinition) {

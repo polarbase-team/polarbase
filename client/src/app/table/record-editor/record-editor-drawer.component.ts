@@ -4,14 +4,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   input,
   model,
   output,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize, Observable, tap } from 'rxjs';
 
 import { DrawerModule } from 'primeng/drawer';
 import { InputTextModule } from 'primeng/inputtext';
@@ -26,19 +29,15 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { AutoFocusModule } from 'primeng/autofocus';
 
-import { JSONEditorDrawerComponent } from '../json-editor/json-editor-drawer.component';
-import { RichTextEditorDrawerComponent } from '../rich-text-editor/rich-text-editor-drawer.component';
-import { DataType } from '../spreadsheet/field/interfaces/field.interface';
-import { Field } from '../spreadsheet/field/objects/field.object';
-
-export interface RecordDetailSavedEvent {
-  id?: string | number;
-  data: Record<string, any>;
-}
+import { JSONEditorDrawerComponent } from '../../common/json-editor/json-editor-drawer.component';
+import { RichTextEditorDrawerComponent } from '../../common/rich-text-editor/rich-text-editor-drawer.component';
+import { DataType } from '../../common/spreadsheet/field/interfaces/field.interface';
+import { Field } from '../../common/spreadsheet/field/objects/field.object';
+import { TableDefinition, TableService } from '../table.service';
 
 @Component({
-  selector: 'record-detail-drawer',
-  templateUrl: './record-detail-drawer.component.html',
+  selector: 'record-editor-drawer',
+  templateUrl: './record-editor-drawer.component.html',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -60,23 +59,21 @@ export interface RecordDetailSavedEvent {
   ],
   providers: [MessageService],
 })
-export class RecordDetailDrawerComponent {
-  id = input<string | number>();
+export class RecordEditorDrawerComponent {
+  table = input<TableDefinition>();
   fields = input<Field[]>([]);
-  data = input({});
+  record = input({});
   mode = input<'add' | 'edit' | 'view'>('add');
   visible = model(false);
 
-  saved = output<RecordDetailSavedEvent>();
-  canceled = output();
-  opened = output();
-  closed = output();
+  onSave = output<Record<string, any>>();
 
   protected viewOnly = computed(() => this.mode() === 'view');
   protected requiredFields = signal<Field[]>([]);
   protected optionalFields = signal<Field[]>([]);
+  protected isSaving = signal<boolean>(false);
   protected DataType = DataType;
-  protected internalData: Record<string, any> = {};
+  protected updatedRecord: Record<string, any> = {};
   protected visibleRichTextEditor = false;
   protected editingRichTextField: Field;
   protected editingRichText = '';
@@ -84,9 +81,13 @@ export class RecordDetailDrawerComponent {
   protected editingJSONField: Field;
   protected editingJSONText = '';
 
-  constructor(private messageService: MessageService) {
+  constructor(
+    private destroyRef: DestroyRef,
+    private messageService: MessageService,
+    private tblService: TableService,
+  ) {
     effect(() => {
-      this.internalData = { ...(this.data() || {}) };
+      this.updatedRecord = { ...(this.record() || {}) };
     });
 
     effect(() => {
@@ -104,17 +105,9 @@ export class RecordDetailDrawerComponent {
     });
   }
 
-  protected onShow() {
-    this.opened.emit();
-  }
-
-  protected onHide() {
-    this.closed.emit();
-  }
-
   protected save() {
     const isInvalid = this.requiredFields().find(
-      (field: Field) => !field.params.isPrimary && _.isNil(this.internalData[field.name]),
+      (field: Field) => !field.params.isPrimary && _.isNil(this.updatedRecord[field.name]),
     );
 
     if (isInvalid) {
@@ -127,24 +120,51 @@ export class RecordDetailDrawerComponent {
       return;
     }
 
-    this.visible.set(false);
-    this.saved.emit({ id: this.id(), data: this.internalData });
+    const { tableName, tableColumnPk } = this.tblService.selectedTable();
+    const id = this.record()[tableColumnPk] ?? undefined;
+    const data = { ...this.updatedRecord };
+
+    let fn: Observable<any>;
+    switch (this.mode()) {
+      case 'add':
+        if (_.isNil(data[tableColumnPk])) data[tableColumnPk] = id;
+        fn = this.tblService
+          .bulkCreateRecords(tableName, [data])
+          .pipe(tap(({ data }) => data.returning[0]));
+        break;
+      case 'edit':
+        fn = this.tblService.bulkUpdateRecords(tableName, [
+          {
+            where: { [tableColumnPk]: id },
+            data,
+          },
+        ]);
+        break;
+    }
+
+    this.isSaving.set(true);
+    fn.pipe(
+      finalize(() => this.isSaving.set(false)),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe((record) => {
+      this.visible.set(false);
+      this.onSave.emit(record);
+    });
   }
 
   protected cancel() {
     this.visible.set(false);
-    this.canceled.emit();
   }
 
   protected openRichTextEditor(field: Field) {
     this.editingRichTextField = field;
-    this.editingRichText = field.toString(this.internalData[field.name]);
+    this.editingRichText = field.toString(this.updatedRecord[field.name]);
     this.visibleRichTextEditor = true;
   }
 
   protected openJSONEditor(field: Field) {
     this.editingJSONField = field;
-    this.editingJSONText = field.toString(this.internalData[field.name]);
+    this.editingJSONText = field.toString(this.updatedRecord[field.name]);
     this.visibleJSONEditor = true;
   }
 }

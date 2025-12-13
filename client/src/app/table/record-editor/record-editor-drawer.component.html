@@ -23,7 +23,7 @@
           pInputText
           [attr.inputId]="field.name"
           [pAutoFocus]="first"
-          [(ngModel)]="internalData[field.name]"
+          [(ngModel)]="updatedRecord[field.name]"
           [readonly]="viewOnly()"
           class="col-span-2"
           placeholder="Input here..."
@@ -35,7 +35,7 @@
             pTextarea
             [attr.inputId]="field.name"
             [pAutoFocus]="first"
-            [(ngModel)]="internalData[field.name]"
+            [(ngModel)]="updatedRecord[field.name]"
             [readonly]="viewOnly()"
             rows="5"
             class="w-full"
@@ -55,7 +55,7 @@
         <p-inputnumber
           [attr.inputId]="field.name"
           [pAutoFocus]="first"
-          [(ngModel)]="internalData[field.name]"
+          [(ngModel)]="updatedRecord[field.name]"
           [useGrouping]="false"
           [readonly]="viewOnly()"
           class="col-span-2"
@@ -66,7 +66,7 @@
         <p-inputnumber
           [attr.inputId]="field.name"
           [pAutoFocus]="first"
-          [(ngModel)]="internalData[field.name]"
+          [(ngModel)]="updatedRecord[field.name]"
           [useGrouping]="false"
           mode="decimal"
           [minFractionDigits]="0"
@@ -91,7 +91,7 @@
           <p-checkbox
             [attr.inputId]="field.name"
             [pAutoFocus]="first"
-            [(ngModel)]="internalData[field.name]"
+            [(ngModel)]="updatedRecord[field.name]"
             [readonly]="viewOnly()"
             [binary]="true"
             size="large"
@@ -102,7 +102,7 @@
         <p-datepicker
           [attr.inputId]="field.name"
           [pAutoFocus]="first"
-          [(ngModel)]="internalData[field.name]"
+          [(ngModel)]="updatedRecord[field.name]"
           [readonlyInput]="viewOnly()"
           [disabled]="viewOnly()"
           class="flex flex-col col-span-2"
@@ -116,7 +116,7 @@
             pTextarea
             [attr.inputId]="field.name"
             [pAutoFocus]="first"
-            [ngModel]="internalData[field.name] | json"
+            [ngModel]="updatedRecord[field.name] | json"
             [readonly]="viewOnly()"
             rows="5"
             cols="30"
@@ -143,20 +143,18 @@
   [header]="mode() === 'view' ? 'View Record' : mode() === 'edit' ? 'Edit Record' : 'Add Record'"
   [modal]="false"
   styleClass="!w-150 custom-drawer"
-  (onShow)="onShow()"
-  (onHide)="onHide()"
 >
   <ng-template #content>
     <p-toast />
     <rich-text-editor-drawer
       [(visible)]="visibleRichTextEditor"
       [(value)]="editingRichText"
-      (saved)="internalData[editingRichTextField?.name] = $event"
+      (saved)="updatedRecord[editingRichTextField?.name] = $event"
     />
     <json-editor-drawer
       [(visible)]="visibleJSONEditor"
       [(value)]="editingJSONText"
-      (saved)="internalData[editingJSONField?.name] = $event"
+      (saved)="updatedRecord[editingJSONField?.name] = $event"
     />
     <div class="flex flex-col gap-12">
       @for (field of requiredFields(); let first = $first; track field.name) {
@@ -177,7 +175,7 @@
   <ng-template #footer>
     <div class="flex justify-end gap-2">
       <p-button label="Cancel" severity="secondary" (click)="visible.set(false)" />
-      <p-button label="Save" (click)="save()" />
+      <p-button label="Save" [loading]="isSaving()" (click)="save()" />
     </div>
   </ng-template>
 </p-drawer>
