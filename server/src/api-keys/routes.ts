@@ -10,7 +10,7 @@ export const generateApiKey = () => {
   return 'ak_' + crypto.randomBytes(32).toString('hex');
 };
 
-export const apiKeyRoute = new Elysia({ prefix: '/api-keys' })
+export const apiKeyRoutes = new Elysia({ prefix: '/api-keys' })
   // Middleware: Only allow super admin API key to access these routes
   .onBeforeHandle(({ headers, set }) => {
     const apiKey = headers['x-api-key'];

@@ -2,13 +2,11 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import chalk from 'chalk';
 
-import { apiKeyAuth } from './api-keys/auth';
-import { apiKeyRoute } from './api-keys/route';
-import { restRoute } from './rest/route';
-import { agentRouter } from './agent/route';
-import { mcpServer } from './mcp/server';
-import { enableCDC } from './realtime/cdc';
-import { WebSocket } from './plugins/web-socket';
+import { apiKeyRoutes } from './api-keys/routes';
+import { enableRest } from './rest';
+import { enableAgent } from './agent';
+import { enableMCP } from './mcp';
+import { enableRealtime } from './realtime';
 
 const logService = (name: string, status: boolean, extra?: string) => {
   const dot = status ? chalk.green('●') : chalk.red('●');
@@ -36,7 +34,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
     serve: { hostname: APP_HOSTNAME },
   })
     .use(cors({ origin: CORS_ORIGINS }))
-    .use(apiKeyRoute);
+    .use(apiKeyRoutes);
 
   let allGood = true;
 
@@ -44,7 +42,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
   const REST_ENABLED = process.env.REST_ENABLED === 'true';
   const REST_PREFIX = process.env.REST_PREFIX;
   if (REST_ENABLED) {
-    app.use(restRoute);
+    await enableRest(app);
     logService(
       'REST API',
       true,
@@ -58,7 +56,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
   const AGENT_ENABLED = process.env.AGENT_ENABLED === 'true';
   const AGENT_PREFIX = process.env.AGENT_PREFIX;
   if (AGENT_ENABLED) {
-    app.use(agentRouter);
+    await enableAgent(app);
     logService(
       'AGENT API',
       true,
@@ -74,10 +72,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
   const MCP_PORT = Number(process.env.MCP_PORT || '8080');
   if (MCP_ENABLED) {
     try {
-      await mcpServer.start({
-        transportType: 'httpStream',
-        httpStream: { port: MCP_PORT },
-      });
+      await enableMCP(app);
       logService(
         'MCP Server',
         true,
@@ -99,27 +94,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
   const REALTIME_ENABLED = process.env.REALTIME_ENABLED === 'true';
   const REALTIME_PATH = process.env.REALTIME_PATH;
   if (REALTIME_ENABLED) {
-    enableCDC();
-
-    app.ws(`${REALTIME_PATH}`, {
-      open(ws) {
-        const apiKey = ws.data.headers['x-api-key'];
-        if (!apiKey) {
-          ws.close(1008, 'Missing API Key');
-          return;
-        }
-        apiKeyAuth(apiKey)
-          .then(() => {
-            WebSocket.addClient(ws as any);
-          })
-          .catch(() => ws.close(1008, 'Invalid API Key'));
-      },
-      close(ws) {
-        const { id } = (ws as any).data.query || {};
-        if (id) WebSocket.removeClient(id);
-      },
-    });
-
+    await enableRealtime(app);
     logService(
       'Realtime (WS+CDC)',
       true,

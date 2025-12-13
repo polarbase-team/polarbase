@@ -58,7 +58,7 @@ const err = (message: string, status = 400) => ({
 /**
  * Main REST router exposing CRUD + bulk operations for all public tables.
  */
-export const restRoute = new Elysia({ prefix: REST_PREFIX })
+export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .use(
     openapi({
       references: fromTypes(),

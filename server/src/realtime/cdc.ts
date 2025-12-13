@@ -25,7 +25,7 @@ const PUBLICATION_NAME = 'cdc_publication';
  *
  * Idempotent – if objects already exist, it logs and continues.
  */
-async function setupReplication() {
+export async function setupReplication() {
   const client = new Client({
     ...pgConfig,
     // Special connection string with replication=database required for slot management
@@ -81,7 +81,7 @@ async function setupReplication() {
  * - Listens to INSERT / UPDATE / DELETE events in real time
  * - Automatically reconnects on failure
  */
-async function startCDC() {
+export async function startCDC() {
   const service = new LogicalReplicationService(pgConfig);
 
   // Configure pgoutput plugin with the publication we created
@@ -132,14 +132,4 @@ async function startCDC() {
   };
 
   subscribeWithRetry();
-}
-
-/**
- * Public function to enable CDC:
- * 1. Ensures publication and replication slot exist
- * 2. Starts listening to real-time changes
- */
-export async function enableCDC() {
-  await setupReplication();
-  await startCDC();
 }

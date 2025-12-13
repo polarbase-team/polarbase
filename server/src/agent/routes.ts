@@ -5,7 +5,7 @@ import { generateAIResponse } from './model';
 
 const AGENT_PREFIX = process.env.AGENT_PREFIX;
 
-export const agentRouter = new Elysia({ prefix: AGENT_PREFIX })
+export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
   /**
    * Global API key authentication middleware (401 if invalid)
    */
