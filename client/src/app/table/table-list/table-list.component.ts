@@ -33,6 +33,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 @Component({
   selector: 'app-table-list',
   templateUrl: './table-list.component.html',
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
@@ -120,6 +121,18 @@ export class AppTableList {
       queryParams: { table: table.tableName },
       queryParamsHandling: 'merge',
     });
+  }
+
+  onSubmit(form: any) {
+    if (form.valid) {
+      // this.messageService.add({
+      //   severity: 'success',
+      //   summary: 'Success',
+      //   detail: 'Form Submitted',
+      //   life: 3000,
+      // });
+      form.resetForm();
+    }
   }
 
   protected saveUpdatedTable() {

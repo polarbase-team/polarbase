@@ -40,6 +40,7 @@ import { TableRealtimeService } from '../table-realtime.service';
 @Component({
   selector: 'app-table-detail',
   templateUrl: './table-detail.component.html',
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TabsModule,
