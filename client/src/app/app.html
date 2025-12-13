@@ -36,8 +36,12 @@
     <div class="w-full h-full">
       <app-table-detail />
     </div>
-    <div class="app-chatbot border-l-1 border-surface-200">
-      <app-chatbot />
+    <div class="app-chatbot border-l-1 border-surface-200" [class.fullscreen]="chatbotFullscreen()">
+      <app-chatbot
+        [visible]="chatbotVisible()"
+        (fullscreen)="chatbotFullscreen.set($event)"
+        (closed)="chatbotVisible.set(false)"
+      />
     </div>
   </div>
 </div>

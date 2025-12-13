@@ -16,6 +16,7 @@ import { AppChatBot } from './chatbot/chatbot.component';
 export class App {
   sidebarVisible = signal<boolean>(true);
   chatbotVisible = signal<boolean>(false);
+  chatbotFullscreen = signal<boolean>(false);
 
   protected toggleSidebar() {
     this.sidebarVisible.update((v) => !v);

@@ -6,11 +6,14 @@ import {
   ElementRef,
   DestroyRef,
   ChangeDetectionStrategy,
+  output,
+  input,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { HttpDownloadProgressEvent, HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+
 import { ButtonModule } from 'primeng/button';
 import { ScrollPanel, ScrollPanelModule } from 'primeng/scrollpanel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -42,11 +45,17 @@ interface Message {
   providers: [AgentService],
 })
 export class AppChatBot {
-  messages = signal<Message[]>([]);
+  visible = input(false);
 
+  fullscreen = output<boolean>();
+  closed = output<void>();
+
+  messages = signal<Message[]>([]);
   inputText = signal('');
   isTyping = signal(false);
   isStreaming = signal(false);
+
+  protected isFullscreen = false;
 
   private scrollContainer = viewChild<ScrollPanel>('scrollContainer');
   private editor = viewChild<ElementRef>('editor');
@@ -56,13 +65,41 @@ export class AppChatBot {
     private agentService: AgentService,
   ) {
     effect(() => {
-      this.messages();
-      setTimeout(() => this.scrollToBottom(), 100);
+      if (this.messages().length > 0) {
+        setTimeout(() => this.scrollToBottom(), 100);
+      }
+    });
+
+    effect(() => {
+      if (this.visible()) {
+        setTimeout(() => {
+          this.scrollToBottom();
+          this.editor()!.nativeElement.focus();
+        }, 100);
+      }
     });
   }
 
   scrollToBottom() {
     this.scrollContainer()!.scrollTop(999999);
+  }
+
+  protected toggleFullscreen() {
+    this.isFullscreen = !this.isFullscreen;
+    this.fullscreen.emit(this.isFullscreen);
+  }
+
+  protected closeChatbot() {
+    this.isFullscreen = false;
+    this.fullscreen.emit(this.isFullscreen);
+    this.closed.emit();
+  }
+
+  protected startNewChat() {
+    this.messages.set([]);
+    this.inputText.set('');
+    this.editor()!.nativeElement.innerHTML = '';
+    this.editor()!.nativeElement.focus();
   }
 
   protected sendMessage() {
