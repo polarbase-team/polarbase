@@ -10,25 +10,21 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
-import { finalize, Observable } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { InputTextModule } from 'primeng/inputtext';
-import { DrawerModule } from 'primeng/drawer';
-import { TextareaModule } from 'primeng/textarea';
 import { Menu, MenuModule } from 'primeng/menu';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
-import { AutoFocusModule } from 'primeng/autofocus';
 
-import { TableService, TableDefinition, TableCreation } from '../table.service';
-import { DividerModule } from 'primeng/divider';
-import { ActivatedRoute, Router } from '@angular/router';
+import { TableService, TableDefinition } from '../table.service';
+import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.component';
 
 @Component({
   selector: 'app-table-list',
@@ -40,15 +36,11 @@ import { ActivatedRoute, Router } from '@angular/router';
     ButtonModule,
     IconFieldModule,
     InputIconModule,
-    InputTextModule,
-    DrawerModule,
-    TextareaModule,
     MenuModule,
     ConfirmDialogModule,
     CheckboxModule,
     MessageModule,
-    AutoFocusModule,
-    DividerModule,
+    TableEditorDrawerComponent,
   ],
   providers: [ConfirmationService],
 })
@@ -61,8 +53,7 @@ export class AppTableList {
   protected searchQuery = '';
   protected menuItems: MenuItem[] | undefined;
   protected visibleTableEditorDrawer = false;
-  protected updatedTableName: string;
-  protected updatedTable: TableCreation = {} as TableCreation;
+  protected updatedTable: TableDefinition;
   protected updatedTableMode: 'add' | 'edit' = 'add';
   protected isCascadeDeleteEnabled = false;
 
@@ -123,51 +114,17 @@ export class AppTableList {
     });
   }
 
-  onSubmit(form: any) {
-    if (form.valid) {
-      // this.messageService.add({
-      //   severity: 'success',
-      //   summary: 'Success',
-      //   detail: 'Form Submitted',
-      //   life: 3000,
-      // });
-      form.resetForm();
-    }
-  }
-
-  protected saveUpdatedTable() {
-    this.isSaving.set(true);
-
-    let fn: Observable<any>;
-
-    if (this.updatedTableMode === 'edit') {
-      fn = this.tblService.updateTable(this.updatedTableName, this.updatedTable);
-    } else {
-      fn = this.tblService.createTable(this.updatedTable);
-    }
-
-    fn.pipe(
-      finalize(() => this.isSaving.set(false)),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe(() => {
-      this.updatedTable = {} as TableDefinition;
-      this.visibleTableEditorDrawer = false;
-      this.refreshTables();
-    });
+  protected onTableEditorSave() {
+    this.refreshTables();
   }
 
   protected addNewTable() {
-    this.updatedTable = {
-      autoAddingPrimaryKey: true,
-      timestamps: true,
-    } as TableCreation;
     this.updatedTableMode = 'add';
     this.visibleTableEditorDrawer = true;
   }
 
   protected editTable(table: TableDefinition) {
-    this.updatedTableName = table.tableName;
-    this.updatedTable = { ...table };
+    this.updatedTable = table;
     this.updatedTableMode = 'edit';
     this.visibleTableEditorDrawer = true;
   }
