@@ -5,7 +5,7 @@ import {
 } from 'pg-logical-replication';
 
 import { log } from '../utils/logger';
-import { pgConfig } from '../plugins/db';
+import { pgConfig } from '../plugins/pg';
 import { WebSocket } from '../plugins/web-socket';
 
 /**

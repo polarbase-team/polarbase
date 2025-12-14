@@ -1,4 +1,4 @@
-import knex from '../../plugins/db';
+import pg from '../../plugins/pg';
 
 /**
  * List of table names that are forbidden to access via this REST API.
@@ -13,11 +13,11 @@ const REST_BLACKLISTED_TABLES = (
  * along with their comments.
  */
 const getTableList = (schemaName = 'pubic') => {
-  return knex('pg_class as c')
+  return pg('pg_class as c')
     .select({
       tableName: 'c.relname',
       tableComment: 'descr.description',
-      tableColumnPk: knex.raw(`
+      tableColumnPk: pg.raw(`
         (
           SELECT a.attname
           FROM pg_index i
@@ -29,7 +29,7 @@ const getTableList = (schemaName = 'pubic') => {
     })
     .leftJoin('pg_namespace as ns', 'c.relnamespace', 'ns.oid')
     .leftJoin('pg_description as descr', function () {
-      this.on('descr.objoid', 'c.oid').andOn(knex.raw('descr.objsubid = 0'));
+      this.on('descr.objoid', 'c.oid').andOn(pg.raw('descr.objsubid = 0'));
     })
     .where({
       'ns.nspname': schemaName,
@@ -52,7 +52,7 @@ const getTableList = (schemaName = 'pubic') => {
  */
 const getTableSchema = async (tableName: string, schemaName = 'public') => {
   // 1. Basic column information
-  const columns = await knex('information_schema.columns')
+  const columns = await pg('information_schema.columns')
     .select(
       'column_name',
       'data_type',
@@ -66,7 +66,7 @@ const getTableSchema = async (tableName: string, schemaName = 'public') => {
     .orderBy('ordinal_position');
 
   // 2. Column comments from pg_description
-  const comments = await knex('pg_description')
+  const comments = await pg('pg_description')
     .select(
       'pg_description.objsubid as ordinal_position',
       'pg_description.description',
@@ -99,7 +99,7 @@ const getTableSchema = async (tableName: string, schemaName = 'public') => {
   );
 
   // 3. Primary key columns
-  const primaryKeys = await knex('information_schema.key_column_usage')
+  const primaryKeys = await pg('information_schema.key_column_usage')
     .select('column_name')
     .join('information_schema.table_constraints', function () {
       this.on(
@@ -127,7 +127,7 @@ const getTableSchema = async (tableName: string, schemaName = 'public') => {
   const primaryKeySet = new Set(primaryKeys.map((pk: any) => pk.column_name));
 
   // 4. Enum type values
-  const enumColumns = await knex('information_schema.columns')
+  const enumColumns = await pg('information_schema.columns')
     .select('column_name', 'udt_name')
     .where({ table_schema: 'public', table_name: tableName })
     .whereRaw(`udt_name IN (SELECT typname FROM pg_type WHERE typtype = 'e')`);
@@ -135,9 +135,9 @@ const getTableSchema = async (tableName: string, schemaName = 'public') => {
   const enumMap: Record<string, string> = {};
 
   for (const col of enumColumns) {
-    const result = await knex('pg_enum')
+    const result = await pg('pg_enum')
       .select(
-        knex.raw("string_agg(enumlabel, ', ' ORDER BY enumsortorder) as labels")
+        pg.raw("string_agg(enumlabel, ', ' ORDER BY enumsortorder) as labels")
       )
       .whereRaw(`enumtypid = (SELECT oid FROM pg_type WHERE typname = ?)`, [
         col.udt_name,
@@ -150,7 +150,7 @@ const getTableSchema = async (tableName: string, schemaName = 'public') => {
   }
 
   // 5. Fetch foreign key information
-  const foreignKeys = await knex('information_schema.key_column_usage as kcu')
+  const foreignKeys = await pg('information_schema.key_column_usage as kcu')
     .select(
       'kcu.column_name',
       'tc.table_name as referenced_table_name',
@@ -215,7 +215,7 @@ export class TableService {
     schemaName?: string;
     tableName: string;
   }) {
-    const exists = await knex.schema.hasTable(tableName);
+    const exists = await pg.schema.hasTable(tableName);
     if (!exists) throw new Error('Table not found');
 
     const schema = await getTableSchema(tableName, schemaName);
@@ -248,12 +248,12 @@ export class TableService {
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
 
-    const exists = await knex.schema.withSchema(schemaName).hasTable(tableName);
+    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
     if (exists) {
       throw new Error(`Table ${fullTableName} already exists`);
     }
 
-    await knex.schema.withSchema(schemaName).createTable(tableName, (table) => {
+    await pg.schema.withSchema(schemaName).createTable(tableName, (table) => {
       if (autoAddingPrimaryKey) table.increments('id').primary();
 
       columns?.forEach((col) => {
@@ -320,32 +320,30 @@ export class TableService {
     const { tableName: newTableName, tableComment: newTableComment } = data;
     const fullTableName = `${schemaName}.${tableName}`;
 
-    const exists = await knex.schema.withSchema(schemaName).hasTable(tableName);
+    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
     if (!exists) {
       throw new Error(`Table ${fullTableName} not found`);
     }
 
     let finalTableName = tableName;
     if (newTableName && newTableName !== tableName) {
-      const newExists = await knex.schema
+      const newExists = await pg.schema
         .withSchema(schemaName)
         .hasTable(newTableName);
       if (newExists) {
         throw new Error(`Table ${schemaName}.${newTableName} already exists`);
       }
 
-      await knex.schema
+      await pg.schema
         .withSchema(schemaName)
         .renameTable(tableName, newTableName);
       finalTableName = newTableName;
     }
 
     if (newTableComment !== undefined) {
-      await knex.schema
-        .withSchema(schemaName)
-        .table(finalTableName, (table) => {
-          table.comment(newTableComment ?? '');
-        });
+      await pg.schema.withSchema(schemaName).table(finalTableName, (table) => {
+        table.comment(newTableComment ?? '');
+      });
     }
 
     return { message: `Table ${fullTableName} updated successfully` };
@@ -362,17 +360,17 @@ export class TableService {
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
 
-    const exists = await knex.schema.withSchema(schemaName).hasTable(tableName);
+    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
     if (!exists) {
       throw new Error(`Table ${fullTableName} not found`);
     }
 
     if (cascade) {
-      await knex.raw(
+      await pg.raw(
         `DROP TABLE IF EXISTS "${schemaName}"."${tableName}" CASCADE;`
       );
     } else {
-      await knex.schema.withSchema(schemaName).dropTable(tableName);
+      await pg.schema.withSchema(schemaName).dropTable(tableName);
     }
 
     return { message: `Table ${fullTableName} deleted successfully` };
@@ -401,12 +399,12 @@ export class TableService {
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
 
-    const exists = await knex.schema.withSchema(schemaName).hasTable(tableName);
+    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
     if (!exists) {
       throw new Error(`Table ${fullTableName} not found`);
     }
 
-    await knex.schema.withSchema(schemaName).table(tableName, (table) => {
+    await pg.schema.withSchema(schemaName).table(tableName, (table) => {
       let columnBuilder;
 
       switch (type.toLowerCase()) {

@@ -1,8 +1,8 @@
-import db from '../../plugins/db';
+import pg from '../../plugins/pg';
 
 export async function loadColumns(tableName: string) {
   try {
-    const columns = await db
+    const columns = await pg
       .select('column_name', 'data_type')
       .from('information_schema.columns')
       .where({ table_schema: 'public', table_name: tableName });

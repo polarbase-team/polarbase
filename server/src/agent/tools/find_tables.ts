@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import db from '../../plugins/db';
+import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
 
 const inputSchema = z.object({});
@@ -15,7 +15,7 @@ export const findTablesTool = {
   inputSchema,
   async execute(args: z.infer<typeof inputSchema>) {
     try {
-      const result = await db
+      const result = await pg
         .select('table_name')
         .from('information_schema.tables')
         .where({ table_schema: 'public' });

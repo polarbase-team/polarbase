@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import db from '../../plugins/db';
+import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 import { loadColumns } from '../resources/columns';
@@ -60,7 +60,7 @@ export const deleteFromTableTool = {
       }
 
       // Build Knex query
-      const query = db(table).where(where).delete<any, Result>('*');
+      const query = pg(table).where(where).delete<any, Result>('*');
 
       // Execute query
       const result = await query;

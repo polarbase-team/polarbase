@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
 
-import knex from '../../plugins/db';
+import pg from '../../plugins/pg';
 
 export class TableRecordService {
   async getAll(
@@ -20,10 +20,10 @@ export class TableRecordService {
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(1000, Math.max(1, Number(limit)));
 
-    let qb = knex(tableName).withSchema(schemaName);
+    let qb = pg(tableName).withSchema(schemaName);
     if (where) qb = qb.where(JSON.parse(where as string));
     if (search) {
-      const cols = await knex(tableName).withSchema(schemaName).columnInfo();
+      const cols = await pg(tableName).withSchema(schemaName).columnInfo();
       qb = qb.where((b) =>
         Object.keys(cols).forEach((col) =>
           b.orWhere(col, 'like', `%${search}%`)
@@ -55,7 +55,7 @@ export class TableRecordService {
   }
 
   async getOne(tableName: string, id: string | number, schemaName = 'public') {
-    const record = await knex(tableName)
+    const record = await pg(tableName)
       .withSchema(schemaName)
       .where({ id })
       .first();
@@ -68,7 +68,7 @@ export class TableRecordService {
     body: Record<string, any>,
     schemaName = 'public'
   ) {
-    const record = await knex(tableName)
+    const record = await pg(tableName)
       .withSchema(schemaName)
       .insert(body)
       .returning('*');
@@ -81,7 +81,7 @@ export class TableRecordService {
     body: Record<string, any>,
     schemaName = 'public'
   ) {
-    const record = await knex(tableName)
+    const record = await pg(tableName)
       .withSchema(schemaName)
       .where({ id: Number(id) })
       .update(body)
@@ -91,7 +91,7 @@ export class TableRecordService {
   }
 
   async delete(tableName: string, id: string | number, schemaName = 'public') {
-    const deleted = await knex(tableName)
+    const deleted = await pg(tableName)
       .withSchema(schemaName)
       .where({ id })
       .del();
@@ -107,7 +107,7 @@ export class TableRecordService {
     const returning = [] as any[];
     const chunk = 500;
 
-    await knex.transaction(async (trx: Knex.Transaction) => {
+    await pg.transaction(async (trx: Knex.Transaction) => {
       for (let i = 0; i < records.length; i += chunk) {
         const inserted = await trx(tableName)
           .withSchema(schemaName)
@@ -129,7 +129,7 @@ export class TableRecordService {
       throw new Error('updates must be a non-empty array');
     }
 
-    const results = await knex.transaction(async (trx) => {
+    const results = await pg.transaction(async (trx) => {
       const affectedRows = [];
 
       for (const { where, data } of updates) {
@@ -167,12 +167,12 @@ export class TableRecordService {
 
     const { ids, where } = body;
     if (ids?.length) {
-      deleted = await knex(tableName)
+      deleted = await pg(tableName)
         .withSchema(schemaName)
         .whereIn('id', ids)
         .delete();
     } else if (where && Object.keys(where).length) {
-      deleted = await knex(tableName)
+      deleted = await pg(tableName)
         .withSchema(schemaName)
         .where(where)
         .delete();

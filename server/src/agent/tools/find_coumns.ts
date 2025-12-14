@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import db from '../../plugins/db';
+import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
 
 const inputSchema = z.object({
@@ -25,7 +25,7 @@ export const findColumnsTool = {
       const { table } = args;
 
       // Validate table name
-      const result = await db
+      const result = await pg
         .select('table_name')
         .from('information_schema.tables')
         .where({ table_schema: 'public' });
@@ -39,7 +39,7 @@ export const findColumnsTool = {
       }
 
       // Fetch columns
-      const columns = await db
+      const columns = await pg
         .select('column_name', 'data_type')
         .from('information_schema.columns')
         .where({ table_schema: 'public', table_name: table });

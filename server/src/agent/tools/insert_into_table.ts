@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import db from '../../plugins/db';
+import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 import { loadColumns } from '../resources/columns';
@@ -60,7 +60,7 @@ export const insertIntoTableTool = {
       }
 
       // Build Knex query
-      const query = db(table).insert<any, Result>(data, '*');
+      const query = pg(table).insert<any, Result>(data, '*');
 
       // Execute query
       const result = await query;

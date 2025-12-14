@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Knex } from 'knex';
 
-import db from '../../plugins/db';
+import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 import { loadColumns } from '../resources/columns';
@@ -191,7 +191,7 @@ export const createTableTool = {
         }
       }
 
-      await db.schema.createTable(tableName, (table: Knex.TableBuilder) => {
+      await pg.schema.createTable(tableName, (table: Knex.TableBuilder) => {
         columns.forEach((col) => {
           let column: Knex.ColumnBuilder;
 

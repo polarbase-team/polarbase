@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { openapi, fromTypes } from '@elysiajs/openapi';
 
-import knex from '../plugins/db';
+import pg from '../plugins/pg';
 import { apiKeyAuth } from '../api-keys/auth';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
@@ -160,7 +160,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .get(
     '/tables/:table/schema',
     async ({ params: { table }, set }) => {
-      const exists = await knex.schema.hasTable(table);
+      const exists = await pg.schema.hasTable(table);
       if (!exists) {
         set.status = 404;
         return err('Table not found');

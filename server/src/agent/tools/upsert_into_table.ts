@@ -1,11 +1,10 @@
-import { Knex } from 'knex';
 import { z } from 'zod';
+import { Result } from 'pg';
 
-import db from '../../plugins/db';
+import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 import { loadColumns } from '../resources/columns';
-import { Result } from 'pg';
 
 const inputSchema = z.object({
   table: z
@@ -88,7 +87,7 @@ export const upsertIntoTableTool = {
       }
 
       // Build Knex query
-      const query = db(table)
+      const query = pg(table)
         .insert<any, Result>(data, '*')
         .onConflict(conflictTarget)
         .merge(updateColumns);

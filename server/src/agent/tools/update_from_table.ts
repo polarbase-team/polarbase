@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import db from '../../plugins/db';
+import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 import { loadColumns } from '../resources/columns';
@@ -77,7 +77,7 @@ export const updateFromTableTool = {
       }
 
       // Build Knex query
-      const query = db(table).update<any, Result>(data, '*').where(where);
+      const query = pg(table).update<any, Result>(data, '*').where(where);
 
       // Execute query
       const result = await query;

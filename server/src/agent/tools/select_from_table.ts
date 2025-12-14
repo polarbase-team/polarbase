@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import db from '../../plugins/db';
+import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 
@@ -69,7 +69,7 @@ export const selectFromTableTool = {
       // Build Knex query
       const columns =
         select === '*' ? '*' : select.split(',').map((col) => col.trim());
-      let query = db.select(columns).from(from);
+      let query = pg.select(columns).from(from);
 
       // Apply WHERE clause
       if (where) {

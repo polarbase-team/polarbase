@@ -1,4 +1,4 @@
-import { Database } from 'bun:sqlite';
+import sqlite from '../plugins/sqlite';
 
 export interface ApiKey {
   id: number;
@@ -9,10 +9,10 @@ export interface ApiKey {
   revoked: number;
 }
 
-export const db = new Database('api-keys.db');
+export const db = sqlite;
 
 // Create api_keys table if it does not exist
-db.query(`
+db.exec(`
   CREATE TABLE IF NOT EXISTS api_keys (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     key TEXT UNIQUE NOT NULL,
@@ -24,4 +24,4 @@ db.query(`
 `);
 
 // Create index on 'key' column for quick lookups
-db.query(`CREATE INDEX IF NOT EXISTS idx_key ON api_keys(key)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_key ON api_keys(key)`);
