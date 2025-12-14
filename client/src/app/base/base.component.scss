@@ -10,13 +10,14 @@ $transition-duration: 0.2s;
 
   .base {
     position: relative;
+    padding-left: $sidebar-width;
     transition: padding-left $transition-duration;
 
-    &.sidebar--opening {
-      padding-left: $sidebar-width;
+    &.sidebar--invisible {
+      padding-left: 0;
 
       .base-sidebar {
-        left: 0;
+        left: -$sidebar-width;
       }
     }
 
@@ -24,7 +25,7 @@ $transition-duration: 0.2s;
       position: absolute;
       top: 0;
       bottom: 0;
-      left: -$sidebar-width;
+      left: 0;
       width: $sidebar-width;
       transition: left $transition-duration;
     }

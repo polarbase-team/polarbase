@@ -1,4 +1,4 @@
-<div class="base w-full h-full" [class.sidebar--opening]="sidebarVisible()">
+<div class="base w-full h-full" [class.sidebar--invisible]="!sidebarVisible()">
   <div class="base-sidebar border-r-1 border-surface-200">
     <table-list />
   </div>
@@ -7,7 +7,7 @@
 
     <p-tabs value="0" class="w-full h-full">
       <p-tablist>
-        <div class="flex items-center px-2">
+        <div class="flex items-center px-1">
           <p-button
             [icon]="`icon ${sidebarVisible() ? 'icon-panel-left-close' : 'icon-panel-right-close'}`"
             [text]="true"

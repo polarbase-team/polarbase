@@ -16,7 +16,7 @@ $transition-duration: 0.2s;
         padding-left $transition-duration,
         padding-right $transition-duration;
 
-      &.sidebar--opening {
+      &.sidebar--visible {
         padding-left: $sidebar-width;
 
         .app-sidebar {
@@ -24,7 +24,7 @@ $transition-duration: 0.2s;
         }
       }
 
-      &.chatbot--opening {
+      &.chatbot--visible {
         padding-right: $chatbot-width;
 
         .app-chatbot {
