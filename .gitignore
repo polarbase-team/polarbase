@@ -56,4 +56,4 @@ pnpm-debug.log*
 Thumbs.db
 Desktop.ini
 
-api-keys.db
+*.db
