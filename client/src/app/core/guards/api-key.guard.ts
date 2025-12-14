@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { CanMatch, Router, Route, UrlSegment } from '@angular/router';
+import { Router, CanActivate } from '@angular/router';
 
 export const hasApiKey = (): boolean => {
   return document.cookie.split(';').some((item) => item.trim().startsWith('apiKey='));
@@ -10,15 +10,21 @@ export const getApiKey = (): string | null => {
   return match ? decodeURIComponent(match[2]) : null;
 };
 
+export const setApiKey = (key: string) => {
+  const expires = new Date();
+  expires.setDate(expires.getDate() + 7);
+  document.cookie = `apiKey=${encodeURIComponent(key)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+};
+
 @Injectable({ providedIn: 'root' })
-export class ApiKeyGuard implements CanMatch {
+export class ApiKeyGuard implements CanActivate {
   private router = inject(Router);
 
-  canMatch(_route: Route, _segments: UrlSegment[]): boolean {
+  canActivate() {
     if (hasApiKey()) {
       return true;
     }
-    this.router.navigate(['/']);
+    this.router.navigate(['/entry']);
     return false;
   }
 }

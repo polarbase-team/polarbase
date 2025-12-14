@@ -10,8 +10,10 @@ import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { FluidModule } from 'primeng/fluid';
 
+import { setApiKey } from '../../../core/guards/api-key.guard';
+
 @Component({
-  selector: 'app-api-key-entry',
+  selector: 'api-key-entry',
   standalone: true,
   imports: [
     FormsModule,
@@ -26,8 +28,8 @@ import { FluidModule } from 'primeng/fluid';
   templateUrl: './api-key-entry.component.html',
 })
 export class ApiKeyEntryComponent {
-  apiKey = '';
-  loading = false;
+  protected apiKey = '';
+  protected loading = false;
 
   constructor(private router: Router) {}
 
@@ -36,9 +38,7 @@ export class ApiKeyEntryComponent {
 
     this.loading = true;
 
-    const expires = new Date();
-    expires.setFullYear(expires.getFullYear() + 10);
-    document.cookie = `apiKey=${encodeURIComponent(key)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+    setApiKey(key);
 
     this.router.navigate(['/']);
   }
