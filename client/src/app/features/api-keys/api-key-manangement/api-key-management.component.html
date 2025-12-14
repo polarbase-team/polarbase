@@ -1,0 +1,90 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="py-10 max-w-250 mx-auto">
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <div class="text-xl">API Key Management</div>
+      <p class="text-sm text-gray-500">
+        Manage your API keys, view details, and perform actions such as copying keys or adding new
+        ones.
+      </p>
+    </div>
+    <p-button label="Add Key" icon="icon icon-plus" />
+  </div>
+
+  <div class="mb-4">
+    <p-iconfield>
+      <p-inputicon class="icon icon-search" />
+      <input
+        class="w-70"
+        type="text"
+        pInputText
+        placeholder="Search"
+        [(ngModel)]="searchValue"
+        (input)="searchByName()"
+      />
+    </p-iconfield>
+  </div>
+
+  <p-table
+    [value]="filteredKeys"
+    [loading]="isLoading()"
+    [paginator]="true"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Key</th>
+        <th>Scopes</th>
+        <th>Created At</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-key>
+      <tr>
+        <td>{{ key.id }}</td>
+        <td>{{ key.name }}</td>
+        <td>
+          <code class="text-sm">{{ key.key }}</code>
+          <p-button
+            icon="icon icon-copy"
+            [cdkCopyToClipboard]="key.key"
+            (cdkCopyToClipboardSuccess)="onCopyKey()"
+          ></p-button>
+        </td>
+        <td>
+          <p-tag
+            *ngFor="let scope of key.scopes"
+            [value]="scope"
+            severity="info"
+            class="mr-1"
+          ></p-tag>
+        </td>
+        <td>{{ key.createdAt | date: 'medium' }}</td>
+        <td>
+          <p-tag
+            [value]="key.revoked ? 'Revoked' : 'Active'"
+            [severity]="key.revoked ? 'danger' : 'success'"
+          ></p-tag>
+        </td>
+        <td>
+          <p-button
+            icon="icon icon-trash"
+            [disabled]="key.revoked"
+            (click)="revokeKey($event, key)"
+          ></p-button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="!text-center py-5">No API Keys found</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

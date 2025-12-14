@@ -5,7 +5,7 @@ export interface ApiKey {
   key: string;
   name: string;
   scopes: string;
-  created_at: Date;
+  createdAt: Date;
   revoked: number;
 }
 
@@ -18,7 +18,7 @@ db.exec(`
     key TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     scopes TEXT NOT NULL, -- JSON string: ["rest", "mcp", "agent", "realtime"]
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     revoked INTEGER DEFAULT 0
   );
 `);

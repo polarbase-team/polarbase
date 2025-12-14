@@ -45,9 +45,7 @@ export const apiKeyRoutes = new Elysia({ prefix: '/api-keys' })
   // List all API keys
   .get('/', () => {
     const rows = db
-      .prepare(
-        'SELECT id, key, name, scopes, created_at, revoked FROM api_keys'
-      )
+      .prepare('SELECT id, key, name, scopes, createdAt, revoked FROM api_keys')
       .all() as ApiKey[];
     return rows.map((r) => ({ ...r, scopes: JSON.parse(r.scopes) }));
   })

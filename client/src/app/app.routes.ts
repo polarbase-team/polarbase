@@ -4,6 +4,7 @@ import { ApiKeyGuard } from './core/guards/api-key.guard';
 import { AuthLayoutComponent } from './layouts/auth-layout/auth-layout.component';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 import { ApiKeyEntryComponent } from './features/api-keys/api-key-entry/api-key-entry.component';
+import { ApiKeyManagementComponent } from './features/api-keys/api-key-manangement/api-key-manangement.component';
 import { BaseComponent } from './features/base/base.component';
 
 export const routes: Routes = [
@@ -18,6 +19,7 @@ export const routes: Routes = [
     canActivate: [ApiKeyGuard],
     children: [
       { path: 'base', component: BaseComponent },
+      { path: 'api-keys', component: ApiKeyManagementComponent },
       { path: '**', redirectTo: '/base' },
     ],
   },
