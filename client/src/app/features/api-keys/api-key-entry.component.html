@@ -1,0 +1,32 @@
+<div class="flex min-h-screen items-center justify-center bg-gray-50">
+  <p-card class="w-full max-w-md shadow-lg">
+    <ng-template pTemplate="header">
+      <div class="flex flex-col items-center pt-6 gap-2">
+        <img src="assets/images/logo.png" alt="Logo" class="h-20" />
+        <p class="font-medium text-lg">Welcome to PolarBase</p>
+      </div>
+    </ng-template>
+
+    <div class="flex flex-col gap-6">
+      <p-iconField iconPosition="left">
+        <p-inputIcon class="pi pi-key" />
+        <input
+          pInputText
+          [(ngModel)]="apiKey"
+          placeholder="Enter your API Key to continue"
+          class="w-full"
+          type="password"
+          pSize="large"
+        />
+      </p-iconField>
+      <p-button
+        label="Continue"
+        (onClick)="save()"
+        [loading]="loading"
+        severity="primary"
+        size="large"
+        fluid
+      />
+    </div>
+  </p-card>
+</div>

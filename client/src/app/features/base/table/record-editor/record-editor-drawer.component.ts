@@ -29,10 +29,10 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { AutoFocusModule } from 'primeng/autofocus';
 
-import { JSONEditorDrawerComponent } from '../../../common/json-editor/json-editor-drawer.component';
-import { RichTextEditorDrawerComponent } from '../../../common/rich-text-editor/rich-text-editor-drawer.component';
-import { DataType } from '../../../common/spreadsheet/field/interfaces/field.interface';
-import { Field } from '../../../common/spreadsheet/field/objects/field.object';
+import { JSONEditorDrawerComponent } from '../../../../shared/json-editor/json-editor-drawer.component';
+import { RichTextEditorDrawerComponent } from '../../../../shared/rich-text-editor/rich-text-editor-drawer.component';
+import { DataType } from '../../../../shared/spreadsheet/field/interfaces/field.interface';
+import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
 import { TableDefinition, TableService } from '../table.service';
 
 @Component({

@@ -11,8 +11,8 @@ import { MessageService } from 'primeng/api';
 import Aura from '@primeuix/themes/aura';
 import { definePreset, palette } from '@primeuix/themes';
 
-import { httpApiKeyInterceptor } from './http-api-key.interceptor';
-import { httpErrorInterceptor } from './http-error.interceptor';
+import { httpApiKeyInterceptor } from './core/interceptors/http-api-key.interceptor';
+import { httpErrorInterceptor } from './core/interceptors/http-error.interceptor';
 import { routes } from './app.routes';
 
 const AuraSky = definePreset(Aura, {

@@ -2,7 +2,7 @@ import { DestroyRef, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, filter } from 'rxjs';
 
-import { WebSocketMessage, WebsocketService } from '../../common/websocket/websocket.service';
+import { WebSocketMessage, WebsocketService } from '../../../shared/websocket/websocket.service';
 import { TableService } from './table.service';
 
 export type RealtimeChange<T = Record<string, any>> =
