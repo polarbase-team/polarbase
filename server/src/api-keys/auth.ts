@@ -7,12 +7,16 @@ const SUPER_ADMIN_API_KEY = process.env.SUPER_ADMIN_API_KEY;
  * - If the API key matches the SUPER_ADMIN_API_KEY, grants all access.
  * - Otherwise, looks up the key in the database (and checks it is not revoked).
  *   Throws if not found or revoked.
- * Returns an object with keyId, name, and scopes array.
+ * Returns an object with keyId, name, and scopes object.
  */
 export const apiKeyAuth = async (apiKey: string) => {
   // Check if API key is the super admin key with all scopes
   if (apiKey === SUPER_ADMIN_API_KEY) {
-    return { keyId: 'app-key', name: 'App Key', scopes: '*' };
+    return {
+      keyId: 'super-admin-key',
+      name: 'Super Admin Key',
+      scopes: { rest: true, mcp: true, agent: true, realtime: true },
+    };
   }
 
   // Dynamically import db (avoids circular imports)
@@ -23,7 +27,16 @@ export const apiKeyAuth = async (apiKey: string) => {
     .get(apiKey) as ApiKey;
   if (!row) throw new Error('Invalid or revoked API key');
 
-  // Parse scopes (stored as JSON array)
+  // Parse scopes (stored as JSON object)
   const scopes = JSON.parse(row.scopes);
-  return { keyId: row.id, name: row.name, scopes };
+  return {
+    keyId: row.id,
+    name: row.name,
+    scopes: scopes as {
+      rest: boolean;
+      mcp: boolean;
+      agent: boolean;
+      realtime: boolean;
+    },
+  };
 };

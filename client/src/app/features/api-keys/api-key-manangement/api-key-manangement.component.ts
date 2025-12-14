@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, effect, OnInit, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { DatePipe, SlicePipe } from '@angular/common';
+import { FormsModule, NgForm } from '@angular/forms';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { finalize } from 'rxjs';
 
@@ -16,12 +16,16 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 
 import { ApiKey, ApiKeyService } from '../api-key.service';
+import { DrawerModule } from 'primeng/drawer';
+import { AutoFocusModule } from 'primeng/autofocus';
+import { MessageModule } from 'primeng/message';
+import { DividerModule } from 'primeng/divider';
+import { CheckboxModule } from 'primeng/checkbox';
+import { Tooltip } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-api-key-management',
   templateUrl: './api-key-management.component.html',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     ClipboardModule,
@@ -33,60 +37,84 @@ import { ApiKey, ApiKeyService } from '../api-key.service';
     IconFieldModule,
     InputIconModule,
     InputTextModule,
+    DrawerModule,
+    AutoFocusModule,
+    MessageModule,
+    DividerModule,
+    CheckboxModule,
     DatePipe,
+    SlicePipe,
+    Tooltip,
   ],
   providers: [ConfirmationService, MessageService],
 })
 export class ApiKeyManagementComponent implements OnInit {
-  apiKeys: ApiKey[] = [];
-  filteredKeys: ApiKey[] = [];
-  searchValue: string = '';
-  protected isLoading = signal(true);
+  // List
+  protected apiKeys = signal<ApiKey[]>([]);
+  protected filteredKeys = signal<ApiKey[]>([]);
+  protected searchQuery: string = '';
+
+  // Creation
+  protected apiKeyForm = viewChild<NgForm>('apiKeyForm');
+  protected isCreating = signal(false);
+  protected isCreationMode = false;
+  protected newApiKey: ApiKey = {
+    scopes: { rest: true, agent: true, mcp: true, realtime: true },
+  } as ApiKey;
 
   constructor(
     private destroyRef: DestroyRef,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private apiKeyService: ApiKeyService,
-  ) {}
+  ) {
+    effect(() => {
+      this.filteredKeys.set([...this.apiKeys()]);
+      this.searchQuery = '';
+    });
+  }
 
   ngOnInit() {
     this.loadApiKeys();
   }
 
   protected loadApiKeys() {
-    this.isLoading.set(true);
     this.apiKeyService
       .getKeys()
-      .pipe(
-        finalize(() => {
-          this.isLoading.set(false);
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((apiKeys) => {
-        this.apiKeys = apiKeys;
+        this.apiKeys.set(apiKeys);
       });
   }
 
   protected searchByName() {
-    if (!this.searchValue.trim()) {
-      this.filteredKeys = this.apiKeys;
+    if (!this.searchQuery.trim()) {
+      this.filteredKeys.set([...this.apiKeys()]);
     } else {
-      this.filteredKeys = this.apiKeys.filter((key) =>
-        key.name.toLowerCase().includes(this.searchValue.toLowerCase()),
+      this.filteredKeys.set(
+        this.apiKeys().filter((key) =>
+          key.name.toLowerCase().includes(this.searchQuery.toLowerCase()),
+        ),
       );
     }
   }
 
-  protected revokeKey(event: Event, apiKey: ApiKey) {
+  protected revokeKey(apiKey: ApiKey) {
     this.confirmationService.confirm({
-      target: event.target as EventTarget,
+      target: null,
+      header: 'Revoke key',
       message: `Are you sure you want to revoke the key "${apiKey.name}"?`,
-      icon: 'icon icon-exclamation-triangle',
       acceptLabel: 'Revoke',
       rejectLabel: 'Cancel',
-      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonProps: {
+        label: 'Cancel',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        label: 'Delete',
+        severity: 'danger',
+      },
       accept: () => {
         this.apiKeyService.revokeKey(apiKey).subscribe({
           next: () => {
@@ -95,7 +123,9 @@ export class ApiKeyManagementComponent implements OnInit {
               summary: 'Success',
               detail: 'Key has been revoked',
             });
-            this.apiKeys.push(apiKey);
+            this.apiKeys.update((arr) =>
+              arr.map((key) => (key.id === apiKey.id ? { ...key, revoked: true } : key)),
+            );
           },
           error: () => {
             this.messageService.add({
@@ -115,5 +145,19 @@ export class ApiKeyManagementComponent implements OnInit {
       summary: 'Copied!',
       detail: 'API Key has been copied',
     });
+  }
+
+  protected onApiKeyFormSubmit() {
+    this.isCreating.set(true);
+    this.apiKeyService
+      .createKey(this.newApiKey)
+      .pipe(
+        finalize(() => this.isCreating.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((apiKey) => {
+        this.isCreationMode = false;
+        this.loadApiKeys();
+      });
   }
 }

@@ -5,7 +5,12 @@ export interface ApiKey {
   id: number;
   key: string;
   name: string;
-  scopes: string[];
+  scopes: {
+    rest: boolean;
+    agent: boolean;
+    mcp: boolean;
+    realtime: boolean;
+  };
   createdAt: string;
   revoked: boolean;
 }
@@ -23,7 +28,7 @@ export class ApiKeyService {
   }
 
   createKey(key: ApiKey) {
-    return this.http.post(this.apiUrl, key);
+    return this.http.post<ApiKey>(this.apiUrl, key);
   }
 
   revokeKey(key: ApiKey) {

@@ -17,7 +17,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     key TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
-    scopes TEXT NOT NULL, -- JSON string: ["rest", "mcp", "agent", "realtime"]
+    scopes TEXT NOT NULL, -- JSON object: {"rest": true, "mcp": true, "agent": true, "realtime": true}
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     revoked INTEGER DEFAULT 0
   );
