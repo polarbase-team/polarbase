@@ -15,9 +15,9 @@ import { httpApiKeyInterceptor } from './core/interceptors/http-api-key.intercep
 import { httpErrorInterceptor } from './core/interceptors/http-error.interceptor';
 import { routes } from './app.routes';
 
-const AuraSky = definePreset(Aura, {
+const AuraCyan = definePreset(Aura, {
   semantic: {
-    primary: palette('{sky}'), // Use the 'sky' palette
+    primary: palette('{cyan}'),
   },
 });
 
@@ -29,7 +29,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([httpApiKeyInterceptor, httpErrorInterceptor])),
     providePrimeNG({
       theme: {
-        preset: AuraSky,
+        preset: AuraCyan,
         options: {
           darkModeSelector: false,
         },

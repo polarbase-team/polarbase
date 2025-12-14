@@ -74,8 +74,8 @@
     <li (click)="onTableSelected(table)">
       <a
         pRipple
-        class="flex items-center cursor-pointer p-4 text-surface-700 hover:bg-surface-100 duration-150 transition-colors p-ripple"
-        [class.bg-surface-100]="table.tableName === tblService.selectedTable()?.tableName"
+        class="group flex items-center cursor-pointer px-4 py-2 text-surface-700 hover:bg-gray-100 duration-150 transition-colors p-ripple"
+        [class.bg-gray-100]="table.tableName === tblService.selectedTable()?.tableName"
       >
         <div class="flex flex-1">
           <i class="icon icon-table-2 text-surface-500 mr-2 mt-0.5"></i>
@@ -93,9 +93,11 @@
         <p-button
           icon="icon icon-ellipsis-vertical"
           severity="secondary"
+          size="small"
           [text]="true"
           [disabled]="isLoading()"
           (click)="openTableActionMenu($event, table, tableMenu)"
+          class="invisible group-hover:visible"
         />
       </a>
     </li>
