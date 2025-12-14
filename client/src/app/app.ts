@@ -6,10 +6,11 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 
 import { ChatBotComponent } from './chatbot/chatbot.component';
+import { Image } from "primeng/image";
 
 @Component({
   selector: 'app-root',
-  imports: [RouterModule, ToastModule, ButtonModule, TooltipModule, ChatBotComponent],
+  imports: [RouterModule, ToastModule, ButtonModule, TooltipModule, ChatBotComponent, Image],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   standalone: true,
