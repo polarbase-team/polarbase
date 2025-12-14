@@ -79,7 +79,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   /**
    * Global API key authentication middleware (401 if invalid)
    */
-  .onBeforeHandle(async ({ headers, set }) => {
+  .derive(async ({ headers, set }) => {
     try {
       const apiKey = headers['x-api-key'];
       if (!apiKey) throw new Error();

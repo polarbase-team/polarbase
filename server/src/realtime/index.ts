@@ -18,7 +18,8 @@ export async function enableRealtime(app: Elysia) {
         return;
       }
       apiKeyAuth(apiKey)
-        .then(() => {
+        .then((data) => {
+          ws.data = { ...data } as any;
           WebSocket.addClient(ws as any);
         })
         .catch(() => ws.close(1008, 'Invalid API Key'));
