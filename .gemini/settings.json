@@ -4,7 +4,7 @@
     "exclude": ["ShellTool(rm -rf)"]
   },
   "mcpServers": {
-    "cozy-db-server": {
+    "polarbase-server": {
       "httpUrl": "http://localhost:8080/mcp"
     }
   },

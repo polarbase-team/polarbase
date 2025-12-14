@@ -1,3 +1,5 @@
 import { Database } from 'bun:sqlite';
 
-export default new Database('cozy-db.db');
+const APP_NAME = process.env.NAME || 'PolarBase';
+
+export default new Database(`${APP_NAME}.db`);

@@ -19,7 +19,7 @@ const logService = (name: string, status: boolean, extra?: string) => {
   );
 };
 
-const APP_NAME = process.env.NAME || 'CozyDB';
+const APP_NAME = process.env.NAME || 'PolarBase';
 const APP_HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
 const APP_PORT = Number(process.env.PORT || '3000');
 const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
