@@ -23,6 +23,7 @@ import { ConfirmationService, MenuItem } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { TableService, TableDefinition } from '../table.service';
 import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.component';
@@ -42,6 +43,7 @@ import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.
     ConfirmDialogModule,
     CheckboxModule,
     MessageModule,
+    TooltipModule,
     TableEditorDrawerComponent,
   ],
   providers: [ConfirmationService],

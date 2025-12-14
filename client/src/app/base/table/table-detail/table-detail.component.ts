@@ -11,8 +11,6 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { TabsModule } from 'primeng/tabs';
-import { ImageModule } from 'primeng/image';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 
@@ -39,14 +37,7 @@ import { TableRealtimeService } from '../table-realtime.service';
   templateUrl: './table-detail.component.html',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    TabsModule,
-    ImageModule,
-    ButtonModule,
-    DividerModule,
-    SpreadsheetComponent,
-    RecordEditorDrawerComponent,
-  ],
+  imports: [ButtonModule, DividerModule, SpreadsheetComponent, RecordEditorDrawerComponent],
 })
 export class TableDetailComponent {
   protected config = signal<TableConfig>({

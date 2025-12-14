@@ -1,66 +1,28 @@
-@if (tblService.selectedTable()) {
-  <p-tabs value="0" class="w-full h-full">
-    <p-tablist>
-      <p-tab value="0">
-        <div class="flex items-center">
-          <i class="icon icon-table-2 mr-2"></i>
-          <span>{{ tblService.selectedTable().tableName }}</span>
-        </div>
-      </p-tab>
-      <!-- <p-tab value="1">
-        <div class="flex items-center">
-          <i class="icon icon-sparkles mr-2"></i>
-          <span>AI Query</span>
-        </div>
-      </p-tab> -->
-    </p-tablist>
-    <p-tabpanels class="flex-1 !p-0">
-      <p-tabpanel value="0">
-        @if (columns()) {
-          <record-editor-drawer
-            [(visible)]="visibleRecordEditor"
-            [fields]="fields()"
-            [record]="updatedRecord"
-            [mode]="updatedRecordMode"
-            (onSave)="onRecordSave($event)"
-          />
-          <spreadsheet
-            [config]="config()"
-            [columns]="columns()"
-            [rows]="rows()"
-            (rowAction)="onRowAction($event)"
-            (cellAction)="onCellAction($event)"
-          >
-            <ng-template #toolbar>
-              <div class="flex">
-                <p-button
-                  icon="icon icon-plus"
-                  label="New Record"
-                  [style]="{ 'white-space': 'nowrap' }"
-                  (click)="addNewRecord()"
-                />
-                <p-divider layout="vertical" />
-              </div>
-            </ng-template>
-          </spreadsheet>
-        }
-      </p-tabpanel>
-      <!-- <p-tabpanel value="1">
-        <p class="m-0">
-          Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque
-          laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi
-          architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit
-          aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione
-          voluptatem sequi nesciunt. Consectetur, adipisci velit, sed quia non numquam eius modi.
-        </p>
-      </p-tabpanel> -->
-    </p-tabpanels>
-  </p-tabs>
-} @else {
-  <div class="flex flex-col w-full h-full items-center justify-center m-1">
-    <p-image src="assets/images/chill-guy.png" alt="Image" width="320" />
-    <p class="text-surface-500 italic flex items-center">
-      <span>Unlock insights by picking any table to explore its data!</span>
-    </p>
-  </div>
+@if (columns()) {
+  <record-editor-drawer
+    [(visible)]="visibleRecordEditor"
+    [fields]="fields()"
+    [record]="updatedRecord"
+    [mode]="updatedRecordMode"
+    (onSave)="onRecordSave($event)"
+  />
+  <spreadsheet
+    [config]="config()"
+    [columns]="columns()"
+    [rows]="rows()"
+    (rowAction)="onRowAction($event)"
+    (cellAction)="onCellAction($event)"
+  >
+    <ng-template #toolbar>
+      <div class="flex">
+        <p-button
+          icon="icon icon-plus"
+          label="New Record"
+          [style]="{ 'white-space': 'nowrap' }"
+          (click)="addNewRecord()"
+        />
+        <p-divider layout="vertical" />
+      </div>
+    </ng-template>
+  </spreadsheet>
 }

@@ -39,16 +39,18 @@
     <p-button
       icon="icon icon-refresh-cw"
       severity="secondary"
-      size="small"
       [text]="true"
+      [pTooltip]="'Refresh table list'"
+      tooltipPosition="bottom"
       [disabled]="isLoading()"
       (click)="refreshTables()"
     />
     <p-button
       icon="icon icon-plus"
       severity="secondary"
-      size="small"
       [text]="true"
+      [pTooltip]="'Add new table'"
+      tooltipPosition="bottom"
       [disabled]="isLoading()"
       (click)="addNewTable()"
     />
@@ -72,24 +74,25 @@
     <li (click)="onTableSelected(table)">
       <a
         pRipple
-        class="flex cursor-pointer p-4 text-surface-700 hover:bg-surface-100 duration-150 transition-colors p-ripple"
+        class="flex items-center cursor-pointer p-4 text-surface-700 hover:bg-surface-100 duration-150 transition-colors p-ripple"
         [class.bg-surface-100]="table.tableName === tblService.selectedTable()?.tableName"
       >
-        <i class="icon icon-table-2 text-surface-500 mr-2 mt-0.5"></i>
-        <div class="flex-1">
-          <p class="font-medium">{{ table.tableName }}</p>
-          <p class="font-light text-surface-500 text-xs">
-            @if (table.tableComment) {
-              {{ table.tableComment }}
-            } @else {
-              <i>No description</i>
-            }
-          </p>
+        <div class="flex flex-1">
+          <i class="icon icon-table-2 text-surface-500 mr-2 mt-0.5"></i>
+          <div class="flex-1">
+            <p class="font-medium">{{ table.tableName }}</p>
+            <p class="font-light text-surface-500 text-xs">
+              @if (table.tableComment) {
+                {{ table.tableComment }}
+              } @else {
+                <i>No description</i>
+              }
+            </p>
+          </div>
         </div>
         <p-button
           icon="icon icon-ellipsis-vertical"
           severity="secondary"
-          size="small"
           [text]="true"
           [disabled]="isLoading()"
           (click)="openTableActionMenu($event, table, tableMenu)"
