@@ -17,6 +17,7 @@ import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
 import { Menu, MenuModule } from 'primeng/menu';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -36,6 +37,7 @@ import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.
     ButtonModule,
     IconFieldModule,
     InputIconModule,
+    InputTextModule,
     MenuModule,
     ConfirmDialogModule,
     CheckboxModule,

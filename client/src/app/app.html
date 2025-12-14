@@ -18,11 +18,12 @@
       <p-button
         label="API Docs"
         severity="secondary"
-        [outlined]="true"
         icon="icon icon-file-text"
         (click)="openAPIDocs()"
       />
-      <p-button icon="icon icon-sparkles" [outlined]="true" (click)="toggleChatbot()" />
+      <p-button severity="secondary" (click)="toggleChatbot()">
+        <i class="icon icon-sparkles" style="color: var(--p-primary-color)"></i>
+      </p-button>
     </div>
   </div>
   <div
