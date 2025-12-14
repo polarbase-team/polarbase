@@ -4,7 +4,7 @@ import { WebSocket } from '../plugins/web-socket';
 import { apiKeyAuth } from '../api-keys/auth';
 import { setupReplication, startCDC } from './cdc';
 
-const REALTIME_PATH = process.env.REALTIME_PATH;
+const REALTIME_PATH = process.env.REALTIME_PATH || '/realtime';
 
 export async function enableRealtime(app: Elysia) {
   setupReplication();

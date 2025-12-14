@@ -22,7 +22,7 @@ const logService = (name: string, status: boolean, extra?: string) => {
 const APP_NAME = process.env.NAME || 'CozyDB';
 const APP_HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
 const APP_PORT = Number(process.env.PORT || '3000');
-const CORS_ORIGINS = process.env.CORS_ORIGINS;
+const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
 
 (async () => {
   console.log('');
@@ -40,7 +40,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
 
   // 1. REST API
   const REST_ENABLED = process.env.REST_ENABLED === 'true';
-  const REST_PREFIX = process.env.REST_PREFIX;
+  const REST_PREFIX = process.env.REST_PREFIX || '/rest';
   if (REST_ENABLED) {
     await enableRest(app);
     logService(
@@ -54,7 +54,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
 
   // 2. AGENT API
   const AGENT_ENABLED = process.env.AGENT_ENABLED === 'true';
-  const AGENT_PREFIX = process.env.AGENT_PREFIX;
+  const AGENT_PREFIX = process.env.AGENT_PREFIX || '/agent';
   if (AGENT_ENABLED) {
     await enableAgent(app);
     logService(
@@ -68,7 +68,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
 
   // 3. MCP Server
   const MCP_ENABLED = process.env.MCP_ENABLED === 'true';
-  const MCP_PATH = process.env.MCP_PATH;
+  const MCP_PATH = process.env.MCP_PATH || '/mcp';
   const MCP_PORT = Number(process.env.MCP_PORT || '8080');
   if (MCP_ENABLED) {
     try {
@@ -92,7 +92,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS;
 
   // 4. Realtime
   const REALTIME_ENABLED = process.env.REALTIME_ENABLED === 'true';
-  const REALTIME_PATH = process.env.REALTIME_PATH;
+  const REALTIME_PATH = process.env.REALTIME_PATH || '/realtime';
   if (REALTIME_ENABLED) {
     await enableRealtime(app);
     logService(

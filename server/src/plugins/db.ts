@@ -1,11 +1,11 @@
 import knex from 'knex';
 
 export const pgConfig = {
-  host: process.env.PG_HOST,
+  host: process.env.PG_HOST || '0.0.0.0',
   port: parseInt(process.env.PG_PORT || '5432', 10),
-  user: process.env.PG_USER,
-  password: process.env.PG_PASSWORD,
-  database: process.env.PG_DATABASE,
+  user: process.env.PG_USER || 'my-postgres',
+  password: process.env.PG_PASSWORD || 'my-password',
+  database: process.env.PG_DATABASE || 'cozy-db',
 };
 
 export default knex({

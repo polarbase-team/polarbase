@@ -3,7 +3,7 @@ import { Elysia, t } from 'elysia';
 import { apiKeyAuth } from '../api-keys/auth';
 import { generateAIResponse } from './model';
 
-const AGENT_PREFIX = process.env.AGENT_PREFIX;
+const AGENT_PREFIX = process.env.AGENT_PREFIX || '/agent';
 
 export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
   /**

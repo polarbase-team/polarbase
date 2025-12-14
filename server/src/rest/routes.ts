@@ -7,7 +7,7 @@ import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
 
 const REST_RATE_LIMIT = parseInt(process.env.REST_RATE_LIMIT!, 10);
-const REST_PREFIX = process.env.REST_PREFIX;
+const REST_PREFIX = process.env.REST_PREFIX || '/rest';
 
 /**
  * List of table names that are forbidden to access via this REST API.
