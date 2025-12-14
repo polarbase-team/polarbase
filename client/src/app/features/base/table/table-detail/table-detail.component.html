@@ -1,0 +1,28 @@
+@if (columns()) {
+  <record-editor-drawer
+    [(visible)]="visibleRecordEditor"
+    [fields]="fields()"
+    [record]="updatedRecord"
+    [mode]="updatedRecordMode"
+    (onSave)="onRecordSave($event)"
+  />
+  <spreadsheet
+    [config]="config()"
+    [columns]="columns()"
+    [rows]="rows()"
+    (rowAction)="onRowAction($event)"
+    (cellAction)="onCellAction($event)"
+  >
+    <ng-template #toolbar>
+      <div class="flex">
+        <p-button
+          icon="icon icon-plus"
+          label="New Record"
+          [style]="{ 'white-space': 'nowrap' }"
+          (click)="addNewRecord()"
+        />
+        <p-divider layout="vertical" />
+      </div>
+    </ng-template>
+  </spreadsheet>
+}

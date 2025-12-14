@@ -1,0 +1,69 @@
+import { Component, input, output, computed, signal, effect } from '@angular/core';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+
+import { PopoverModule } from 'primeng/popover';
+import { ButtonModule } from 'primeng/button';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { PanelModule } from 'primeng/panel';
+import { DividerModule } from 'primeng/divider';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
+
+import { TableColumn } from '../../models/table-column';
+
+@Component({
+  selector: 'column-view-options',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    DragDropModule,
+    PopoverModule,
+    ButtonModule,
+    ToggleSwitchModule,
+    DividerModule,
+    MenuModule,
+  ],
+  templateUrl: './column-view-options.component.html',
+})
+export class ColumnViewOptionsComponent {
+  sourceColumns = input.required<TableColumn[]>();
+  visibleColumns = input.required<TableColumn[]>();
+
+  onToggle = output<{ column: TableColumn; hidden: boolean }>();
+  onMove = output<{ column: TableColumn; newIndex: number }>();
+
+  columns = signal<TableColumn[]>([]);
+
+  constructor() {
+    effect(() => {
+      this.columns.set([...this.sourceColumns()]);
+    });
+  }
+
+  protected toggleHidden(column: TableColumn) {
+    this.onToggle.emit({ column, hidden: !column.hidden });
+  }
+
+  protected onDropped(event: CdkDragDrop<TableColumn[]>) {
+    const previousIndex = event.previousIndex;
+    const currentIndex = event.currentIndex;
+    const newColumns = [...this.columns()];
+    const column = newColumns[previousIndex];
+    moveItemInArray(newColumns, previousIndex, currentIndex);
+    this.columns.set(newColumns);
+
+    const visibleColumns = new Set(this.visibleColumns());
+    if (!visibleColumns.has(column)) return;
+
+    let newIndex = 0;
+    for (let i = 0; i < currentIndex; i++) {
+      if (visibleColumns.has(newColumns[i])) newIndex++;
+    }
+
+    this.onMove.emit({ column, newIndex });
+  }
+}

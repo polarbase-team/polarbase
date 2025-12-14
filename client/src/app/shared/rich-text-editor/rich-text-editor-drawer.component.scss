@@ -1,0 +1,29 @@
+::ng-deep {
+  .rich-text-editor-drawer {
+    .p-drawer-header {
+      border-bottom: 1px solid var(--p-surface-200);
+    }
+
+    .p-drawer-content {
+      padding: 0;
+    }
+
+    .p-drawer-footer {
+      border-top: 1px solid var(--p-surface-200);
+    }
+
+    .p-editor {
+      .p-editor-toolbar {
+        border-radius: 0;
+        border-top: 0 !important;
+        border-left: 0 !important;
+        border-right: 0 !important;
+      }
+
+      .p-editor-content {
+        border-radius: 0;
+        border: 0;
+      }
+    }
+  }
+}

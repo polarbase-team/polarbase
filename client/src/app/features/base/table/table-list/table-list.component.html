@@ -1,0 +1,105 @@
+<p-confirmdialog>
+  <ng-template #message let-message>
+    <div class="flex flex-col gap-4">
+      <div>{{ message.message }}</div>
+      <div class="flex items-center gap-2">
+        <p-checkbox
+          [(ngModel)]="isCascadeDeleteEnabled"
+          inputId="cascade"
+          name="size"
+          value="true"
+          [binary]="true"
+        />
+        <label for="cascade" class="text-sm">
+          Drop table with cascade?
+          <p class="text-surface-500">Deletes the table and its dependent objects</p>
+        </label>
+      </div>
+      @if (isCascadeDeleteEnabled) {
+        <p-message severity="warn" class="w-xs">
+          <p>This will also delete all dependent objects such as views, foreign keys, etc.</p>
+        </p-message>
+      }
+    </div>
+  </ng-template>
+</p-confirmdialog>
+
+<p-menu #tableMenu [model]="menuItems" [popup]="true" appendTo="body" />
+
+<table-editor-drawer
+  [(visible)]="visibleTableEditorDrawer"
+  [table]="updatedTable"
+  [mode]="updatedTableMode"
+  (onSave)="onTableEditorSave()"
+/>
+
+<div class="flex items-center justify-between pl-4 pr-2 py-2 border-b-1 border-surface-200">
+  <div>Tables</div>
+  <div class="flex">
+    <p-button
+      icon="icon icon-refresh-cw"
+      severity="secondary"
+      [text]="true"
+      [pTooltip]="'Refresh table list'"
+      tooltipPosition="bottom"
+      [disabled]="isLoading()"
+      (click)="refreshTables()"
+    />
+    <p-button
+      icon="icon icon-plus"
+      severity="secondary"
+      [text]="true"
+      [pTooltip]="'Add new table'"
+      tooltipPosition="bottom"
+      [disabled]="isLoading()"
+      (click)="addNewTable()"
+    />
+  </div>
+</div>
+<div class="p-4">
+  <p-iconfield>
+    <p-inputicon class="icon icon-search" />
+    <input
+      class="w-full"
+      type="text"
+      pInputText
+      placeholder="Search"
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="onTableSearch($event)"
+    />
+  </p-iconfield>
+</div>
+<ul class="list-none p-0 m-0 overflow-y-auto max-h-full">
+  @for (table of filteredTables(); track table.tableName) {
+    <li (click)="onTableSelected(table)">
+      <a
+        pRipple
+        class="group flex items-center cursor-pointer px-4 py-2 text-surface-700 hover:bg-gray-100 duration-150 transition-colors p-ripple"
+        [class.bg-gray-100]="table.tableName === tblService.selectedTable()?.tableName"
+      >
+        <div class="flex flex-1">
+          <i class="icon icon-table-2 text-surface-500 mr-2 mt-0.5"></i>
+          <div class="flex-1">
+            <p class="font-medium">{{ table.tableName }}</p>
+            <p class="font-light text-surface-500 text-xs">
+              @if (table.tableComment) {
+                {{ table.tableComment }}
+              } @else {
+                <i>No description</i>
+              }
+            </p>
+          </div>
+        </div>
+        <p-button
+          icon="icon icon-ellipsis-vertical"
+          severity="secondary"
+          size="small"
+          [text]="true"
+          [disabled]="isLoading()"
+          (click)="openTableActionMenu($event, table, tableMenu)"
+          class="invisible group-hover:visible"
+        />
+      </a>
+    </li>
+  }
+</ul>

@@ -4,8 +4,8 @@
     "exclude": ["ShellTool(rm -rf)"]
   },
   "mcpServers": {
-    "cozy-db-server": {
-      "httpUrl": "http://localhost:3001/mcp"
+    "polar-base-server": {
+      "httpUrl": "http://localhost:8080/mcp"
     }
   },
   "model": {

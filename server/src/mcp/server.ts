@@ -1,9 +1,11 @@
 import { FastMCP } from 'fastmcp';
 
 import { log } from '../utils/logger';
+import { apiKeyAuth } from '../api-keys/auth';
+import instructions from '../agent/instructions';
 import registerTablesResource from './resources/tables';
 import registerColumnsResource from './resources/columns';
-import registerSuggestTableStructureTool from './tools/suggest_table_structure';
+import registerSuggestTableStructurePrompt from './prompts/suggest_table_structure';
 import registerFindTablesTool from './tools/find_tables';
 import registerFindColumnsTool from './tools/find_coumns';
 import registerCreateTableTool from './tools/create_table';
@@ -17,31 +19,31 @@ export const mcpServer = new FastMCP({
   name: 'Database Server',
   version: '1.0.0',
   logger: log as any,
-  instructions: `
-    I am an AI assistant for managing a database through tools and prompts.
-    To understand the database structure:
-    - Use the 'findTables' tool to get a JSON array of existing table names.
-    - Use the 'findColumns' tool with a valid table name from 'findTables' to get columns and their data types.
-    To create a table:
-    - Call 'findTables' to ensure the table name is unique.
-    - Use 'suggestTableStructure' to generate a JSON structure based on the user prompt.
-    - Use 'createTable' with the prompt and structure.
-    To manipulate data:
-    - Call 'findTables' to validate table names for 'table' or 'from' parameters.
-    - Call 'findColumns' to validate column names for 'select', 'data', 'where', 'conflictTarget', or 'updateColumns'.
-    - Use 'selectFromTable', 'insertIntoTable', 'upsertIntoTable', 'updateTable', or 'deleteFromTable'.
-  `,
+  instructions,
+  authenticate: async (request) => {
+    const apiKey = request.headers['x-api-key'];
+    try {
+      return await apiKeyAuth(apiKey as string);
+    } catch {
+      throw new Response(null, {
+        status: 401,
+        statusText: 'Unauthorized',
+      });
+    }
+  },
 });
 
 // Register resources
 registerTablesResource(mcpServer);
 registerColumnsResource(mcpServer);
 
+// Register prompts
+registerSuggestTableStructurePrompt(mcpServer);
+
 // Register tools
 registerFindTablesTool(mcpServer);
 registerFindColumnsTool(mcpServer);
 registerCreateTableTool(mcpServer);
-registerSuggestTableStructureTool(mcpServer);
 registerSelectFromTableTool(mcpServer);
 registerInsertIntoTableTool(mcpServer);
 registerUpsertIntoTableTool(mcpServer);

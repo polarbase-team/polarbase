@@ -1,0 +1,53 @@
+<p-popover #popover>
+  <div class="w-3xs">
+    <!-- Body -->
+    <div class="overflow-y-auto max-h-100">
+      <div cdkDropList (cdkDropListDropped)="onDropped($event)" class="flex flex-col gap-2">
+        <div
+          *ngFor="let column of columns()"
+          cdkDrag
+          cdkDragLockAxis="y"
+          class="flex items-center justify-between gap-6"
+        >
+          <div class="flex min-w-0 items-center gap-2">
+            <!-- Drag handle -->
+            <div cdkDragHandle class="mt-1">
+              <i class="icon icon-grip-vertical"></i>
+            </div>
+
+            <!-- Field name -->
+            <div class="flex items-center gap-2">
+              @if (column.primary) {
+                <i class="icon icon-key rotate-45" style="color: var(--p-primary-color)"></i>
+              } @else {
+                <i [class]="`${column.field.icon}`"></i>
+              }
+              <span class="font-medium break-all">
+                {{ column.field.name }}
+              </span>
+              @if (column.field.required) {
+                <i class="icon icon-asterisk text-red-500"></i>
+              }
+            </div>
+          </div>
+
+          <!-- Toggle visible -->
+          <p-button
+            variant="text"
+            severity="secondary"
+            [icon]="`icon ${column.hidden ? 'icon-eye-closed' : 'icon-eye'}`"
+            (click)="toggleHidden(column)"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</p-popover>
+
+<p-button
+  label="Customize"
+  icon="icon icon-columns-3-cog"
+  variant="outlined"
+  severity="secondary"
+  (click)="popover.show($event)"
+/>

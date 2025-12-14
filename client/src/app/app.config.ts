@@ -9,19 +9,27 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 import Aura from '@primeuix/themes/aura';
+import { definePreset, palette } from '@primeuix/themes';
 
-import { httpErrorInterceptor } from './http-error.interceptor';
+import { httpApiKeyInterceptor } from './core/interceptors/http-api-key.interceptor';
+import { httpErrorInterceptor } from './core/interceptors/http-error.interceptor';
 import { routes } from './app.routes';
+
+const AuraCyan = definePreset(Aura, {
+  semantic: {
+    primary: palette('{cyan}'),
+  },
+});
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([httpErrorInterceptor])),
+    provideHttpClient(withInterceptors([httpApiKeyInterceptor, httpErrorInterceptor])),
     providePrimeNG({
       theme: {
-        preset: Aura,
+        preset: AuraCyan,
         options: {
           darkModeSelector: false,
         },

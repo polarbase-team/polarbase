@@ -1,0 +1,1125 @@
+<p-toast appendTo="body" />
+<p-confirmdialog appendTo="body" />
+<p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
+<p-contextmenu #contextMenu [model]="menuItems" appendTo="body" />
+<p-overlay
+  [visible]="!!tableCellService.activeCellError"
+  [target]="$any(tableCellService.activeCellError?.target)"
+  appendTo="body"
+>
+  <ng-template #content>
+    <p-message severity="error">{{ tableCellService.activeCellError?.message }}</p-message>
+  </ng-template>
+</p-overlay>
+
+<div
+  class="spreadsheet__toolbar"
+  [style.paddingLeft.px]="tableService.config().sideSpacing"
+  [style.paddingRight.px]="tableService.config().sideSpacing"
+>
+  <ng-container *ngTemplateOutlet="toolbarTemplate()"></ng-container>
+  <div class="flex w-full gap-2">
+    <div class="flex w-full gap-2">
+      <column-view-options
+        [sourceColumns]="sourceColumns()"
+        [visibleColumns]="tableColumnService.columns()"
+        (onToggle)="
+          $event.hidden
+            ? tableColumnService.hideColumn($event.column)
+            : tableColumnService.showColumn($event.column)
+        "
+        (onMove)="tableColumnService.moveColumn($event.column, $event.newIndex)"
+      />
+      <data-view-options
+        type="group"
+        [sourceColumns]="sourceColumns()"
+        [currentColumns]="tableColumnService.groupedColumns()"
+        [limit]="3"
+        (onApply)="tableService.onApplyGroup($event)"
+      />
+      <data-view-options
+        type="sort"
+        [sourceColumns]="sourceColumns()"
+        [currentColumns]="tableColumnService.sortedColumns()"
+        (onApply)="tableService.onApplySort($event)"
+      />
+    </div>
+    <p-inputgroup class="w-xs max-w-xs">
+      <p-iconfield>
+        <p-inputicon class="icon icon-search !z-2" />
+        <input
+          type="text"
+          pInputText
+          placeholder="Search"
+          (input)="tableService.onSearch($any($event))"
+          (keydown.enter)="tableService.searchNext()"
+        />
+      </p-iconfield>
+      @if (tableService.searchResults?.length) {
+        <p-inputgroup-addon>
+          <div class="text-center">
+            <span class="text-sm font-medium">
+              {{ tableService.layout.cell.search.currentMatchIndex || 0 }}/{{
+                tableService.searchResults.length - 1
+              }}
+            </span>
+          </div>
+        </p-inputgroup-addon>
+        <p-inputgroup-addon>
+          <div class="flex gap-2 justify-content-space-around px-2">
+            <i
+              class="icon icon-chevron-up cursor-pointer"
+              style="font-size: 16px"
+              (click)="tableService.searchPrevious()"
+            ></i>
+            <i
+              class="icon icon-chevron-down cursor-pointer"
+              style="font-size: 16px"
+              (click)="tableService.searchNext()"
+            ></i>
+          </div>
+        </p-inputgroup-addon>
+      }
+    </p-inputgroup>
+  </div>
+</div>
+
+<virtual-scroll
+  [sideSpacing]="tableService.config().sideSpacing"
+  [disable]="disableScroll"
+  (scrolling)="onViewportScrolling()"
+>
+  <!-- Header -->
+  <div
+    class="spreadsheet__header"
+    cdkDropList
+    cdkDropListSortingDisabled
+    cdkDropListAutoScrollDisabled
+    (cdkDropListDropped)="tableColumnService.onColumnDropped($event)"
+  >
+    <div
+      #dragBoundary
+      style="position: absolute; height: 1px; opacity: 0; visibility: hidden; pointer-events: none"
+      [style.left.px]="-virtualScroll.viewport.width() / 2"
+      [style.right.px]="-virtualScroll.viewport.width() / 2"
+      [style.width.px]="virtualScroll.viewport.width() * 2"
+    ></div>
+    <ng-template #headerCellTemplate let-column="column" let-columnIndex="columnIndex">
+      <div
+        class="header-cell cell"
+        #headerCell
+        safe-area
+        virtualScrollAutoScrollHolder="horizontal"
+        cell-type="column"
+        [attr.data-column-id]="column.id"
+        [attr.data-column-index]="columnIndex"
+        [style.width.px]="column.width"
+        [style.minWidth.px]="column.width"
+        [style.maxWidth.px]="column.width"
+        [style.zIndex]="tableColumnService.columns()?.length - columnIndex"
+        [class.cell--active]="tableService.layout.column.selectedIndices?.has(columnIndex)"
+        [class.header-cell--grouping]="!tableService.isStreaming && column.groupingType"
+        [class.header-cell--sorting]="!tableService.isStreaming && column.sortingType"
+        cdkDrag
+        cdkDragLockAxis="x"
+        cdkDragPreviewClass="column-drag-preview"
+        [cdkDragBoundary]="dragBoundary"
+        [cdkDragDisabled]="!tableService.config().column.reorderable"
+        (cdkDragStarted)="tableColumnService.onColumnDragStarted()"
+        (cdkDragMoved)="tableColumnService.onColumnDragMoved($event)"
+        mwlResizable
+        (resizing)="tableColumnService.onColumnResizing(column, $event)"
+        (resizeEnd)="tableColumnService.onColumnResizeEnd(column)"
+        (click)="!column._isResizing && tableColumnService.selectColumns($event, columnIndex)"
+      >
+        <div
+          class="header-cell cell"
+          #headerCell
+          *cdkDragPlaceholder
+          [style.width.px]="column.width"
+          [style.minWidth.px]="column.width"
+          [style.maxWidth.px]="column.width"
+        >
+          @if (column.primary) {
+            <i class="icon icon-key rotate-45" style="color: var(--p-primary-color)"></i>
+          } @else {
+            <i [class]="`${column.field.icon}`"></i>
+          }
+          <div
+            class="text-sm white-space-nowrap overflow-hidden truncate"
+            [attr.title]="column.field.name"
+          >
+            {{ column.field.name }}
+          </div>
+          @if (column.field.required) {
+            <i class="icon icon-asterisk text-red-500"></i>
+          }
+          @if (column.field.description?.length) {
+            <i
+              class="icon icon-info text-surface-500"
+              [pTooltip]="column.field.description"
+              tooltipPosition="bottom"
+            ></i>
+          }
+        </div>
+        <div
+          class="header-cell cell"
+          #headerCell
+          *cdkDragPreview
+          [style.width.px]="column.width"
+          [style.minWidth.px]="column.width"
+          [style.maxWidth.px]="column.width"
+          [style.height.%]="100"
+          [style.minHeight.%]="100"
+          [style.maxHeight.%]="100"
+        ></div>
+        @if (column.primary) {
+          <i class="icon icon-key rotate-45" style="color: var(--p-primary-color)"></i>
+        } @else {
+          <i [class]="`${column.field.icon}`"></i>
+        }
+        <div
+          class="text-sm white-space-nowrap overflow-hidden truncate"
+          [attr.title]="column.field.name"
+        >
+          {{ column.field.name }}
+        </div>
+        @if (column.field.required) {
+          <i class="icon icon-asterisk text-red-500"></i>
+        }
+        @if (column.field.description?.length) {
+          <i
+            class="icon icon-info text-surface-500"
+            [pTooltip]="column.field.description"
+            tooltipPosition="bottom"
+          ></i>
+        }
+        @if (tableService.config().column.resizable) {
+          <div
+            class="header-cell__resize-handle"
+            mwlResizeHandle
+            [resizeEdges]="{ right: tableService.config().column.resizable }"
+            pTooltip="Resize column"
+            (mousedown)="$event.stopPropagation()"
+            (mouseenter)="
+              tableService.layout.freezeHandle.isHideHeadLine =
+                columnIndex === tableService.frozenCount()
+            "
+            (mouseleave)="tableService.layout.freezeHandle.isHideHeadLine = false"
+          ></div>
+        }
+      </div>
+    </ng-template>
+    <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset()">
+      <div
+        class="pane-content box box-left box--radius flex flex-row"
+        [style.left.px]="tableService.config().sideSpacing"
+        [style.width.px]="virtualScroll.viewport.leftWidth()"
+      >
+        <div class="header-cell cell index-cell">
+          <div class="index-block">
+            @let rowLength = tableRowService.rows().length;
+            @let selectedRowLength = tableRowService.selectedRows.size;
+            <p-checkbox
+              [binary]="true"
+              [ngModel]="rowLength > 0 && selectedRowLength > 0 && rowLength === selectedRowLength"
+              (ngModelChange)="
+                $event ? tableRowService.selectAllRows() : tableRowService.deselectAllRows()
+              "
+            ></p-checkbox>
+          </div>
+        </div>
+        @for (
+          column of tableColumnService.frozenColumns();
+          let columnIndex = $index;
+          track column
+        ) {
+          <ng-container
+            *ngTemplateOutlet="headerCellTemplate; context: { column, columnIndex }"
+          ></ng-container>
+        }
+      </div>
+    </div>
+    <div
+      class="pane pane-right"
+      [style.left.px]="virtualScroll.scrollDivideOffset()"
+      [class.hidden]="!virtualScroll.viewport.leftWidth()"
+    >
+      <div
+        class="pane-content box box-right box--radius flex flex-row"
+        [style.width.px]="virtualScroll.viewport.rightWidth()"
+        [style.transform]="'translate3d(' + -virtualScroll.scrollLeft() + 'px, 0, 0)'"
+      >
+        @for (
+          column of tableColumnService.scrollableColumns();
+          let columnIndex = $index;
+          track column
+        ) {
+          <ng-container
+            *ngTemplateOutlet="
+              headerCellTemplate;
+              context: {
+                column,
+                columnIndex: tableService.frozenCount() + columnIndex + 1,
+              }
+            "
+          ></ng-container>
+        }
+        @if (tableService.config().column.addable) {
+          <div class="header-cell cell header-action-cell">
+            <i class="icon icon-circle-plus"></i>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div
+    class="spreadsheet__body"
+    virtualScrollViewport
+    [leftColumns]="tableColumnService.frozenColumns()"
+    [rightColumns]="tableColumnService.scrollableColumns()"
+    [rows]="tableRowService.rows()"
+    [rootGroup]="tableGroupService.rootGroup()"
+    [rowHeight]="tableRowService.rowHeight()"
+  >
+    <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset()">
+      <div
+        class="pane-content"
+        [style.left.px]="tableService.config().sideSpacing"
+        [style.width.px]="virtualScroll.viewport.leftWidth()"
+        [style.height.px]="virtualScroll.viewport.contentHeight()"
+        [style.transform]="'translate3d(0,' + -virtualScroll.scrollTop() + 'px, 0)'"
+      >
+        <div
+          virtualScrollLeftContentWrapper
+          [style.height.px]="virtualScroll.viewport.contentHeight()"
+          [ngClass]="{
+            'box box-left box--radius': tableGroupService.hasNoGroups(),
+          }"
+        >
+          <!-- group-left -->
+          <ng-container
+            *virtualScrollGroupRepeater="
+              undefined;
+              let group;
+              let groupIndex = index;
+              let groupRect = rect
+            "
+          >
+            <div
+              class="group box group-left box-left"
+              [attr.data-group-id]="group.id"
+              [attr.data-group-index]="groupIndex"
+              [style.left.px]="groupRect.left"
+              [style.top.px]="groupRect.top"
+              [style.height.px]="groupRect.height"
+              [class.group-first-depth]="group.depth === 1"
+              [class.group-last-depth]="group.depth === tableGroupService.groupDepth()"
+              [class.group--collapsed]="group.isCollapsed"
+              [class.box--radius]="group.depth === 1"
+            >
+              <div class="group__header">
+                <div class="group-cell cell index-cell" cell-type="group">
+                  <div class="index-block">
+                    <i
+                      class="icon cursor-pointer text-surface-500"
+                      [ngClass]="group.isCollapsed ? 'icon-chevron-right' : 'icon-chevron-down'"
+                      (click)="
+                        group.isCollapsed
+                          ? this.tableGroupService.expandGroup(group)
+                          : this.tableGroupService.collapseGroup(group)
+                      "
+                    ></i>
+                  </div>
+                </div>
+                <ng-container
+                  *virtualScrollColumnRepeater="
+                    virtualScroll.viewport.leftWrapper.columns;
+                    cacheSize: 0;
+                    let column;
+                    let columnIndex = index;
+                    let columnRect = rect
+                  "
+                >
+                  @if (columnIndex === 0 && tableService.frozenCount() >= 0) {
+                    <div
+                      class="group-cell cell"
+                      cell-type="group"
+                      [style.left.px]="columnRect.left"
+                      [style.width.px]="columnRect.width - tableService.config().column.minWidth"
+                      [style.minWidth.px]="columnRect.width - tableService.config().column.minWidth"
+                      [style.maxWidth.px]="columnRect.width - tableService.config().column.minWidth"
+                    >
+                      <div
+                        class="text-sm text-color-secondary white-space-nowrap overflow-hidden truncate"
+                      >
+                        @if (group.label) {
+                          {{ group.label }}
+                        } @else {
+                          <i>Empty</i>
+                        }
+                      </div>
+                    </div>
+                    <div
+                      class="group-cell cell"
+                      cell-type="group"
+                      [style.left.px]="
+                        columnRect.left + columnRect.width - tableService.config().column.minWidth
+                      "
+                      [style.width.px]="tableService.config().column.minWidth"
+                      [style.minWidth.px]="tableService.config().column.minWidth"
+                      [style.maxWidth.px]="tableService.config().column.minWidth"
+                    >
+                      @if (!virtualScroll.isLongScrollingY()) {
+                        <ng-container
+                          *ngTemplateOutlet="
+                            calculationBlockTemplate;
+                            context: {
+                              column,
+                              calcResults: group.calcResults?.get(column.id),
+                            }
+                          "
+                        ></ng-container>
+                      }
+                    </div>
+                  } @else {
+                    <div
+                      class="group-cell cell"
+                      cell-type="group"
+                      [style.left.px]="columnRect.left"
+                      [style.width.px]="columnRect.width"
+                      [style.minWidth.px]="columnRect.width"
+                      [style.maxWidth.px]="columnRect.width"
+                    >
+                      @if (!virtualScroll.isLongScrollingY()) {
+                        <ng-container
+                          *ngTemplateOutlet="
+                            calculationBlockTemplate;
+                            context: {
+                              column,
+                              calcResults: group.calcResults?.get(column.id),
+                            }
+                          "
+                        ></ng-container>
+                      }
+                    </div>
+                  }
+                </ng-container>
+              </div>
+              @if (!group.children) {
+                <div class="group__body">
+                  @if (tableRowService.canAddRow()) {
+                    <div class="row blank-row">
+                      <div
+                        class="row-cell cell index-cell"
+                        [attr.disabled]="tableService.isStreaming"
+                        (click)="tableRowService.addNewRow(group)"
+                      >
+                        <i class="icon icon-circle-plus" style="margin-left: 11px"></i>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </ng-container>
+          <!-- row-left -->
+          <ng-container
+            *virtualScrollRowRepeater="
+              undefined;
+              let row;
+              let rowIndex = index;
+              let rowGroupIndex = indexInGroup;
+              let rowRect = rect;
+              let group = group
+            "
+          >
+            <div
+              class="row"
+              virtualScrollAutoScrollHolder="vertical"
+              [attr.data-row-index]="rowIndex"
+              [attr.data-row-id]="row.id"
+              [attr.row-size]="tableRowService.rowSize()"
+              [style.top.px]="rowRect.top"
+              [style.height.px]="rowRect.height"
+              [class.row--selecting]="row.selected"
+              [class.row--pending]="row === tableRowService.pendingRow"
+              [class.row--hover]="tableService.layout.cell.hovered?.rowIndex === rowIndex"
+              [style.left.px]="rowRect.left"
+              cdkDrag
+              cdkDragLockAxis="y"
+              cdkDragPreviewClass="row-drag-preview"
+              [cdkDragData]="row"
+              [cdkDragDisabled]="!tableService.config().row.reorderable"
+              (cdkDragStarted)="tableRowService.onRowDragStarted($event)"
+              (cdkDragMoved)="tableRowService.onRowDragMoved($event)"
+              (cdkDragEnded)="tableRowService.onRowDragEnded($event)"
+            >
+              @if (virtualScroll.isLongScrollingY()) {
+                <div class="row-cell cell index-cell" cell-type="row">
+                  <div class="h-fit-content">
+                    <div class="index-block">
+                      <div class="row__index-handle">
+                        {{ rowIndex + 1 }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              } @else {
+                <div
+                  class="row-cell cell index-cell"
+                  cell-type="row"
+                  [class.cell--active]="
+                    row.selected ||
+                    (!tableService.layout.column.selectedIndices &&
+                      tableService.layout.cell.selection &&
+                      tableService.layout.cell.selection.count === 1 &&
+                      tableService.layout.cell.selection.anchor.rowIndex === rowIndex)
+                  "
+                  (pointerenter)="
+                    tableCellService.onCellHover($event, { rowIndex, columnIndex: -1 })
+                  "
+                >
+                  <div
+                    class="flex flex-row align-items-start justify-content-center h-fit-content"
+                    style="height: fit-content"
+                  >
+                    @if (tableService.config().row.reorderable) {
+                      <div class="row__drag-handle" cdkDragHandle>
+                        <i class="icon icon-grip-vertical"></i>
+                      </div>
+                    }
+                    <div class="index-block">
+                      @if (row === tableRowService.pendingRow) {
+                        <a
+                          safe-area
+                          class="text-xs text-blue-500 pointer-events-auto"
+                          (click)="tableRowService.cancelPendingRow()"
+                          >Cancel</a
+                        >
+                      } @else {
+                        <div class="row__index-handle">
+                          {{ rowIndex + 1 }}
+                        </div>
+                      }
+                      @if (tableService.config().row.selectable) {
+                        <div class="row__select-handle">
+                          <p-checkbox
+                            [binary]="true"
+                            [ngModel]="row.selected"
+                            (ngModelChange)="tableRowService.toggleSelectRow(row)"
+                          ></p-checkbox>
+                        </div>
+                      }
+                      @if (tableService.config().row.expandable) {
+                        <div class="row__expand-handle">
+                          <i
+                            class="icon icon-maximize-2 text-surface-500"
+                            [pTooltip]="'View Detail'"
+                            tooltipPosition="top"
+                            (click)="tableRowService.expandRow(row)"
+                          ></i>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+              <ng-container
+                *virtualScrollColumnRepeater="
+                  virtualScroll.viewport.leftWrapper.columns;
+                  cacheSize: 0;
+                  let column;
+                  let columnIndex = index;
+                  let columnRect = rect
+                "
+              >
+                @if (virtualScroll.isLongScrollingY()) {
+                  <div
+                    class="row-cell cell"
+                    safe-area
+                    virtualScrollAutoScrollHolder
+                    cell-type="row"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="columnRect.width"
+                    [style.minWidth.px]="columnRect.width"
+                    [style.maxWidth.px]="columnRect.width"
+                  ></div>
+                } @else {
+                  <div
+                    class="row-cell cell"
+                    safe-area
+                    virtualScrollAutoScrollHolder
+                    cell-type="row"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="column.width"
+                    [style.minWidth.px]="column.width"
+                    [style.maxWidth.px]="column.width"
+                    [attr.data-row-id]="row.id"
+                    [attr.data-column-id]="column.id"
+                    [attr.data-row-index]="rowIndex"
+                    [attr.data-column-index]="columnIndex"
+                    [class.cell--active]="
+                      row.selected ||
+                      (!tableService.layout.column.selectedIndices &&
+                        tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.count === 1 &&
+                        tableService.layout.cell.selection.anchor.rowIndex === rowIndex) ||
+                      (tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.start.rowIndex <= rowIndex &&
+                        tableService.layout.cell.selection.start.columnIndex <= columnIndex &&
+                        tableService.layout.cell.selection.end.rowIndex >= rowIndex &&
+                        tableService.layout.cell.selection.end.columnIndex >= columnIndex) ||
+                      tableService.layout.column.selectedIndices?.has(columnIndex)
+                    "
+                    [class.cell--highlight]="
+                      tableService.layout.cell.search?.matches?.get(row.id)?.has(column.id)
+                    "
+                    [class.cell--filling]="
+                      tableService.layout.cell.fill &&
+                      tableService.layout.cell.fill.start.rowIndex <= rowIndex &&
+                      tableService.layout.cell.fill.start.columnIndex <= columnIndex &&
+                      tableService.layout.cell.fill.end.rowIndex >= rowIndex &&
+                      tableService.layout.cell.fill.end.columnIndex >= columnIndex
+                    "
+                    [class.cell--focusing]="
+                      tableService.layout.cell.focused &&
+                      tableService.layout.cell.focused.rowIndex === rowIndex &&
+                      tableService.layout.cell.focused.columnIndex === columnIndex
+                    "
+                    [class.cell--invalid]="
+                      tableService.layout.cell.invalid &&
+                      tableService.layout.cell.invalid.rowIndex === rowIndex &&
+                      tableService.layout.cell.invalid.columnIndex === columnIndex
+                    "
+                    [class.row-cell--selecting]="
+                      tableService.layout.cell.selection &&
+                      tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
+                      tableService.layout.cell.selection.anchor.columnIndex === columnIndex
+                    "
+                    (pointerenter)="tableCellService.onCellHover($event, { rowIndex, columnIndex })"
+                  >
+                    <ng-template
+                      fieldCellFactory
+                      [row]="row"
+                      [column]="column"
+                      [field]="column.field"
+                      [data]="row.data?.[column.id] ?? null"
+                      [readonly]="
+                        (tableService.isStreaming && !$any(row)._isStreamed) ||
+                        !(
+                          row.editable?.[column.id] !== false &&
+                          row.editable !== false &&
+                          column.editable !== false &&
+                          !!tableService.config().cell.editable
+                        )
+                      "
+                      [selecting]="
+                        !!tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
+                        tableService.layout.cell.selection.anchor.columnIndex === columnIndex
+                      "
+                    ></ng-template>
+                  </div>
+                }
+              </ng-container>
+            </div>
+          </ng-container>
+          @if (
+            tableRowService.canAddRow() &&
+            (!tableGroupService.isGrouped() || tableGroupService.hasNoGroups())
+          ) {
+            <div class="row blank-row">
+              <div
+                class="row-cell cell index-cell"
+                [attr.disabled]="tableService.isStreaming"
+                (click)="tableRowService.addNewRow()"
+              >
+                <i class="icon icon-circle-plus" style="margin-left: 11px"></i>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    <div
+      class="pane pane-right"
+      [style.left.px]="virtualScroll.scrollDivideOffset()"
+      [class.hidden]="!virtualScroll.viewport.leftWidth()"
+    >
+      <div
+        class="pane-content"
+        [style.width.px]="virtualScroll.viewport.rightWidth()"
+        [style.transform]="
+          'translate3d(' +
+          -virtualScroll.scrollLeft() +
+          'px,' +
+          -virtualScroll.scrollTop() +
+          'px, 0)'
+        "
+        [style.height.px]="virtualScroll.viewport.contentHeight()"
+      >
+        <div
+          virtualScrollRightContentWrapper
+          [style.height.px]="virtualScroll.viewport.contentHeight()"
+          [ngClass]="{
+            'box box-right box--radius': tableGroupService.hasNoGroups(),
+          }"
+        >
+          <!-- group-right -->
+          <ng-container
+            *virtualScrollGroupRepeater="
+              undefined;
+              let group;
+              let groupIndex = index;
+              let groupRect = rect
+            "
+          >
+            <div
+              class="group box group-right box-right"
+              [attr.data-group-id]="group.id"
+              [attr.data-group-index]="groupIndex"
+              [style.right.px]="groupRect.right"
+              [style.top.px]="groupRect.top"
+              [style.height.px]="groupRect.height"
+              [class.group-first-depth]="group.depth === 1"
+              [class.group-last-depth]="group.depth === tableGroupService.groupDepth()"
+              [class.group--collapsed]="group.isCollapsed"
+              [class.box--radius]="group.depth === 1"
+            >
+              <div class="group__header">
+                <ng-container
+                  *virtualScrollColumnRepeater="
+                    virtualScroll.viewport.rightWrapper.columns;
+                    let column;
+                    let columnIndex = index;
+                    let columnRect = rect
+                  "
+                >
+                  <div
+                    class="group-cell cell"
+                    cell-type="group"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="columnRect.width"
+                    [style.minWidth.px]="columnRect.width"
+                    [style.maxWidth.px]="columnRect.width"
+                  >
+                    @if (!virtualScroll.isLongScrollingY()) {
+                      <ng-container
+                        *ngTemplateOutlet="
+                          calculationBlockTemplate;
+                          context: {
+                            column,
+                            calcResults: group.calcResults?.get(column.id),
+                          }
+                        "
+                      ></ng-container>
+                    }
+                  </div>
+                </ng-container>
+              </div>
+              @if (!group.children) {
+                <div class="group__body">
+                  @if (tableRowService.canAddRow()) {
+                    <div class="row blank-row"></div>
+                  }
+                </div>
+              }
+            </div>
+          </ng-container>
+          <!-- row-right -->
+          <ng-container
+            *virtualScrollRowRepeater="
+              undefined;
+              let row;
+              let rowIndex = index;
+              let rowGroupIndex = indexInGroup;
+              let rowRect = rect;
+              let group = group
+            "
+          >
+            <div
+              class="row"
+              [style.right.px]="rowRect.right"
+              virtualScrollAutoScrollHolder="vertical"
+              [attr.data-row-index]="rowIndex"
+              [attr.data-row-id]="row.id"
+              [attr.row-size]="tableRowService.rowSize()"
+              [style.top.px]="rowRect.top"
+              [style.height.px]="rowRect.height"
+              [class.row--selecting]="row.selected"
+              [class.row--pending]="row === tableRowService.pendingRow"
+              [class.row--hover]="tableService.layout.cell.hovered?.rowIndex === rowIndex"
+            >
+              <ng-container
+                *virtualScrollColumnRepeater="
+                  virtualScroll.viewport.rightWrapper.columns;
+                  startIndex: tableService.frozenCount() + 1;
+                  let column;
+                  let columnIndex = index;
+                  let columnRect = rect
+                "
+              >
+                @if (virtualScroll.isLongScrollingY()) {
+                  <div
+                    class="row-cell cell"
+                    safe-area
+                    virtualScrollAutoScrollHolder
+                    cell-type="row"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="columnRect.width"
+                    [style.minWidth.px]="columnRect.width"
+                    [style.maxWidth.px]="columnRect.width"
+                  ></div>
+                } @else {
+                  <div
+                    class="row-cell cell"
+                    safe-area
+                    virtualScrollAutoScrollHolder
+                    cell-type="row"
+                    [style.left.px]="columnRect.left"
+                    [style.width.px]="column.width"
+                    [style.minWidth.px]="column.width"
+                    [style.maxWidth.px]="column.width"
+                    [attr.data-row-id]="row.id"
+                    [attr.data-column-id]="column.id"
+                    [attr.data-row-index]="rowIndex"
+                    [attr.data-column-index]="columnIndex"
+                    [class.cdk-drag-placeholder]="column._isDragging"
+                    [class.cell--active]="
+                      row.selected ||
+                      (!tableService.layout.column.selectedIndices &&
+                        tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.count === 1 &&
+                        tableService.layout.cell.selection.anchor.rowIndex === rowIndex) ||
+                      (tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.start.rowIndex <= rowIndex &&
+                        tableService.layout.cell.selection.start.columnIndex <= columnIndex &&
+                        tableService.layout.cell.selection.end.rowIndex >= rowIndex &&
+                        tableService.layout.cell.selection.end.columnIndex >= columnIndex) ||
+                      tableService.layout.column.selectedIndices?.has(columnIndex)
+                    "
+                    [class.cell--highlight]="
+                      tableService.layout.cell.search?.matches?.get(row.id)?.has(column.id)
+                    "
+                    [class.cell--filling]="
+                      tableService.layout.cell.fill &&
+                      tableService.layout.cell.fill.start.rowIndex <= rowIndex &&
+                      tableService.layout.cell.fill.start.columnIndex <= columnIndex &&
+                      tableService.layout.cell.fill.end.rowIndex >= rowIndex &&
+                      tableService.layout.cell.fill.end.columnIndex >= columnIndex
+                    "
+                    [class.cell--focusing]="
+                      tableService.layout.cell.focused &&
+                      tableService.layout.cell.focused.rowIndex === rowIndex &&
+                      tableService.layout.cell.focused.columnIndex === columnIndex
+                    "
+                    [class.cell--invalid]="
+                      tableService.layout.cell.invalid &&
+                      tableService.layout.cell.invalid.rowIndex === rowIndex &&
+                      tableService.layout.cell.invalid.columnIndex === columnIndex
+                    "
+                    [class.row-cell--selecting]="
+                      tableService.layout.cell.selection &&
+                      tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
+                      tableService.layout.cell.selection.anchor.columnIndex === columnIndex
+                    "
+                    (pointerenter)="tableCellService.onCellHover($event, { rowIndex, columnIndex })"
+                  >
+                    <ng-template
+                      fieldCellFactory
+                      [row]="row"
+                      [column]="column"
+                      [field]="column.field"
+                      [data]="row.data?.[column.id] ?? null"
+                      [readonly]="
+                        (tableService.isStreaming && !$any(row)._isStreamed) ||
+                        !(
+                          row.editable?.[column.id] !== false &&
+                          row.editable !== false &&
+                          column.editable !== false &&
+                          !!tableService.config().cell.editable
+                        )
+                      "
+                      [selecting]="
+                        !!tableService.layout.cell.selection &&
+                        tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
+                        tableService.layout.cell.selection.anchor.columnIndex === columnIndex
+                      "
+                    ></ng-template>
+                  </div>
+                }
+              </ng-container>
+            </div>
+          </ng-container>
+          @if (
+            tableRowService.canAddRow() &&
+            (!tableGroupService.isGrouped() || tableGroupService.hasNoGroups())
+          ) {
+            <div class="row blank-row"></div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  @if (tableService.config().column.calculable) {
+    <div class="spreadsheet__footer">
+      <ng-template #footerCellTempTemplate let-column="column" let-columnIndex="columnIndex">
+        <div
+          class="footer-cell cell"
+          [attr.data-column-id]="column.id"
+          [attr.data-column-index]="columnIndex"
+          [style.width.px]="column.width"
+          [style.minWidth.px]="column.width"
+          [style.maxWidth.px]="column.width"
+        >
+          <ng-container
+            *ngTemplateOutlet="
+              calculationBlockTemplate;
+              context: {
+                column,
+                calcResults: (tableGroupService.isGrouped()
+                  ? tableGroupService.rootGroup().calcResults
+                  : tableService.calcResults
+                )?.get(column.id),
+              }
+            "
+          ></ng-container>
+        </div>
+      </ng-template>
+      <div class="pane pane-left" [style.width.px]="virtualScroll.scrollDivideOffset()">
+        <div
+          class="pane-content flex flex-row full-height"
+          style="height: 100%"
+          [style.left.px]="tableService.config().sideSpacing"
+          [style.width.px]="virtualScroll.viewport.leftWidth()"
+        >
+          <div class="footer-cell cell index-cell">
+            @if (tableService.isStreaming) {
+              <p-skeleton
+                height="24px"
+                width="100px"
+                styleClass="h-24"
+                borderRadius="8px"
+                style="margin-bottom: 0"
+              ></p-skeleton>
+            } @else {
+              <div class="summary-block">
+                <div class="summary-block__content">
+                  {{ tableRowService.rows().length || 0 }}
+                  @if (!isHideSummaryLabel) {
+                    rows
+                  }
+                </div>
+                <div
+                  class="summary-block__btn-toggle"
+                  (click)="isHideSummaryLabel = !isHideSummaryLabel"
+                >
+                  <i
+                    class="icon"
+                    [ngClass]="isHideSummaryLabel ? 'icon-chevron-right' : 'icon-chevron-left'"
+                  ></i>
+                </div>
+              </div>
+            }
+          </div>
+          @for (
+            column of tableColumnService.frozenColumns();
+            let columnIndex = $index;
+            track column
+          ) {
+            <ng-container
+              *ngTemplateOutlet="footerCellTempTemplate; context: { column, columnIndex }"
+            ></ng-container>
+          }
+        </div>
+      </div>
+      <div
+        class="pane pane-right"
+        [style.left.px]="virtualScroll.scrollDivideOffset()"
+        [class.hidden]="!virtualScroll.viewport.leftWidth()"
+      >
+        <div
+          class="pane-content flex flex-row full-height"
+          style="height: 100%"
+          [style.width.px]="virtualScroll.viewport.rightWidth()"
+          [style.transform]="'translate3d(' + -virtualScroll.scrollLeft() + 'px, 0, 0)'"
+        >
+          @for (
+            column of tableColumnService.scrollableColumns();
+            let columnIndex = $index;
+            track column
+          ) {
+            <ng-container
+              *ngTemplateOutlet="
+                footerCellTempTemplate;
+                context: {
+                  column,
+                  columnIndex: tableService.frozenCount() + columnIndex + 1,
+                }
+              "
+            ></ng-container>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Frozen divider -->
+  @if (tableService.config().column.freezable || tableService.frozenCount() !== null) {
+    @let isHideHeadLine =
+      tableService.layout.freezeHandle.isHideHeadLine ||
+      $any(tableColumnService.columns()?.[tableService.frozenCount()])?._isResizing;
+    @let bodyLineHeight =
+      virtualScroll.viewport.height() + virtualScroll.scrollTop() >
+      virtualScroll.viewport.contentHeight()
+        ? virtualScroll.viewport.contentHeight() -
+          virtualScroll.scrollTop() +
+          Dimension.BodyVerticalPadding
+        : virtualScroll.viewport.height();
+    <div
+      class="frozen-divider"
+      cdkDrag
+      cdkDragLockAxis="x"
+      [style.left.px]="virtualScroll.scrollDivideOffset()"
+      [class.frozen-divider--hover]="tableService.layout.freezeHandle.isHovered"
+      [class.frozen-divider--dragging]="tableService.layout.freezeHandle.isDragging"
+      [class.frozen-divider--disabled]="!tableService.config().column.freezable || isHideHeadLine"
+      [cdkDragDisabled]="!tableService.config().column.freezable"
+      (cdkDragStarted)="tableService.onFrozenDividerDragStarted()"
+      (cdkDragMoved)="tableService.onFrozenDividerDragMoved($event)"
+      (cdkDragEnded)="tableService.onFrozenDividerDragEnded($event)"
+    >
+      <div
+        class="frozen-divider__line frozen-divider__head-line"
+        [class.hidden]="isHideHeadLine"
+      ></div>
+      <div
+        class="frozen-divider__line frozen-divider__body-line"
+        cdkDragHandle
+        [style.height.px]="bodyLineHeight"
+        [class.hidden]="!virtualScroll.viewport.contentHeight()"
+        (mousemove)="tableService.onFrozenDividerMousemove($event)"
+        (mouseleave)="tableService.onFrozenDividerMouseleave()"
+      >
+        <span
+          class="frozen-divider__drag-handle"
+          [style.transform]="
+            'translate3d(0,' + tableService.layout.freezeHandle.dragOffsetY + 'px, 0)'
+          "
+        ></span>
+      </div>
+      @if (tableService.config().column.calculable) {
+        <div class="frozen-divider__line frozen-divider__foot-line"></div>
+      }
+    </div>
+    @if (tableService.layout.freezeHandle.isDragging) {
+      <div
+        class="frozen-divider-drag-placeholder"
+        [style.height.px]="bodyLineHeight + Dimension.HeaderHeight"
+        [style.transform]="
+          'translate3d(' + tableService.layout.freezeHandle.dragTargetOffsetX + 'px, 0, 0)'
+        "
+      ></div>
+      <div class="frozen-divider-drag-overlay"></div>
+    }
+  }
+
+  <!-- Fill handle -->
+  @if (tableService.config().cell.fillable && !isKeyboardNavigating) {
+    <div class="fill-handle-wrapper">
+      @if (tableService.layout.fillHandle?.offset) {
+        <div
+          class="fill-handle"
+          #fillHandle
+          safe-area
+          virtualScrollAutoScrollHolder="vertical"
+          [style.left.px]="tableService.layout.fillHandle.offset.left"
+          [style.top.px]="tableService.layout.fillHandle.offset.top"
+          [class.hidden]="tableService.layout.fillHandle.hidden"
+        ></div>
+      }
+    </div>
+  }
+
+  <!-- Column drag placeholder -->
+  @if (
+    tableService.layout.column.dragTargetIndex !== undefined &&
+    tableService.layout.column.dragTargetIndex !== null
+  ) {
+    <div
+      class="column-drag-placeholder"
+      [style.transform]="
+        'translate3d(' + tableService.layout.column.dragTargetOffsetX + 'px, 0, 0)'
+      "
+    ></div>
+    <div class="column-drag-overlay"></div>
+  }
+
+  <!-- Row drag placeholder -->
+  @if (
+    tableService.layout.row.dragTargetIndex !== undefined &&
+    tableService.layout.row.dragTargetIndex !== null
+  ) {
+    <div
+      class="row-drag-placeholder"
+      [style.transform]="'translate3d(0, ' + tableService.layout.row.dragTargetOffsetY + 'px, 0)'"
+    >
+      <p-chip
+        style="position: absolute; top: -14px; left: 10px"
+        [label]="(tableRowService.selectedRows.size || '1') + ' rows'"
+      />
+    </div>
+    <div class="row-drag-overlay"></div>
+  }
+</virtual-scroll>
+
+<!-- Empty block -->
+@if (!tableRowService.rows().length) {
+  <div class="empty-block">
+    <ng-content select="[emptyBlock]"></ng-content>
+  </div>
+}
+
+<!-- Calculation -->
+<ng-template #calculationBlockTemplate let-column="column" let-calcResults="calcResults">
+  @if (tableService.config().column.calculable) {
+    <div
+      class="calculation-block"
+      [class.calculation-block--active]="column.calculateType"
+      (click)="tableColumnService.openAggregateMenu($event, column)"
+    >
+      @if (column.calculateType) {
+        <div class="white-space-nowrap overflow-hidden truncate" title="column.calculateType">
+          {{ column.calculateType }}:
+        </div>
+        <b>
+          @if (tableService.isStreaming) {
+            <span class="white-space-nowrap overflow-hidden truncate">Calculating...</span>
+          } @else {
+            {{ calcResults | parseCalculatedResult: column.calculateType }}
+          }
+        </b>
+      } @else {
+        Calculate
+      }
+    </div>
+  } @else if (column.calculateType) {
+    <div class="calculation-block calculation-block--viewonly">
+      <div class="white-space-nowrap overflow-hidden truncate" title="column.calculateType">
+        {{ column.calculateType }}:
+      </div>
+      <b>
+        @if (tableService.isStreaming) {
+          <span class="white-space-nowrap overflow-hidden truncate">Calculating...</span>
+        } @else {
+          {{ calcResults | parseCalculatedResult: column.calculateType }}
+        }
+      </b>
+    </div>
+  }
+</ng-template>
