@@ -83,10 +83,18 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     try {
       const apiKey = headers['x-api-key'];
       if (!apiKey) throw new Error();
-      return await apiKeyAuth(apiKey);
-    } catch {
-      set.status = 401;
-      return { error: 'Invalid or missing x-api-key' };
+
+      const authData = await apiKeyAuth(apiKey);
+      if (!authData.scopes.rest) {
+        set.status = 403;
+        throw new Error(
+          'Access denied: you do not have permission to access this resource.'
+        );
+      }
+      return authData;
+    } catch (e) {
+      set.status ??= 401;
+      throw e ?? new Error('Invalid or missing x-api-key');
     }
   })
 
@@ -122,7 +130,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     }
 
     if (error instanceof Error) {
-      const status = (error as any).cause ?? 500;
+      const status = (error as any).cause ?? set.status ?? 500;
       set.status = status;
 
       const message =

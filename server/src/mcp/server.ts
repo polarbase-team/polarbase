@@ -23,7 +23,14 @@ export const mcpServer = new FastMCP({
   authenticate: async (request) => {
     const apiKey = request.headers['x-api-key'];
     try {
-      return await apiKeyAuth(apiKey as string);
+      const authData = await apiKeyAuth(apiKey as string);
+      if (!authData.scopes.mcp) {
+        throw new Response(null, {
+          status: 403,
+          statusText: 'Forbidden',
+        });
+      }
+      return authData;
     } catch {
       throw new Response(null, {
         status: 401,
