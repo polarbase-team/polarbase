@@ -9,14 +9,14 @@ import { ChatBotComponent } from './chatbot/chatbot.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterModule, ToastModule, ButtonModule, ChatBotComponent, TooltipModule],
+  imports: [RouterModule, ToastModule, ButtonModule, TooltipModule, ChatBotComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   standalone: true,
 })
 export class App {
-  chatbotVisible = signal<boolean>(false);
-  chatbotFullscreen = signal<boolean>(false);
+  protected chatbotVisible = signal<boolean>(false);
+  protected chatbotFullscreen = signal<boolean>(false);
 
   protected toggleChatbot() {
     this.chatbotVisible.update((v) => !v);

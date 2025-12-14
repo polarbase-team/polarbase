@@ -1,4 +1,3 @@
-$sidebar-width: 20rem;
 $chatbot-width: 30rem;
 $transition-duration: 0.2s;
 
@@ -12,17 +11,7 @@ $transition-duration: 0.2s;
 
     .app-main {
       position: relative;
-      transition:
-        padding-left $transition-duration,
-        padding-right $transition-duration;
-
-      &.sidebar--visible {
-        padding-left: $sidebar-width;
-
-        .app-sidebar {
-          left: 0;
-        }
-      }
+      transition: padding-right $transition-duration;
 
       &.chatbot--visible {
         padding-right: $chatbot-width;
@@ -31,15 +20,6 @@ $transition-duration: 0.2s;
           right: 0;
         }
       }
-    }
-
-    .app-sidebar {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: -$sidebar-width;
-      width: $sidebar-width;
-      transition: left $transition-duration;
     }
 
     .app-chatbot {
