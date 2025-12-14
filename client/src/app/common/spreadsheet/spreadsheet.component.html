@@ -45,16 +45,16 @@
       />
     </div>
     <p-inputgroup class="w-xs max-w-xs">
-      <p-inputgroup-addon class="relative">
-        <p-inputicon class="icon icon-search" />
-      </p-inputgroup-addon>
-      <input
-        type="text"
-        pInputText
-        placeholder="Search"
-        (input)="tableService.onSearch($any($event))"
-        (keydown.enter)="tableService.searchNext()"
-      />
+      <p-iconfield>
+        <p-inputicon class="icon icon-search !z-2" />
+        <input
+          type="text"
+          pInputText
+          placeholder="Search"
+          (input)="tableService.onSearch($any($event))"
+          (keydown.enter)="tableService.searchNext()"
+        />
+      </p-iconfield>
       @if (tableService.searchResults?.length) {
         <p-inputgroup-addon>
           <div class="text-center">
@@ -66,13 +66,15 @@
           </div>
         </p-inputgroup-addon>
         <p-inputgroup-addon>
-          <div class="flex gap-2 justify-content-space-around">
+          <div class="flex gap-2 justify-content-space-around px-2">
             <i
               class="icon icon-chevron-up cursor-pointer"
+              style="font-size: 16px"
               (click)="tableService.searchPrevious()"
             ></i>
             <i
               class="icon icon-chevron-down cursor-pointer"
+              style="font-size: 16px"
               (click)="tableService.searchNext()"
             ></i>
           </div>

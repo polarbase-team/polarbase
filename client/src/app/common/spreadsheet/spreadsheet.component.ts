@@ -54,6 +54,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { ButtonModule } from 'primeng/button';
+import { IconFieldModule } from 'primeng/iconfield';
 
 // Utils
 import { Clipboard } from './utils/clipboard';
@@ -126,6 +127,7 @@ const stack: SpreadsheetComponent[] = [];
     InputGroupModule,
     InputGroupAddonModule,
     InputIconModule,
+    IconFieldModule,
     ButtonModule,
     VirtualScrollComponent,
     VirtualScrollViewportComponent,
