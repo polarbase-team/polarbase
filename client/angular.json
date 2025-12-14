@@ -3,10 +3,12 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "child-db-client": {
+    "polarbase-client": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
+          "changeDetection": "OnPush",
+          "standalone": true,
           "style": "scss"
         }
       },
@@ -57,10 +59,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "child-db-client:build:production"
+              "buildTarget": "polarbase-client:build:production"
             },
             "development": {
-              "buildTarget": "child-db-client:build:development"
+              "buildTarget": "polarbase-client:build:development"
             }
           },
           "defaultConfiguration": "development"

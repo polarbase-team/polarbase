@@ -35,9 +35,12 @@ export const apiKeyRoutes = new Elysia({ prefix: '/api-keys' })
     {
       body: t.Object({
         name: t.String(),
-        scopes: t.Array(
-          t.String({ enum: ['rest', 'mcp', 'agent', 'realtime'] })
-        ),
+        scopes: t.Object({
+          rest: t.Boolean(),
+          mcp: t.Boolean(),
+          agent: t.Boolean(),
+          realtime: t.Boolean(),
+        }),
       }),
     }
   )
@@ -45,11 +48,18 @@ export const apiKeyRoutes = new Elysia({ prefix: '/api-keys' })
   // List all API keys
   .get('/', () => {
     const rows = db
-      .prepare(
-        'SELECT id, key, name, scopes, created_at, revoked FROM api_keys'
-      )
+      .prepare('SELECT id, key, name, scopes, createdAt, revoked FROM api_keys')
       .all() as ApiKey[];
-    return rows.map((r) => ({ ...r, scopes: JSON.parse(r.scopes) }));
+    return rows.map((r) => ({
+      ...r,
+      revoked: !!r.revoked,
+      scopes: JSON.parse(r.scopes) as {
+        rest: boolean;
+        mcp: boolean;
+        agent: boolean;
+        realtime: boolean;
+      },
+    }));
   })
 
   // Permanently revoke (soft delete) an API key

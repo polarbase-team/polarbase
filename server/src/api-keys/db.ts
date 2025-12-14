@@ -5,7 +5,7 @@ export interface ApiKey {
   key: string;
   name: string;
   scopes: string;
-  created_at: Date;
+  createdAt: Date;
   revoked: number;
 }
 
@@ -17,8 +17,8 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     key TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
-    scopes TEXT NOT NULL, -- JSON string: ["rest", "mcp", "agent", "realtime"]
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    scopes TEXT NOT NULL, -- JSON object: {"rest": true, "mcp": true, "agent": true, "realtime": true}
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     revoked INTEGER DEFAULT 0
   );
 `);

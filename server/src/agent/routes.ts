@@ -13,10 +13,18 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
     try {
       const apiKey = headers['x-api-key'];
       if (!apiKey) throw new Error();
-      return await apiKeyAuth(apiKey);
-    } catch {
-      set.status = 401;
-      return { error: 'Invalid or missing x-api-key' };
+
+      const authData = await apiKeyAuth(apiKey);
+      if (!authData.scopes.rest) {
+        set.status = 403;
+        throw new Error(
+          'Access denied: you do not have permission to access this resource.'
+        );
+      }
+      return authData;
+    } catch (e) {
+      set.status ??= 401;
+      throw e ?? new Error('Invalid or missing x-api-key');
     }
   })
 
