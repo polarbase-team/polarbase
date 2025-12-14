@@ -5,7 +5,7 @@ export const pgConfig = {
   port: parseInt(process.env.PG_PORT || '5432', 10),
   user: process.env.PG_USER || 'my-postgres',
   password: process.env.PG_PASSWORD || 'my-password',
-  database: process.env.PG_DATABASE || 'polar-base',
+  database: process.env.PG_DATABASE || 'polarbase',
 };
 
 export default knex({
