@@ -16,6 +16,10 @@ export const setApiKey = (key: string) => {
   document.cookie = `apiKey=${encodeURIComponent(key)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
 };
 
+export const removeApiKey = () => {
+  document.cookie = `apiKey=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+};
+
 @Injectable({ providedIn: 'root' })
 export class ApiKeyGuard implements CanActivate {
   private router = inject(Router);

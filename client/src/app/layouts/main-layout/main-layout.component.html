@@ -28,7 +28,7 @@
     </div>
   </div>
   <div class="app-main w-full h-full flex" [class.chatbot--visible]="chatbotVisible()">
-    <div class="border-r-1 border-surface-200">
+    <div class="flex flex-col justify-between border-r-1 border-surface-200">
       <ul class="p-2 flex flex-col gap-2">
         <li
           class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
@@ -45,6 +45,15 @@
           routerLinkActive="bg-gray-100 text-surface-700"
         >
           <i class="icon icon-key" style="font-size: 16px"></i>
+        </li>
+      </ul>
+      <ul class="p-2 flex flex-col gap-2">
+        <li
+          class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
+          [pTooltip]="'Logout'"
+          (click)="logout()"
+        >
+          <i class="icon icon-log-out" style="font-size: 16px"></i>
         </li>
       </ul>
     </div>
