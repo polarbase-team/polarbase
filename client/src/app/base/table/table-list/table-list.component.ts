@@ -28,7 +28,7 @@ import { TableService, TableDefinition } from '../table.service';
 import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.component';
 
 @Component({
-  selector: 'app-table-list',
+  selector: 'table-list',
   templateUrl: './table-list.component.html',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,7 +46,7 @@ import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.
   ],
   providers: [ConfirmationService],
 })
-export class AppTableList {
+export class TableListComponent {
   protected tblService = inject(TableService);
   protected tables = signal<TableDefinition[]>([]);
   protected filteredTables = signal<TableDefinition[]>([]);

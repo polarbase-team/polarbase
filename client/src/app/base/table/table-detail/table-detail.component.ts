@@ -16,26 +16,26 @@ import { ImageModule } from 'primeng/image';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 
-import { TableColumn } from '../../common/spreadsheet/models/table-column';
-import { TableRow } from '../../common/spreadsheet/models/table-row';
-import { TableConfig } from '../../common/spreadsheet/models/table';
-import { SpreadsheetComponent } from '../../common/spreadsheet/spreadsheet.component';
+import { TableColumn } from '../../../common/spreadsheet/models/table-column';
+import { TableRow } from '../../../common/spreadsheet/models/table-row';
+import { TableConfig } from '../../../common/spreadsheet/models/table';
+import { SpreadsheetComponent } from '../../../common/spreadsheet/spreadsheet.component';
 import {
   TableRowAction,
   TableRowActionType,
   TableRowAddedEvent,
-} from '../../common/spreadsheet/events/table-row';
+} from '../../../common/spreadsheet/events/table-row';
 import {
   TableCellAction,
   TableCellActionType,
   TableCellEditedEvent,
-} from '../../common/spreadsheet/events/table-cell';
+} from '../../../common/spreadsheet/events/table-cell';
 import { RecordEditorDrawerComponent } from '../record-editor/record-editor-drawer.component';
 import { TableDefinition, TableService } from '../table.service';
 import { TableRealtimeService } from '../table-realtime.service';
 
 @Component({
-  selector: 'app-table-detail',
+  selector: 'table-detail',
   templateUrl: './table-detail.component.html',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,7 +48,7 @@ import { TableRealtimeService } from '../table-realtime.service';
     RecordEditorDrawerComponent,
   ],
 })
-export class AppTableDetail {
+export class TableDetailComponent {
   protected config = signal<TableConfig>({
     sideSpacing: 20,
     column: { addable: false, deletable: false },

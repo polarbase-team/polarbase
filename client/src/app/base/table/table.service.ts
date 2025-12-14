@@ -2,9 +2,9 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-import { DataType, FieldConfig } from '../common/spreadsheet/field/interfaces/field.interface';
-import { DropdownFieldConfig } from '../common/spreadsheet/field/interfaces/dropdown-field.interface';
-import { buildField } from '../common/spreadsheet/field/utils';
+import { DataType, FieldConfig } from '../../common/spreadsheet/field/interfaces/field.interface';
+import { DropdownFieldConfig } from '../../common/spreadsheet/field/interfaces/dropdown-field.interface';
+import { buildField } from '../../common/spreadsheet/field/utils';
 
 export interface TableDefinition {
   tableName: string;

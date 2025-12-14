@@ -4,41 +4,32 @@
   <div
     class="app-topbar flex items-center justify-between gap-2 pl-2 pr-4 py-2 border-b-1 border-surface-200"
   >
-    <div class="flex items-center">
-      <p-button
-        icon="icon icon-menu"
-        severity="secondary"
-        [text]="true"
-        size="large"
-        (click)="toggleSidebar()"
-      />
-      <div class="font-semibold">Cozy DB</div>
-    </div>
+    <div class="flex items-center"></div>
     <div class="flex gap-2 items-center">
       <p-button
-        label="API Docs"
+        icon="icon icon-book-open-text"
         severity="secondary"
-        icon="icon icon-file-text"
+        [pTooltip]="'API Docs'"
+        tooltipPosition="bottom"
         (click)="openAPIDocs()"
       />
-      <p-button severity="secondary" (click)="toggleChatbot()">
-        <i class="icon icon-sparkles" style="color: var(--p-primary-color)"></i>
-      </p-button>
+      <p-button
+        icon="icon icon-sparkles"
+        severity="info"
+        [pTooltip]="'AI Chatbot'"
+        tooltipPosition="bottom"
+        [outlined]="true"
+        (click)="toggleChatbot()"
+      />
     </div>
   </div>
-  <div
-    class="app-main w-full h-full"
-    [class.sidebar--opening]="sidebarVisible()"
-    [class.chatbot--opening]="chatbotVisible()"
-  >
-    <div class="app-sidebar border-r-1 border-surface-200">
-      <app-table-list />
-    </div>
+  <div class="app-main w-full h-full" [class.chatbot--opening]="chatbotVisible()">
+    <div class="app-sidebar border-r-1 border-surface-200"></div>
     <div class="w-full h-full">
-      <app-table-detail />
+      <router-outlet />
     </div>
     <div class="app-chatbot border-l-1 border-surface-200" [class.fullscreen]="chatbotFullscreen()">
-      <app-chatbot
+      <chatbot
         [visible]="chatbotVisible()"
         (fullscreen)="chatbotFullscreen.set($event)"
         (onClose)="chatbotVisible.set(false)"

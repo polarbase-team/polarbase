@@ -29,7 +29,7 @@ interface Message {
 }
 
 @Component({
-  selector: 'app-chatbot',
+  selector: 'chatbot',
   templateUrl: './chatbot.component.html',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,7 +44,7 @@ interface Message {
   ],
   providers: [AgentService],
 })
-export class AppChatBot {
+export class ChatBotComponent {
   visible = input(false);
 
   fullscreen = output<boolean>();
