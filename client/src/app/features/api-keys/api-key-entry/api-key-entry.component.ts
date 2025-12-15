@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -15,6 +15,7 @@ import { setApiKey } from '../../../core/guards/api-key.guard';
 @Component({
   selector: 'api-key-entry',
   templateUrl: './api-key-entry.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     CardModule,

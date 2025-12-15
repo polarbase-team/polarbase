@@ -5,6 +5,7 @@ import {
   AfterContentInit,
   AfterViewChecked,
   AfterViewInit,
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   contentChild,
@@ -105,6 +106,7 @@ const stack: SpreadsheetComponent[] = [];
     class: 'spreadsheet',
     '[class.spreadsheet--right-scrolled]': 'virtualScroll.scrollLeft() > 0',
   },
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,

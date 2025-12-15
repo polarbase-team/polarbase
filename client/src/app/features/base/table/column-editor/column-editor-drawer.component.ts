@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   effect,
@@ -26,6 +27,7 @@ import { ColumnCreation, ColumnDefinition, TableDefinition, TableService } from 
 @Component({
   selector: 'column-editor-drawer',
   templateUrl: './column-editor-drawer.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     DrawerModule,

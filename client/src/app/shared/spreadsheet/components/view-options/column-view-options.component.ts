@@ -1,4 +1,4 @@
-import { Component, input, output, signal, effect } from '@angular/core';
+import { Component, input, output, signal, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +14,8 @@ import { TableColumn } from '../../models/table-column';
 
 @Component({
   selector: 'column-view-options',
+  templateUrl: './column-view-options.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -24,7 +26,6 @@ import { TableColumn } from '../../models/table-column';
     DividerModule,
     MenuModule,
   ],
-  templateUrl: './column-view-options.component.html',
 })
 export class ColumnViewOptionsComponent {
   sourceColumns = input.required<TableColumn[]>();

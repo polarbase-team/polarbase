@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
 import { TabsModule } from 'primeng/tabs';
 import { ButtonModule } from 'primeng/button';
@@ -13,6 +13,7 @@ import { TableService } from './table/table.service';
   selector: 'base',
   templateUrl: './base.component.html',
   styleUrl: './base.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TabsModule,
     ButtonModule,

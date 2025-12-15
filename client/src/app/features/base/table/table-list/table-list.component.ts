@@ -1,6 +1,13 @@
 import _ from 'lodash';
 
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -23,6 +30,7 @@ import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.
 @Component({
   selector: 'table-list',
   templateUrl: './table-list.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     ButtonModule,

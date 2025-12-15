@@ -7,6 +7,7 @@ import {
   DestroyRef,
   output,
   input,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -30,6 +31,7 @@ interface Message {
 @Component({
   selector: 'chatbot',
   templateUrl: './chatbot.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,

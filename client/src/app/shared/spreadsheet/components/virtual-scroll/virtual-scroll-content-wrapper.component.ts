@@ -1,4 +1,4 @@
-import { Component, ContentChild, Directive } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ContentChild, Directive } from '@angular/core';
 
 import { VirtualScrollGroupRepeaterDirective } from './virtual-scroll-group-repeater.directive';
 import { VirtualScrollRowRepeaterDirective } from './virtual-scroll-row-repeater.directive';
@@ -17,6 +17,7 @@ class VirtualScrollContentWrapperComponent {
   selector: '[virtualScrollLeftContentWrapper]',
   template: '<ng-content></ng-content>',
   styles: [':host { position: relative; display: block; }'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollLeftContentWrapperComponent extends VirtualScrollContentWrapperComponent {}
 
@@ -24,5 +25,6 @@ export class VirtualScrollLeftContentWrapperComponent extends VirtualScrollConte
   selector: '[virtualScrollRightContentWrapper]',
   template: '<ng-content></ng-content>',
   styles: [':host { position: relative; display: block; }'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollRightContentWrapperComponent extends VirtualScrollContentWrapperComponent {}

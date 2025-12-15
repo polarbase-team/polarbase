@@ -1,4 +1,12 @@
-import { Component, input, output, computed, signal, effect } from '@angular/core';
+import {
+  Component,
+  input,
+  output,
+  computed,
+  signal,
+  effect,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +28,8 @@ export interface OrderingRule {
 
 @Component({
   selector: 'data-view-options',
+  templateUrl: './data-view-options.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -30,7 +40,6 @@ export interface OrderingRule {
     DividerModule,
     MenuModule,
   ],
-  templateUrl: './data-view-options.component.html',
 })
 export class DataViewOptionsComponent {
   type = input.required<'group' | 'sort'>();

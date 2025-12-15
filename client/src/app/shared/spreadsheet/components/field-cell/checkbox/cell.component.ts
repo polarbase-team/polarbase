@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
 
@@ -11,6 +11,7 @@ import { CellTouchEvent } from '../field-cell-touchable';
   templateUrl: './cell.component.html',
   styleUrls: ['../field-cell.scss', './cell.component.scss'],
   host: { class: 'checkbox-field-cell' },
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, CheckboxModule],
 })
 export class CheckboxFieldCellComponent extends FieldCellEditable<CheckboxData> {

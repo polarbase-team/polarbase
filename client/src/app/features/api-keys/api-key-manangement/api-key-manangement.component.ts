@@ -1,4 +1,12 @@
-import { Component, DestroyRef, effect, OnInit, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, SlicePipe } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -26,6 +34,7 @@ import { Tooltip } from 'primeng/tooltip';
 @Component({
   selector: 'app-api-key-management',
   templateUrl: './api-key-management.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     ClipboardModule,

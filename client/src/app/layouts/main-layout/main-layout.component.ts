@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 
 import { ToastModule } from 'primeng/toast';
@@ -13,6 +13,7 @@ import { ChatBotComponent } from '../../features/chatbot/chatbot.component';
   selector: 'app-main-layout',
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterModule, ToastModule, ButtonModule, TooltipModule, ImageModule, ChatBotComponent],
 })
 export class MainLayoutComponent {

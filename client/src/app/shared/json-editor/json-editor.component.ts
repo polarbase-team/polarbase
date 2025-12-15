@@ -8,6 +8,7 @@ import {
   model,
   effect,
   input,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import * as ace from 'ace-builds';
 
@@ -18,6 +19,7 @@ import 'ace-builds/src-noconflict/mode-json';
 @Component({
   selector: 'json-editor',
   template: `<div #editorContainer style="height: 100%; width: 100%;"></div>`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JSONEditorComponent implements AfterViewInit, OnDestroy {
   editorContainer = viewChild<ElementRef<HTMLDivElement>>('editorContainer');

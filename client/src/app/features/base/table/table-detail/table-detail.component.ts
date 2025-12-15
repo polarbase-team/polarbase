@@ -1,6 +1,14 @@
 import _ from 'lodash';
 
-import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ButtonModule } from 'primeng/button';
@@ -32,6 +40,7 @@ import { ColumnEditorDrawerComponent } from '../column-editor/column-editor-draw
 @Component({
   selector: 'table-detail',
   templateUrl: './table-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ButtonModule,
     DividerModule,

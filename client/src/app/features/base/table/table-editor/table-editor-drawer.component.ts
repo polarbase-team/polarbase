@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   effect,
@@ -26,6 +27,7 @@ import { TableCreation, TableDefinition, TableService } from '../table.service';
 @Component({
   selector: 'table-editor-drawer',
   templateUrl: './table-editor-drawer.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     DrawerModule,

@@ -2,6 +2,7 @@ import {
   AfterContentInit,
   AfterViewChecked,
   AfterViewInit,
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ContentChild,
@@ -60,6 +61,7 @@ export interface ViewportSizeUpdatedEvent {
   exportAs: 'virtualScrollViewport',
   template: '<ng-content></ng-content>',
   styles: [':host { overflow: hidden; contain: strict; }'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollViewportComponent
   implements AfterContentInit, AfterViewInit, AfterViewChecked, OnDestroy
