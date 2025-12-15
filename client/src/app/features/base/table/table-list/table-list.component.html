@@ -63,9 +63,9 @@
       class="w-full"
       type="text"
       pInputText
-      placeholder="Search"
+      placeholder="Search table..."
       [(ngModel)]="searchQuery"
-      (ngModelChange)="onTableSearch($event)"
+      (input)="searchTableByNameOrComment()"
     />
   </p-iconfield>
 </div>

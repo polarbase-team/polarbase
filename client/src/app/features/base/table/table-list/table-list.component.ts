@@ -94,17 +94,23 @@ export class TableListComponent {
       });
   }
 
-  protected onTableSearch(query: string) {
+  protected searchTableByNameOrComment() {
     const tables = this.tables();
-    if (query.length) {
-      this.filteredTables.set(
-        tables.filter(
-          (t) => t.tableName.search(query) !== -1 || (t.tableComment || '').search(query) !== -1,
-        ),
-      );
-    } else {
+
+    let query = this.searchQuery.trim();
+    if (!query) {
       this.filteredTables.set([...tables]);
+      return;
     }
+
+    query = query.toLowerCase();
+    this.filteredTables.set(
+      tables.filter(
+        (t) =>
+          t.tableName.toLowerCase().includes(query) ||
+          (t.tableComment || '').toLowerCase().includes(query),
+      ),
+    );
   }
 
   protected onTableSelected(table: TableDefinition) {

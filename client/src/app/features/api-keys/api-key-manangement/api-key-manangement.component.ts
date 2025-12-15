@@ -97,15 +97,18 @@ export class ApiKeyManagementComponent implements OnInit {
   }
 
   protected searchByName() {
-    if (!this.searchQuery.trim()) {
-      this.filteredKeys.set([...this.apiKeys()]);
-    } else {
-      this.filteredKeys.set(
-        this.apiKeys().filter((key) =>
-          key.name.toLowerCase().includes(this.searchQuery.toLowerCase()),
-        ),
-      );
+    const apiKeys = this.apiKeys();
+
+    let query = this.searchQuery.trim();
+    if (!query) {
+      this.filteredKeys.set([...apiKeys]);
+      return;
     }
+
+    query = query.toLowerCase();
+    this.filteredKeys.set(
+      apiKeys.filter((key) => key.name.toLowerCase().includes(this.searchQuery.toLowerCase())),
+    );
   }
 
   protected revokeKey(apiKey: ApiKey) {

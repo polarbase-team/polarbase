@@ -18,8 +18,8 @@ export const routes: Routes = [
     component: MainLayoutComponent,
     canActivate: [ApiKeyGuard],
     children: [
-      { path: 'base', component: BaseComponent },
-      { path: 'api-keys', component: ApiKeyManagementComponent },
+      { path: 'base', component: BaseComponent, title: 'Base' },
+      { path: 'api-keys', component: ApiKeyManagementComponent, title: 'Api Keys' },
       { path: '**', redirectTo: '/base' },
     ],
   },

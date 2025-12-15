@@ -1,3 +1,5 @@
+<p-menu #insertMenu [model]="insertMenuItems" [popup]="true" appendTo="body" />
+
 @if (columns()) {
   <column-editor-drawer
     [(visible)]="visibleColumnEditor"
@@ -23,12 +25,7 @@
     >`
     <ng-template #toolbar>
       <div class="flex">
-        <p-button
-          icon="icon icon-plus"
-          label="New Record"
-          [style]="{ 'white-space': 'nowrap' }"
-          (click)="addNewRecord()"
-        />
+        <p-button icon="icon icon-chevron-down" label="Insert" (click)="insertMenu.show($event)" />
         <p-divider layout="vertical" />
       </div>
     </ng-template>

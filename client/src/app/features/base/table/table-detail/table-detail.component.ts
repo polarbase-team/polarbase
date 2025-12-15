@@ -13,6 +13,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
+import { MenuItem } from 'primeng/api';
+import { MenuModule } from 'primeng/menu';
 
 import { TableColumn } from '../../../../shared/spreadsheet/models/table-column';
 import { TableRow } from '../../../../shared/spreadsheet/models/table-row';
@@ -44,6 +46,7 @@ import { ColumnEditorDrawerComponent } from '../column-editor/column-editor-draw
   imports: [
     ButtonModule,
     DividerModule,
+    MenuModule,
     SpreadsheetComponent,
     RecordEditorDrawerComponent,
     ColumnEditorDrawerComponent,
@@ -67,6 +70,22 @@ export class TableDetailComponent {
   protected updatedRecord: Record<string, any>;
   protected updatedRecordMode: 'add' | 'edit' | 'view' = 'add';
   protected visibleRecordEditor: boolean;
+  protected insertMenuItems: MenuItem[] = [
+    {
+      label: 'Insert row',
+      icon: 'icon icon-rows-3',
+      command: () => {
+        this.addNewRecord();
+      },
+    },
+    {
+      label: 'Insert column',
+      icon: 'icon icon-columns-3',
+      command: () => {
+        this.addNewColumn();
+      },
+    },
+  ];
 
   constructor(
     private destroyRef: DestroyRef,
@@ -117,9 +136,7 @@ export class TableDetailComponent {
     const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
       case TableColumnActionType.Add:
-        this.updatedRecord = null;
-        this.updatedRecordMode = 'add';
-        this.visibleColumnEditor = true;
+        this.addNewColumn();
         break;
     }
   }
@@ -195,6 +212,12 @@ export class TableDetailComponent {
         rows.map((row) => (row.id === recordId ? { ...row, data: record } : row)),
       );
     }
+  }
+
+  protected addNewColumn() {
+    this.updatedRecord = null;
+    this.updatedRecordMode = 'add';
+    this.visibleColumnEditor = true;
   }
 
   protected addNewRecord() {

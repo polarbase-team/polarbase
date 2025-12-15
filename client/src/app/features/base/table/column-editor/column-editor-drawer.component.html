@@ -1,7 +1,7 @@
 <p-drawer
   [(visible)]="visible"
   position="right"
-  [header]="mode() === 'edit' ? `Edit column: ${column().name}` : 'New column'"
+  [header]="mode() === 'edit' ? `Edit column: ${column().name}` : 'Add column'"
   styleClass="!w-150 custom-drawer"
 >
   <ng-template #content>
@@ -27,9 +27,9 @@
             @if (name.invalid && (name.touched || columnForm.submitted)) {
               <p-message severity="error" size="small" variant="simple">
                 @if (name.errors['required']) {
-                  Table name is required.
+                  Column name is required.
                 } @else if (name.errors?.['pattern']) {
-                  Invalid table name.
+                  Invalid column name.
                 }
               </p-message>
             }
