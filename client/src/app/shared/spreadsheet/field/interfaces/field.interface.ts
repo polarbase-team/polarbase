@@ -5,7 +5,7 @@ export const DataType = {
   Number: 'number',
   Date: 'date',
   Checkbox: 'checkbox',
-  Dropdown: 'dropdown',
+  Select: 'select',
   JSON: 'json',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];

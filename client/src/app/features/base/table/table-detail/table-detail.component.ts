@@ -180,10 +180,10 @@ export class TableDetailComponent {
       .subscribe((columnDefs) => {
         const length = columnDefs.length;
         const columns: TableColumn[] = columnDefs.map((c) => ({
-          id: c.columnName,
-          primary: c.isPrimary,
-          editable: !c.isPrimary,
-          hidden: c.isPrimary && length > 1,
+          id: c.name,
+          primary: c.primary,
+          editable: !c.primary,
+          hidden: c.primary && length > 1,
           field: this.tblService.buildField(c),
         }));
         this.columns.set(null);

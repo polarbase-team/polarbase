@@ -2,7 +2,7 @@
   <div class="grid grid-cols-3 w-full gap-12">
     <label [attr.for]="field.name" class="col-span-1">
       <div class="flex items-center gap-2">
-        @if (field.params.isPrimary) {
+        @if (field.params.primary) {
           <i class="icon icon-key rotate-45" style="color: var(--p-primary-color)"></i>
         } @else {
           <i [class]="`${field.icon}`"></i>
@@ -76,7 +76,7 @@
           placeholder="Input here..."
         />
       }
-      @case (DataType.Dropdown) {
+      @case (DataType.Select) {
         <p-select
           [attr.inputId]="field.name"
           [pAutoFocus]="first"

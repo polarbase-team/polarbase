@@ -6,7 +6,7 @@ import {
   DataType,
   FieldConfig,
 } from '../../../shared/spreadsheet/field/interfaces/field.interface';
-import { DropdownFieldConfig } from '../../../shared/spreadsheet/field/interfaces/dropdown-field.interface';
+import { SelectFieldConfig } from '../../../shared/spreadsheet/field/interfaces/select-field.interface';
 import { buildField } from '../../../shared/spreadsheet/field/utils';
 
 export interface TableDefinition {
@@ -16,15 +16,16 @@ export interface TableDefinition {
 }
 
 export interface ColumnDefinition {
-  columnName: string;
+  name: string;
   dataType: string;
   rawType: string;
-  isPrimary: boolean;
-  isNullable: boolean;
+  primary: boolean;
+  nullable: boolean;
+  unique: boolean;
   maxLength: number | null;
   defaultValue: any;
   comment: string | null;
-  enumValues: string[] | null;
+  options: string[] | null;
 }
 
 export interface TableCreation {
@@ -35,47 +36,27 @@ export interface TableCreation {
   timestamps?: boolean;
 }
 
+export interface ColumnCreation {
+  name: string;
+  comment: string;
+  nullable: boolean;
+  unique: boolean;
+}
+
 interface Response<T = any> {
   success: boolean;
   message: string;
   data: T;
 }
 
-const PG_TYPE_MAPPING = {
-  // Integer
-  smallint: DataType.Integer,
+const DATA_TYPE_MAPPING = {
   integer: DataType.Integer,
-  bigint: DataType.Integer,
-  smallserial: DataType.Integer,
-  serial: DataType.Integer,
-  bigserial: DataType.Integer,
-
-  // Number
-  numeric: DataType.Number,
-  real: DataType.Number,
-  'double precision': DataType.Number,
-
-  // Text
-  character: DataType.Text,
-  'character varying': DataType.Text,
-  uuid: DataType.Text,
-  bit: DataType.Text,
-  'bit varying': DataType.Text,
-
-  // Long Text
-  text: DataType.LongText,
-
-  // Checkbox
-  boolean: DataType.Checkbox,
-
-  // Date
+  number: DataType.Number,
+  text: DataType.Text,
+  'long-text': DataType.LongText,
+  checkbox: DataType.Checkbox,
   date: DataType.Date,
-  timestamp: DataType.Date,
-  time: DataType.Date,
-
-  // JSON
   json: DataType.JSON,
-  jsonb: DataType.JSON,
 };
 
 @Injectable({
@@ -112,6 +93,18 @@ export class TableService {
     return this.http.delete<Response>(`${this.apiUrl}/tables/${tableName}?cascade=${casecade}`);
   }
 
+  createColumn(tableName: string, column: ColumnCreation) {
+    return this.http.post(`${this.apiUrl}/tables/${tableName}/columns`, column);
+  }
+
+  updateColumn(tableName: string, columnName: string, column: ColumnCreation) {
+    return this.http.patch(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`, column);
+  }
+
+  deleteColumn(tableName: string) {
+    return this.http.delete(`${this.apiUrl}/tables/${tableName}/columns`);
+  }
+
   getRecords(tableName: string): Observable<Record<string, any>[]> {
     return this.http.get(`${this.apiUrl}/${tableName}`).pipe(map((res) => res['data']['rows']));
   }
@@ -141,27 +134,17 @@ export class TableService {
   }
 
   buildField(column: ColumnDefinition) {
-    let dataType: DataType;
+    const dataType: DataType = DATA_TYPE_MAPPING[column.dataType] || DataType.Text;
     const config: FieldConfig = {
-      name: column.columnName,
+      name: column.name,
       description: column.comment,
-      required: !column.isNullable,
+      required: !column.nullable,
       initialData: column.defaultValue,
       params: column,
     };
 
-    if (column.enumValues) {
-      dataType = DataType.Dropdown;
-      (config as DropdownFieldConfig).options = column.enumValues;
-    } else {
-      const pgType = column.dataType;
-      const normalizedType = pgType
-        .toLowerCase()
-        .split('(')[0]
-        .trim()
-        .split(' without')[0]
-        .split(' with')[0];
-      dataType = PG_TYPE_MAPPING[normalizedType] || DataType.Text;
+    if (dataType === DataType.Select) {
+      (config as SelectFieldConfig).options = column.options;
     }
 
     return buildField(dataType, config);

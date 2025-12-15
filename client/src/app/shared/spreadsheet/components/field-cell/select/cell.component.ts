@@ -5,20 +5,20 @@ import { MenuItem } from 'primeng/api';
 import { Menu, MenuModule } from 'primeng/menu';
 import { TagModule } from 'primeng/tag';
 
-import { DropdownField } from '../../../field/objects/dropdown-field.object';
-import { DropdownData } from '../../../field/interfaces/dropdown-field.interface';
+import { SelectField } from '../../../field/objects/select-field.object';
+import { SelectData } from '../../../field/interfaces/select-field.interface';
 import { CellTouchEvent } from '../field-cell-touchable';
 import { FieldCellEditable } from '../field-cell-editable';
 
 @Component({
-  selector: 'dropdown-field-cell',
+  selector: 'select-field-cell',
   templateUrl: './cell.component.html',
   styleUrl: '../field-cell.scss',
-  host: { class: 'dropdown-field-cell' },
+  host: { class: 'select-field-cell' },
   imports: [MenuModule, TagModule],
 })
-export class DropdownFieldCellComponent extends FieldCellEditable<DropdownData> {
-  declare field: DropdownField;
+export class SelectFieldCellComponent extends FieldCellEditable<SelectData> {
+  declare field: SelectField;
 
   @ViewChild('menu') menu: Menu;
 

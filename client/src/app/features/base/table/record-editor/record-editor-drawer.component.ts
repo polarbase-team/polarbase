@@ -104,7 +104,7 @@ export class RecordEditorDrawerComponent {
 
   protected save() {
     const isInvalid = this.requiredFields().find(
-      (field: Field) => !field.params.isPrimary && _.isNil(this.updatedRecord[field.name]),
+      (field: Field) => !field.params.primary && _.isNil(this.updatedRecord[field.name]),
     );
 
     if (isInvalid) {

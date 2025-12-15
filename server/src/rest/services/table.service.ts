@@ -8,6 +8,86 @@ const REST_BLACKLISTED_TABLES = (
   process.env.REST_BLACKLISTED_TABLES || ''
 ).split(',');
 
+export const DataType = {
+  Text: 'text',
+  LongText: 'long-text',
+  Integer: 'integer',
+  Number: 'number',
+  Date: 'date',
+  Checkbox: 'checkbox',
+  Select: 'dropdown',
+  JSON: 'json',
+} as const;
+export type DataType = (typeof DataType)[keyof typeof DataType];
+
+export interface Column {
+  name: string;
+  dataType: DataType;
+  pgDataType: string;
+  pgRawType: string;
+  primary: boolean;
+  nullable: boolean;
+  unique: boolean;
+  maxLength: number;
+  defaultValue: string;
+  comment: string;
+  options: string[];
+  foreignKey: any;
+}
+
+const PG_TYPE_MAPPING: Record<string, DataType> = {
+  // Integer
+  smallint: DataType.Integer,
+  integer: DataType.Integer,
+  bigint: DataType.Integer,
+  smallserial: DataType.Integer,
+  serial: DataType.Integer,
+  bigserial: DataType.Integer,
+
+  // Number
+  numeric: DataType.Number,
+  real: DataType.Number,
+  'double precision': DataType.Number,
+
+  // Text
+  character: DataType.Text,
+  'character varying': DataType.Text,
+  uuid: DataType.Text,
+  bit: DataType.Text,
+  'bit varying': DataType.Text,
+
+  // Long Text
+  text: DataType.LongText,
+
+  // Checkbox
+  boolean: DataType.Checkbox,
+
+  // Date
+  date: DataType.Date,
+  timestamp: DataType.Date,
+  time: DataType.Date,
+
+  // JSON
+  json: DataType.JSON,
+  jsonb: DataType.JSON,
+};
+
+const mapDataType = (column: Column) => {
+  let dataType: DataType = DataType.Text;
+  if (column.options) {
+    dataType = DataType.Select;
+  } else {
+    const normalizedType = column.pgDataType
+      .toLowerCase()
+      .split('(')[0]
+      .trim()
+      .split(' without')[0]
+      .split(' with')[0];
+    dataType = PG_TYPE_MAPPING[normalizedType] || dataType;
+  }
+  return dataType;
+};
+
 /**
  * Retrieves the list of tables in the public schema (excluding blacklisted ones)
  * along with their comments.
@@ -56,10 +136,10 @@ const getTableSchema = async (tableName: string, schemaName = 'public') => {
     .select(
       'column_name',
       'data_type',
-      'udt_name as raw_type',
+      'udt_name',
       'is_nullable',
-      'character_maximum_length as max_length',
-      'column_default as default_value',
+      'character_maximum_length',
+      'column_default',
       'ordinal_position'
     )
     .where({ table_schema: 'public', table_name: tableName })
@@ -132,7 +212,7 @@ const getTableSchema = async (tableName: string, schemaName = 'public') => {
     .where({ table_schema: 'public', table_name: tableName })
     .whereRaw(`udt_name IN (SELECT typname FROM pg_type WHERE typtype = 'e')`);
 
-  const enumMap: Record<string, string> = {};
+  const enumMap: Record<string, string[]> = {};
 
   for (const col of enumColumns) {
     const result = await pg('pg_enum')
@@ -145,7 +225,7 @@ const getTableSchema = async (tableName: string, schemaName = 'public') => {
       .first();
 
     if (result?.labels) {
-      enumMap[col.column_name] = result.labels;
+      enumMap[col.column_name] = result.labels as string[];
     }
   }
 
@@ -184,19 +264,44 @@ const getTableSchema = async (tableName: string, schemaName = 'public') => {
     ])
   );
 
-  // 6. Combine everything into a clean schema object
-  return columns.map((col) => ({
-    columnName: col.column_name,
-    dataType: col.data_type,
-    rawType: col.raw_type,
-    isPrimary: primaryKeySet.has(col.column_name),
-    isNullable: col.is_nullable === 'YES',
-    maxLength: col.max_length,
-    defaultValue: col.default_value,
-    comment: commentMap[col.column_name] ?? null,
-    enumValues: enumMap[col.column_name] ?? null,
-    foreignKey: foreignKeyMap[col.column_name] || null,
-  }));
+  // 6. Unique columns (single-column UNIQUE constraints only)
+  const uniqueConstraints = await pg(
+    'information_schema.table_constraints as tc'
+  )
+    .select('kcu.column_name')
+    .join('information_schema.key_column_usage as kcu', function () {
+      this.on('kcu.constraint_name', '=', 'tc.constraint_name')
+        .andOn('kcu.table_schema', '=', 'tc.table_schema')
+        .andOn('kcu.table_name', '=', 'tc.table_name');
+    })
+    .where({
+      'tc.table_schema': schemaName,
+      'tc.table_name': tableName,
+      'tc.constraint_type': 'UNIQUE',
+    })
+    .groupBy('kcu.column_name')
+    .havingRaw('COUNT(*) = 1');
+
+  const uniqueSet = new Set(uniqueConstraints.map((u: any) => u.column_name));
+
+  // 7. Combine everything into a clean schema object
+  return columns.map((col) => {
+    const column: Column = {
+      name: col.column_name,
+      pgDataType: col.data_type,
+      pgRawType: col.udt_name,
+      primary: primaryKeySet.has(col.column_name),
+      nullable: col.is_nullable === 'YES',
+      unique: uniqueSet.has(col.column_name),
+      maxLength: col.character_maximum_length,
+      defaultValue: col.column_default,
+      comment: commentMap[col.column_name] ?? null,
+      options: enumMap[col.column_name] ?? null,
+      foreignKey: foreignKeyMap[col.column_name] || null,
+    } as Column;
+    column.dataType = mapDataType(column);
+    return column;
+  });
 };
 
 /**
@@ -240,7 +345,7 @@ export class TableService {
       primary?: boolean;
       unique?: boolean;
       default?: any;
-      enumValues?: string[];
+      options?: string[];
       comment?: string;
     }>;
     autoAddingPrimaryKey?: boolean;
@@ -277,10 +382,10 @@ export class TableService {
             columnBuilder = table.timestamp(col.name);
             break;
           case 'enum':
-            if (!col.enumValues?.length) {
-              throw new Error(`enumValues is required for column ${col.name}`);
+            if (!col.options?.length) {
+              throw new Error(`options is required for column ${col.name}`);
             }
-            columnBuilder = table.enum(col.name, col.enumValues);
+            columnBuilder = table.enum(col.name, col.options);
             break;
           default:
             throw new Error(`Unsupported column type: ${col.type}`);
@@ -379,22 +484,22 @@ export class TableService {
   async addColumn({
     schemaName = 'public',
     tableName,
-    columnName,
+    name,
     type,
     nullable = true,
     unique = false,
     default: def,
-    enumValues,
+    options,
     comment,
   }: {
     schemaName?: string;
     tableName: string;
-    columnName: string;
-    type: string;
+    name: string;
+    type: DataType;
     nullable?: boolean;
     unique?: boolean;
     default?: any;
-    enumValues?: string[];
+    options?: string[];
     comment?: string;
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
@@ -408,27 +513,29 @@ export class TableService {
       let columnBuilder;
 
       switch (type.toLowerCase()) {
-        case 'string':
-        case 'varchar':
-          columnBuilder = table.string(columnName);
+        case DataType.Text:
+          columnBuilder = table.string(name);
           break;
-        case 'text':
-          columnBuilder = table.text(columnName);
+        case DataType.LongText:
+          columnBuilder = table.text(name);
           break;
-        case 'integer':
-          columnBuilder = table.integer(columnName);
+        case DataType.Integer:
+          columnBuilder = table.integer(name);
           break;
-        case 'boolean':
-          columnBuilder = table.boolean(columnName);
+        case DataType.Checkbox:
+          columnBuilder = table.boolean(name);
           break;
-        case 'timestamp':
-          columnBuilder = table.timestamp(columnName);
+        case DataType.Date:
+          columnBuilder = table.timestamp(name);
           break;
-        case 'enum':
-          if (!enumValues?.length) {
-            throw new Error(`enumValues is required for column ${columnName}`);
+        case DataType.Select:
+          if (!options?.length) {
+            throw new Error(`options is required for column ${name}`);
           }
-          columnBuilder = table.enum(columnName, enumValues);
+          columnBuilder = table.enum(name, options);
+          break;
+        case DataType.JSON:
+          columnBuilder = table.json(name);
           break;
         default:
           throw new Error(`Unsupported column type: ${type}`);
@@ -440,6 +547,6 @@ export class TableService {
       if (comment) columnBuilder.comment(comment);
     });
 
-    return { message: `Column ${columnName} added to ${fullTableName}` };
+    return { message: `Column ${name} added to ${fullTableName}` };
   }
 }
