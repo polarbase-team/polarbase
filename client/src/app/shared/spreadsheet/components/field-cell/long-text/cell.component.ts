@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 import { LongTextData } from '../../../field/interfaces/long-text-field.interface';
 import { FieldCellInputable } from '../field-cell-inputable';
@@ -10,8 +10,6 @@ import { RichTextEditorDrawerComponent } from '../../../../rich-text-editor/rich
   templateUrl: './cell.component.html',
   styleUrls: ['../field-cell.scss', '../field-cell-inputable.scss'],
   host: { class: 'long-text-field-cell' },
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [InputBoxComponent, RichTextEditorDrawerComponent],
 })
 export class LongTextFieldCellComponent extends FieldCellInputable<LongTextData> {

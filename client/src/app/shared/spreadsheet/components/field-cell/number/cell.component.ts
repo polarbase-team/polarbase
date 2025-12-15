@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 import { NumberData } from '../../../field/interfaces/number-field.interface';
 import { NumberField } from '../../../field/objects/number-field.object';
@@ -10,8 +10,6 @@ import { InputBoxComponent } from '../input-box.component';
   templateUrl: './cell.component.html',
   styleUrls: ['../field-cell.scss', '../field-cell-inputable.scss'],
   host: { class: 'number-field-cell' },
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [InputBoxComponent],
 })
 export class NumberFieldCellComponent extends FieldCellInputable<NumberData> {

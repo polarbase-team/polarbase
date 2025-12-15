@@ -5,7 +5,6 @@ import {
   viewChild,
   ElementRef,
   DestroyRef,
-  ChangeDetectionStrategy,
   output,
   input,
 } from '@angular/core';
@@ -31,8 +30,6 @@ interface Message {
 @Component({
   selector: 'chatbot',
   templateUrl: './chatbot.component.html',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,

@@ -1,7 +1,6 @@
 import _ from 'lodash';
 
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -38,8 +37,6 @@ import { TableDefinition, TableService } from '../table.service';
 @Component({
   selector: 'record-editor-drawer',
   templateUrl: './record-editor-drawer.component.html',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,

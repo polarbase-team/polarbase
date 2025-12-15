@@ -1,10 +1,10 @@
 import _ from 'lodash';
+
 import {
   AfterContentChecked,
   AfterContentInit,
   AfterViewChecked,
   AfterViewInit,
-  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   contentChild,
@@ -105,8 +105,6 @@ const stack: SpreadsheetComponent[] = [];
     class: 'spreadsheet',
     '[class.spreadsheet--right-scrolled]': 'virtualScroll.scrollLeft() > 0',
   },
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,

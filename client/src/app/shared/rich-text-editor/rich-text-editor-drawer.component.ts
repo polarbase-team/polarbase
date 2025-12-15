@@ -1,4 +1,4 @@
-import { Component, output, model, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, output, model, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
@@ -8,8 +8,6 @@ import { EditorModule } from 'primeng/editor';
   selector: 'rich-text-editor-drawer',
   templateUrl: './rich-text-editor-drawer.component.html',
   styleUrl: './rich-text-editor-drawer.component.scss',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, DrawerModule, ButtonModule, EditorModule],
 })
 export class RichTextEditorDrawerComponent {

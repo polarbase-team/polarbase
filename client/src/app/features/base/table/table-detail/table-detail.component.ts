@@ -1,14 +1,6 @@
 import _ from 'lodash';
 
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  DestroyRef,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ButtonModule } from 'primeng/button';
@@ -35,8 +27,6 @@ import { TableRealtimeService } from '../table-realtime.service';
 @Component({
   selector: 'table-detail',
   templateUrl: './table-detail.component.html',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ButtonModule, DividerModule, SpreadsheetComponent, RecordEditorDrawerComponent],
 })
 export class TableDetailComponent {

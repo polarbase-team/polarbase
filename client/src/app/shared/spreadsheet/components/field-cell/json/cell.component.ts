@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import { ChangeDetectionStrategy, Component, SimpleChanges } from '@angular/core';
+
+import { Component, SimpleChanges } from '@angular/core';
 
 import { JSONEditorDrawerComponent } from '../../../../json-editor/json-editor-drawer.component';
 import { JSONData } from '../../../field/interfaces/json-field.interface';
@@ -11,8 +12,6 @@ import { InputBoxComponent } from '../input-box.component';
   templateUrl: './cell.component.html',
   styleUrls: ['../field-cell.scss', '../field-cell-inputable.scss'],
   host: { class: 'json-field-cell' },
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [JSONEditorDrawerComponent, InputBoxComponent],
 })
 export class JSONFieldCellComponent extends FieldCellInputable<JSONData> {

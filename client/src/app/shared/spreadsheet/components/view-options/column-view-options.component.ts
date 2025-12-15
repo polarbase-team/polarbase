@@ -1,4 +1,4 @@
-import { Component, input, output, computed, signal, effect } from '@angular/core';
+import { Component, input, output, signal, effect } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,16 +7,13 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { PopoverModule } from 'primeng/popover';
 import { ButtonModule } from 'primeng/button';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { PanelModule } from 'primeng/panel';
 import { DividerModule } from 'primeng/divider';
 import { MenuModule } from 'primeng/menu';
-import { MenuItem } from 'primeng/api';
 
 import { TableColumn } from '../../models/table-column';
 
 @Component({
   selector: 'column-view-options',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,

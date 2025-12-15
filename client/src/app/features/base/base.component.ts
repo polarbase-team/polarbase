@@ -11,6 +11,8 @@ import { TableService } from './table/table.service';
 
 @Component({
   selector: 'base',
+  templateUrl: './base.component.html',
+  styleUrl: './base.component.scss',
   imports: [
     TabsModule,
     ButtonModule,
@@ -19,9 +21,6 @@ import { TableService } from './table/table.service';
     TableListComponent,
     TableDetailComponent,
   ],
-  templateUrl: './base.component.html',
-  styleUrl: './base.component.scss',
-  standalone: true,
 })
 export class BaseComponent {
   protected tblService = inject(TableService);

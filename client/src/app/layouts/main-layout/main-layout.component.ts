@@ -13,7 +13,6 @@ import { ChatBotComponent } from '../../features/chatbot/chatbot.component';
   selector: 'app-main-layout',
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',
-  standalone: true,
   imports: [RouterModule, ToastModule, ButtonModule, TooltipModule, ImageModule, ChatBotComponent],
 })
 export class MainLayoutComponent {

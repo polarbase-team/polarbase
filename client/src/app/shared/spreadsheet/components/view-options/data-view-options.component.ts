@@ -20,7 +20,6 @@ export interface OrderingRule {
 
 @Component({
   selector: 'data-view-options',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,

@@ -1,6 +1,5 @@
 import {
   AfterContentInit,
-  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   computed,
@@ -77,8 +76,6 @@ const SCROLL_LONG_DISTANCE = 1200;
     class: 'virtual-scroll',
     '[class.virtual-scroll--scrolling]': 'isScrolling() && !isAutoScroll()',
   },
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollComponent implements AfterContentInit, OnDestroy {
   sideSpacing = input<number>(0);

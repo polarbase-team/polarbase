@@ -14,7 +14,7 @@ import { setApiKey } from '../../../core/guards/api-key.guard';
 
 @Component({
   selector: 'api-key-entry',
-  standalone: true,
+  templateUrl: './api-key-entry.component.html',
   imports: [
     FormsModule,
     CardModule,
@@ -25,7 +25,6 @@ import { setApiKey } from '../../../core/guards/api-key.guard';
     MessageModule,
     FluidModule,
   ],
-  templateUrl: './api-key-entry.component.html',
 })
 export class ApiKeyEntryComponent {
   protected apiKey = '';
