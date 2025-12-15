@@ -159,6 +159,13 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
+  addColumn() {
+    this.host.columnAction.emit({
+      type: TableColumnActionType.Add,
+      payload: null,
+    });
+  }
+
   showColumn(column: TableColumn) {
     if (!column) return;
 

@@ -39,6 +39,7 @@ export interface TableCreation {
 export interface ColumnCreation {
   name: string;
   comment: string;
+  primary: boolean;
   nullable: boolean;
   unique: boolean;
 }

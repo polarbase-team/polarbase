@@ -266,7 +266,7 @@
           ></ng-container>
         }
         @if (tableService.config().column.addable) {
-          <div class="header-cell cell header-action-cell">
+          <div class="header-cell cell header-action-cell" (click)="tableColumnService.addColumn()">
             <i class="icon icon-circle-plus"></i>
           </div>
         }

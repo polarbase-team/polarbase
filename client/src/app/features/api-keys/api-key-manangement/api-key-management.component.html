@@ -5,7 +5,6 @@
   [(visible)]="isCreationMode"
   position="right"
   header="Add key"
-  [modal]="false"
   styleClass="!w-150 custom-drawer"
 >
   <ng-template #content>
@@ -36,78 +35,76 @@
             }
           </div>
         </div>
-        <p-divider align="center" type="solid">
-          <b>Permissions</b>
-        </p-divider>
-        <div class="grid grid-cols-3 w-full gap-12">
-          <label for="restApiPermission" class="col-span-1">
-            <p class="font-medium">REST API Access</p>
-            <p class="text-surface-500 text-xs">
-              Enable this to allow the API key to access and manage data via the system’s RESTful
-              API.
-            </p>
-          </label>
-          <div class="col-span-2">
-            <p-checkbox
-              id="restApiPermission"
-              name="restApiPermission"
-              [(ngModel)]="newApiKey.scopes.rest"
-              [binary]="true"
-              size="large"
-            />
-          </div>
-        </div>
+        <p-divider />
         <div class="grid grid-cols-3 w-full gap-12">
           <label for="description" class="col-span-1">
-            <p class="font-medium">Agent API Access</p>
-            <p class="text-surface-500 text-xs">
-              Enable this to allow the API key to access and manage data via the system’s Agent API.
-            </p>
+            <p class="font-medium">Permissions</p>
           </label>
-          <div class="col-span-2">
-            <p-checkbox
-              id="agentApiPermission"
-              name="agentApiPermission"
-              [(ngModel)]="newApiKey.scopes.agent"
-              [binary]="true"
-              size="large"
-            />
-          </div>
-        </div>
-        <div class="grid grid-cols-3 w-full gap-12">
-          <label for="description" class="col-span-1">
-            <p class="font-medium">MCP Server Access</p>
-            <p class="text-surface-500 text-xs">
-              Enable this to allow the API key to access and manage data via the system’s MCP
-              Server.
-            </p>
-          </label>
-          <div class="col-span-2">
-            <p-checkbox
-              id="mcpServerPermission"
-              name="mcpServerPermission"
-              [(ngModel)]="newApiKey.scopes.mcp"
-              [binary]="true"
-              size="large"
-            />
-          </div>
-        </div>
-        <div class="grid grid-cols-3 w-full gap-12">
-          <label for="description" class="col-span-1">
-            <p class="font-medium">Realtime Server Access</p>
-            <p class="text-surface-500 text-xs">
-              Enable this to allow the API key to access and manage data via the system’s Realtime
-              Server.
-            </p>
-          </label>
-          <div class="col-span-2">
-            <p-checkbox
-              id="realtimeServerPermission"
-              name="realtimeServerPermission"
-              [(ngModel)]="newApiKey.scopes.realtime"
-              [binary]="true"
-              size="large"
-            />
+          <div class="flex flex-col gap-8 col-span-2">
+            <div class="flex gap-4">
+              <p-checkbox
+                id="restApiPermission"
+                name="restApiPermission"
+                [(ngModel)]="newApiKey.scopes.rest"
+                [binary]="true"
+                size="large"
+              />
+              <div class="flex flex-col gap-1">
+                <label for="restApiPermission">REST API Access</label>
+                <p class="text-surface-500 text-xs">
+                  Enable this to allow the API key to access and manage data via the system’s
+                  RESTful API.
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <p-checkbox
+                id="agentApiPermission"
+                name="agentApiPermission"
+                [(ngModel)]="newApiKey.scopes.agent"
+                [binary]="true"
+                size="large"
+              />
+              <div class="flex flex-col gap-1">
+                <label for="agentApiPermission">Agent API Access</label>
+                <p class="text-surface-500 text-xs">
+                  Enable this to allow the API key to access and manage data via the system’s Agent
+                  API.
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <p-checkbox
+                id="mcpServerPermission"
+                name="mcpServerPermission"
+                [(ngModel)]="newApiKey.scopes.mcp"
+                [binary]="true"
+                size="large"
+              />
+              <div class="flex flex-col gap-1">
+                <label for="mcpServerPermission">MCP Server Access</label>
+                <p class="text-surface-500 text-xs">
+                  Enable this to allow the API key to access and manage data via the system’s MCP
+                  Server.
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <p-checkbox
+                id="realtimeServerPermission"
+                name="realtimeServerPermission"
+                [(ngModel)]="newApiKey.scopes.realtime"
+                [binary]="true"
+                size="large"
+              />
+              <div class="flex flex-col gap-1">
+                <label for="realtimeServerPermission">Realtime Server Access</label>
+                <p class="text-surface-500 text-xs">
+                  Enable this to allow the API key to access and manage data via the system’s
+                  Realtime Server.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

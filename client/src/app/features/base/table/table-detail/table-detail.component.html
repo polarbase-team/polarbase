@@ -1,4 +1,11 @@
 @if (columns()) {
+  <column-editor-drawer
+    [(visible)]="visibleColumnEditor"
+    [table]="tblService.selectedTable()"
+    [column]="updatedColumn"
+    [mode]="updatedColumnMode"
+    (onSave)="onRecordSave($event)"
+  />
   <record-editor-drawer
     [(visible)]="visibleRecordEditor"
     [fields]="fields()"
@@ -10,9 +17,10 @@
     [config]="config()"
     [columns]="columns()"
     [rows]="rows()"
+    (columnAction)="onColumnAction($event)"
     (rowAction)="onRowAction($event)"
     (cellAction)="onCellAction($event)"
-  >
+    >`
     <ng-template #toolbar>
       <div class="flex">
         <p-button

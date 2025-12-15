@@ -1,0 +1,124 @@
+<p-drawer
+  [(visible)]="visible"
+  position="right"
+  [header]="mode() === 'edit' ? `Edit column: ${column().name}` : 'New column'"
+  styleClass="!w-150 custom-drawer"
+>
+  <ng-template #content>
+    <form #columnForm="ngForm" (ngSubmit)="onSubmit()">
+      <div class="flex flex-col gap-12">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label for="name" class="col-span-1">
+            <p class="font-medium">Name</p>
+          </label>
+          <div class="flex flex-col gap-1 col-span-2">
+            <input
+              pInputText
+              id="name"
+              name="name"
+              [pAutoFocus]="true"
+              [invalid]="name.invalid && (name.touched || columnForm.submitted)"
+              [(ngModel)]="updatedColumn.name"
+              #name="ngModel"
+              placeholder="Input here..."
+              required
+              pattern="[a-zA-Z_][a-zA-Z0-9_$ ]*"
+            />
+            @if (name.invalid && (name.touched || columnForm.submitted)) {
+              <p-message severity="error" size="small" variant="simple">
+                @if (name.errors['required']) {
+                  Table name is required.
+                } @else if (name.errors?.['pattern']) {
+                  Invalid table name.
+                }
+              </p-message>
+            }
+            <p class="text-surface-500 text-xs">
+              Only letters, numbers, space, _, $ allowed and must start with a letter or _.
+            </p>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label for="description" class="col-span-1">
+            <p class="font-medium">Description</p>
+          </label>
+          <textarea
+            pTextarea
+            id="description"
+            name="description"
+            [(ngModel)]="updatedColumn.comment"
+            rows="5"
+            class="col-span-2"
+            placeholder="Input here..."
+          ></textarea>
+        </div>
+        <p-divider />
+        <p-divider />
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label for="description" class="col-span-1">
+            <p class="font-medium">Constraints</p>
+          </label>
+          <div class="flex flex-col gap-8 col-span-2">
+            <div class="flex gap-4">
+              <p-checkbox
+                id="primary"
+                name="primary"
+                [(ngModel)]="updatedColumn.primary"
+                [binary]="true"
+                size="large"
+              />
+              <div class="flex flex-col gap-1">
+                <label for="primary">Is Primary Key</label>
+                <p class="text-surface-500 text-xs">
+                  A primary key indicates that a column or group of columns can be used as a unique
+                  identifier for rows in the table
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <p-checkbox
+                id="nullable"
+                name="nullable"
+                [(ngModel)]="updatedColumn.nullable"
+                [binary]="true"
+                size="large"
+              />
+              <div class="flex flex-col gap-1">
+                <label for="nullable">Allow Nullable</label>
+                <p class="text-surface-500 text-xs">
+                  Allow the column to assume a NULL value if no value is provided
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <p-checkbox
+                id="unique"
+                name="unique"
+                [(ngModel)]="updatedColumn.unique"
+                [binary]="true"
+                size="large"
+              />
+              <div class="flex flex-col gap-1">
+                <label for="unique">Is Unique</label>
+                <p class="text-surface-500 text-xs">
+                  Enforce values in the column to be unique across rows
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" (click)="cancel()" />
+      <p-button
+        label="Save"
+        [loading]="isSaving()"
+        [disabled]="columnForm().invalid"
+        (click)="save()"
+      />
+    </div>
+  </ng-template>
+</p-drawer>

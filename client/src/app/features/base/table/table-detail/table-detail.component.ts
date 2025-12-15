@@ -21,18 +21,29 @@ import {
   TableCellEditedEvent,
 } from '../../../../shared/spreadsheet/events/table-cell';
 import { RecordEditorDrawerComponent } from '../record-editor/record-editor-drawer.component';
-import { TableDefinition, TableService } from '../table.service';
+import { ColumnDefinition, TableDefinition, TableService } from '../table.service';
 import { TableRealtimeService } from '../table-realtime.service';
+import {
+  TableColumnAction,
+  TableColumnActionType,
+} from '../../../../shared/spreadsheet/events/table-column';
+import { ColumnEditorDrawerComponent } from '../column-editor/column-editor-drawer.component';
 
 @Component({
   selector: 'table-detail',
   templateUrl: './table-detail.component.html',
-  imports: [ButtonModule, DividerModule, SpreadsheetComponent, RecordEditorDrawerComponent],
+  imports: [
+    ButtonModule,
+    DividerModule,
+    SpreadsheetComponent,
+    RecordEditorDrawerComponent,
+    ColumnEditorDrawerComponent,
+  ],
 })
 export class TableDetailComponent {
   protected config = signal<TableConfig>({
     sideSpacing: 20,
-    column: { addable: false, deletable: false },
+    column: { deletable: false },
     row: { insertable: false, reorderable: false },
   });
   protected columns = signal<TableColumn[]>([]);
@@ -41,6 +52,9 @@ export class TableDetailComponent {
     return this.columns().map((c) => c.field);
   });
   protected tblService = inject(TableService);
+  protected updatedColumn: ColumnDefinition;
+  protected updatedColumnMode: 'add' | 'edit' = 'add';
+  protected visibleColumnEditor: boolean;
   protected updatedRecord: Record<string, any>;
   protected updatedRecordMode: 'add' | 'edit' | 'view' = 'add';
   protected visibleRecordEditor: boolean;
@@ -88,6 +102,17 @@ export class TableDetailComponent {
           }
         },
       });
+  }
+
+  protected onColumnAction(action: TableColumnAction) {
+    const { tableName } = this.tblService.selectedTable();
+    switch (action.type) {
+      case TableColumnActionType.Add:
+        this.updatedRecord = null;
+        this.updatedRecordMode = 'add';
+        this.visibleColumnEditor = true;
+        break;
+    }
   }
 
   protected onRowAction(action: TableRowAction) {
