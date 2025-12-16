@@ -6,54 +6,57 @@
 >
   <ng-template #content>
     <form #columnForm="ngForm" (ngSubmit)="onSubmit()">
-      <div class="flex flex-col gap-12">
-        <div class="grid grid-cols-3 w-full gap-12">
-          <label for="name" class="col-span-1">
-            <p class="font-medium">Name</p>
-          </label>
-          <div class="flex flex-col gap-1 col-span-2">
-            <input
-              pInputText
-              id="name"
-              name="name"
-              [pAutoFocus]="true"
-              [invalid]="name.invalid && (name.touched || columnForm.submitted)"
-              [(ngModel)]="updatedColumn.name"
-              #name="ngModel"
+      <div class="p-5">
+        <div class="flex flex-col gap-12">
+          <div class="grid grid-cols-3 w-full gap-12">
+            <label for="name" class="col-span-1">
+              <p class="font-medium">Name</p>
+            </label>
+            <div class="flex flex-col gap-1 col-span-2">
+              <input
+                pInputText
+                id="name"
+                name="name"
+                [pAutoFocus]="true"
+                [invalid]="name.invalid && (name.touched || columnForm.submitted)"
+                [(ngModel)]="updatedColumn.name"
+                #name="ngModel"
+                placeholder="Input here..."
+                required
+                pattern="[a-zA-Z_][a-zA-Z0-9_$ ]*"
+              />
+              @if (name.invalid && (name.touched || columnForm.submitted)) {
+                <p-message severity="error" size="small" variant="simple">
+                  @if (name.errors['required']) {
+                    Column name is required.
+                  } @else if (name.errors?.['pattern']) {
+                    Invalid column name.
+                  }
+                </p-message>
+              }
+              <p class="text-surface-500 text-xs">
+                Only letters, numbers, space, _, $ allowed and must start with a letter or _.
+              </p>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 w-full gap-12">
+            <label for="description" class="col-span-1">
+              <p class="font-medium">Description</p>
+            </label>
+            <textarea
+              pTextarea
+              id="description"
+              name="description"
+              [(ngModel)]="updatedColumn.comment"
+              rows="5"
+              class="col-span-2"
               placeholder="Input here..."
-              required
-              pattern="[a-zA-Z_][a-zA-Z0-9_$ ]*"
-            />
-            @if (name.invalid && (name.touched || columnForm.submitted)) {
-              <p-message severity="error" size="small" variant="simple">
-                @if (name.errors['required']) {
-                  Column name is required.
-                } @else if (name.errors?.['pattern']) {
-                  Invalid column name.
-                }
-              </p-message>
-            }
-            <p class="text-surface-500 text-xs">
-              Only letters, numbers, space, _, $ allowed and must start with a letter or _.
-            </p>
+            ></textarea>
           </div>
         </div>
-        <div class="grid grid-cols-3 w-full gap-12">
-          <label for="description" class="col-span-1">
-            <p class="font-medium">Description</p>
-          </label>
-          <textarea
-            pTextarea
-            id="description"
-            name="description"
-            [(ngModel)]="updatedColumn.comment"
-            rows="5"
-            class="col-span-2"
-            placeholder="Input here..."
-          ></textarea>
-        </div>
-        <p-divider />
-        <p-divider />
+      </div>
+      <p-divider />
+      <div class="p-5">
         <div class="grid grid-cols-3 w-full gap-12">
           <label for="description" class="col-span-1">
             <p class="font-medium">Constraints</p>

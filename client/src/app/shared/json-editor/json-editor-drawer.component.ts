@@ -7,7 +7,6 @@ import { JSONEditorComponent } from './json-editor.component';
 @Component({
   selector: 'json-editor-drawer',
   templateUrl: './json-editor-drawer.component.html',
-  styleUrl: './json-editor-drawer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DrawerModule, ButtonModule, JSONEditorComponent],
 })

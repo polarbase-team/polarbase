@@ -110,20 +110,24 @@
 >
   <ng-template #content>
     <p-toast />
-    <div class="flex flex-col gap-12">
-      @for (field of requiredFields(); let first = $first; track field.name) {
-        <ng-container *ngTemplateOutlet="fieldTmpl; context: { field, first }" />
-      }
+    <div class="p-5">
+      <div class="flex flex-col gap-12">
+        @for (field of requiredFields(); let first = $first; track field.name) {
+          <ng-container *ngTemplateOutlet="fieldTmpl; context: { field, first }" />
+        }
+      </div>
     </div>
-    <p-divider class="!my-10" />
-    <div class="mb-10">
-      <p class="text-xl font-medium">Optional Fields</p>
-      <p class="text-surface-500">These are columns that do not need any value</p>
-    </div>
-    <div class="flex flex-col gap-12">
-      @for (field of optionalFields(); track field.name) {
-        <ng-container *ngTemplateOutlet="fieldTmpl; context: { field }" />
-      }
+    <p-divider />
+    <div class="p-5">
+      <div class="mb-10">
+        <p class="text-xl font-medium">Optional Fields</p>
+        <p class="text-surface-500">These are columns that do not need any value</p>
+      </div>
+      <div class="flex flex-col gap-12">
+        @for (field of optionalFields(); track field.name) {
+          <ng-container *ngTemplateOutlet="fieldTmpl; context: { field }" />
+        }
+      </div>
     </div>
   </ng-template>
   <ng-template #footer>
