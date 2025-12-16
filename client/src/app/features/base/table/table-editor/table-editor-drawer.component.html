@@ -21,7 +21,7 @@
                   name="tableName"
                   [pAutoFocus]="true"
                   [invalid]="tableName.invalid && (tableName.touched || tableForm.submitted)"
-                  [(ngModel)]="updatedTable.tableName"
+                  [(ngModel)]="tableFormData.tableName"
                   #tableName="ngModel"
                   placeholder="Input here..."
                   required
@@ -46,7 +46,7 @@
                   pTextarea
                   id="description"
                   name="description"
-                  [(ngModel)]="updatedTable.tableComment"
+                  [(ngModel)]="tableFormData.tableComment"
                   rows="5"
                   class="col-span-2"
                   placeholder="Input here..."
@@ -68,7 +68,7 @@
                 <p-checkbox
                   id="autoAddingPrimaryKey"
                   name="autoAddingPrimaryKey"
-                  [(ngModel)]="updatedTable.autoAddingPrimaryKey"
+                  [(ngModel)]="tableFormData.autoAddingPrimaryKey"
                   [binary]="true"
                   size="large"
                 />
@@ -83,7 +83,7 @@
                 <p-checkbox
                   id="timestamps"
                   name="timestamps"
-                  [(ngModel)]="updatedTable.timestamps"
+                  [(ngModel)]="tableFormData.timestamps"
                   [binary]="true"
                   size="large"
                 />

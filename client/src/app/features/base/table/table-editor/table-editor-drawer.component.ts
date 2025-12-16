@@ -22,7 +22,7 @@ import { MessageModule } from 'primeng/message';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { DividerModule } from 'primeng/divider';
 
-import { TableCreation, TableDefinition, TableService } from '../table.service';
+import { TableFormData, TableDefinition, TableService } from '../table.service';
 
 @Component({
   selector: 'table-editor-drawer',
@@ -45,10 +45,10 @@ export class TableEditorDrawerComponent {
   table = input<TableDefinition>();
   mode = input<'add' | 'edit'>('add');
 
-  onSave = output<TableCreation>();
+  onSave = output<TableFormData>();
 
   protected tableForm = viewChild<NgForm>('tableForm');
-  protected updatedTable: TableCreation;
+  protected tableFormData: TableFormData;
   protected isSaving = signal(false);
 
   constructor(
@@ -56,7 +56,7 @@ export class TableEditorDrawerComponent {
     private tblService: TableService,
   ) {
     effect(() => {
-      this.updatedTable = { autoAddingPrimaryKey: true, timestamps: true, ...this.table() };
+      this.tableFormData = { autoAddingPrimaryKey: true, timestamps: true, ...this.table() };
     });
   }
 
@@ -68,9 +68,9 @@ export class TableEditorDrawerComponent {
     let fn: Observable<any>;
 
     if (this.mode() === 'edit') {
-      fn = this.tblService.updateTable(this.table().tableName, this.updatedTable);
+      fn = this.tblService.updateTable(this.table().tableName, this.tableFormData);
     } else {
-      fn = this.tblService.createTable(this.updatedTable);
+      fn = this.tblService.createTable(this.tableFormData);
     }
 
     fn.pipe(
@@ -78,7 +78,7 @@ export class TableEditorDrawerComponent {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(() => {
       this.visible.set(false);
-      this.onSave.emit(this.updatedTable);
+      this.onSave.emit(this.tableFormData);
     });
   }
 

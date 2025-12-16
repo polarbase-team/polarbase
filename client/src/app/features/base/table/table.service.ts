@@ -28,7 +28,7 @@ export interface ColumnDefinition {
   options: string[] | null;
 }
 
-export interface TableCreation {
+export interface TableFormData {
   tableName: string;
   tableComment?: string;
   columns?: ColumnDefinition[];
@@ -36,7 +36,7 @@ export interface TableCreation {
   timestamps?: boolean;
 }
 
-export interface ColumnCreation {
+export interface ColumnFormData {
   name: string;
   comment: string;
   primary: boolean;
@@ -82,11 +82,11 @@ export class TableService {
       .pipe(map((res) => res.data));
   }
 
-  createTable(table: TableCreation) {
+  createTable(table: TableFormData) {
     return this.http.post<Response>(`${this.apiUrl}/tables`, table);
   }
 
-  updateTable(tableName: string, table: Pick<TableCreation, 'tableName' | 'tableComment'>) {
+  updateTable(tableName: string, table: Pick<TableFormData, 'tableName' | 'tableComment'>) {
     return this.http.patch<Response>(`${this.apiUrl}/tables/${tableName}`, table);
   }
 
@@ -94,11 +94,11 @@ export class TableService {
     return this.http.delete<Response>(`${this.apiUrl}/tables/${tableName}?cascade=${casecade}`);
   }
 
-  createColumn(tableName: string, column: ColumnCreation) {
+  createColumn(tableName: string, column: ColumnFormData) {
     return this.http.post(`${this.apiUrl}/tables/${tableName}/columns`, column);
   }
 
-  updateColumn(tableName: string, columnName: string, column: ColumnCreation) {
+  updateColumn(tableName: string, columnName: string, column: ColumnFormData) {
     return this.http.patch(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`, column);
   }
 

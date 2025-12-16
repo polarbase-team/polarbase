@@ -22,7 +22,7 @@ import { MessageModule } from 'primeng/message';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { DividerModule } from 'primeng/divider';
 
-import { ColumnCreation, ColumnDefinition, TableDefinition, TableService } from '../table.service';
+import { ColumnFormData, ColumnDefinition, TableDefinition, TableService } from '../table.service';
 
 @Component({
   selector: 'column-editor-drawer',
@@ -46,10 +46,10 @@ export class ColumnEditorDrawerComponent {
   column = input<ColumnDefinition>();
   mode = input<'add' | 'edit'>('add');
 
-  onSave = output<ColumnCreation>();
+  onSave = output<ColumnFormData>();
 
   protected columnForm = viewChild<NgForm>('columnForm');
-  protected updatedColumn: ColumnCreation;
+  protected columnFormData: ColumnFormData;
   protected isSaving = signal(false);
 
   constructor(
@@ -57,7 +57,7 @@ export class ColumnEditorDrawerComponent {
     private tblService: TableService,
   ) {
     effect(() => {
-      this.updatedColumn = { ...this.column() };
+      this.columnFormData = { ...this.column() };
     });
   }
 
@@ -72,10 +72,10 @@ export class ColumnEditorDrawerComponent {
       fn = this.tblService.updateColumn(
         this.table().tableName,
         this.column().name,
-        this.updatedColumn,
+        this.columnFormData,
       );
     } else {
-      fn = this.tblService.createColumn(this.table().tableName, this.updatedColumn);
+      fn = this.tblService.createColumn(this.table().tableName, this.columnFormData);
     }
 
     fn.pipe(
@@ -83,7 +83,7 @@ export class ColumnEditorDrawerComponent {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(() => {
       this.visible.set(false);
-      this.onSave.emit(this.updatedColumn);
+      this.onSave.emit(this.columnFormData);
     });
   }
 
