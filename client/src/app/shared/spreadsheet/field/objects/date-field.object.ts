@@ -6,13 +6,10 @@ import { DataType } from '../interfaces/field.interface';
 import { Field } from './field.object';
 
 export class DateField extends Field<DateData> {
-  static readonly dataType = DataType.Date;
+  static readonly dataType: DataType = DataType.Date;
 
-  readonly icon = 'icon icon-calendar';
-
-  get dataType() {
-    return DateField.dataType;
-  }
+  readonly dataType: DataType = DataType.Date;
+  readonly icon: string = 'icon icon-calendar';
 
   override compareData(source: DateData, destination = this.data!) {
     if (_.isNil(source) && _.isNil(destination)) {

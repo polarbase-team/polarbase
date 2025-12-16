@@ -230,6 +230,85 @@
       <div class="p-5">
         <div class="grid grid-cols-3 w-full gap-12">
           <label class="col-span-1">
+            <p class="font-medium text-sm">Default Value</p>
+          </label>
+          <div class="flex flex-col gap-8 col-span-2">
+            @switch (DataType[selectedDataType()]) {
+              @case (DataType.Text) {
+                <text-field-editor
+                  [field]="field"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.LongText) {
+                <long-text-field-editor
+                  [field]="field"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Integer) {
+                <integer-field-editor
+                  [field]="field"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Number) {
+                <number-field-editor
+                  [field]="field"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Select) {
+                <select-field-editor
+                  [field]="field"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Checkbox) {
+                <checkbox-field-editor
+                  [field]="field"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Date) {
+                <date-field-editor
+                  [field]="field"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.JSON) {
+                <json-field-editor
+                  [field]="field"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @default {
+                <i class="text-sm text-surface-500">Select a data type first.</i>
+              }
+            }
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
             <p class="font-medium text-sm">Constraints</p>
           </label>
           <div class="flex flex-col gap-8 col-span-2">

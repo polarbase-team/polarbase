@@ -5,15 +5,12 @@ import { DataType } from '../interfaces/field.interface';
 import { Field, FieldValidationKey } from './field.object';
 
 export class NumberField extends Field<NumberData> {
-  static readonly dataType = DataType.Number;
+  static readonly dataType: DataType = DataType.Number;
 
-  readonly icon = 'icon icon-decimals-arrow-right';
+  readonly dataType: DataType = DataType.Number;
+  readonly icon: string = 'icon icon-decimals-arrow-right';
 
-  allowNegative: boolean | undefined;
-
-  get dataType() {
-    return NumberField.dataType;
-  }
+  allowNegative?: boolean | undefined;
 
   constructor(config: NumberFieldConfig) {
     super(config);

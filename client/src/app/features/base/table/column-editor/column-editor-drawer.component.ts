@@ -27,7 +27,16 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { DatePickerModule } from 'primeng/datepicker';
 
 import { DataType } from '../../../../shared/spreadsheet/field/interfaces/field.interface';
+import { TextFieldEditorComponent } from '../field-editors/text/editor.component';
+import { LongTextFieldEditorComponent } from '../field-editors/long-text/editor.component';
+import { IntegerFieldEditorComponent } from '../field-editors/integer/editor.component';
+import { NumberFieldEditorComponent } from '../field-editors/number/editor.component';
+import { SelectFieldEditorComponent } from '../field-editors/select/editor.component';
+import { CheckboxFieldEditorComponent } from '../field-editors/checkbox/editor.component';
+import { DateFieldEditorComponent } from '../field-editors/date/editor.component';
+import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
 import { ColumnFormData, ColumnDefinition, TableDefinition, TableService } from '../table.service';
+import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
 
 @Component({
   selector: 'column-editor-drawer',
@@ -47,6 +56,14 @@ import { ColumnFormData, ColumnDefinition, TableDefinition, TableService } from 
     InputNumberModule,
     SelectButtonModule,
     DatePickerModule,
+    TextFieldEditorComponent,
+    LongTextFieldEditorComponent,
+    IntegerFieldEditorComponent,
+    NumberFieldEditorComponent,
+    SelectFieldEditorComponent,
+    CheckboxFieldEditorComponent,
+    DateFieldEditorComponent,
+    JSONFieldEditorComponent,
   ],
 })
 export class ColumnEditorDrawerComponent {
@@ -66,6 +83,7 @@ export class ColumnEditorDrawerComponent {
   protected options = signal<string[]>([]);
   protected selectionState: string | undefined = 'Single';
   protected readonly selectionStateOptions = ['Single', 'Multiple'];
+  protected field: Field;
 
   constructor(
     private destroyRef: DestroyRef,
@@ -118,6 +136,7 @@ export class ColumnEditorDrawerComponent {
       this.columnFormData.maxValue =
       this.columnFormData.defaultValue =
         null;
+    this.field = this.tblService.buildField(this.columnFormData);
   }
 
   protected addOption() {

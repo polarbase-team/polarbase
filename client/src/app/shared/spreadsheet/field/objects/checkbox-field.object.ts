@@ -7,11 +7,8 @@ export function parseCheckboxToString(data: CheckboxData) {
 }
 
 export class CheckboxField extends Field<CheckboxData> {
-  static readonly dataType = DataType.Checkbox;
+  static readonly dataType: DataType = DataType.Checkbox;
 
-  readonly icon = 'icon icon-circle-check-big';
-
-  get dataType() {
-    return CheckboxField.dataType;
-  }
+  readonly dataType: DataType = DataType.Checkbox;
+  readonly icon: string = 'icon icon-circle-check-big';
 }

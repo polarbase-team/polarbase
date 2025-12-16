@@ -24,8 +24,7 @@ export abstract class Field<T = any> {
   params: any;
 
   abstract icon: string;
-
-  abstract get dataType(): DataType;
+  abstract dataType: DataType;
 
   constructor(config: FieldConfig<T>) {
     this.name = config.name;
@@ -51,7 +50,7 @@ export abstract class Field<T = any> {
     return _.isEqual(source, destination);
   }
 
-  toJson() {
+  toJson(): any {
     return { data: _.cloneDeep(this.data) };
   }
 

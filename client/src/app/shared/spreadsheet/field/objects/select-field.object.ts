@@ -3,15 +3,12 @@ import { DataType } from '../interfaces/field.interface';
 import { Field } from './field.object';
 
 export class SelectField extends Field<SelectData> {
-  static readonly dataType = DataType.Select;
+  static readonly dataType: DataType = DataType.Select;
 
-  readonly icon = 'icon icon-square-check';
+  readonly dataType: DataType = DataType.Select;
+  readonly icon: string = 'icon icon-square-check';
 
-  options: SelectOption[] | undefined;
-
-  get dataType() {
-    return SelectField.dataType;
-  }
+  options?: SelectOption[] | undefined;
 
   constructor(config: SelectFieldConfig) {
     super(config);

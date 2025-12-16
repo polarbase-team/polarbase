@@ -7,13 +7,10 @@ import { Field, FieldValidationKey } from './field.object';
 export class IntegerField extends Field<IntegerData> {
   static readonly dataType = DataType.Integer;
 
-  readonly icon = 'icon icon-hash';
+  readonly icon: string = 'icon icon-hash';
+  readonly dataType: DataType = DataType.Integer;
 
-  allowNegative: boolean | undefined;
-
-  get dataType() {
-    return IntegerField.dataType;
-  }
+  allowNegative?: boolean | undefined;
 
   constructor(config: IntegerFieldConfig) {
     super(config);

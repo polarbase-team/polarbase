@@ -5,13 +5,10 @@ import { DataType } from '../interfaces/field.interface';
 import { Field } from './field.object';
 
 export class JSONField extends Field<JSONData> {
-  static readonly dataType = DataType.JSON;
+  static readonly dataType: DataType = DataType.JSON;
 
-  readonly icon = 'icon icon-braces';
-
-  get dataType() {
-    return JSONField.dataType;
-  }
+  readonly dataType: DataType = DataType.JSON;
+  readonly icon: string = 'icon icon-braces';
 
   override convertTextToData(text: string) {
     try {
