@@ -117,9 +117,7 @@ export class RecordEditorDrawerComponent {
     switch (this.mode()) {
       case 'add':
         if (_.isNil(data[tableColumnPk])) data[tableColumnPk] = id;
-        fn = this.tblService
-          .bulkCreateRecords(tableName, [data])
-          .pipe(map(({ data }) => data.returning[0]));
+        fn = this.tblService.bulkCreateRecords(tableName, [data]);
         break;
       case 'edit':
         fn = this.tblService.bulkUpdateRecords(tableName, [
@@ -133,6 +131,7 @@ export class RecordEditorDrawerComponent {
 
     this.isSaving.set(true);
     fn.pipe(
+      map(({ data }) => data.returning[0]),
       finalize(() => this.isSaving.set(false)),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe((record) => {
