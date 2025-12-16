@@ -14,10 +14,9 @@
             </label>
             <div class="flex flex-col col-span-2 gap-8">
               <div class="flex flex-col gap-1">
-                <label for="name" class="text-sm">Name</label>
+                <label class="text-sm">Name</label>
                 <input
                   pInputText
-                  id="name"
                   name="name"
                   [pAutoFocus]="true"
                   [invalid]="name.invalid && (name.touched || columnForm.submitted)"
@@ -41,10 +40,9 @@
                 </p>
               </div>
               <div class="flex flex-col gap-1">
-                <label for="description" class="text-sm">Description</label>
+                <label class="text-sm">Description</label>
                 <textarea
                   pTextarea
-                  id="description"
                   name="description"
                   [(ngModel)]="columnFormData.comment"
                   rows="5"
@@ -59,20 +57,191 @@
       <p-divider />
       <div class="p-5">
         <div class="grid grid-cols-3 w-full gap-12">
-          <label for="description" class="col-span-1">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Data Type</p>
+          </label>
+          <div class="flex flex-col gap-8 col-span-2">
+            <div class="flex flex-col gap-1">
+              <label class="text-sm">Type</label>
+              <p-select
+                name="type"
+                [options]="dataTypes"
+                [(ngModel)]="selectedDataType"
+                (ngModelChange)="onSelectDataType($event)"
+                placeholder="Select here..."
+              />
+            </div>
+            @switch (DataType[selectedDataType()]) {
+              @case (DataType.Text) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Min length</label>
+                  <p-inputnumber
+                    name="minLength"
+                    [(ngModel)]="columnFormData.minLength"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max length</label>
+                  <p-inputnumber
+                    name="maxLength"
+                    [(ngModel)]="columnFormData.maxLength"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.LongText) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max size (bytes)</label>
+                  <p-inputnumber
+                    name="maxSize"
+                    [(ngModel)]="columnFormData.maxValue"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.Integer) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Min value</label>
+                  <p-inputnumber
+                    name="minValue"
+                    [(ngModel)]="columnFormData.minValue"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max value</label>
+                  <p-inputnumber
+                    name="maxValue"
+                    [(ngModel)]="columnFormData.maxValue"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.Number) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Min value</label>
+                  <p-inputnumber
+                    name="minValue"
+                    [(ngModel)]="columnFormData.minValue"
+                    mode="decimal"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="5"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max value</label>
+                  <p-inputnumber
+                    name="maxValue"
+                    [(ngModel)]="columnFormData.maxValue"
+                    mode="decimal"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="5"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.Date) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Min date</label>
+                  <p-datepicker
+                    name="minDate"
+                    [(ngModel)]="columnFormData.minValue"
+                    [showTime]="true"
+                    class="flex flex-col"
+                    appendTo="body"
+                    placeholder="Select here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max date</label>
+                  <p-datepicker
+                    name="maxDate"
+                    [(ngModel)]="columnFormData.maxValue"
+                    [showTime]="true"
+                    class="flex flex-col"
+                    appendTo="body"
+                    placeholder="Select here..."
+                  />
+                </div>
+              }
+              @case (DataType.Select) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Mode</label>
+                  <p-selectbutton
+                    name="maxValue"
+                    [(ngModel)]="selectionState"
+                    [options]="selectionStateOptions"
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Options</label>
+                  <div class="flex flex-col gap-2">
+                    @for (option of options(); track $index; let idx = $index) {
+                      <div class="flex">
+                        <input
+                          pInputText
+                          [pAutoFocus]="true"
+                          [ngModel]="option"
+                          [ngModelOptions]="{ standalone: true }"
+                          (ngModelChange)="editOption(idx, $event)"
+                          placeholder="Input here..."
+                          class="w-full"
+                        />
+                        <p-button
+                          icon="pi pi-trash"
+                          [text]="true"
+                          severity="danger"
+                          (click)="removeOption(idx)"
+                        />
+                      </div>
+                    }
+                    <div>
+                      <p-button icon="pi pi-plus" label="Add option" (click)="addOption()" />
+                    </div>
+                  </div>
+                </div>
+              }
+              @case (DataType.Checkbox) {}
+              @case (DataType.JSON) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max size (bytes)</label>
+                  <p-inputnumber
+                    name="maxSize"
+                    [(ngModel)]="columnFormData.maxValue"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
             <p class="font-medium text-sm">Constraints</p>
           </label>
           <div class="flex flex-col gap-8 col-span-2">
             <div class="flex gap-4">
               <p-checkbox
-                id="primary"
                 name="primary"
                 [(ngModel)]="columnFormData.primary"
                 [binary]="true"
                 size="large"
               />
               <div>
-                <label for="primary" class="text-sm">Is Primary Key</label>
+                <label class="text-sm">Is Primary Key</label>
                 <p class="text-surface-500 text-xs">
                   A primary key indicates that a column or group of columns can be used as a unique
                   identifier for rows in the table
@@ -81,14 +250,13 @@
             </div>
             <div class="flex gap-4">
               <p-checkbox
-                id="nullable"
                 name="nullable"
                 [(ngModel)]="columnFormData.nullable"
                 [binary]="true"
                 size="large"
               />
               <div>
-                <label for="nullable" class="text-sm">Allow Nullable</label>
+                <label class="text-sm">Allow Nullable</label>
                 <p class="text-surface-500 text-xs">
                   Allow the column to assume a NULL value if no value is provided
                 </p>
@@ -96,14 +264,13 @@
             </div>
             <div class="flex gap-4">
               <p-checkbox
-                id="unique"
                 name="unique"
                 [(ngModel)]="columnFormData.unique"
                 [binary]="true"
                 size="large"
               />
               <div>
-                <label for="unique" class="text-sm">Is Unique</label>
+                <label class="text-sm">Is Unique</label>
                 <p class="text-surface-500 text-xs">
                   Enforce values in the column to be unique across rows
                 </p>

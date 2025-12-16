@@ -21,7 +21,12 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { DividerModule } from 'primeng/divider';
+import { SelectModule } from 'primeng/select';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { DatePickerModule } from 'primeng/datepicker';
 
+import { DataType } from '../../../../shared/spreadsheet/field/interfaces/field.interface';
 import { ColumnFormData, ColumnDefinition, TableDefinition, TableService } from '../table.service';
 
 @Component({
@@ -38,6 +43,10 @@ import { ColumnFormData, ColumnDefinition, TableDefinition, TableService } from 
     MessageModule,
     AutoFocusModule,
     DividerModule,
+    SelectModule,
+    InputNumberModule,
+    SelectButtonModule,
+    DatePickerModule,
   ],
 })
 export class ColumnEditorDrawerComponent {
@@ -48,9 +57,15 @@ export class ColumnEditorDrawerComponent {
 
   onSave = output<ColumnFormData>();
 
+  protected readonly DataType = DataType;
   protected columnForm = viewChild<NgForm>('columnForm');
   protected columnFormData: ColumnFormData;
   protected isSaving = signal(false);
+  protected dataTypes = Object.keys(DataType);
+  protected selectedDataType = signal<string>(null);
+  protected options = signal<string[]>([]);
+  protected selectionState: string | undefined = 'Single';
+  protected readonly selectionStateOptions = ['Single', 'Multiple'];
 
   constructor(
     private destroyRef: DestroyRef,
@@ -59,6 +74,14 @@ export class ColumnEditorDrawerComponent {
     effect(() => {
       this.columnFormData = { ...this.column() };
     });
+  }
+
+  protected save() {
+    this.onSubmit();
+  }
+
+  protected cancel() {
+    this.visible.set(false);
   }
 
   protected async onSubmit() {
@@ -87,11 +110,25 @@ export class ColumnEditorDrawerComponent {
     });
   }
 
-  protected save() {
-    this.onSubmit();
+  protected onSelectDataType(dataType: string) {
+    this.columnFormData.dataType = DataType[dataType];
+    this.columnFormData.minLength =
+      this.columnFormData.maxLength =
+      this.columnFormData.minValue =
+      this.columnFormData.maxValue =
+      this.columnFormData.defaultValue =
+        null;
   }
 
-  protected cancel() {
-    this.visible.set(false);
+  protected addOption() {
+    this.options.update((arr) => [...arr, '']);
+  }
+
+  protected editOption(idx: number, option: string) {
+    this.options.update((arr) => arr.map((o, i) => (i === idx ? option : o)));
+  }
+
+  protected removeOption(idx: number) {
+    this.options.update((arr) => arr.filter((o, i) => i !== idx));
   }
 }

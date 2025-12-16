@@ -17,12 +17,15 @@ export interface TableDefinition {
 
 export interface ColumnDefinition {
   name: string;
-  dataType: string;
+  dataType: DataType;
   rawType: string;
   primary: boolean;
   nullable: boolean;
   unique: boolean;
+  minLength: number | null;
   maxLength: number | null;
+  minValue: number | Date | null;
+  maxValue: number | Date | null;
   defaultValue: any;
   comment: string | null;
   options: string[] | null;
@@ -36,13 +39,7 @@ export interface TableFormData {
   timestamps?: boolean;
 }
 
-export interface ColumnFormData {
-  name: string;
-  comment: string;
-  primary: boolean;
-  nullable: boolean;
-  unique: boolean;
-}
+export interface ColumnFormData extends ColumnDefinition {}
 
 interface Response<T = any> {
   success: boolean;
