@@ -12,7 +12,7 @@
       <div class="p-5">
         <div class="grid grid-cols-3 w-full gap-12">
           <label for="name" class="col-span-1">
-            <p class="font-medium">Name</p>
+            <p class="font-medium text-sm">Name</p>
           </label>
           <div class="flex flex-col gap-1 col-span-2">
             <input
@@ -40,7 +40,7 @@
       <div class="p-5">
         <div class="grid grid-cols-3 w-full gap-12">
           <label for="description" class="col-span-1">
-            <p class="font-medium">Permissions</p>
+            <p class="font-medium text-sm">Permissions</p>
           </label>
           <div class="flex flex-col gap-8 col-span-2">
             <div class="flex gap-4">
@@ -51,8 +51,8 @@
                 [binary]="true"
                 size="large"
               />
-              <div class="flex flex-col gap-1">
-                <label for="restApiPermission">REST API Access</label>
+              <div>
+                <label for="restApiPermission" class="text-sm">REST API Access</label>
                 <p class="text-surface-500 text-xs">
                   Enable this to allow the API key to access and manage data via the system’s
                   RESTful API.
@@ -67,8 +67,8 @@
                 [binary]="true"
                 size="large"
               />
-              <div class="flex flex-col gap-1">
-                <label for="agentApiPermission">Agent API Access</label>
+              <div>
+                <label for="agentApiPermission" class="text-sm">Agent API Access</label>
                 <p class="text-surface-500 text-xs">
                   Enable this to allow the API key to access and manage data via the system’s Agent
                   API.
@@ -83,8 +83,8 @@
                 [binary]="true"
                 size="large"
               />
-              <div class="flex flex-col gap-1">
-                <label for="mcpServerPermission">MCP Server Access</label>
+              <div>
+                <label for="mcpServerPermission" class="text-sm">MCP Server Access</label>
                 <p class="text-surface-500 text-xs">
                   Enable this to allow the API key to access and manage data via the system’s MCP
                   Server.
@@ -99,8 +99,8 @@
                 [binary]="true"
                 size="large"
               />
-              <div class="flex flex-col gap-1">
-                <label for="realtimeServerPermission">Realtime Server Access</label>
+              <div>
+                <label for="realtimeServerPermission" class="text-sm">Realtime Server Access</label>
                 <p class="text-surface-500 text-xs">
                   Enable this to allow the API key to access and manage data via the system’s
                   Realtime Server.

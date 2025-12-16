@@ -7,7 +7,7 @@
         } @else {
           <i [class]="`${field.icon}`"></i>
         }
-        <p class="font-medium">{{ field.name }}</p>
+        <p class="font-medium text-sm">{{ field.name }}</p>
       </div>
       <p class="text-surface-500 text-sm">
         @if (field.description) {
@@ -120,8 +120,8 @@
     <p-divider />
     <div class="p-5">
       <div class="mb-10">
-        <p class="text-xl font-medium">Optional Fields</p>
-        <p class="text-surface-500">These are columns that do not need any value</p>
+        <p class="font-medium text-base">Optional Fields</p>
+        <p class="text-surface-500 text-sm">These are columns that do not need any value</p>
       </div>
       <div class="flex flex-col gap-12">
         @for (field of optionalFields(); track field.name) {

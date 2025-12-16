@@ -27,6 +27,8 @@ html {
 
 .custom-drawer {
   .p-drawer-header {
+    padding-top: 1.2rem;
+    padding-bottom: 1.2rem;
     border-bottom: 1px solid var(--p-surface-200);
   }
 
@@ -36,5 +38,9 @@ html {
 
   .p-drawer-footer {
     border-top: 1px solid var(--p-surface-200);
+  }
+
+  .p-drawer-title {
+    font-size: 1.2rem;
   }
 }
