@@ -19,119 +19,84 @@
     </label>
     @switch (field.dataType) {
       @case (DataType.Text) {
-        <input
-          pInputText
-          [attr.inputId]="field.name"
-          [pAutoFocus]="first"
-          [(ngModel)]="updatedRecord[field.name]"
-          [readonly]="viewOnly()"
+        <text-field-editor
+          [field]="field"
+          [(data)]="updatedRecord[field.name]"
+          [autoFocus]="first"
+          [viewOnly]="viewOnly()"
+          [label]="false"
           class="col-span-2"
-          placeholder="Input here..."
         />
       }
       @case (DataType.LongText) {
-        <div class="relative col-span-2">
-          <textarea
-            pTextarea
-            [attr.inputId]="field.name"
-            [pAutoFocus]="first"
-            [(ngModel)]="updatedRecord[field.name]"
-            [readonly]="viewOnly()"
-            rows="5"
-            class="w-full"
-            placeholder="Input here..."
-          ></textarea>
-          <p-button
-            icon="icon icon-maximize-2"
-            severity="secondary"
-            size="small"
-            class="absolute top-0.5 right-0.5"
-            [text]="true"
-            (click)="openRichTextEditor(field)"
-          />
-        </div>
+        <long-text-field-editor
+          [field]="field"
+          [(data)]="updatedRecord[field.name]"
+          [autoFocus]="first"
+          [viewOnly]="viewOnly()"
+          [label]="false"
+          class="col-span-2"
+        />
       }
       @case (DataType.Integer) {
-        <p-inputnumber
-          [attr.inputId]="field.name"
-          [pAutoFocus]="first"
-          [(ngModel)]="updatedRecord[field.name]"
-          [useGrouping]="false"
-          [readonly]="viewOnly()"
+        <integer-field-editor
+          [field]="field"
+          [(data)]="updatedRecord[field.name]"
+          [autoFocus]="first"
+          [viewOnly]="viewOnly()"
+          [label]="false"
           class="col-span-2"
-          placeholder="Input here..."
         />
       }
       @case (DataType.Number) {
-        <p-inputnumber
-          [attr.inputId]="field.name"
-          [pAutoFocus]="first"
-          [(ngModel)]="updatedRecord[field.name]"
-          [useGrouping]="false"
-          mode="decimal"
-          [minFractionDigits]="0"
-          [maxFractionDigits]="5"
-          [readonly]="viewOnly()"
+        <number-field-editor
+          [field]="field"
+          [(data)]="updatedRecord[field.name]"
+          [autoFocus]="first"
+          [viewOnly]="viewOnly()"
+          [label]="false"
           class="col-span-2"
-          placeholder="Input here..."
         />
       }
       @case (DataType.Select) {
-        <p-select
-          [attr.inputId]="field.name"
-          [pAutoFocus]="first"
-          [options]="field.options"
-          [readonly]="viewOnly()"
+        <select-field-editor
+          [field]="field"
+          [(data)]="updatedRecord[field.name]"
+          [autoFocus]="first"
+          [viewOnly]="viewOnly()"
+          [label]="false"
           class="col-span-2"
-          placeholder="Select here..."
         />
       }
       @case (DataType.Checkbox) {
-        <div class="col-span-2">
-          <p-checkbox
-            [attr.inputId]="field.name"
-            [pAutoFocus]="first"
-            [(ngModel)]="updatedRecord[field.name]"
-            [readonly]="viewOnly()"
-            [binary]="true"
-            size="large"
-          />
-        </div>
+        <checkbox-field-editor
+          [field]="field"
+          [(data)]="updatedRecord[field.name]"
+          [autoFocus]="first"
+          [viewOnly]="viewOnly()"
+          [label]="false"
+          class="col-span-2"
+        />
       }
       @case (DataType.Date) {
-        <p-datepicker
-          [attr.inputId]="field.name"
-          [pAutoFocus]="first"
-          [(ngModel)]="updatedRecord[field.name]"
-          [readonlyInput]="viewOnly()"
-          [disabled]="viewOnly()"
-          class="flex flex-col col-span-2"
-          appendTo="body"
-          placeholder="Select here..."
+        <date-field-editor
+          [field]="field"
+          [(data)]="updatedRecord[field.name]"
+          [autoFocus]="first"
+          [viewOnly]="viewOnly()"
+          [label]="false"
+          class="col-span-2"
         />
       }
       @case (DataType.JSON) {
-        <div class="relative col-span-2">
-          <textarea
-            pTextarea
-            [attr.inputId]="field.name"
-            [pAutoFocus]="first"
-            [ngModel]="updatedRecord[field.name] | json"
-            [readonly]="viewOnly()"
-            rows="5"
-            cols="30"
-            class="w-full"
-            placeholder="Input here..."
-          ></textarea>
-          <p-button
-            icon="icon icon-maximize-2"
-            severity="secondary"
-            size="small"
-            class="absolute top-0.5 right-0.5"
-            [text]="true"
-            (click)="openJSONEditor(field)"
-          />
-        </div>
+        <json-field-editor
+          [field]="field"
+          [(data)]="updatedRecord[field.name]"
+          [autoFocus]="first"
+          [viewOnly]="viewOnly()"
+          [label]="false"
+          class="col-span-2"
+        />
       }
     }
   </div>
@@ -145,16 +110,6 @@
 >
   <ng-template #content>
     <p-toast />
-    <rich-text-editor-drawer
-      [(visible)]="visibleRichTextEditor"
-      [(value)]="editingRichText"
-      (onSave)="updatedRecord[editingRichTextField?.name] = $event"
-    />
-    <json-editor-drawer
-      [(visible)]="visibleJSONEditor"
-      [(value)]="editingJSONText"
-      (onSave)="updatedRecord[editingJSONField?.name] = $event"
-    />
     <div class="flex flex-col gap-12">
       @for (field of requiredFields(); let first = $first; track field.name) {
         <ng-container *ngTemplateOutlet="fieldTmpl; context: { field, first }" />

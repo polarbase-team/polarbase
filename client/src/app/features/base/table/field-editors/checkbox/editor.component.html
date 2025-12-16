@@ -1,0 +1,16 @@
+@let fieldName = field().name;
+
+<div class="flex flex-col gap-2 w-full">
+  @if (label() !== false) {
+    <label [attr.for]="fieldName">{{ fieldName }}</label>
+  }
+  <p-checkbox
+    [attr.inputId]="field.name"
+    [attr.placeholder]="placeholder() ?? 'Input here...'"
+    [pAutoFocus]="autoFocus()"
+    [readonly]="viewOnly()"
+    [(ngModel)]="data"
+    [binary]="true"
+    size="large"
+  />
+</div>
