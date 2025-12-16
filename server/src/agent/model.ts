@@ -6,7 +6,7 @@ import { createXai } from '@ai-sdk/xai';
 
 import { createTableTool } from './tools/create_table';
 import { deleteFromTableTool } from './tools/delete_from_table';
-import { findColumnsTool } from './tools/find_coumns';
+import { findColumnsTool } from './tools/find_columns';
 import { findTablesTool } from './tools/find_tables';
 import { insertIntoTableTool } from './tools/insert_into_table';
 import { selectFromTableTool } from './tools/select_from_table';
