@@ -80,8 +80,8 @@ export class ColumnEditorDrawerComponent {
   protected columnForm = viewChild<NgForm>('columnForm');
   protected columnFormData: ColumnFormData;
   protected isSaving = signal(false);
-  protected dataTypes = Object.keys(DataType);
-  protected selectedDataType = signal<string>(null);
+  protected dataTypes = Object.keys(DataType).map((t) => ({ name: t, value: DataType[t] }));
+  protected selectedDataType = signal<DataType>(null);
   protected options = signal<string[]>([]);
   protected selectionState: string | undefined = 'Single';
   protected readonly selectionStateOptions = ['Single', 'Multiple'];
@@ -92,7 +92,9 @@ export class ColumnEditorDrawerComponent {
     private tblService: TableService,
   ) {
     effect(() => {
-      this.columnFormData = { ...this.column() };
+      const column = { ...this.column() };
+      this.columnFormData = column;
+      this.selectedDataType.set(column.dataType);
     });
   }
 

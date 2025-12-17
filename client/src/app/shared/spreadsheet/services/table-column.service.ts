@@ -166,6 +166,13 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
+  editColumn(column: TableColumn) {
+    this.host.columnAction.emit({
+      type: TableColumnActionType.Edit,
+      payload: column,
+    });
+  }
+
   showColumn(column: TableColumn) {
     if (!column) return;
 
@@ -523,14 +530,26 @@ export class TableColumnService extends TableBaseService {
         });
       }
     } else {
-      if (config.freezable) {
+      if (config.updatable) {
         items.push({
-          label: 'Freeze up to This Column',
-          icon: 'icon icon-panel-right-close',
+          label: 'Edit column',
+          icon: 'icon icon-pencil',
           command: () => {
-            this.tableService.setFrozenCount(columnIndex);
+            this.editColumn(column);
           },
         });
+      }
+      if (config.freezable) {
+        items.push(
+          { separator: true },
+          {
+            label: 'Freeze up to This Column',
+            icon: 'icon icon-panel-right-close',
+            command: () => {
+              this.tableService.setFrozenCount(columnIndex);
+            },
+          },
+        );
       }
       if (config.sortable) {
         items.push(

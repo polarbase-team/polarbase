@@ -138,6 +138,9 @@ export class TableDetailComponent {
       case TableColumnActionType.Add:
         this.addNewColumn();
         break;
+      case TableColumnActionType.Edit:
+        this.editColumn(action.payload as TableColumn);
+        break;
     }
   }
 
@@ -215,8 +218,14 @@ export class TableDetailComponent {
   }
 
   protected addNewColumn() {
-    this.updatedRecord = null;
-    this.updatedRecordMode = 'add';
+    this.updatedColumn = null;
+    this.updatedColumnMode = 'add';
+    this.visibleColumnEditor = true;
+  }
+
+  protected editColumn(column: TableColumn) {
+    this.updatedColumn = column.field.params;
+    this.updatedColumnMode = 'edit';
     this.visibleColumnEditor = true;
   }
 

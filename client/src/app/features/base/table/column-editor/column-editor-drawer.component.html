@@ -65,13 +65,15 @@
               <label class="text-sm">Type</label>
               <p-select
                 name="type"
+                optionLabel="name"
+                optionValue="value"
                 [options]="dataTypes"
                 [(ngModel)]="selectedDataType"
                 (ngModelChange)="onSelectDataType($event)"
                 placeholder="Select here..."
               />
             </div>
-            @switch (DataType[selectedDataType()]) {
+            @switch (selectedDataType()) {
               @case (DataType.Text) {
                 <div class="flex flex-col gap-1">
                   <label class="text-sm">Min length</label>
@@ -233,7 +235,7 @@
             <p class="font-medium text-sm">Default Value</p>
           </label>
           <div class="flex flex-col gap-8 col-span-2">
-            @switch (DataType[selectedDataType()]) {
+            @switch (selectedDataType()) {
               @case (DataType.Text) {
                 <text-field-editor
                   [field]="field"

@@ -18,7 +18,8 @@ export interface TableDefinition {
 export interface ColumnDefinition {
   name: string;
   dataType: DataType;
-  rawType: string;
+  pgDataType: string;
+  pgRawType: string;
   primary: boolean;
   nullable: boolean;
   unique: boolean;
@@ -29,6 +30,7 @@ export interface ColumnDefinition {
   defaultValue: any;
   comment: string | null;
   options: string[] | null;
+  foreignKey: { table: string; column: string };
 }
 
 export interface TableFormData {

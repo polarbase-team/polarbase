@@ -18,6 +18,7 @@ export interface TableConfig {
     reorderable?: boolean;
     calculable?: boolean;
     addable?: boolean;
+    updatable?: boolean;
     deletable?: boolean;
     freezable?: boolean;
     groupable?: boolean;

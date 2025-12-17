@@ -94,6 +94,7 @@ const DEFAULT_CONFIG: TableConfig = {
     reorderable: true,
     calculable: true,
     addable: true,
+    updatable: true,
     deletable: true,
     freezable: true,
     groupable: true,
