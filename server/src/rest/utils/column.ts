@@ -19,6 +19,7 @@ export interface Column {
   nullable: boolean;
   unique: boolean;
   defaultValue: string;
+  hasSpecialDefault: boolean;
   comment: string;
   options: string[];
   foreignKey: any;

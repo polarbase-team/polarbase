@@ -28,6 +28,7 @@ export interface ColumnDefinition {
   minValue: number | Date | null;
   maxValue: number | Date | null;
   defaultValue: any;
+  hasSpecialDefault: boolean;
   comment: string | null;
   options: string[] | null;
   foreignKey: { table: string; column: string };

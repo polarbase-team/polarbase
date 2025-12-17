@@ -233,75 +233,92 @@
         <div class="grid grid-cols-3 w-full gap-12">
           <label class="col-span-1">
             <p class="font-medium text-sm">Default Value</p>
+            <p
+              class="text-surface-500 text-sm hover:underline cursor-pointer"
+              (click)="toggleDefaultValueMode()"
+            >
+              {{ hasSpecialDefault() ? 'Plain text' : 'Field editor' }}
+            </p>
           </label>
           <div class="flex flex-col gap-8 col-span-2">
-            @switch (selectedDataType()) {
-              @case (DataType.Text) {
-                <text-field-editor
-                  [field]="internalField"
-                  [(data)]="columnFormData.defaultValue"
-                  [label]="false"
-                  class="col-span-2"
-                />
-              }
-              @case (DataType.LongText) {
-                <long-text-field-editor
-                  [field]="internalField"
-                  [(data)]="columnFormData.defaultValue"
-                  [label]="false"
-                  class="col-span-2"
-                />
-              }
-              @case (DataType.Integer) {
-                <integer-field-editor
-                  [field]="internalField"
-                  [(data)]="columnFormData.defaultValue"
-                  [label]="false"
-                  class="col-span-2"
-                />
-              }
-              @case (DataType.Number) {
-                <number-field-editor
-                  [field]="internalField"
-                  [(data)]="columnFormData.defaultValue"
-                  [label]="false"
-                  class="col-span-2"
-                />
-              }
-              @case (DataType.Select) {
-                <select-field-editor
-                  [field]="internalField"
-                  [(data)]="columnFormData.defaultValue"
-                  [label]="false"
-                  class="col-span-2"
-                />
-              }
-              @case (DataType.Checkbox) {
-                <checkbox-field-editor
-                  [field]="internalField"
-                  [(data)]="columnFormData.defaultValue"
-                  [label]="false"
-                  class="col-span-2"
-                />
-              }
-              @case (DataType.Date) {
-                <date-field-editor
-                  [field]="internalField"
-                  [(data)]="columnFormData.defaultValue"
-                  [label]="false"
-                  class="col-span-2"
-                />
-              }
-              @case (DataType.JSON) {
-                <json-field-editor
-                  [field]="internalField"
-                  [(data)]="columnFormData.defaultValue"
-                  [label]="false"
-                  class="col-span-2"
-                />
-              }
-              @default {
-                <i class="text-sm text-surface-500">Select a data type first.</i>
+            @if (hasSpecialDefault()) {
+              <textarea
+                pTextarea
+                name="defaultValue"
+                placeholder="Input here..."
+                [(ngModel)]="columnFormData.defaultValue"
+                rows="5"
+                class="w-full"
+              ></textarea>
+            } @else {
+              @switch (selectedDataType()) {
+                @case (DataType.Text) {
+                  <text-field-editor
+                    [field]="internalField"
+                    [(data)]="columnFormData.defaultValue"
+                    [label]="false"
+                    class="col-span-2"
+                  />
+                }
+                @case (DataType.LongText) {
+                  <long-text-field-editor
+                    [field]="internalField"
+                    [(data)]="columnFormData.defaultValue"
+                    [label]="false"
+                    class="col-span-2"
+                  />
+                }
+                @case (DataType.Integer) {
+                  <integer-field-editor
+                    [field]="internalField"
+                    [(data)]="columnFormData.defaultValue"
+                    [label]="false"
+                    class="col-span-2"
+                  />
+                }
+                @case (DataType.Number) {
+                  <number-field-editor
+                    [field]="internalField"
+                    [(data)]="columnFormData.defaultValue"
+                    [label]="false"
+                    class="col-span-2"
+                  />
+                }
+                @case (DataType.Select) {
+                  <select-field-editor
+                    [field]="internalField"
+                    [(data)]="columnFormData.defaultValue"
+                    [label]="false"
+                    class="col-span-2"
+                  />
+                }
+                @case (DataType.Checkbox) {
+                  <checkbox-field-editor
+                    [field]="internalField"
+                    [(data)]="columnFormData.defaultValue"
+                    [label]="false"
+                    class="col-span-2"
+                  />
+                }
+                @case (DataType.Date) {
+                  <date-field-editor
+                    [field]="internalField"
+                    [(data)]="columnFormData.defaultValue"
+                    [label]="false"
+                    class="col-span-2"
+                  />
+                }
+                @case (DataType.JSON) {
+                  <json-field-editor
+                    [field]="internalField"
+                    [(data)]="columnFormData.defaultValue"
+                    [label]="false"
+                    class="col-span-2"
+                  />
+                }
+                @default {
+                  <i class="text-sm text-surface-500">Select a data type first.</i>
+                }
               }
             }
           </div>
@@ -322,10 +339,9 @@
                 size="large"
               />
               <div>
-                <label class="text-sm">Is Primary Key</label>
+                <label class="text-sm">Primary Key</label>
                 <p class="text-surface-500 text-xs">
-                  A primary key indicates that a column or group of columns can be used as a unique
-                  identifier for rows in the table
+                  Sets a column (or columns) as a unique ID for every row — no duplicates allowed.
                 </p>
               </div>
             </div>
@@ -339,7 +355,7 @@
               <div>
                 <label class="text-sm">Allow Nullable</label>
                 <p class="text-surface-500 text-xs">
-                  Allow the column to assume a NULL value if no value is provided
+                  Allows the column to be left blank (optional).
                 </p>
               </div>
             </div>
@@ -353,7 +369,8 @@
               <div>
                 <label class="text-sm">Is Unique</label>
                 <p class="text-surface-500 text-xs">
-                  Enforce values in the column to be unique across rows
+                  Ensures all values are different (no duplicates). Can be blank if allowed, unlike
+                  Primary Key.
                 </p>
               </div>
             </div>

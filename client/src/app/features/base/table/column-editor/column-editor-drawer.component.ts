@@ -83,6 +83,7 @@ export class ColumnEditorDrawerComponent {
   protected isSaving = signal(false);
   protected dataTypes = Object.keys(DataType).map((t) => ({ name: t, value: DataType[t] }));
   protected selectedDataType = signal<DataType>(null);
+  protected hasSpecialDefault = signal(false);
   protected options = signal<string[]>([]);
   protected selectionState: string | undefined = 'Single';
   protected readonly selectionStateOptions = ['Single', 'Multiple'];
@@ -93,9 +94,10 @@ export class ColumnEditorDrawerComponent {
     private tblService: TableService,
   ) {
     effect(() => {
-      const column = { ...this.column() };
+      const column = { nullable: true, ...this.column() };
       this.columnFormData = column;
       this.selectedDataType.set(column.dataType);
+      this.hasSpecialDefault.set(column.hasSpecialDefault);
     });
 
     effect(() => {
@@ -158,5 +160,9 @@ export class ColumnEditorDrawerComponent {
 
   protected removeOption(idx: number) {
     this.options.update((arr) => arr.filter((o, i) => i !== idx));
+  }
+
+  protected toggleDefaultValueMode() {
+    this.hasSpecialDefault.update((v) => !v);
   }
 }

@@ -280,6 +280,8 @@ export const getTableSchema = async (
 
   // 8. Combine everything into a clean schema object
   return columns.map((col) => {
+    const { value: defaultValue, isSpecialExpression: hasSpecialDefault } =
+      parsePostgresDefault(col.column_default);
     const validation = validationMap[col.column_name] || {};
     const column: Column = {
       name: col.column_name,
@@ -292,7 +294,8 @@ export const getTableSchema = async (
       maxLength: validation.maxLength ?? col.character_maximum_length ?? null,
       minValue: validation.minValue ?? null,
       maxValue: validation.maxValue ?? null,
-      defaultValue: col.column_default,
+      defaultValue,
+      hasSpecialDefault,
       comment: commentMap[col.column_name] ?? null,
       options: enumMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
@@ -300,6 +303,73 @@ export const getTableSchema = async (
     column.dataType = mapDataType(column);
     return column;
   });
+};
+
+const parsePostgresDefault = (
+  rawDefault: string | null
+): {
+  value: any;
+  isSpecialExpression: boolean;
+} => {
+  if (rawDefault === null) {
+    return { value: null, isSpecialExpression: false };
+  }
+
+  let expr = rawDefault
+    .trim()
+    .replace(/::[\w\s"']+$/, '')
+    .trim();
+
+  const specialExpressionPatterns = [
+    /^nextval\(/i,
+    /^currval\(/i,
+    /^now\(\)$/i,
+    /^current_timestamp/i,
+    /^current_date/i,
+    /^gen_random_uuid\(\)$/i,
+    /^uuid_generate_v[1-5]/i,
+    /^transaction_timestamp\(\)$/i,
+    /^statement_timestamp\(\)$/i,
+    /^clock_timestamp\(\)$/i,
+    /^timezone\(/i,
+    /^date_bin\(/i,
+  ];
+
+  const isSpecial = specialExpressionPatterns.some((pattern) =>
+    pattern.test(expr)
+  );
+  if (isSpecial) {
+    return { value: expr, isSpecialExpression: true };
+  }
+
+  if (/^'.*'$/.test(expr)) {
+    const str = expr
+      .slice(1, -1)
+      .replace(/''/g, "'")
+      .replace(/\\n/g, '\n')
+      .replace(/\\r/g, '\r')
+      .replace(/\\t/g, '\t')
+      .replace(/\\\\/g, '\\')
+      .replace(/\\'/g, "'")
+      .replace(/\\"/g, '"');
+
+    return { value: str, isSpecialExpression: false };
+  }
+
+  if (/^-?\d+(\.\d+)?$/.test(expr)) {
+    const num = Number(expr);
+    return {
+      value: Number.isInteger(num) ? parseInt(expr, 10) : num,
+      isSpecialExpression: false,
+    };
+  }
+
+  if (expr === 'true') return { value: true, isSpecialExpression: false };
+  if (expr === 'false') return { value: false, isSpecialExpression: false };
+
+  if (expr === 'NULL') return { value: null, isSpecialExpression: false };
+
+  return { value: expr, isSpecialExpression: true };
 };
 
 const extractLengthRange = (definition: string) => {
