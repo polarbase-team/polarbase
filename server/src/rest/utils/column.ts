@@ -18,11 +18,14 @@ export interface Column {
   primary: boolean;
   nullable: boolean;
   unique: boolean;
-  maxLength: number;
   defaultValue: string;
   comment: string;
   options: string[];
   foreignKey: any;
+  minLength: number;
+  maxLength: number;
+  minValue: string | number;
+  maxValue: string | number;
 }
 
 const PG_TYPE_MAPPING: Record<string, DataType> = {
