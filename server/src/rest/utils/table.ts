@@ -50,6 +50,7 @@ export const getTableList = (
 export const getTableSchema = async (
   pg: Knex,
   tableName: string,
+  columnName?: string,
   schemaName = 'public'
 ) => {
   // 1. Basic column information
@@ -63,7 +64,11 @@ export const getTableSchema = async (
       'column_default',
       'ordinal_position'
     )
-    .where({ table_schema: 'public', table_name: tableName })
+    .where({
+      table_schema: schemaName,
+      table_name: tableName,
+      ...(columnName ? { column_name: columnName } : {}),
+    })
     .orderBy('ordinal_position');
 
   // 2. Column comments from pg_description
@@ -91,6 +96,9 @@ export const getTableSchema = async (
     .where({
       'pg_namespace.nspname': schemaName,
       'pg_class.relname': tableName,
+      ...(columnName
+        ? { 'information_schema.columns.column_name': columnName }
+        : {}),
     });
 
   const commentMap = Object.fromEntries(
@@ -120,8 +128,9 @@ export const getTableSchema = async (
         );
     })
     .where({
-      'key_column_usage.table_schema': 'public',
+      'key_column_usage.table_schema': schemaName,
       'key_column_usage.table_name': tableName,
+      ...(columnName ? { 'key_column_usage.column_name': columnName } : {}),
       'table_constraints.constraint_type': 'PRIMARY KEY',
     });
 
@@ -130,7 +139,11 @@ export const getTableSchema = async (
   // 4. Enum type values
   const enumColumns = await pg('information_schema.columns')
     .select('column_name', 'udt_name')
-    .where({ table_schema: 'public', table_name: tableName })
+    .where({
+      table_schema: schemaName,
+      table_name: tableName,
+      ...(columnName ? { column_name: columnName } : {}),
+    })
     .whereRaw(`udt_name IN (SELECT typname FROM pg_type WHERE typtype = 'e')`);
 
   const enumMap: Record<string, string[]> = {};
@@ -146,7 +159,7 @@ export const getTableSchema = async (
       .first();
 
     if (result?.labels) {
-      enumMap[col.column_name] = result.labels as string[];
+      enumMap[col.column_name] = result.labels?.split(', ');
     }
   }
 
@@ -170,8 +183,9 @@ export const getTableSchema = async (
       );
     })
     .where({
-      'kcu.table_schema': 'public',
+      'kcu.table_schema': schemaName,
       'kcu.table_name': tableName,
+      ...(columnName ? { 'kcu.column_name': columnName } : {}),
       'tc.constraint_type': 'FOREIGN KEY',
     });
 
@@ -199,6 +213,7 @@ export const getTableSchema = async (
       'tc.table_schema': schemaName,
       'tc.table_name': tableName,
       'tc.constraint_type': 'UNIQUE',
+      ...(columnName ? { 'kcu.column_name': columnName } : {}),
     })
     .groupBy('kcu.column_name')
     .havingRaw('COUNT(*) = 1');

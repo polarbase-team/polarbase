@@ -33,7 +33,7 @@ export class TableService {
     const exists = await pg.schema.hasTable(tableName);
     if (!exists) throw new Error('Table not found');
 
-    const schema = await getTableSchema(pg, tableName, schemaName);
+    const schema = await getTableSchema(pg, schemaName, tableName);
     return schema;
   }
 
