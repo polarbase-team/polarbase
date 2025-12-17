@@ -5,8 +5,8 @@
     <label [attr.for]="fieldName">{{ fieldName }}</label>
   }
   <p-select
-    [attr.inputId]="fieldName"
-    [attr.placeholder]="placeholder() ?? 'Select here...'"
+    [inputId]="fieldName"
+    [placeholder]="placeholder() ?? 'Select here...'"
     [pAutoFocus]="autoFocus()"
     [readonly]="viewOnly()"
     [options]="field().options"

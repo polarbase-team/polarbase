@@ -5,8 +5,7 @@
     <label [attr.for]="fieldName">{{ fieldName }}</label>
   }
   <p-checkbox
-    [attr.inputId]="field.name"
-    [attr.placeholder]="placeholder() ?? 'Input here...'"
+    [inputId]="field().name"
     [pAutoFocus]="autoFocus()"
     [readonly]="viewOnly()"
     [(ngModel)]="data"

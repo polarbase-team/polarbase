@@ -25,8 +25,10 @@ import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { DatePickerModule } from 'primeng/datepicker';
+import { FluidModule } from 'primeng/fluid';
 
 import { DataType } from '../../../../shared/spreadsheet/field/interfaces/field.interface';
+import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
 import { TextFieldEditorComponent } from '../field-editors/text/editor.component';
 import { LongTextFieldEditorComponent } from '../field-editors/long-text/editor.component';
 import { IntegerFieldEditorComponent } from '../field-editors/integer/editor.component';
@@ -36,7 +38,6 @@ import { CheckboxFieldEditorComponent } from '../field-editors/checkbox/editor.c
 import { DateFieldEditorComponent } from '../field-editors/date/editor.component';
 import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
 import { ColumnFormData, ColumnDefinition, TableDefinition, TableService } from '../table.service';
-import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
 
 @Component({
   selector: 'column-editor-drawer',
@@ -56,6 +57,7 @@ import { Field } from '../../../../shared/spreadsheet/field/objects/field.object
     InputNumberModule,
     SelectButtonModule,
     DatePickerModule,
+    FluidModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
