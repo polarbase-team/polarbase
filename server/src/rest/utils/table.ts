@@ -7,7 +7,7 @@ import { Column, mapDataType } from './column';
  */
 export const getTableList = (
   pg: Knex,
-  schemaName = 'pubic',
+  schemaName: string,
   blacklisted: string[] = []
 ) => {
   return pg('pg_class as c')
@@ -49,9 +49,9 @@ export const getTableList = (
  */
 export const getTableSchema = async (
   pg: Knex,
+  schemaName: string,
   tableName: string,
-  columnName?: string,
-  schemaName = 'public'
+  columnName?: string
 ) => {
   // 1. Basic column information
   const columns = await pg('information_schema.columns')
