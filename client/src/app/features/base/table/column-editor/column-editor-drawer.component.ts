@@ -72,6 +72,7 @@ export class ColumnEditorDrawerComponent {
   visible = model(false);
   table = input<TableDefinition>();
   column = input<ColumnDefinition>();
+  field = input<Field>();
   mode = input<'add' | 'edit'>('add');
 
   onSave = output<ColumnFormData>();
@@ -85,7 +86,7 @@ export class ColumnEditorDrawerComponent {
   protected options = signal<string[]>([]);
   protected selectionState: string | undefined = 'Single';
   protected readonly selectionStateOptions = ['Single', 'Multiple'];
-  protected field: Field;
+  protected internalField: Field;
 
   constructor(
     private destroyRef: DestroyRef,
@@ -95,6 +96,10 @@ export class ColumnEditorDrawerComponent {
       const column = { ...this.column() };
       this.columnFormData = column;
       this.selectedDataType.set(column.dataType);
+    });
+
+    effect(() => {
+      this.internalField = this.field();
     });
   }
 
@@ -132,15 +137,15 @@ export class ColumnEditorDrawerComponent {
     });
   }
 
-  protected onSelectDataType(dataType: string) {
-    this.columnFormData.dataType = DataType[dataType];
+  protected onSelectDataType(dataType: DataType) {
+    this.columnFormData.dataType = dataType;
     this.columnFormData.minLength =
       this.columnFormData.maxLength =
       this.columnFormData.minValue =
       this.columnFormData.maxValue =
       this.columnFormData.defaultValue =
         null;
-    this.field = this.tblService.buildField(this.columnFormData);
+    this.internalField = this.tblService.buildField(this.columnFormData);
   }
 
   protected addOption() {

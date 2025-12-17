@@ -16,6 +16,7 @@ import { DividerModule } from 'primeng/divider';
 import { MenuItem } from 'primeng/api';
 import { MenuModule } from 'primeng/menu';
 
+import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
 import { TableColumn } from '../../../../shared/spreadsheet/models/table-column';
 import { TableRow } from '../../../../shared/spreadsheet/models/table-row';
 import { TableConfig } from '../../../../shared/spreadsheet/models/table';
@@ -30,14 +31,14 @@ import {
   TableCellActionType,
   TableCellEditedEvent,
 } from '../../../../shared/spreadsheet/events/table-cell';
-import { RecordEditorDrawerComponent } from '../record-editor/record-editor-drawer.component';
-import { ColumnDefinition, TableDefinition, TableService } from '../table.service';
-import { TableRealtimeService } from '../table-realtime.service';
 import {
   TableColumnAction,
   TableColumnActionType,
 } from '../../../../shared/spreadsheet/events/table-column';
 import { ColumnEditorDrawerComponent } from '../column-editor/column-editor-drawer.component';
+import { RecordEditorDrawerComponent } from '../record-editor/record-editor-drawer.component';
+import { ColumnDefinition, TableDefinition, TableService } from '../table.service';
+import { TableRealtimeService } from '../table-realtime.service';
 
 @Component({
   selector: 'table-detail',
@@ -65,6 +66,7 @@ export class TableDetailComponent {
   });
   protected tblService = inject(TableService);
   protected updatedColumn: ColumnDefinition;
+  protected updatedColumnField: Field;
   protected updatedColumnMode: 'add' | 'edit' = 'add';
   protected visibleColumnEditor: boolean;
   protected updatedRecord: Record<string, any>;
@@ -225,6 +227,7 @@ export class TableDetailComponent {
 
   protected editColumn(column: TableColumn) {
     this.updatedColumn = column.field.params;
+    this.updatedColumnField = column.field;
     this.updatedColumnMode = 'edit';
     this.visibleColumnEditor = true;
   }

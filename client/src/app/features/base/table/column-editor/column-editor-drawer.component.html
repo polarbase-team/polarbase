@@ -238,7 +238,7 @@
             @switch (selectedDataType()) {
               @case (DataType.Text) {
                 <text-field-editor
-                  [field]="field"
+                  [field]="internalField"
                   [(data)]="columnFormData.defaultValue"
                   [label]="false"
                   class="col-span-2"
@@ -246,7 +246,7 @@
               }
               @case (DataType.LongText) {
                 <long-text-field-editor
-                  [field]="field"
+                  [field]="internalField"
                   [(data)]="columnFormData.defaultValue"
                   [label]="false"
                   class="col-span-2"
@@ -254,7 +254,7 @@
               }
               @case (DataType.Integer) {
                 <integer-field-editor
-                  [field]="field"
+                  [field]="internalField"
                   [(data)]="columnFormData.defaultValue"
                   [label]="false"
                   class="col-span-2"
@@ -262,7 +262,7 @@
               }
               @case (DataType.Number) {
                 <number-field-editor
-                  [field]="field"
+                  [field]="internalField"
                   [(data)]="columnFormData.defaultValue"
                   [label]="false"
                   class="col-span-2"
@@ -270,7 +270,7 @@
               }
               @case (DataType.Select) {
                 <select-field-editor
-                  [field]="field"
+                  [field]="internalField"
                   [(data)]="columnFormData.defaultValue"
                   [label]="false"
                   class="col-span-2"
@@ -278,7 +278,7 @@
               }
               @case (DataType.Checkbox) {
                 <checkbox-field-editor
-                  [field]="field"
+                  [field]="internalField"
                   [(data)]="columnFormData.defaultValue"
                   [label]="false"
                   class="col-span-2"
@@ -286,7 +286,7 @@
               }
               @case (DataType.Date) {
                 <date-field-editor
-                  [field]="field"
+                  [field]="internalField"
                   [(data)]="columnFormData.defaultValue"
                   [label]="false"
                   class="col-span-2"
@@ -294,7 +294,7 @@
               }
               @case (DataType.JSON) {
                 <json-field-editor
-                  [field]="field"
+                  [field]="internalField"
                   [(data)]="columnFormData.defaultValue"
                   [label]="false"
                   class="col-span-2"

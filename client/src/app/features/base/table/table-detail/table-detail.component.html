@@ -5,6 +5,7 @@
     [(visible)]="visibleColumnEditor"
     [table]="tblService.selectedTable()"
     [column]="updatedColumn"
+    [field]="updatedColumnField"
     [mode]="updatedColumnMode"
     (onSave)="onRecordSave($event)"
   />
