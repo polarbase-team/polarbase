@@ -24,6 +24,11 @@ import { DividerModule } from 'primeng/divider';
 
 import { TableFormData, TableDefinition, TableService } from '../table.service';
 
+const DEFAULT_VALUE: TableFormData = {
+  autoAddingPrimaryKey: true,
+  timestamps: true,
+} as TableFormData;
+
 @Component({
   selector: 'table-editor-drawer',
   templateUrl: './table-editor-drawer.component.html',
@@ -56,7 +61,7 @@ export class TableEditorDrawerComponent {
     private tblService: TableService,
   ) {
     effect(() => {
-      this.tableFormData = { autoAddingPrimaryKey: true, timestamps: true, ...this.table() };
+      this.tableFormData = { ...DEFAULT_VALUE, ...this.table() };
     });
   }
 
@@ -79,6 +84,7 @@ export class TableEditorDrawerComponent {
     ).subscribe(() => {
       this.visible.set(false);
       this.onSave.emit(this.tableFormData);
+      this.reset();
     });
   }
 
@@ -88,5 +94,11 @@ export class TableEditorDrawerComponent {
 
   protected cancel() {
     this.visible.set(false);
+  }
+
+  protected reset() {
+    this.tableForm().reset();
+    this.tableFormData = { ...DEFAULT_VALUE };
+    this.isSaving.set(false);
   }
 }

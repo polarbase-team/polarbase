@@ -37,7 +37,7 @@ import {
 } from '../../../../shared/spreadsheet/events/table-column';
 import { ColumnEditorDrawerComponent } from '../column-editor/column-editor-drawer.component';
 import { RecordEditorDrawerComponent } from '../record-editor/record-editor-drawer.component';
-import { ColumnDefinition, TableDefinition, TableService } from '../table.service';
+import { ColumnDefinition, ColumnFormData, TableDefinition, TableService } from '../table.service';
 import { TableRealtimeService } from '../table-realtime.service';
 
 @Component({
@@ -202,19 +202,30 @@ export class TableDetailComponent {
     }
   }
 
-  protected onRecordSave(record: Record<string, any>) {
+  protected onColumnSave(savedColumn: ColumnFormData) {
+    const column: TableColumn = {
+      id: savedColumn.name,
+      primary: savedColumn.primary,
+      editable: !savedColumn.primary,
+      hidden: savedColumn.primary && length > 1,
+      field: this.tblService.buildField(savedColumn),
+    };
+    this.columns.update((arr) => [...arr, column]);
+  }
+
+  protected onRecordSave(savedRecord: Record<string, any>) {
     const { tableColumnPk } = this.tblService.selectedTable();
-    const recordId = record[tableColumnPk];
+    const recordId = savedRecord[tableColumnPk];
 
     if (this.updatedRecordMode === 'add') {
       const newRow: TableRow = {
         id: recordId,
-        data: record,
+        data: savedRecord,
       };
       this.rows.update((arr) => [...arr, newRow]);
     } else {
       this.rows.update((rows) =>
-        rows.map((row) => (row.id === recordId ? { ...row, data: record } : row)),
+        rows.map((row) => (row.id === recordId ? { ...row, data: savedRecord } : row)),
       );
     }
   }

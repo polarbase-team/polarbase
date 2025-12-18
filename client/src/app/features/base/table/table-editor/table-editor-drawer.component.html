@@ -3,6 +3,7 @@
   position="right"
   [header]="mode() === 'edit' ? `Edit table: ${table().tableName}` : 'New table'"
   styleClass="!w-150 custom-drawer"
+  (onHide)="reset()"
 >
   <ng-template #content>
     <form #tableForm="ngForm" (ngSubmit)="onSubmit()">
