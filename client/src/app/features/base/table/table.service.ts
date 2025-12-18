@@ -25,13 +25,14 @@ export interface ColumnDefinition {
   unique: boolean;
   minLength: number | null;
   maxLength: number | null;
-  minValue: number | Date | null;
-  maxValue: number | Date | null;
-  defaultValue: any;
+  minValue: number | string | null;
+  maxValue: number | string | null;
+  maxSize: number | null;
+  defaultValue: any | null;
   hasSpecialDefault: boolean;
   comment: string | null;
   options: string[] | null;
-  foreignKey: { table: string; column: string };
+  foreignKey: { table: string; column: string } | null;
 }
 
 export interface TableFormData {

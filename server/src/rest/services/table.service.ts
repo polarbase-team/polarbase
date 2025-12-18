@@ -1,6 +1,12 @@
 import pg from '../../plugins/pg';
 import { getTableList, getTableSchema } from '../utils/table';
-import { DataType } from '../utils/column';
+import {
+  addLengthCheck,
+  addSizeCheck,
+  addValueCheck,
+  specificType,
+  DataType,
+} from '../utils/column';
 
 /**
  * List of table names that are forbidden to access via this REST API.
@@ -41,72 +47,25 @@ export class TableService {
     schemaName = 'public',
     tableName,
     tableComment,
-    columns,
     autoAddingPrimaryKey = true,
     timestamps = true,
   }: {
     schemaName?: string;
     tableName: string;
     tableComment?: string;
-    columns?: Array<{
-      name: string;
-      type: string;
-      nullable?: boolean;
-      primary?: boolean;
-      unique?: boolean;
-      default?: any;
-      options?: string[];
-      comment?: string;
-    }>;
     autoAddingPrimaryKey?: boolean;
     timestamps?: boolean;
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
+    const schemaBuilder = pg.schema.withSchema(schemaName);
 
-    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
+    const exists = await schemaBuilder.hasTable(tableName);
     if (exists) {
       throw new Error(`Table ${fullTableName} already exists`);
     }
 
-    await pg.schema.withSchema(schemaName).createTable(tableName, (table) => {
+    await schemaBuilder.createTable(tableName, (table) => {
       if (autoAddingPrimaryKey) table.increments('id').primary();
-
-      columns?.forEach((col) => {
-        let columnBuilder;
-
-        switch (col.type.toLowerCase()) {
-          case 'string':
-          case 'varchar':
-            columnBuilder = table.string(col.name);
-            break;
-          case 'text':
-            columnBuilder = table.text(col.name);
-            break;
-          case 'integer':
-            columnBuilder = table.integer(col.name);
-            break;
-          case 'boolean':
-            columnBuilder = table.boolean(col.name);
-            break;
-          case 'timestamp':
-            columnBuilder = table.timestamp(col.name);
-            break;
-          case 'enum':
-            if (!col.options?.length) {
-              throw new Error(`options is required for column ${col.name}`);
-            }
-            columnBuilder = table.enum(col.name, col.options);
-            break;
-          default:
-            throw new Error(`Unsupported column type: ${col.type}`);
-        }
-
-        if (col.nullable === false) columnBuilder.notNullable();
-        if (col.unique) columnBuilder.unique();
-        if (col.default !== undefined) columnBuilder.defaultTo(col.default);
-        if (col.primary) columnBuilder.primary();
-        if (col.comment) columnBuilder.comment(col.comment);
-      });
 
       if (timestamps) {
         table.timestamps();
@@ -134,8 +93,9 @@ export class TableService {
   }) {
     const { tableName: newTableName, tableComment: newTableComment } = data;
     const fullTableName = `${schemaName}.${tableName}`;
+    const schemaBuilder = pg.schema.withSchema(schemaName);
 
-    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
+    const exists = await schemaBuilder.hasTable(tableName);
     if (!exists) {
       throw new Error(`Table ${fullTableName} not found`);
     }
@@ -156,9 +116,11 @@ export class TableService {
     }
 
     if (newTableComment !== undefined) {
-      await pg.schema.withSchema(schemaName).table(finalTableName, (table) => {
-        table.comment(newTableComment ?? '');
-      });
+      await pg.schema
+        .withSchema(schemaName)
+        .alterTable(finalTableName, (table) => {
+          table.comment(newTableComment ?? '');
+        });
     }
 
     return { message: `Table ${fullTableName} updated successfully` };
@@ -174,8 +136,9 @@ export class TableService {
     cascade?: boolean;
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
+    const schemaBuilder = pg.schema.withSchema(schemaName);
 
-    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
+    const exists = await schemaBuilder.hasTable(tableName);
     if (!exists) {
       throw new Error(`Table ${fullTableName} not found`);
     }
@@ -185,78 +148,93 @@ export class TableService {
         `DROP TABLE IF EXISTS "${schemaName}"."${tableName}" CASCADE;`
       );
     } else {
-      await pg.schema.withSchema(schemaName).dropTable(tableName);
+      await schemaBuilder.dropTable(tableName);
     }
 
     return { message: `Table ${fullTableName} deleted successfully` };
   }
 
-  async addColumn({
+  async createColumn({
     schemaName = 'public',
     tableName,
-    name,
-    type,
-    nullable = true,
-    unique = false,
-    default: def,
-    options,
-    comment,
+    column,
   }: {
     schemaName?: string;
     tableName: string;
-    name: string;
-    type: DataType;
-    nullable?: boolean;
-    unique?: boolean;
-    default?: any;
-    options?: string[];
-    comment?: string;
+    column: {
+      name: string;
+      dataType: DataType;
+      nullable?: boolean | null;
+      unique?: boolean | null;
+      minLength?: number | null;
+      maxLength?: number | null;
+      minValue?: number | string | null;
+      maxValue?: number | string | null;
+      maxSize?: number | null;
+      defaultValue?: any | null;
+      comment?: string | null;
+      options?: string[] | null;
+    };
   }) {
-    const fullTableName = `${schemaName}.${tableName}`;
+    const {
+      name,
+      dataType,
+      nullable,
+      unique,
+      defaultValue,
+      comment,
+      options,
+      minLength,
+      maxLength,
+      minValue,
+      maxValue,
+      maxSize,
+    } = column;
 
-    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
-    if (!exists) {
-      throw new Error(`Table ${fullTableName} not found`);
+    const fullTableName = `"${schemaName}"."${tableName}"`;
+    const schemaBuilder = pg.schema.withSchema(schemaName);
+
+    const tableExists = await pg.schema
+      .withSchema(schemaName)
+      .hasTable(tableName);
+    if (!tableExists) throw new Error(`Table ${fullTableName} not found`);
+
+    const columnExists = await pg.schema
+      .withSchema(schemaName)
+      .hasColumn(tableName, name);
+    if (columnExists)
+      throw new Error(`Column "${name}" already exists in ${fullTableName}`);
+
+    try {
+      await schemaBuilder.alterTable(tableName, (tableBuilder) => {
+        const columnBuilder = specificType(tableBuilder, {
+          name,
+          dataType,
+          options,
+        });
+
+        if (nullable) columnBuilder.nullable();
+        if (unique) columnBuilder.unique();
+        if (defaultValue !== undefined && defaultValue !== null)
+          columnBuilder.defaultTo(defaultValue);
+        if (comment) columnBuilder.comment(comment);
+
+        addLengthCheck(tableBuilder, tableName, name, minLength!, maxLength!);
+        addValueCheck(tableBuilder, tableName, name, minValue!, maxValue!);
+        addSizeCheck(tableBuilder, tableName, name, maxSize!);
+      });
+    } catch (error) {
+      // Drop column
+      await pg.raw(`ALTER TABLE ?? DROP COLUMN IF EXISTS ??`, [
+        tableName,
+        name,
+      ]);
+
+      throw error;
     }
 
-    await pg.schema.withSchema(schemaName).table(tableName, (table) => {
-      let columnBuilder;
-
-      switch (type.toLowerCase()) {
-        case DataType.Text:
-          columnBuilder = table.string(name);
-          break;
-        case DataType.LongText:
-          columnBuilder = table.text(name);
-          break;
-        case DataType.Integer:
-          columnBuilder = table.integer(name);
-          break;
-        case DataType.Checkbox:
-          columnBuilder = table.boolean(name);
-          break;
-        case DataType.Date:
-          columnBuilder = table.timestamp(name);
-          break;
-        case DataType.Select:
-          if (!options?.length) {
-            throw new Error(`options is required for column ${name}`);
-          }
-          columnBuilder = table.enum(name, options);
-          break;
-        case DataType.JSON:
-          columnBuilder = table.json(name);
-          break;
-        default:
-          throw new Error(`Unsupported column type: ${type}`);
-      }
-
-      if (nullable === false) columnBuilder.notNullable();
-      if (unique) columnBuilder.unique();
-      if (def !== undefined) columnBuilder.defaultTo(def);
-      if (comment) columnBuilder.comment(comment);
-    });
-
-    return { message: `Column ${name} added to ${fullTableName}` };
+    return {
+      message: `Column "${name}" created successfully in ${fullTableName}`,
+    };
   }
 }
