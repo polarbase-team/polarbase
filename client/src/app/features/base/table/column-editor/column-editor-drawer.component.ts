@@ -29,6 +29,7 @@ import { FluidModule } from 'primeng/fluid';
 
 import { DataType } from '../../../../shared/spreadsheet/field/interfaces/field.interface';
 import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
+import { SelectField } from '../../../../shared/spreadsheet/field/objects/select-field.object';
 import { TextFieldEditorComponent } from '../field-editors/text/editor.component';
 import { LongTextFieldEditorComponent } from '../field-editors/long-text/editor.component';
 import { IntegerFieldEditorComponent } from '../field-editors/integer/editor.component';
@@ -98,10 +99,19 @@ export class ColumnEditorDrawerComponent {
       this.columnFormData = column;
       this.selectedDataType.set(column.dataType);
       this.hasSpecialDefault.set(column.hasSpecialDefault);
+      this.options.set(column.options || []);
     });
 
     effect(() => {
       this.internalField = this.field();
+    });
+
+    effect(() => {
+      const options = this.options() || [];
+      this.columnFormData.options = [...options];
+      if (this.internalField?.dataType === DataType.Select) {
+        (this.internalField as SelectField).options = [...options];
+      }
     });
   }
 

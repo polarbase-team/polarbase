@@ -314,7 +314,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     ({ params: { table }, body }) => {
       return tableRecordService.create(table, body);
     },
-    { body: t.Record(t.String(), t.Any(), { minProperties: 1 }) }
+    { body: t.Record(t.String(), t.Any()) }
   )
 
   /**
@@ -352,7 +352,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       return tableRecordService.bulkCreate(table, body);
     },
     {
-      body: t.Array(t.Record(t.String(), t.Any(), { minProperties: 1 }), {
+      body: t.Array(t.Record(t.String(), t.Any()), {
         minItems: 1,
         maxItems: 10000,
       }),

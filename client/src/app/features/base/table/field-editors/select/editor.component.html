@@ -9,7 +9,9 @@
     [placeholder]="placeholder() ?? 'Select here...'"
     [pAutoFocus]="autoFocus()"
     [readonly]="viewOnly()"
+    [(ngModel)]="data"
     [options]="field().options"
+    appendTo="body"
     class="w-full"
   />
 </div>

@@ -58,6 +58,7 @@ const DATA_TYPE_MAPPING = {
   'long-text': DataType.LongText,
   checkbox: DataType.Checkbox,
   date: DataType.Date,
+  select: DataType.Select,
   json: DataType.JSON,
 };
 

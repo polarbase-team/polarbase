@@ -7,7 +7,7 @@ export const DataType = {
   Number: 'number',
   Date: 'date',
   Checkbox: 'checkbox',
-  Select: 'dropdown',
+  Select: 'select',
   JSON: 'json',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
@@ -117,7 +117,10 @@ export const specificType = (
       if (!options?.length) {
         throw new Error(`options is required for Select column "${name}"`);
       }
-      return tableBuilder.enum(name, options);
+      return tableBuilder.enum(name, options, {
+        useNative: true,
+        enumName: `${name}_enum`,
+      });
 
     case DataType.JSON:
       return tableBuilder.json(name);
