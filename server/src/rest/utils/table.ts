@@ -1,5 +1,11 @@
 import { Knex } from 'knex';
-import { Column, mapDataType } from './column';
+import {
+  Column,
+  LENGTH_CHECK_SUFFIX,
+  mapDataType,
+  SIZE_CHECK_SUFFIX,
+  VALUE_CHECK_SUFFIX,
+} from './column';
 
 /**
  * Retrieves the list of tables in the public schema (excluding blacklisted ones)
@@ -223,21 +229,22 @@ export const getTableSchema = async (
   // 7. Fetch CHECK constraints (min/max length and min/max value)
   const checkConstraints = await pg.raw(
     `
-      SELECT 
-          c.conname AS constraint_name,
-          pg_get_constraintdef(c.oid) AS constraint_def,
-          STRING_AGG(a.attname, ', ' ORDER BY array_position(c.conkey, a.attnum)) AS involved_columns
-      FROM pg_constraint c
-      JOIN pg_class rel ON rel.oid = c.conrelid
-      JOIN pg_namespace ns ON ns.oid = rel.relnamespace
-      LEFT JOIN pg_attribute a ON a.attrelid = c.conrelid 
-          AND a.attnum = ANY(c.conkey)  -- Unnest conkey để lấy từng column
-      WHERE ns.nspname = ? 
-        AND rel.relname = ?
-        AND c.contype = 'c'  -- Chỉ check constraints
-      GROUP BY c.conname, c.oid, c.conkey;
-    `,
-    [schemaName, tableName]
+    SELECT 
+        c.conname AS constraint_name,
+        pg_get_constraintdef(c.oid) AS constraint_def,
+        STRING_AGG(a.attname, ', ' ORDER BY array_position(c.conkey, a.attnum)) AS involved_columns
+    FROM pg_constraint c
+    JOIN pg_class rel ON rel.oid = c.conrelid
+    JOIN pg_namespace ns ON ns.oid = rel.relnamespace
+    LEFT JOIN pg_attribute a ON a.attrelid = c.conrelid 
+        AND a.attnum = ANY(c.conkey)
+    WHERE ns.nspname = ? 
+      AND rel.relname = ?
+      AND c.contype = 'c'  -- Chỉ check constraints
+      ${columnName ? `AND a.attname = ?` : ''}
+    GROUP BY c.conname, c.oid, c.conkey;
+  `,
+    columnName ? [schemaName, tableName, columnName] : [schemaName, tableName]
   );
 
   const validationMap: Record<
@@ -247,14 +254,15 @@ export const getTableSchema = async (
       maxLength?: number;
       minValue?: string | number | null;
       maxValue?: string | number | null;
+      maxSize?: number | null;
     }
   > = {};
 
   for (const cons of checkConstraints.rows) {
     const def = cons.constraint_def.toLowerCase();
-    const columnName = cons.involved_columns.toLowerCase();
+    const columnName = cons.involved_columns;
 
-    if (cons.constraint_name.endsWith('_length_check')) {
+    if (cons.constraint_name.endsWith(LENGTH_CHECK_SUFFIX)) {
       const [min, max] = extractLengthRange(def) || [];
 
       validationMap[columnName] = validationMap[columnName] || {};
@@ -262,7 +270,7 @@ export const getTableSchema = async (
       if (max) validationMap[columnName].maxLength = max.value;
     }
 
-    if (cons.constraint_name.endsWith('_value_check')) {
+    if (cons.constraint_name.endsWith(VALUE_CHECK_SUFFIX)) {
       const [min, max] = extractValueRange(def) || [];
 
       validationMap[columnName] = validationMap[columnName] || {};
@@ -270,11 +278,11 @@ export const getTableSchema = async (
       if (max) validationMap[columnName].maxValue = max.value;
     }
 
-    if (cons.constraint_name.endsWith('_size_check')) {
+    if (cons.constraint_name.endsWith(SIZE_CHECK_SUFFIX)) {
       const maxSize = extractMaxSize(def);
 
       validationMap[columnName] = validationMap[columnName] || {};
-      validationMap[columnName].maxValue = maxSize;
+      validationMap[columnName].maxSize = maxSize;
     }
   }
 
@@ -294,13 +302,16 @@ export const getTableSchema = async (
       maxLength: validation.maxLength ?? col.character_maximum_length ?? null,
       minValue: validation.minValue ?? null,
       maxValue: validation.maxValue ?? null,
+      maxSize: validation.maxSize ?? null,
       defaultValue,
       hasSpecialDefault,
       comment: commentMap[col.column_name] ?? null,
       options: enumMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
     } as Column;
+
     column.dataType = mapDataType(column);
+
     return column;
   });
 };
@@ -374,14 +385,13 @@ const parsePostgresDefault = (
 
 const extractLengthRange = (definition: string) => {
   const regex = new RegExp(
-    /(?:char_length|length)\s*\(\s*\(?(\w+)\)?(?:::\w+)?\s*\)\s*(>=|<=|>|<|=|<>|!=)\s*(\d+)/gi
+    /(?:char_length|length)\s*\(\s*\(\s*["']?([\w ]+)["']?\s*\)?(?:::\w+)?\s*\)\s*(>=|<=|>|<)\s*(\d+)/gi
   );
   const matches = Array.from(definition.matchAll(regex));
 
   if (matches.length === 0) return null;
 
   return matches.map((match) => ({
-    func: match[1].toLowerCase() as 'char_length' | 'length',
     operator: match[2],
     value: parseInt(match[3], 10),
   }));
@@ -389,35 +399,33 @@ const extractLengthRange = (definition: string) => {
 
 const extractValueRange = (definition: string) => {
   const regex =
-    /([\w"]+)\s*(>=|<=|>|<|=|<>|!=)\s*\(?\s*(-?\d+(?:\.\d+)?|'[^']*')\s*\)?\s*(::[\w\s]+)?/gi;
+    /\(\s*["']?([\w ]+)["']?\s*(>=|<=|>|<)\s*\(?\s*(-?\d+(?:\.\d+)?|'[^']*')\s*(::[\w\s]+)?\)/gi;
   const matches = Array.from(definition.matchAll(regex));
 
   const bounds: {
     operator: string;
     rawValue: string;
     value: string | number | null;
-    cast?: string;
   }[] = [];
 
   for (const match of matches) {
-    const operator = match[1];
-    const rawValue = match[0].match(/('[^']*'|\-?\d+(?:\.\d+)?)/)?.[1] || '';
+    const operator = match[2];
+    const rawValue = match[3].match(/('[^']*'|\-?\d+(?:\.\d+)?)/)?.[1] || '';
     let value: string | number | null = rawValue;
 
     if (!rawValue.startsWith("'")) {
       value = parseFloat(rawValue);
     }
 
-    const cast = match[0].match(/::([\w\s]+)/)?.[1]?.trim();
-
-    bounds.push({ operator, rawValue, value, cast });
+    bounds.push({ operator, rawValue, value });
   }
 
   return bounds;
 };
 
 const extractMaxSize = (definition: string): number | null => {
-  const regex = /pg_column_size\s*\(\s*["']?(\w+)["']?\s*\)\s*(<=|<)\s*(\d+)/i;
+  const regex =
+    /pg_column_size\s*\(\s*["']?([\w ]+)["']?\s*\)\s*(<=|<)\s*(\d+)/i;
   const match = definition.match(regex);
 
   if (!match) return null;

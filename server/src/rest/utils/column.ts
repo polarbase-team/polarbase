@@ -27,6 +27,7 @@ export interface Column {
   maxLength: number;
   minValue: string | number;
   maxValue: string | number;
+  maxSize: number;
 }
 
 const PG_TYPE_MAPPING: Record<string, DataType> = {
@@ -81,3 +82,7 @@ export const mapDataType = (column: Column) => {
   }
   return dataType;
 };
+
+export const LENGTH_CHECK_SUFFIX = '_length_check';
+export const VALUE_CHECK_SUFFIX = '_value_check';
+export const SIZE_CHECK_SUFFIX = '_size_check';
