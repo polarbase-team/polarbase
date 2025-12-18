@@ -30,7 +30,7 @@
   [(visible)]="visibleTableEditorDrawer"
   [table]="updatedTable"
   [mode]="updatedTableMode"
-  (onSave)="onTableEditorSave()"
+  (onSave)="onTableEditorSave($event)"
 />
 
 <div class="flex items-center justify-between pl-4 pr-2 py-2 border-b-1 border-surface-200">
@@ -65,7 +65,7 @@
       pInputText
       placeholder="Search table..."
       [(ngModel)]="searchQuery"
-      (input)="searchTableByNameOrComment()"
+      (input)="searchTable()"
     />
   </p-iconfield>
 </div>
@@ -81,7 +81,7 @@
 } @else {
   <ul class="list-none p-0 m-0 overflow-y-auto max-h-full">
     @for (table of filteredTables(); track table.tableName) {
-      <li (click)="onTableSelected(table)">
+      <li (click)="selectTable(table)">
         <a
           pRipple
           class="group flex items-center cursor-pointer px-4 py-2 text-surface-700 hover:bg-gray-100 duration-150 transition-colors p-ripple"
