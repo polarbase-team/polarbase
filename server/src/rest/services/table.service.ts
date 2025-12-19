@@ -3,9 +3,14 @@ import { getTableList, getTableSchema } from '../utils/table';
 import {
   addLengthCheck,
   addSizeCheck,
-  addValueCheck,
+  addRangeCheck,
   specificType,
   DataType,
+  Column,
+  removeLengthCheck,
+  removeRangeCheck,
+  removeSizeCheck,
+  getConstraintName,
 } from '../utils/column';
 
 /**
@@ -166,14 +171,16 @@ export class TableService {
       dataType: DataType;
       nullable?: boolean | null;
       unique?: boolean | null;
-      minLength?: number | null;
-      maxLength?: number | null;
-      minValue?: number | string | null;
-      maxValue?: number | string | null;
-      maxSize?: number | null;
       defaultValue?: any | null;
       comment?: string | null;
       options?: string[] | null;
+      validation?: {
+        minLength?: number | null;
+        maxLength?: number | null;
+        minValue?: number | string | null;
+        maxValue?: number | string | null;
+        maxSize?: number | null;
+      } | null;
     };
   }) {
     const {
@@ -184,12 +191,10 @@ export class TableService {
       defaultValue,
       comment,
       options,
-      minLength,
-      maxLength,
-      minValue,
-      maxValue,
-      maxSize,
+      validation,
     } = column;
+    const { minLength, maxLength, minValue, maxValue, maxSize } =
+      validation || {};
 
     const fullTableName = `"${schemaName}"."${tableName}"`;
     const schemaBuilder = pg.schema.withSchema(schemaName);
@@ -220,7 +225,7 @@ export class TableService {
         if (comment) columnBuilder.comment(comment);
 
         addLengthCheck(tableBuilder, tableName, name, minLength!, maxLength!);
-        addValueCheck(tableBuilder, tableName, name, minValue!, maxValue!);
+        addRangeCheck(tableBuilder, tableName, name, minValue!, maxValue!);
         addSizeCheck(tableBuilder, tableName, name, maxSize!);
       });
     } catch (error) {
@@ -235,6 +240,144 @@ export class TableService {
 
     return {
       message: `Column "${name}" created successfully in ${fullTableName}`,
+    };
+  }
+
+  async updateColumn(
+    schemaName: string,
+    tableName: string,
+    columnName: string,
+    column: Column
+  ) {
+    const {
+      name: newName,
+      dataType,
+      nullable,
+      unique,
+      defaultValue,
+      comment,
+      options,
+      validation,
+    } = column;
+    const { minLength, maxLength, minValue, maxValue, maxSize } =
+      validation || {};
+
+    const fullTableName = `"${schemaName}"."${tableName}"`;
+
+    const tableExists = await pg.schema
+      .withSchema(schemaName)
+      .hasTable(tableName);
+    if (!tableExists) throw new Error(`Table ${fullTableName} not found`);
+
+    const columnExists = await pg.schema
+      .withSchema(schemaName)
+      .hasColumn(tableName, columnName);
+    if (!columnExists)
+      throw new Error(`Column "${columnName}" not found in ${fullTableName}`);
+
+    const [oldSchema] = (await getTableSchema(
+      pg,
+      schemaName,
+      tableName,
+      columnName
+    )) as Column[];
+
+    let recreateConstraints = false;
+
+    await pg.schema
+      .withSchema(schemaName)
+      .alterTable(tableName, (tableBuilder) => {
+        const columnBuilder = specificType(tableBuilder, {
+          name: columnName,
+          dataType: dataType || oldSchema!.dataType,
+          options,
+        } as any).alter();
+
+        if (newName !== oldSchema!.name) {
+          tableBuilder.renameColumn(columnName, newName);
+          recreateConstraints = true;
+        }
+
+        if (nullable !== oldSchema!.nullable) {
+          if (nullable === true) columnBuilder.nullable();
+          else if (nullable === false) columnBuilder.notNullable();
+        }
+
+        if (unique !== oldSchema!.unique) {
+          if (unique === true) columnBuilder.unique();
+          else if (unique === false) tableBuilder.dropUnique([columnName]);
+        }
+
+        if (defaultValue !== oldSchema!.defaultValue) {
+          columnBuilder.defaultTo(defaultValue);
+        }
+
+        if (comment !== oldSchema!.comment) {
+          columnBuilder.comment(comment || '');
+        }
+
+        if (
+          recreateConstraints ||
+          minLength !== oldSchema!.validation!.minLength ||
+          maxLength !== oldSchema!.validation!.maxLength
+        ) {
+          if (!recreateConstraints)
+            removeLengthCheck(tableBuilder, tableName, columnName);
+
+          addLengthCheck(
+            tableBuilder,
+            tableName,
+            newName,
+            minLength!,
+            maxLength!
+          );
+        }
+
+        if (
+          recreateConstraints ||
+          minValue !== oldSchema!.validation!.minValue ||
+          maxValue !== oldSchema!.validation!.maxValue
+        ) {
+          if (!recreateConstraints)
+            removeRangeCheck(tableBuilder, tableName, columnName);
+
+          addRangeCheck(tableBuilder, tableName, newName, minValue!, maxValue!);
+        }
+
+        if (recreateConstraints || maxSize !== oldSchema!.validation!.maxSize) {
+          if (!recreateConstraints)
+            removeSizeCheck(tableBuilder, tableName, columnName);
+
+          addSizeCheck(tableBuilder, tableName, newName, maxSize!);
+        }
+      })
+      .then(() => {
+        if (recreateConstraints) {
+          return pg.raw(
+            `
+            ALTER TABLE public."${tableName}"
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'length'
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'range'
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'size'
+            )}"
+          `
+          );
+        }
+      });
+
+    return {
+      message: `Column "${columnName}" updated successfully in ${fullTableName}`,
     };
   }
 }

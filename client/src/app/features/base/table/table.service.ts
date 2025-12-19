@@ -23,16 +23,18 @@ export interface ColumnDefinition {
   primary: boolean;
   nullable: boolean;
   unique: boolean;
-  minLength: number | null;
-  maxLength: number | null;
-  minValue: number | string | null;
-  maxValue: number | string | null;
-  maxSize: number | null;
   defaultValue: any | null;
   hasSpecialDefault: boolean;
   comment: string | null;
   options: string[] | null;
   foreignKey: { table: string; column: string } | null;
+  validation: {
+    minLength?: number | null;
+    maxLength?: number | null;
+    minValue?: number | string | null;
+    maxValue?: number | string | null;
+    maxSize?: number | null;
+  } | null;
 }
 
 export interface TableFormData {

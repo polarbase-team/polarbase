@@ -15,21 +15,21 @@ export type DataType = (typeof DataType)[keyof typeof DataType];
 export interface Column {
   name: string;
   dataType: DataType;
-  pgDataType: string;
-  pgRawType: string;
   primary: boolean;
   nullable: boolean;
   unique: boolean;
   defaultValue: string;
-  hasSpecialDefault: boolean;
   comment: string;
   options: string[];
   foreignKey: any;
-  minLength: number;
-  maxLength: number;
-  minValue: string | number;
-  maxValue: string | number;
-  maxSize: number;
+  validation: {
+    minLength?: number;
+    maxLength?: number;
+    minValue?: string | number;
+    maxValue?: string | number;
+    maxSize?: number;
+  };
+  metadata: any;
 }
 
 const PG_TYPE_MAPPING: Record<string, DataType> = {
@@ -69,12 +69,12 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
   jsonb: DataType.JSON,
 };
 
-export const mapDataType = (column: Column) => {
+export const mapDataType = (column: Column, pgDataType: string) => {
   let dataType: DataType = DataType.Text;
   if (column.options) {
     dataType = DataType.Select;
   } else {
-    const normalizedType = column.pgDataType
+    const normalizedType = pgDataType
       .toLowerCase()
       .split('(')[0]
       .trim()
@@ -97,7 +97,7 @@ export const specificType = (
     options?: string[] | null;
   }
 ) => {
-  switch (dataType.toLowerCase()) {
+  switch (dataType) {
     case DataType.Text:
       return tableBuilder.string(name);
 
@@ -120,6 +120,7 @@ export const specificType = (
       return tableBuilder.enum(name, options, {
         useNative: true,
         enumName: `${name}_enum`,
+        existingType: false,
       });
 
     case DataType.JSON:
@@ -131,21 +132,34 @@ export const specificType = (
 };
 
 export const LENGTH_CHECK_SUFFIX = '_length_check';
-export const VALUE_CHECK_SUFFIX = '_value_check';
+export const RANGE_CHECK_SUFFIX = '_range_check';
 export const SIZE_CHECK_SUFFIX = '_size_check';
 
-function getConstraintPrefix(tableName: string, columnName: string): string {
-  return `${tableName}_${columnName}`;
-}
+export const getConstraintName = (
+  tableName: string,
+  columnName: string,
+  type: 'length' | 'range' | 'size'
+): string => {
+  const prefix = `${tableName}_${columnName}`;
+  switch (type) {
+    case 'length':
+      return prefix + LENGTH_CHECK_SUFFIX;
+    case 'range':
+      return prefix + RANGE_CHECK_SUFFIX;
+    case 'size':
+      return prefix + SIZE_CHECK_SUFFIX;
+  }
+};
 
 export const addLengthCheck = (
   tableBuilder: Knex.TableBuilder,
   tableName: string,
   columnName: string,
-  minLength: number,
-  maxLength: number
+  minLength: number | null,
+  maxLength: number | null
 ) => {
   const quotedColumn = `"${columnName}"`;
+  const constraintName = getConstraintName(tableName, columnName, 'length');
   const checks: string[] = [];
 
   if (typeof minLength === 'number' && minLength > 0) {
@@ -156,32 +170,28 @@ export const addLengthCheck = (
   }
 
   if (checks.length > 0) {
-    const prefix = getConstraintPrefix(tableName, columnName);
-    tableBuilder.check(
-      checks.join(' AND '),
-      [],
-      `"${prefix}${LENGTH_CHECK_SUFFIX}"`
-    );
+    tableBuilder.check(checks.join(' AND '), [], `"${constraintName}"`);
   }
 };
 
-export function removeLengthCheck(
+export const removeLengthCheck = (
   tableBuilder: Knex.TableBuilder,
   tableName: string,
   columnName: string
-) {
-  const prefix = getConstraintPrefix(tableName, columnName);
-  tableBuilder.dropChecks(`"${prefix}${LENGTH_CHECK_SUFFIX}"`);
-}
+) => {
+  const constraintName = getConstraintName(tableName, columnName, 'length');
+  tableBuilder.dropChecks(`"${constraintName}"`);
+};
 
-export function addValueCheck(
+export const addRangeCheck = (
   tableBuilder: Knex.TableBuilder,
   tableName: string,
   columnName: string,
-  minValue: number | string,
-  maxValue: number | string
-) {
+  minValue: number | string | null,
+  maxValue: number | string | null
+) => {
   const quotedColumn = `"${columnName}"`;
+  const constraintName = getConstraintName(tableName, columnName, 'range');
   const checks: string[] = [];
 
   if (typeof minValue === 'number') {
@@ -192,22 +202,17 @@ export function addValueCheck(
   }
 
   if (checks.length > 0) {
-    const prefix = getConstraintPrefix(tableName, columnName);
-    tableBuilder.check(
-      checks.join(' AND '),
-      [],
-      `"${prefix}${VALUE_CHECK_SUFFIX}"`
-    );
+    tableBuilder.check(checks.join(' AND '), [], `"${constraintName}"`);
   }
-}
+};
 
-export const removeValueCheck = (
+export const removeRangeCheck = (
   tableBuilder: Knex.TableBuilder,
   tableName: string,
   columnName: string
 ) => {
-  const prefix = getConstraintPrefix(tableName, columnName);
-  tableBuilder.dropChecks(`"${prefix}${VALUE_CHECK_SUFFIX}"`);
+  const constraintName = getConstraintName(tableName, columnName, 'range');
+  tableBuilder.dropChecks(`"${constraintName}"`);
 };
 
 export const addSizeCheck = (
@@ -217,6 +222,7 @@ export const addSizeCheck = (
   maxSize: number | null
 ) => {
   const quotedColumn = `"${columnName}"`;
+  const constraintName = getConstraintName(tableName, columnName, 'size');
   const checks: string[] = [];
 
   if (typeof maxSize === 'number') {
@@ -224,8 +230,7 @@ export const addSizeCheck = (
   }
 
   if (checks.length > 0) {
-    const prefix = getConstraintPrefix(tableName, columnName);
-    tableBuilder.check(checks.join(''), [], `"${prefix}${SIZE_CHECK_SUFFIX}"`);
+    tableBuilder.check(checks.join(''), [], `"${constraintName}"`);
   }
 };
 
@@ -234,6 +239,6 @@ export const removeSizeCheck = (
   tableName: string,
   columnName: string
 ) => {
-  const prefix = getConstraintPrefix(tableName, columnName);
-  tableBuilder.dropChecks(`"${prefix}${SIZE_CHECK_SUFFIX}"`);
+  const constraintName = getConstraintName(tableName, columnName, 'size');
+  tableBuilder.dropChecks(`"${constraintName}"`);
 };

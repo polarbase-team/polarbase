@@ -243,14 +243,10 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           dataType: body.dataType as DataType,
           nullable: body.nullable,
           unique: body.unique,
-          minLength: body.minLength,
-          maxLength: body.maxLength,
-          minValue: body.minValue,
-          maxValue: body.maxValue,
-          maxSize: body.maxSize,
           defaultValue: body.defaultValue,
           comment: body.comment,
           options: body.options,
+          validation: body.validation,
         },
       });
     },
@@ -263,14 +259,24 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         }),
         nullable: t.Optional(t.Nullable(t.Boolean())),
         unique: t.Optional(t.Nullable(t.Boolean())),
-        minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
-        maxLength: t.Optional(t.Nullable(t.Numeric({ minimum: 1 }))),
-        minValue: t.Optional(t.Nullable(t.Union([t.Numeric(), t.String()]))),
-        maxValue: t.Optional(t.Nullable(t.Union([t.Numeric(), t.String()]))),
-        maxSize: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
         defaultValue: t.Optional(t.Nullable(t.Any())),
         comment: t.Optional(t.Nullable(t.String())),
         options: t.Optional(t.Nullable(t.Array(t.String()))),
+        validation: t.Optional(
+          t.Nullable(
+            t.Object({
+              minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
+              maxLength: t.Optional(t.Nullable(t.Numeric({ minimum: 1 }))),
+              minValue: t.Optional(
+                t.Nullable(t.Union([t.Numeric(), t.String()]))
+              ),
+              maxValue: t.Optional(
+                t.Nullable(t.Union([t.Numeric(), t.String()]))
+              ),
+              maxSize: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
+            })
+          )
+        ),
       }),
     }
   )

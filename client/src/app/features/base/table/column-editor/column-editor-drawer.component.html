@@ -86,7 +86,7 @@
                   <label class="text-sm">Min length</label>
                   <p-inputnumber
                     name="minLength"
-                    [(ngModel)]="columnFormData.minLength"
+                    [(ngModel)]="columnFormData.validation.minLength"
                     [useGrouping]="false"
                     placeholder="Input here..."
                   />
@@ -95,7 +95,7 @@
                   <label class="text-sm">Max length</label>
                   <p-inputnumber
                     name="maxLength"
-                    [(ngModel)]="columnFormData.maxLength"
+                    [(ngModel)]="columnFormData.validation.maxLength"
                     [useGrouping]="false"
                     placeholder="Input here..."
                   />
@@ -106,7 +106,7 @@
                   <label class="text-sm">Max size (bytes)</label>
                   <p-inputnumber
                     name="maxSize"
-                    [(ngModel)]="columnFormData.maxSize"
+                    [(ngModel)]="columnFormData.validation.maxSize"
                     [useGrouping]="false"
                     placeholder="Input here..."
                   />
@@ -117,7 +117,7 @@
                   <label class="text-sm">Min value</label>
                   <p-inputnumber
                     name="minValue"
-                    [(ngModel)]="columnFormData.minValue"
+                    [(ngModel)]="columnFormData.validation.minValue"
                     [useGrouping]="false"
                     placeholder="Input here..."
                   />
@@ -126,7 +126,7 @@
                   <label class="text-sm">Max value</label>
                   <p-inputnumber
                     name="maxValue"
-                    [(ngModel)]="columnFormData.maxValue"
+                    [(ngModel)]="columnFormData.validation.maxValue"
                     [useGrouping]="false"
                     placeholder="Input here..."
                   />
@@ -137,7 +137,7 @@
                   <label class="text-sm">Min value</label>
                   <p-inputnumber
                     name="minValue"
-                    [(ngModel)]="columnFormData.minValue"
+                    [(ngModel)]="columnFormData.validation.minValue"
                     mode="decimal"
                     [minFractionDigits]="0"
                     [maxFractionDigits]="5"
@@ -149,7 +149,7 @@
                   <label class="text-sm">Max value</label>
                   <p-inputnumber
                     name="maxValue"
-                    [(ngModel)]="columnFormData.maxValue"
+                    [(ngModel)]="columnFormData.validation.maxValue"
                     mode="decimal"
                     [minFractionDigits]="0"
                     [maxFractionDigits]="5"
@@ -163,7 +163,7 @@
                   <label class="text-sm">Min date</label>
                   <p-datepicker
                     name="minDate"
-                    [(ngModel)]="columnFormData.minValue"
+                    [(ngModel)]="columnFormData.validation.minValue"
                     [showTime]="true"
                     [fluid]="true"
                     appendTo="body"
@@ -174,7 +174,7 @@
                   <label class="text-sm">Max date</label>
                   <p-datepicker
                     name="maxDate"
-                    [(ngModel)]="columnFormData.maxValue"
+                    [(ngModel)]="columnFormData.validation.maxValue"
                     [showTime]="true"
                     [fluid]="true"
                     appendTo="body"
@@ -225,7 +225,7 @@
                   <label class="text-sm">Max size (bytes)</label>
                   <p-inputnumber
                     name="maxSize"
-                    [(ngModel)]="columnFormData.maxSize"
+                    [(ngModel)]="columnFormData.validation.maxSize"
                     [useGrouping]="false"
                     placeholder="Input here..."
                   />
@@ -338,20 +338,6 @@
             <p class="font-medium text-sm">Constraints</p>
           </label>
           <div class="flex flex-col gap-8 col-span-2">
-            <div class="flex gap-4">
-              <p-checkbox
-                name="primary"
-                [(ngModel)]="columnFormData.primary"
-                [binary]="true"
-                size="large"
-              />
-              <div>
-                <label class="text-sm">Primary Key</label>
-                <p class="text-surface-500 text-xs">
-                  Sets a column (or columns) as a unique ID for every row — no duplicates allowed.
-                </p>
-              </div>
-            </div>
             <div class="flex gap-4">
               <p-checkbox
                 name="nullable"

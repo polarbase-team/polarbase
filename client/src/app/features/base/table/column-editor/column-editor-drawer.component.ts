@@ -95,7 +95,7 @@ export class ColumnEditorDrawerComponent {
     private tblService: TableService,
   ) {
     effect(() => {
-      const column = { nullable: true, ...this.column() };
+      const column = { nullable: true, validation: {}, ...this.column() };
       this.columnFormData = column;
       this.selectedDataType.set(column.dataType);
       this.hasSpecialDefault.set(column.hasSpecialDefault);
@@ -151,12 +151,8 @@ export class ColumnEditorDrawerComponent {
 
   protected onSelectDataType(dataType: DataType) {
     this.columnFormData.dataType = dataType;
-    this.columnFormData.minLength =
-      this.columnFormData.maxLength =
-      this.columnFormData.minValue =
-      this.columnFormData.maxValue =
-      this.columnFormData.defaultValue =
-        null;
+    this.columnFormData.defaultValue = null;
+    this.columnFormData.validation = {};
     this.internalField = this.tblService.buildField(this.columnFormData);
   }
 

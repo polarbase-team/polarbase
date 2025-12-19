@@ -4,7 +4,7 @@ import {
   LENGTH_CHECK_SUFFIX,
   mapDataType,
   SIZE_CHECK_SUFFIX,
-  VALUE_CHECK_SUFFIX,
+  RANGE_CHECK_SUFFIX,
 } from './column';
 
 /**
@@ -270,7 +270,7 @@ export const getTableSchema = async (
       if (max) validationMap[columnName].maxLength = max.value;
     }
 
-    if (cons.constraint_name.endsWith(VALUE_CHECK_SUFFIX)) {
+    if (cons.constraint_name.endsWith(RANGE_CHECK_SUFFIX)) {
       const [min, max] = extractValueRange(def) || [];
 
       validationMap[columnName] = validationMap[columnName] || {};
@@ -288,29 +288,29 @@ export const getTableSchema = async (
 
   // 8. Combine everything into a clean schema object
   return columns.map((col) => {
-    const { value: defaultValue, isSpecialExpression: hasSpecialDefault } =
-      parsePostgresDefault(col.column_default);
-    const validation = validationMap[col.column_name] || {};
+    const {
+      value: defaultValue,
+      rawValue: rawDefaultValue,
+      isSpecialExpression: hasSpecialDefault,
+    } = parsePostgresDefault(col.column_default);
     const column: Column = {
       name: col.column_name,
-      pgDataType: col.data_type,
-      pgRawType: col.udt_name,
       primary: primaryKeySet.has(col.column_name),
       nullable: col.is_nullable === 'YES',
       unique: uniqueSet.has(col.column_name),
-      minLength: validation.minLength ?? null,
-      maxLength: validation.maxLength ?? col.character_maximum_length ?? null,
-      minValue: validation.minValue ?? null,
-      maxValue: validation.maxValue ?? null,
-      maxSize: validation.maxSize ?? null,
-      defaultValue,
-      hasSpecialDefault,
+      defaultValue: hasSpecialDefault ? defaultValue : null,
       comment: commentMap[col.column_name] ?? null,
       options: enumMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
+      validation: validationMap[col.column_name] || null,
+      metadata: {
+        pgDataType: col.data_type,
+        pgRawType: col.udt_name,
+        pgDefaultValue: rawDefaultValue,
+      },
     } as Column;
 
-    column.dataType = mapDataType(column);
+    column.dataType = mapDataType(column, col.data_type);
 
     return column;
   });
@@ -320,10 +320,13 @@ const parsePostgresDefault = (
   rawDefault: string | null
 ): {
   value: any;
+  rawValue: string | null;
   isSpecialExpression: boolean;
 } => {
+  const parsed = { rawValue: rawDefault, isSpecialExpression: false };
+
   if (rawDefault === null) {
-    return { value: null, isSpecialExpression: false };
+    return { ...parsed, value: null };
   }
 
   let expr = rawDefault
@@ -350,7 +353,7 @@ const parsePostgresDefault = (
     pattern.test(expr)
   );
   if (isSpecial) {
-    return { value: expr, isSpecialExpression: true };
+    return { ...parsed, value: expr, isSpecialExpression: true };
   }
 
   if (/^'.*'$/.test(expr)) {
@@ -364,23 +367,23 @@ const parsePostgresDefault = (
       .replace(/\\'/g, "'")
       .replace(/\\"/g, '"');
 
-    return { value: str, isSpecialExpression: false };
+    return { ...parsed, value: str };
   }
 
   if (/^-?\d+(\.\d+)?$/.test(expr)) {
     const num = Number(expr);
     return {
+      ...parsed,
       value: Number.isInteger(num) ? parseInt(expr, 10) : num,
-      isSpecialExpression: false,
     };
   }
 
-  if (expr === 'true') return { value: true, isSpecialExpression: false };
-  if (expr === 'false') return { value: false, isSpecialExpression: false };
+  if (expr === 'true') return { ...parsed, value: true };
+  if (expr === 'false') return { ...parsed, value: false };
 
-  if (expr === 'NULL') return { value: null, isSpecialExpression: false };
+  if (expr === 'NULL') return { ...parsed, value: null };
 
-  return { value: expr, isSpecialExpression: true };
+  return { ...parsed, value: expr, isSpecialExpression: true };
 };
 
 const extractLengthRange = (definition: string) => {
