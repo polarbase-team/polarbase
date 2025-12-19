@@ -40,6 +40,11 @@ import { DateFieldEditorComponent } from '../field-editors/date/editor.component
 import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
 import { ColumnFormData, ColumnDefinition, TableDefinition, TableService } from '../table.service';
 
+const DEFAULT_VALUE: ColumnFormData = {
+  nullable: true,
+  validation: {},
+} as ColumnFormData;
+
 @Component({
   selector: 'column-editor-drawer',
   templateUrl: './column-editor-drawer.component.html',
@@ -94,7 +99,8 @@ export class ColumnEditorDrawerComponent {
     private tblService: TableService,
   ) {
     effect(() => {
-      const column = { nullable: true, validation: {}, ...this.column() };
+      const column = { ...DEFAULT_VALUE, ...this.column() };
+      column.validation ??= {};
       this.columnFormData = column;
       this.selectedDataType.set(column.dataType);
       this.options.set(column.options || []);
@@ -121,6 +127,12 @@ export class ColumnEditorDrawerComponent {
     this.visible.set(false);
   }
 
+  protected reset() {
+    this.columnForm().reset();
+    this.columnFormData = { ...DEFAULT_VALUE };
+    this.isSaving.set(false);
+  }
+
   protected async onSubmit() {
     if (!this.columnForm().valid) return;
 
@@ -144,6 +156,7 @@ export class ColumnEditorDrawerComponent {
     ).subscribe(({ data: column }) => {
       this.visible.set(false);
       this.onSave.emit(column);
+      this.reset();
     });
   }
 

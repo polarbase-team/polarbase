@@ -3,6 +3,7 @@
   position="right"
   [header]="mode() === 'edit' ? `Edit column: ${column().name}` : 'Add column'"
   styleClass="!w-150 custom-drawer"
+  (onHide)="reset()"
 >
   <ng-template #content>
     <form #columnForm="ngForm" (ngSubmit)="onSubmit()">

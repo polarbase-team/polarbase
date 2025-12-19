@@ -137,10 +137,16 @@ export class RecordEditorDrawerComponent {
     ).subscribe((record) => {
       this.visible.set(false);
       this.onSave.emit(record);
+      this.reset();
     });
   }
 
   protected cancel() {
     this.visible.set(false);
+  }
+
+  protected reset() {
+    this.updatedRecord = {};
+    this.isSaving.set(false);
   }
 }

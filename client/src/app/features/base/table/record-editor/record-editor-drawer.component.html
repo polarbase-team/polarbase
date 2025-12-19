@@ -107,6 +107,7 @@
   position="right"
   [header]="mode() === 'view' ? 'View Record' : mode() === 'edit' ? 'Edit Record' : 'Add Record'"
   styleClass="!w-150 custom-drawer"
+  (onHide)="reset()"
 >
   <ng-template #content>
     <p-toast />

@@ -307,37 +307,37 @@ export class TableService {
       .alterTable(tableName, (tableBuilder) => {
         const columnBuilder = specificType(tableBuilder, {
           name: columnName,
-          dataType: dataType || oldSchema!.dataType,
+          dataType: dataType || oldSchema.dataType,
           options,
         } as any).alter();
 
-        if (newName !== oldSchema!.name) {
+        if (newName !== oldSchema.name) {
           tableBuilder.renameColumn(columnName, newName);
           recreateConstraints = true;
         }
 
-        if (nullable !== oldSchema!.nullable) {
+        if (nullable !== oldSchema.nullable) {
           if (nullable === true) columnBuilder.nullable();
           else if (nullable === false) columnBuilder.notNullable();
         }
 
-        if (unique !== oldSchema!.unique) {
+        if (unique !== oldSchema.unique) {
           if (unique === true) columnBuilder.unique();
           else if (unique === false) tableBuilder.dropUnique([columnName]);
         }
 
-        if (defaultValue !== oldSchema!.defaultValue) {
+        if (defaultValue !== oldSchema.defaultValue) {
           columnBuilder.defaultTo(defaultValue);
         }
 
-        if (comment !== oldSchema!.comment) {
+        if (comment !== oldSchema.comment) {
           columnBuilder.comment(comment || '');
         }
 
         if (
           recreateConstraints ||
-          minLength !== oldSchema!.validation!.minLength ||
-          maxLength !== oldSchema!.validation!.maxLength
+          minLength !== oldSchema.validation?.minLength ||
+          maxLength !== oldSchema.validation?.maxLength
         ) {
           if (!recreateConstraints)
             removeLengthCheck(tableBuilder, tableName, columnName);
@@ -353,8 +353,8 @@ export class TableService {
 
         if (
           recreateConstraints ||
-          minValue !== oldSchema!.validation!.minValue ||
-          maxValue !== oldSchema!.validation!.maxValue
+          minValue !== oldSchema.validation?.minValue ||
+          maxValue !== oldSchema.validation?.maxValue
         ) {
           if (!recreateConstraints)
             removeRangeCheck(tableBuilder, tableName, columnName);
@@ -362,7 +362,7 @@ export class TableService {
           addRangeCheck(tableBuilder, tableName, newName, minValue!, maxValue!);
         }
 
-        if (recreateConstraints || maxSize !== oldSchema!.validation!.maxSize) {
+        if (recreateConstraints || maxSize !== oldSchema.validation?.maxSize) {
           if (!recreateConstraints)
             removeSizeCheck(tableBuilder, tableName, columnName);
 
