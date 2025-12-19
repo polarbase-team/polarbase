@@ -201,7 +201,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   )
 
   /**
-   * POST /rest/tables/:table → partial update of table (rename, update comment)
+   * PATCH /rest/tables/:table → partial update of table (rename, update comment)
    */
   .patch(
     '/tables/:table',
@@ -233,6 +233,9 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     }
   )
 
+  /**
+   * POST /rest/tables/:table → create new column
+   */
   .post(
     '/tables/:table/columns',
     ({ params: { table }, body }) => {
@@ -276,6 +279,56 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
               maxSize: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
             })
           )
+        ),
+      }),
+    }
+  )
+
+  /**
+   * PUT /rest/tables/:table/columns/:column → update column
+   */
+  .put(
+    '/tables/:table/columns/:column',
+    ({ params: { table, column }, body }) => {
+      return tableService.updateColumn({
+        tableName: table,
+        columnName: column,
+        column: {
+          name: body.name,
+          dataType: body.dataType as DataType,
+          nullable: body.nullable,
+          unique: body.unique,
+          defaultValue: body.defaultValue,
+          comment: body.comment,
+          options: body.options,
+          validation: body.validation,
+        },
+      });
+    },
+    {
+      params: t.Object({ table: t.String(), column: t.String() }),
+      body: t.Object({
+        name: t.String({ minLength: 1 }),
+        dataType: t.String({
+          enum: Object.values(DataType) as [string, ...string[]],
+        }),
+        nullable: t.Nullable(t.Boolean()),
+        unique: t.Nullable(t.Boolean()),
+        defaultValue: t.Nullable(t.Any()),
+        comment: t.Nullable(t.String()),
+        options: t.Nullable(t.Array(t.String())),
+        validation: t.Nullable(
+          t.Object({
+            minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
+            maxLength: t.Optional(t.Nullable(t.Numeric({ minimum: 1 }))),
+            minValue: t.Optional(
+              t.Nullable(t.Union([t.Numeric(), t.String()]))
+            ),
+            maxValue: t.Optional(
+              t.Nullable(t.Union([t.Numeric(), t.String()]))
+            ),
+            maxSize: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
+          })
         ),
       }),
     }

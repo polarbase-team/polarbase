@@ -84,7 +84,6 @@ export class ColumnEditorDrawerComponent {
   protected isSaving = signal(false);
   protected dataTypes = Object.keys(DataType).map((t) => ({ name: t, value: DataType[t] }));
   protected selectedDataType = signal<DataType>(null);
-  protected hasSpecialDefault = signal(false);
   protected options = signal<string[]>([]);
   protected selectionState: string | undefined = 'Single';
   protected readonly selectionStateOptions = ['Single', 'Multiple'];
@@ -98,7 +97,6 @@ export class ColumnEditorDrawerComponent {
       const column = { nullable: true, validation: {}, ...this.column() };
       this.columnFormData = column;
       this.selectedDataType.set(column.dataType);
-      this.hasSpecialDefault.set(column.hasSpecialDefault);
       this.options.set(column.options || []);
     });
 
@@ -143,9 +141,9 @@ export class ColumnEditorDrawerComponent {
     fn.pipe(
       finalize(() => this.isSaving.set(false)),
       takeUntilDestroyed(this.destroyRef),
-    ).subscribe(() => {
+    ).subscribe(({ data: column }) => {
       this.visible.set(false);
-      this.onSave.emit(this.columnFormData);
+      this.onSave.emit(column);
     });
   }
 
@@ -153,7 +151,7 @@ export class ColumnEditorDrawerComponent {
     this.columnFormData.dataType = dataType;
     this.columnFormData.defaultValue = null;
     this.columnFormData.validation = {};
-    this.internalField = this.tblService.buildField(this.columnFormData);
+    this.internalField = this.tblService.buildField(this.columnFormData as ColumnDefinition);
   }
 
   protected addOption() {
@@ -166,9 +164,5 @@ export class ColumnEditorDrawerComponent {
 
   protected removeOption(idx: number) {
     this.options.update((arr) => arr.filter((o, i) => i !== idx));
-  }
-
-  protected toggleDefaultValueMode() {
-    this.hasSpecialDefault.update((v) => !v);
   }
 }

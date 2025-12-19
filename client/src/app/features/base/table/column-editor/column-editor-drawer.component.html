@@ -240,92 +240,75 @@
         <div class="grid grid-cols-3 w-full gap-12">
           <label class="col-span-1">
             <p class="font-medium text-sm">Default Value</p>
-            <p
-              class="text-surface-500 text-sm hover:underline cursor-pointer"
-              (click)="toggleDefaultValueMode()"
-            >
-              {{ hasSpecialDefault() ? 'Plain text' : 'Field editor' }}
-            </p>
           </label>
           <div class="flex flex-col gap-8 col-span-2">
-            @if (hasSpecialDefault()) {
-              <textarea
-                pTextarea
-                name="defaultValue"
-                placeholder="Input here..."
-                [(ngModel)]="columnFormData.defaultValue"
-                rows="5"
-                class="w-full"
-              ></textarea>
-            } @else {
-              @switch (selectedDataType()) {
-                @case (DataType.Text) {
-                  <text-field-editor
-                    [field]="internalField"
-                    [(data)]="columnFormData.defaultValue"
-                    [label]="false"
-                    class="col-span-2"
-                  />
-                }
-                @case (DataType.LongText) {
-                  <long-text-field-editor
-                    [field]="internalField"
-                    [(data)]="columnFormData.defaultValue"
-                    [label]="false"
-                    class="col-span-2"
-                  />
-                }
-                @case (DataType.Integer) {
-                  <integer-field-editor
-                    [field]="internalField"
-                    [(data)]="columnFormData.defaultValue"
-                    [label]="false"
-                    class="col-span-2"
-                  />
-                }
-                @case (DataType.Number) {
-                  <number-field-editor
-                    [field]="internalField"
-                    [(data)]="columnFormData.defaultValue"
-                    [label]="false"
-                    class="col-span-2"
-                  />
-                }
-                @case (DataType.Select) {
-                  <select-field-editor
-                    [field]="internalField"
-                    [(data)]="columnFormData.defaultValue"
-                    [label]="false"
-                    class="col-span-2"
-                  />
-                }
-                @case (DataType.Checkbox) {
-                  <checkbox-field-editor
-                    [field]="internalField"
-                    [(data)]="columnFormData.defaultValue"
-                    [label]="false"
-                    class="col-span-2"
-                  />
-                }
-                @case (DataType.Date) {
-                  <date-field-editor
-                    [field]="internalField"
-                    [(data)]="columnFormData.defaultValue"
-                    [label]="false"
-                    class="col-span-2"
-                  />
-                }
-                @case (DataType.JSON) {
-                  <json-field-editor
-                    [field]="internalField"
-                    [(data)]="columnFormData.defaultValue"
-                    [label]="false"
-                    class="col-span-2"
-                  />
-                }
-                @default {
-                  <i class="text-sm text-surface-500">Select a data type first.</i>
-                }
+            @switch (selectedDataType()) {
+              @case (DataType.Text) {
+                <text-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.LongText) {
+                <long-text-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Integer) {
+                <integer-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Number) {
+                <number-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Select) {
+                <select-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Checkbox) {
+                <checkbox-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Date) {
+                <date-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.JSON) {
+                <json-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @default {
+                <i class="text-sm text-surface-500">Select a data type first.</i>
               }
             }
           </div>

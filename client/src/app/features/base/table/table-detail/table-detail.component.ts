@@ -202,12 +202,9 @@ export class TableDetailComponent {
     }
   }
 
-  protected onColumnSave(savedColumn: ColumnFormData) {
+  protected onColumnSave(savedColumn: ColumnDefinition) {
     const column: TableColumn = {
       id: savedColumn.name,
-      primary: savedColumn.primary,
-      editable: !savedColumn.primary,
-      hidden: savedColumn.primary && length > 1,
       field: this.tblService.buildField(savedColumn),
     };
     this.columns.update((arr) => [...arr, column]);

@@ -238,17 +238,35 @@ export class TableService {
       throw error;
     }
 
-    return {
-      message: `Column "${name}" created successfully in ${fullTableName}`,
-    };
+    return (await getTableSchema(pg, schemaName, tableName, name))[0];
   }
 
-  async updateColumn(
-    schemaName: string,
-    tableName: string,
-    columnName: string,
-    column: Column
-  ) {
+  async updateColumn({
+    schemaName = 'public',
+    tableName,
+    columnName,
+    column,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    columnName: string;
+    column: {
+      name: string;
+      dataType: DataType;
+      nullable: boolean | null;
+      unique: boolean | null;
+      defaultValue: any | null;
+      comment: string | null;
+      options: string[] | null;
+      validation: {
+        minLength?: number | null;
+        maxLength?: number | null;
+        minValue?: number | string | null;
+        maxValue?: number | string | null;
+        maxSize?: number | null;
+      } | null;
+    };
+  }) {
     const {
       name: newName,
       dataType,
@@ -376,8 +394,6 @@ export class TableService {
         }
       });
 
-    return {
-      message: `Column "${columnName}" updated successfully in ${fullTableName}`,
-    };
+    return (await getTableSchema(pg, schemaName, tableName, newName))[0];
   }
 }

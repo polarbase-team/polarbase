@@ -18,13 +18,10 @@ export interface TableDefinition {
 export interface ColumnDefinition {
   name: string;
   dataType: DataType;
-  pgDataType: string;
-  pgRawType: string;
   primary: boolean;
   nullable: boolean;
   unique: boolean;
   defaultValue: any | null;
-  hasSpecialDefault: boolean;
   comment: string | null;
   options: string[] | null;
   foreignKey: { table: string; column: string } | null;
@@ -35,6 +32,7 @@ export interface ColumnDefinition {
     maxValue?: number | string | null;
     maxSize?: number | null;
   } | null;
+  metadata: any;
 }
 
 export interface TableFormData {
@@ -45,7 +43,7 @@ export interface TableFormData {
   timestamps?: boolean;
 }
 
-export interface ColumnFormData extends ColumnDefinition {}
+export interface ColumnFormData extends Omit<ColumnDefinition, 'primary'> {}
 
 interface Response<T = any> {
   success: boolean;
@@ -87,11 +85,11 @@ export class TableService {
   }
 
   createTable(table: TableFormData) {
-    return this.http.post<Response>(`${this.apiUrl}/tables`, table);
+    return this.http.post<Response<TableDefinition>>(`${this.apiUrl}/tables`, table);
   }
 
   updateTable(tableName: string, table: Pick<TableFormData, 'tableName' | 'tableComment'>) {
-    return this.http.patch<Response>(`${this.apiUrl}/tables/${tableName}`, table);
+    return this.http.patch<Response<TableDefinition>>(`${this.apiUrl}/tables/${tableName}`, table);
   }
 
   deleteTable(tableName: string, casecade = false) {
@@ -99,11 +97,17 @@ export class TableService {
   }
 
   createColumn(tableName: string, column: ColumnFormData) {
-    return this.http.post(`${this.apiUrl}/tables/${tableName}/columns`, column);
+    return this.http.post<Response<ColumnDefinition>>(
+      `${this.apiUrl}/tables/${tableName}/columns`,
+      column,
+    );
   }
 
   updateColumn(tableName: string, columnName: string, column: ColumnFormData) {
-    return this.http.patch(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`, column);
+    return this.http.put<Response<ColumnDefinition>>(
+      `${this.apiUrl}/tables/${tableName}/columns/${columnName}`,
+      column,
+    );
   }
 
   deleteColumn(tableName: string) {
