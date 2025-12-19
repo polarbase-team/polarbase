@@ -24,6 +24,7 @@ import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.
 @Component({
   selector: 'table-list',
   templateUrl: './table-list.component.html',
+  host: { class: 'flex flex-col h-full' },
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
