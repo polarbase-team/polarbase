@@ -335,6 +335,22 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   )
 
   /**
+   * DELETE /rest/tables/:table/columns/:column → delete column
+   */
+  .delete(
+    '/tables/:table/columns/:column',
+    ({ params: { table, column } }) => {
+      return tableService.deleteColumn({
+        tableName: table,
+        columnName: column,
+      });
+    },
+    {
+      params: t.Object({ table: t.String(), column: t.String() }),
+    }
+  )
+
+  /**
    * GET /rest/:table → paginated list with optional filters
    */
   .get(

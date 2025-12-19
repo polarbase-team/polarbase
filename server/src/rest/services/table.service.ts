@@ -396,4 +396,33 @@ export class TableService {
 
     return (await getTableSchema(pg, schemaName, tableName, newName))[0];
   }
+
+  async deleteColumn({
+    schemaName = 'public',
+    tableName,
+    columnName,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    columnName: string;
+  }) {
+    const fullTableName = `"${schemaName}"."${tableName}"`;
+
+    const tableExists = await pg.schema
+      .withSchema(schemaName)
+      .hasTable(tableName);
+    if (!tableExists) throw new Error(`Table ${fullTableName} not found`);
+
+    const columnExists = await pg.schema
+      .withSchema(schemaName)
+      .hasColumn(tableName, columnName);
+    if (!columnExists)
+      throw new Error(`Column "${columnName}" not found in ${fullTableName}`);
+
+    await pg.schema
+      .withSchema(schemaName)
+      .alterTable(tableName, (tableBuilder) => {
+        tableBuilder.dropColumn(columnName);
+      });
+  }
 }

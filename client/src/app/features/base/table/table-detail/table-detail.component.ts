@@ -56,7 +56,6 @@ import { TableRealtimeService } from '../table-realtime.service';
 export class TableDetailComponent {
   protected config = signal<TableConfig>({
     sideSpacing: 20,
-    column: { deletable: false },
     row: { insertable: false, reorderable: false },
   });
   protected columns = signal<TableColumn[]>([]);
@@ -142,6 +141,10 @@ export class TableDetailComponent {
         break;
       case TableColumnActionType.Edit:
         this.editColumn(action.payload as TableColumn);
+        break;
+      case TableColumnActionType.Delete:
+        const { id: columnName } = action.payload as TableColumn;
+        this.tblService.deleteColumn(tableName, columnName as string);
         break;
     }
   }

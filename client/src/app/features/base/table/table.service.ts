@@ -110,8 +110,8 @@ export class TableService {
     );
   }
 
-  deleteColumn(tableName: string) {
-    return this.http.delete(`${this.apiUrl}/tables/${tableName}/columns`);
+  deleteColumn(tableName: string, columnName: string) {
+    return this.http.delete(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`);
   }
 
   getRecords(tableName: string): Observable<Record<string, any>[]> {
