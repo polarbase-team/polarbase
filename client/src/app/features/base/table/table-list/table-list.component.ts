@@ -68,7 +68,9 @@ export class TableListComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((params) => {
         tableFromQueryParam = params['table'];
-        this.getTables(tableFromQueryParam);
+        if (!this.tables().length) {
+          this.getTables(tableFromQueryParam);
+        }
       });
   }
 
