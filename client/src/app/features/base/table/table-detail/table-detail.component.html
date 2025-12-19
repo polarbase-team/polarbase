@@ -1,5 +1,3 @@
-<p-menu #insertMenu [model]="insertMenuItems" [popup]="true" appendTo="body" />
-
 @if (columns()) {
   <column-editor-drawer
     [(visible)]="visibleColumnEditor"
@@ -7,7 +5,7 @@
     [column]="updatedColumn"
     [field]="updatedColumnField"
     [mode]="updatedColumnMode"
-    (onSave)="onColumnSave($event)"
+    (onSave)="onColumnSave($any($event))"
   />
   <record-editor-drawer
     [(visible)]="visibleRecordEditor"
@@ -26,7 +24,12 @@
     >`
     <ng-template #toolbar>
       <div class="flex">
-        <p-button icon="icon icon-chevron-down" label="Insert" (click)="insertMenu.show($event)" />
+        <p-splitbutton
+          label="Insert"
+          icon="icon icon-plus"
+          [model]="insertMenuItems"
+          (onClick)="addNewRecord()"
+        />
         <p-divider layout="vertical" />
       </div>
     </ng-template>

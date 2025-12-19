@@ -14,7 +14,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { MenuItem } from 'primeng/api';
-import { MenuModule } from 'primeng/menu';
+import { SplitButtonModule } from 'primeng/splitbutton';
 
 import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
 import { TableColumn } from '../../../../shared/spreadsheet/models/table-column';
@@ -37,7 +37,7 @@ import {
 } from '../../../../shared/spreadsheet/events/table-column';
 import { ColumnEditorDrawerComponent } from '../column-editor/column-editor-drawer.component';
 import { RecordEditorDrawerComponent } from '../record-editor/record-editor-drawer.component';
-import { ColumnDefinition, ColumnFormData, TableDefinition, TableService } from '../table.service';
+import { ColumnDefinition, TableDefinition, TableService } from '../table.service';
 import { TableRealtimeService } from '../table-realtime.service';
 
 @Component({
@@ -47,7 +47,7 @@ import { TableRealtimeService } from '../table-realtime.service';
   imports: [
     ButtonModule,
     DividerModule,
-    MenuModule,
+    SplitButtonModule,
     SpreadsheetComponent,
     RecordEditorDrawerComponent,
     ColumnEditorDrawerComponent,
