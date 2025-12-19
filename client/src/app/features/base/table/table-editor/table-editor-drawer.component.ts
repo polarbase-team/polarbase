@@ -24,7 +24,7 @@ import { DividerModule } from 'primeng/divider';
 
 import { TableFormData, TableDefinition, TableService } from '../table.service';
 
-const DEFAULT_VALUE: TableFormData = {
+const DEFAULT_VALUE = {
   autoAddingPrimaryKey: true,
   timestamps: true,
 } as TableFormData;

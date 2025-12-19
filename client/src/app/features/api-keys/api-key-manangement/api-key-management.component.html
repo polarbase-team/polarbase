@@ -6,6 +6,7 @@
   position="right"
   header="Add key"
   styleClass="!w-150 custom-drawer"
+  (onHide)="reset()"
 >
   <ng-template #content>
     <form id="apiKeyForm" #apiKeyForm="ngForm" (ngSubmit)="onApiKeyFormSubmit()">
@@ -46,8 +47,8 @@
             <div class="flex gap-4">
               <p-checkbox
                 id="restApiPermission"
-                name="restApiPermission"
                 [(ngModel)]="newApiKey.scopes.rest"
+                [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
               />
@@ -62,8 +63,8 @@
             <div class="flex gap-4">
               <p-checkbox
                 id="agentApiPermission"
-                name="agentApiPermission"
                 [(ngModel)]="newApiKey.scopes.agent"
+                [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
               />
@@ -78,8 +79,8 @@
             <div class="flex gap-4">
               <p-checkbox
                 id="mcpServerPermission"
-                name="mcpServerPermission"
                 [(ngModel)]="newApiKey.scopes.mcp"
+                [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
               />
@@ -94,8 +95,8 @@
             <div class="flex gap-4">
               <p-checkbox
                 id="realtimeServerPermission"
-                name="realtimeServerPermission"
                 [(ngModel)]="newApiKey.scopes.realtime"
+                [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
               />

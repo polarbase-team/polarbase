@@ -22,14 +22,23 @@ import { ToastModule } from 'primeng/toast';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
-
-import { ApiKey, ApiKeyService } from '../api-key.service';
 import { DrawerModule } from 'primeng/drawer';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { MessageModule } from 'primeng/message';
 import { DividerModule } from 'primeng/divider';
 import { CheckboxModule } from 'primeng/checkbox';
 import { Tooltip } from 'primeng/tooltip';
+
+import { ApiKey, ApiKeyService } from '../api-key.service';
+
+const DEFAULT_VALUE = {
+  scopes: {
+    rest: true,
+    agent: true,
+    mcp: true,
+    realtime: true,
+  },
+} as ApiKey;
 
 @Component({
   selector: 'app-api-key-management',
@@ -67,9 +76,7 @@ export class ApiKeyManagementComponent implements OnInit {
   protected apiKeyForm = viewChild<NgForm>('apiKeyForm');
   protected isCreating = signal(false);
   protected isCreationMode = false;
-  protected newApiKey: ApiKey = {
-    scopes: { rest: true, agent: true, mcp: true, realtime: true },
-  } as ApiKey;
+  protected newApiKey: ApiKey = { ...DEFAULT_VALUE };
 
   constructor(
     private destroyRef: DestroyRef,
@@ -85,6 +92,11 @@ export class ApiKeyManagementComponent implements OnInit {
 
   ngOnInit() {
     this.loadApiKeys();
+  }
+
+  protected reset() {
+    this.apiKeyForm().reset();
+    this.newApiKey = { ...DEFAULT_VALUE };
   }
 
   protected loadApiKeys() {
@@ -167,9 +179,10 @@ export class ApiKeyManagementComponent implements OnInit {
         finalize(() => this.isCreating.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((apiKey) => {
+      .subscribe(() => {
         this.isCreationMode = false;
         this.loadApiKeys();
+        this.reset();
       });
   }
 }

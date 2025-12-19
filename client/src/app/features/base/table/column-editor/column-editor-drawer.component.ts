@@ -40,7 +40,7 @@ import { DateFieldEditorComponent } from '../field-editors/date/editor.component
 import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
 import { ColumnFormData, ColumnDefinition, TableDefinition, TableService } from '../table.service';
 
-const DEFAULT_VALUE: ColumnFormData = {
+const DEFAULT_VALUE = {
   nullable: true,
   validation: {},
 } as ColumnFormData;
