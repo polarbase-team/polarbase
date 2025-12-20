@@ -1,6 +1,6 @@
 @if (isInputting) {
   <input-box
-    [type]="field.allowNegative ? 'number' : 'positive-number'"
+    type="number"
     [content]="data"
     (edited)="onInputBoxEdited($event)"
     (input)="onInputBoxInput($event)"

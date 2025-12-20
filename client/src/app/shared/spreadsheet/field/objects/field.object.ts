@@ -5,8 +5,11 @@ import { DataType, FieldConfig } from '../interfaces/field.interface';
 export const FieldValidationKey = {
   Required: 'required',
   Pattern: 'pattern',
+  MinLength: 'min-length',
+  MaxLength: 'max-length',
   Min: 'min',
   Max: 'max',
+  MaxSize: 'max-size',
   Other: 'other',
 } as const;
 export type FieldValidationKey = (typeof FieldValidationKey)[keyof typeof FieldValidationKey];

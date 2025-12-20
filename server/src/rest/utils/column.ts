@@ -107,6 +107,9 @@ export const specificType = (
     case DataType.Integer:
       return tableBuilder.integer(name);
 
+    case DataType.Number:
+      return tableBuilder.decimal(name);
+
     case DataType.Checkbox:
       return tableBuilder.boolean(name);
 

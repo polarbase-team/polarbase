@@ -6,8 +6,14 @@ import {
   DataType,
   FieldConfig,
 } from '../../../shared/spreadsheet/field/interfaces/field.interface';
+import { IntegerFieldConfig } from '../../../shared/spreadsheet/field/interfaces/integer-field.interface';
 import { SelectFieldConfig } from '../../../shared/spreadsheet/field/interfaces/select-field.interface';
 import { buildField } from '../../../shared/spreadsheet/field/utils';
+import { NumberFieldConfig } from '../../../shared/spreadsheet/field/interfaces/number-field.interface';
+import { TextFieldConfig } from '../../../shared/spreadsheet/field/interfaces/text-field.interface';
+import { LongTextFieldConfig } from '../../../shared/spreadsheet/field/interfaces/long-text-field.interface';
+import { JSONFieldConfig } from '../../../shared/spreadsheet/field/interfaces/json-field.interface';
+import { DateFieldConfig } from '../../../shared/spreadsheet/field/interfaces/date-field.interface';
 
 export interface TableDefinition {
   tableName: string;
@@ -152,8 +158,32 @@ export class TableService {
       params: column,
     };
 
-    if (dataType === DataType.Select) {
-      (config as SelectFieldConfig).options = column.options;
+    switch (dataType) {
+      case DataType.Text:
+        (config as TextFieldConfig).minLength = column.validation?.minLength;
+        (config as TextFieldConfig).maxLength = column.validation?.maxLength;
+        break;
+      case DataType.LongText:
+        (config as LongTextFieldConfig).maxSize = column.validation?.maxSize;
+        break;
+      case DataType.Integer:
+        (config as IntegerFieldConfig).min = column.validation?.minValue as number;
+        (config as IntegerFieldConfig).max = column.validation?.maxValue as number;
+        break;
+      case DataType.Number:
+        (config as NumberFieldConfig).min = column.validation?.minValue as number;
+        (config as NumberFieldConfig).max = column.validation?.maxValue as number;
+        break;
+      case DataType.Date:
+        (config as DateFieldConfig).min = column.validation?.minValue as string;
+        (config as DateFieldConfig).max = column.validation?.maxValue as string;
+        break;
+      case DataType.Select:
+        (config as SelectFieldConfig).options = column.options;
+        break;
+      case DataType.JSON:
+        (config as JSONFieldConfig).maxSize = column.validation?.maxSize;
+        break;
     }
 
     return buildField(dataType, config);

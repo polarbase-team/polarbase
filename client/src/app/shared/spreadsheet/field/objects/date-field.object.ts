@@ -1,15 +1,59 @@
 import _ from 'lodash';
 import dayjs from 'dayjs';
 
-import { DateData } from '../interfaces/date-field.interface';
+import { DateData, DateFieldConfig } from '../interfaces/date-field.interface';
 import { DataType } from '../interfaces/field.interface';
-import { Field } from './field.object';
+import { Field, FieldValidationKey } from './field.object';
 
 export class DateField extends Field<DateData> {
   static readonly dataType: DataType = DataType.Date;
 
   readonly dataType: DataType = DataType.Date;
   readonly icon: string = 'icon icon-calendar';
+
+  min?: string;
+  max?: string;
+
+  constructor(config: DateFieldConfig) {
+    super(config);
+
+    this.min = config.min;
+    this.max = config.max;
+  }
+
+  override validate(data = this.data!) {
+    let errors = super.validate(data);
+
+    if (!_.isNil(data)) {
+      const date = dayjs(data);
+      const minDate = dayjs(this.min);
+      const maxDate = dayjs(this.max);
+
+      if (date.isBefore(minDate)) {
+        errors = {
+          ...errors,
+          [FieldValidationKey.Min]: {
+            field: this,
+            data,
+            min: minDate,
+          },
+        };
+      }
+
+      if (date.isAfter(maxDate)) {
+        errors = {
+          ...errors,
+          [FieldValidationKey.Max]: {
+            field: this,
+            data,
+            max: maxDate,
+          },
+        };
+      }
+    }
+
+    return errors;
+  }
 
   override compareData(source: DateData, destination = this.data!) {
     if (_.isNil(source) && _.isNil(destination)) {

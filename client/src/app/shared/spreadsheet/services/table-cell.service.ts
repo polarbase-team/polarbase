@@ -277,7 +277,7 @@ export class TableCellService extends TableBaseService {
 
           for (const key in errors) {
             if (!errors.hasOwnProperty(key)) continue;
-            this.showCellError(cellElement, key);
+            this.showCellError(cellElement, key, errors[key]);
           }
 
           this.tableService.layout.fillHandle.hidden = true;
@@ -1132,23 +1132,32 @@ export class TableCellService extends TableBaseService {
     return matrix;
   }
 
-  private showCellError(target: HTMLElement, key: string) {
+  private showCellError(target: HTMLElement, key: string, payload: any) {
     let message: string;
     switch (key) {
       case FieldValidationKey.Required:
         message = 'This field is required.';
         break;
       case FieldValidationKey.Pattern:
-        message = 'The value does not match the required format.';
+        message = 'Invalid format.';
+        break;
+      case FieldValidationKey.MinLength:
+        message = `Minimum ${payload.minLength} characters.`;
+        break;
+      case FieldValidationKey.MaxLength:
+        message = `Maximum ${payload.maxLength} characters.`;
         break;
       case FieldValidationKey.Min:
-        message = 'The value is too small.';
+        message = `Must be at least ${payload.min}.`;
         break;
       case FieldValidationKey.Max:
-        message = 'The value is too large.';
+        message = `Must be at most ${payload.max}.`;
+        break;
+      case FieldValidationKey.MaxSize:
+        message = `Maximum size: ${payload.maxSize}.`;
         break;
       default:
-        message = 'An error has occurred.';
+        message = 'Invalid value.';
     }
     this.activeCellError = { target, message };
   }
