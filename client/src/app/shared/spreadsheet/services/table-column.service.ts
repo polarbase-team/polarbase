@@ -530,7 +530,7 @@ export class TableColumnService extends TableBaseService {
         });
       }
     } else {
-      if (config.updatable) {
+      if (config.updatable && !column.primary) {
         items.push({
           label: 'Edit column',
           icon: 'icon icon-pencil',
@@ -623,7 +623,7 @@ export class TableColumnService extends TableBaseService {
           },
         );
       }
-      if (config.deletable) {
+      if (config.deletable && !column.primary) {
         items.push(
           { separator: true },
           {
