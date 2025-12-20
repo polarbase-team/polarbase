@@ -25,8 +25,10 @@ export interface Column {
   validation: {
     minLength?: number;
     maxLength?: number;
-    minValue?: string | number;
-    maxValue?: string | number;
+    minValue?: number;
+    maxValue?: number;
+    minDate?: string;
+    maxDate?: string;
     maxSize?: number;
   };
   metadata: any;
@@ -136,12 +138,13 @@ export const specificType = (
 
 export const LENGTH_CHECK_SUFFIX = '_length_check';
 export const RANGE_CHECK_SUFFIX = '_range_check';
+export const DATE_RANGE_CHECK_SUFFIX = '_date_range_check';
 export const SIZE_CHECK_SUFFIX = '_size_check';
 
 export const getConstraintName = (
   tableName: string,
   columnName: string,
-  type: 'length' | 'range' | 'size'
+  type: 'length' | 'range' | 'date-range' | 'size'
 ): string => {
   const prefix = `${tableName}_${columnName}`;
   switch (type) {
@@ -149,6 +152,8 @@ export const getConstraintName = (
       return prefix + LENGTH_CHECK_SUFFIX;
     case 'range':
       return prefix + RANGE_CHECK_SUFFIX;
+    case 'date-range':
+      return prefix + DATE_RANGE_CHECK_SUFFIX;
     case 'size':
       return prefix + SIZE_CHECK_SUFFIX;
   }
@@ -190,8 +195,8 @@ export const addRangeCheck = (
   tableBuilder: Knex.TableBuilder,
   tableName: string,
   columnName: string,
-  minValue: number | string | null,
-  maxValue: number | string | null
+  minValue: number | null,
+  maxValue: number | null
 ) => {
   const quotedColumn = `"${columnName}"`;
   const constraintName = getConstraintName(tableName, columnName, 'range');
@@ -215,6 +220,43 @@ export const removeRangeCheck = (
   columnName: string
 ) => {
   const constraintName = getConstraintName(tableName, columnName, 'range');
+  tableBuilder.dropChecks(`"${constraintName}"`);
+};
+
+export const addDateRangeCheck = (
+  tableBuilder: Knex.TableBuilder,
+  tableName: string,
+  columnName: string,
+  minDate: string | null,
+  maxDate: string | null
+) => {
+  const quotedColumn = `"${columnName}"`;
+  const constraintName = getConstraintName(tableName, columnName, 'date-range');
+  const checks: string[] = [];
+
+  if (typeof minDate === 'string') {
+    checks.push(
+      `${quotedColumn} >= TO_TIMESTAMP('${minDate}', 'YYYY-MM-DD HH24:MI')`
+    );
+  }
+
+  if (typeof maxDate === 'string') {
+    checks.push(
+      `${quotedColumn} <= TO_TIMESTAMP('${maxDate}', 'YYYY-MM-DD HH24:MI')`
+    );
+  }
+
+  if (checks.length > 0) {
+    tableBuilder.check(checks.join(' AND '), [], `"${constraintName}"`);
+  }
+};
+
+export const removeDateRangeCheck = (
+  tableBuilder: Knex.TableBuilder,
+  tableName: string,
+  columnName: string
+) => {
+  const constraintName = getConstraintName(tableName, columnName, 'date-range');
   tableBuilder.dropChecks(`"${constraintName}"`);
 };
 

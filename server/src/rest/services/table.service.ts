@@ -11,6 +11,8 @@ import {
   removeRangeCheck,
   removeSizeCheck,
   getConstraintName,
+  addDateRangeCheck,
+  removeDateRangeCheck,
 } from '../utils/column';
 
 /**
@@ -177,8 +179,10 @@ export class TableService {
       validation?: {
         minLength?: number | null;
         maxLength?: number | null;
-        minValue?: number | string | null;
-        maxValue?: number | string | null;
+        minValue?: number | null;
+        maxValue?: number | null;
+        minDate?: string | null;
+        maxDate?: string | null;
         maxSize?: number | null;
       } | null;
     };
@@ -193,8 +197,15 @@ export class TableService {
       options,
       validation,
     } = column;
-    const { minLength, maxLength, minValue, maxValue, maxSize } =
-      validation || {};
+    const {
+      minLength,
+      maxLength,
+      minValue,
+      maxValue,
+      minDate,
+      maxDate,
+      maxSize,
+    } = validation || {};
 
     const fullTableName = `"${schemaName}"."${tableName}"`;
     const schemaBuilder = pg.schema.withSchema(schemaName);
@@ -226,6 +237,7 @@ export class TableService {
 
         addLengthCheck(tableBuilder, tableName, name, minLength!, maxLength!);
         addRangeCheck(tableBuilder, tableName, name, minValue!, maxValue!);
+        addDateRangeCheck(tableBuilder, tableName, name, minDate!, maxDate!);
         addSizeCheck(tableBuilder, tableName, name, maxSize!);
       });
     } catch (error) {
@@ -261,8 +273,10 @@ export class TableService {
       validation: {
         minLength?: number | null;
         maxLength?: number | null;
-        minValue?: number | string | null;
-        maxValue?: number | string | null;
+        minValue?: number | null;
+        maxValue?: number | null;
+        minDate?: string | null;
+        maxDate?: string | null;
         maxSize?: number | null;
       } | null;
     };
@@ -277,8 +291,15 @@ export class TableService {
       options,
       validation,
     } = column;
-    const { minLength, maxLength, minValue, maxValue, maxSize } =
-      validation || {};
+    const {
+      minLength,
+      maxLength,
+      minValue,
+      maxValue,
+      minDate,
+      maxDate,
+      maxSize,
+    } = validation || {};
 
     const fullTableName = `"${schemaName}"."${tableName}"`;
 
@@ -339,8 +360,20 @@ export class TableService {
           minLength !== oldSchema.validation?.minLength ||
           maxLength !== oldSchema.validation?.maxLength
         ) {
-          if (!recreateConstraints)
-            removeLengthCheck(tableBuilder, tableName, columnName);
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'range'
+            );
+            if (
+              oldSchema.metadata.constraints?.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeLengthCheck(tableBuilder, tableName, columnName);
+            }
+          }
 
           addLengthCheck(
             tableBuilder,
@@ -356,15 +389,68 @@ export class TableService {
           minValue !== oldSchema.validation?.minValue ||
           maxValue !== oldSchema.validation?.maxValue
         ) {
-          if (!recreateConstraints)
-            removeRangeCheck(tableBuilder, tableName, columnName);
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'range'
+            );
+            if (
+              oldSchema.metadata.constraints.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeRangeCheck(tableBuilder, tableName, columnName);
+            }
+          }
 
           addRangeCheck(tableBuilder, tableName, newName, minValue!, maxValue!);
         }
 
+        if (
+          recreateConstraints ||
+          minDate !== oldSchema.validation?.minDate ||
+          maxDate !== oldSchema.validation?.maxDate
+        ) {
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'range'
+            );
+            if (
+              oldSchema.metadata.constraints.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeDateRangeCheck(tableBuilder, tableName, columnName);
+            }
+          }
+
+          addDateRangeCheck(
+            tableBuilder,
+            tableName,
+            newName,
+            minDate!,
+            maxDate!
+          );
+        }
+
         if (recreateConstraints || maxSize !== oldSchema.validation?.maxSize) {
-          if (!recreateConstraints)
-            removeSizeCheck(tableBuilder, tableName, columnName);
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'size'
+            );
+            if (
+              oldSchema.metadata.constraints?.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeSizeCheck(tableBuilder, tableName, columnName);
+            }
+          }
 
           addSizeCheck(tableBuilder, tableName, newName, maxSize!);
         }
@@ -383,6 +469,11 @@ export class TableService {
               tableName,
               columnName,
               'range'
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'date-range'
             )}",
             DROP CONSTRAINT IF EXISTS "${getConstraintName(
               tableName,

@@ -164,8 +164,11 @@
                   <label class="text-sm">Min date</label>
                   <p-datepicker
                     name="minDate"
-                    [(ngModel)]="columnFormData.validation.minValue"
+                    [(ngModel)]="columnFormData.validation.minDate"
+                    [dataType]="'string'"
+                    [dateFormat]="'yy-mm-dd'"
                     [showTime]="true"
+                    [showClear]="true"
                     [fluid]="true"
                     appendTo="body"
                     placeholder="Select here..."
@@ -175,8 +178,11 @@
                   <label class="text-sm">Max date</label>
                   <p-datepicker
                     name="maxDate"
-                    [(ngModel)]="columnFormData.validation.maxValue"
+                    [(ngModel)]="columnFormData.validation.maxDate"
+                    [dataType]="'string'"
+                    [dateFormat]="'yy-mm-dd'"
                     [showTime]="true"
+                    [showClear]="true"
                     [fluid]="true"
                     appendTo="body"
                     placeholder="Select here..."

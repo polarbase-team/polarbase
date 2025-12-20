@@ -34,8 +34,10 @@ export interface ColumnDefinition {
   validation: {
     minLength?: number | null;
     maxLength?: number | null;
-    minValue?: number | string | null;
-    maxValue?: number | string | null;
+    minValue?: number | null;
+    maxValue?: number | null;
+    minDate?: string | null;
+    maxDate?: string | null;
     maxSize?: number | null;
   } | null;
   metadata: any;
@@ -167,16 +169,16 @@ export class TableService {
         (config as LongTextFieldConfig).maxSize = column.validation?.maxSize;
         break;
       case DataType.Integer:
-        (config as IntegerFieldConfig).min = column.validation?.minValue as number;
-        (config as IntegerFieldConfig).max = column.validation?.maxValue as number;
+        (config as IntegerFieldConfig).min = column.validation?.minValue;
+        (config as IntegerFieldConfig).max = column.validation?.maxValue;
         break;
       case DataType.Number:
-        (config as NumberFieldConfig).min = column.validation?.minValue as number;
-        (config as NumberFieldConfig).max = column.validation?.maxValue as number;
+        (config as NumberFieldConfig).min = column.validation?.minValue;
+        (config as NumberFieldConfig).max = column.validation?.maxValue;
         break;
       case DataType.Date:
-        (config as DateFieldConfig).min = column.validation?.minValue as string;
-        (config as DateFieldConfig).max = column.validation?.maxValue as string;
+        (config as DateFieldConfig).min = column.validation?.minDate;
+        (config as DateFieldConfig).max = column.validation?.maxDate;
         break;
       case DataType.Select:
         (config as SelectFieldConfig).options = column.options;

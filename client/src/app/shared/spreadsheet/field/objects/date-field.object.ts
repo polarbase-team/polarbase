@@ -26,29 +26,33 @@ export class DateField extends Field<DateData> {
 
     if (!_.isNil(data)) {
       const date = dayjs(data);
-      const minDate = dayjs(this.min);
-      const maxDate = dayjs(this.max);
 
-      if (date.isBefore(minDate)) {
-        errors = {
-          ...errors,
-          [FieldValidationKey.Min]: {
-            field: this,
-            data,
-            min: minDate,
-          },
-        };
+      if (!_.isNil(this.min)) {
+        const minDate = dayjs(this.min);
+        if (date.isBefore(minDate)) {
+          errors = {
+            ...errors,
+            [FieldValidationKey.Min]: {
+              field: this,
+              data,
+              min: minDate,
+            },
+          };
+        }
       }
 
-      if (date.isAfter(maxDate)) {
-        errors = {
-          ...errors,
-          [FieldValidationKey.Max]: {
-            field: this,
-            data,
-            max: maxDate,
-          },
-        };
+      if (!_.isNil(this.max)) {
+        const maxDate = dayjs(this.max);
+        if (date.isAfter(maxDate)) {
+          errors = {
+            ...errors,
+            [FieldValidationKey.Max]: {
+              field: this,
+              data,
+              max: maxDate,
+            },
+          };
+        }
       }
     }
 

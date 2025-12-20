@@ -270,12 +270,10 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
             t.Object({
               minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
               maxLength: t.Optional(t.Nullable(t.Numeric({ minimum: 1 }))),
-              minValue: t.Optional(
-                t.Nullable(t.Union([t.Numeric(), t.String()]))
-              ),
-              maxValue: t.Optional(
-                t.Nullable(t.Union([t.Numeric(), t.String()]))
-              ),
+              minValue: t.Optional(t.Nullable(t.Numeric())),
+              maxValue: t.Optional(t.Nullable(t.Numeric())),
+              minDate: t.Optional(t.Nullable(t.String())),
+              maxDate: t.Optional(t.Nullable(t.String())),
               maxSize: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
             })
           )
@@ -321,12 +319,10 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           t.Object({
             minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
             maxLength: t.Optional(t.Nullable(t.Numeric({ minimum: 1 }))),
-            minValue: t.Optional(
-              t.Nullable(t.Union([t.Numeric(), t.String()]))
-            ),
-            maxValue: t.Optional(
-              t.Nullable(t.Union([t.Numeric(), t.String()]))
-            ),
+            minValue: t.Optional(t.Nullable(t.Numeric())),
+            maxValue: t.Optional(t.Nullable(t.Numeric())),
+            minDate: t.Optional(t.Nullable(t.String())),
+            maxDate: t.Optional(t.Nullable(t.String())),
             maxSize: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
           })
         ),

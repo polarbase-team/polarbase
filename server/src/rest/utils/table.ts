@@ -5,6 +5,7 @@ import {
   mapDataType,
   SIZE_CHECK_SUFFIX,
   RANGE_CHECK_SUFFIX,
+  DATE_RANGE_CHECK_SUFFIX,
 } from './column';
 
 /**
@@ -250,10 +251,13 @@ export const getTableSchema = async (
   const validationMap: Record<
     string,
     {
+      constraints: any[];
       minLength?: number;
       maxLength?: number;
-      minValue?: string | number | null;
-      maxValue?: string | number | null;
+      minValue?: number | null;
+      maxValue?: number | null;
+      minDate?: string | null;
+      maxDate?: string | null;
       maxSize?: number | null;
     }
   > = {};
@@ -265,7 +269,10 @@ export const getTableSchema = async (
     if (cons.constraint_name.endsWith(LENGTH_CHECK_SUFFIX)) {
       const [min, max] = extractLengthRange(def) || [];
 
-      validationMap[columnName] = validationMap[columnName] || {};
+      validationMap[columnName] = validationMap[columnName] || {
+        constraints: [],
+      };
+      validationMap[columnName].constraints.push(cons);
       if (min) validationMap[columnName].minLength = min.value;
       if (max) validationMap[columnName].maxLength = max.value;
     }
@@ -273,15 +280,32 @@ export const getTableSchema = async (
     if (cons.constraint_name.endsWith(RANGE_CHECK_SUFFIX)) {
       const [min, max] = extractValueRange(def) || [];
 
-      validationMap[columnName] = validationMap[columnName] || {};
+      validationMap[columnName] = validationMap[columnName] || {
+        constraints: [],
+      };
+      validationMap[columnName].constraints.push(cons);
       if (min) validationMap[columnName].minValue = min.value;
       if (max) validationMap[columnName].maxValue = max.value;
+    }
+
+    if (cons.constraint_name.endsWith(DATE_RANGE_CHECK_SUFFIX)) {
+      const [min, max] = extractDateRange(def) || [];
+
+      validationMap[columnName] = validationMap[columnName] || {
+        constraints: [],
+      };
+      validationMap[columnName].constraints.push(cons);
+      if (min) validationMap[columnName].minDate = min.value;
+      if (max) validationMap[columnName].maxDate = max.value;
     }
 
     if (cons.constraint_name.endsWith(SIZE_CHECK_SUFFIX)) {
       const maxSize = extractMaxSize(def);
 
-      validationMap[columnName] = validationMap[columnName] || {};
+      validationMap[columnName] = validationMap[columnName] || {
+        constraints: [],
+      };
+      validationMap[columnName].constraints.push(cons);
       validationMap[columnName].maxSize = maxSize;
     }
   }
@@ -293,6 +317,7 @@ export const getTableSchema = async (
       rawValue: rawDefaultValue,
       isSpecialExpression: hasSpecialDefault,
     } = parsePostgresDefault(col.column_default);
+    const { constraints, ...validation } = validationMap[col.column_name] || {};
     const column: Column = {
       name: col.column_name,
       primary: primaryKeySet.has(col.column_name),
@@ -302,11 +327,12 @@ export const getTableSchema = async (
       comment: commentMap[col.column_name] ?? null,
       options: enumMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
-      validation: validationMap[col.column_name] || null,
+      validation: validation || null,
       metadata: {
         pgDataType: col.data_type,
         pgRawType: col.udt_name,
         pgDefaultValue: rawDefaultValue,
+        constraints,
       },
     } as Column;
 
@@ -407,20 +433,32 @@ const extractValueRange = (definition: string) => {
 
   const bounds: {
     operator: string;
-    rawValue: string;
-    value: string | number | null;
+    value: number | null;
   }[] = [];
 
   for (const match of matches) {
     const operator = match[2];
-    const rawValue = match[3].match(/('[^']*'|\-?\d+(?:\.\d+)?)/)?.[1] || '';
-    let value: string | number | null = rawValue;
+    const value = match[3].match(/('[^']*'|\-?\d+(?:\.\d+)?)/)?.[1] || '';
+    bounds.push({ operator, value: parseFloat(value) });
+  }
 
-    if (!rawValue.startsWith("'")) {
-      value = parseFloat(rawValue);
-    }
+  return bounds;
+};
 
-    bounds.push({ operator, rawValue, value });
+const extractDateRange = (definition: string) => {
+  const regex =
+    /\(\s*["']?([\w ]+)["']?\s*(>=|<=|>|<)\s*to_timestamp\s*\(\s*'([^']+)'\s*::text\s*,\s*'YYYY-MM-DD HH24:MI'::text\s*\)\s*(::[\w\s]+)?\s*\)/gi;
+  const matches = Array.from(definition.matchAll(regex));
+
+  const bounds: {
+    operator: string;
+    value: string | null;
+  }[] = [];
+
+  for (const match of matches) {
+    const operator = match[2];
+    const value = match[3] || '';
+    bounds.push({ operator, value });
   }
 
   return bounds;
