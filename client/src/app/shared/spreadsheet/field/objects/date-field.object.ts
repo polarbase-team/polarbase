@@ -2,14 +2,14 @@ import _ from 'lodash';
 import dayjs from 'dayjs';
 
 import { DateData, DateFieldConfig } from '../interfaces/date-field.interface';
-import { DataType } from '../interfaces/field.interface';
+import { DataType, FIELD_ICON_MAP } from '../interfaces/field.interface';
 import { Field, FieldValidationKey } from './field.object';
 
 export class DateField extends Field<DateData> {
   static readonly dataType: DataType = DataType.Date;
 
   readonly dataType: DataType = DataType.Date;
-  readonly icon: string = 'icon icon-calendar';
+  readonly icon: string = FIELD_ICON_MAP[DataType.Date];
 
   min?: string;
   max?: string;

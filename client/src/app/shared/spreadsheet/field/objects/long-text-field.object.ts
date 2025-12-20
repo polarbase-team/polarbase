@@ -1,14 +1,14 @@
 import _ from 'lodash';
 
 import { LongTextData, LongTextFieldConfig } from '../interfaces/long-text-field.interface';
-import { DataType } from '../interfaces/field.interface';
+import { DataType, FIELD_ICON_MAP } from '../interfaces/field.interface';
 import { Field, FieldValidationKey } from './field.object';
 
 export class LongTextField extends Field<LongTextData> {
   static readonly dataType: DataType = DataType.LongText;
 
   readonly dataType: DataType = DataType.LongText;
-  readonly icon: string = 'icon icon-text-initial';
+  readonly icon: string = FIELD_ICON_MAP[DataType.LongText];
 
   maxSize?: number;
 

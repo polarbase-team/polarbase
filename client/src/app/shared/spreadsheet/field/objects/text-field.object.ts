@@ -1,14 +1,14 @@
 import _ from 'lodash';
 
 import { TextData, TextFieldConfig } from '../interfaces/text-field.interface';
-import { DataType } from '../interfaces/field.interface';
+import { DataType, FIELD_ICON_MAP } from '../interfaces/field.interface';
 import { Field, FieldValidationKey } from './field.object';
 
 export class TextField extends Field<TextData> {
   static readonly dataType: DataType = DataType.Text;
 
   readonly dataType: DataType = DataType.Text;
-  readonly icon: string = 'icon icon-case-sensitive';
+  readonly icon: string = FIELD_ICON_MAP[DataType.Text];
 
   minLength?: number;
   maxLength?: number;

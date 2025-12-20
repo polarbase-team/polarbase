@@ -79,7 +79,14 @@
                 (ngModelChange)="onSelectDataType($event)"
                 placeholder="Select here..."
                 required
-              />
+              >
+                <ng-template let-item #item>
+                  <div class="flex items-center gap-2">
+                    <i [class]="item.icon"></i>
+                    <span>{{ item.name }}</span>
+                  </div>
+                </ng-template>
+              </p-select>
             </div>
             @switch (selectedDataType()) {
               @case (DataType.Text) {

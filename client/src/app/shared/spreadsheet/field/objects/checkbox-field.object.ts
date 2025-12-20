@@ -1,5 +1,5 @@
 import { CheckboxData } from '../interfaces/checkbox-field.interface';
-import { DataType } from '../interfaces/field.interface';
+import { DataType, FIELD_ICON_MAP } from '../interfaces/field.interface';
 import { Field } from './field.object';
 
 export function parseCheckboxToString(data: CheckboxData) {
@@ -10,5 +10,5 @@ export class CheckboxField extends Field<CheckboxData> {
   static readonly dataType: DataType = DataType.Checkbox;
 
   readonly dataType: DataType = DataType.Checkbox;
-  readonly icon: string = 'icon icon-circle-check-big';
+  readonly icon: string = FIELD_ICON_MAP[DataType.Checkbox];
 }

@@ -1,14 +1,14 @@
 import _ from 'lodash';
 
 import { NumberData, NumberFieldConfig } from '../interfaces/number-field.interface';
-import { DataType } from '../interfaces/field.interface';
+import { DataType, FIELD_ICON_MAP } from '../interfaces/field.interface';
 import { Field, FieldValidationKey } from './field.object';
 
 export class NumberField extends Field<NumberData> {
   static readonly dataType: DataType = DataType.Number;
 
   readonly dataType: DataType = DataType.Number;
-  readonly icon: string = 'icon icon-decimals-arrow-right';
+  readonly icon: string = FIELD_ICON_MAP[DataType.Number];
 
   min?: number;
   max?: number;

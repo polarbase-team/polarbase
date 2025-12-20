@@ -124,12 +124,12 @@ export const specificType = (
       }
       return tableBuilder.enum(name, options, {
         useNative: true,
-        enumName: `${name}_enum`,
+        enumName: `${name}_enum_${+new Date()}`,
         existingType: false,
       });
 
     case DataType.JSON:
-      return tableBuilder.json(name);
+      return tableBuilder.jsonb(name);
 
     default:
       throw new Error(`Unsupported column type: ${dataType}`);

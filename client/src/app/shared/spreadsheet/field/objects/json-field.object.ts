@@ -1,14 +1,14 @@
 import _ from 'lodash';
 
 import { JSONData, JSONFieldConfig } from '../interfaces/json-field.interface';
-import { DataType } from '../interfaces/field.interface';
+import { DataType, FIELD_ICON_MAP } from '../interfaces/field.interface';
 import { Field, FieldValidationKey } from './field.object';
 
 export class JSONField extends Field<JSONData> {
   static readonly dataType: DataType = DataType.JSON;
 
   readonly dataType: DataType = DataType.JSON;
-  readonly icon: string = 'icon icon-braces';
+  readonly icon: string = FIELD_ICON_MAP[DataType.JSON];
 
   maxSize?: number;
 

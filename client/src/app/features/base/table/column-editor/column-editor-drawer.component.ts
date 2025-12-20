@@ -26,7 +26,10 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FluidModule } from 'primeng/fluid';
 
-import { DataType } from '../../../../shared/spreadsheet/field/interfaces/field.interface';
+import {
+  DataType,
+  FIELD_ICON_MAP,
+} from '../../../../shared/spreadsheet/field/interfaces/field.interface';
 import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
 import { SelectField } from '../../../../shared/spreadsheet/field/objects/select-field.object';
 import { TextFieldEditorComponent } from '../field-editors/text/editor.component';
@@ -85,7 +88,11 @@ export class ColumnEditorDrawerComponent {
   protected columnForm = viewChild<NgForm>('columnForm');
   protected columnFormData: ColumnFormData;
   protected isSaving = signal(false);
-  protected dataTypes = Object.keys(DataType).map((t) => ({ name: t, value: DataType[t] }));
+  protected dataTypes = Object.keys(DataType).map((t) => ({
+    name: t,
+    value: DataType[t],
+    icon: FIELD_ICON_MAP[DataType[t]],
+  }));
   protected selectedDataType = signal<DataType>(null);
   protected options = signal<string[]>([]);
   protected selectionState: string | undefined = 'Single';

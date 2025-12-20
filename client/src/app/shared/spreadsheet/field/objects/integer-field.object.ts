@@ -1,14 +1,14 @@
 import _ from 'lodash';
 
 import { IntegerData, IntegerFieldConfig } from '../interfaces/integer-field.interface';
-import { DataType } from '../interfaces/field.interface';
+import { DataType, FIELD_ICON_MAP } from '../interfaces/field.interface';
 import { Field, FieldValidationKey } from './field.object';
 
 export class IntegerField extends Field<IntegerData> {
   static readonly dataType = DataType.Integer;
 
-  readonly icon: string = 'icon icon-hash';
   readonly dataType: DataType = DataType.Integer;
+  readonly icon: string = FIELD_ICON_MAP[DataType.Integer];
 
   min?: number;
   max?: number;
