@@ -6,6 +6,8 @@ export type TableColumnMovedEvent = {
 };
 
 export const TableColumnActionType = {
+  Add: 'add',
+  Edit: 'edit',
   Clear: 'clear',
   Delete: 'delete',
   Move: 'move',
@@ -24,6 +26,8 @@ export type TableColumnActionType =
   (typeof TableColumnActionType)[keyof typeof TableColumnActionType];
 
 export interface TableColumnActionPayload {
+  [TableColumnActionType.Add]: null;
+  [TableColumnActionType.Edit]: TableColumn;
   [TableColumnActionType.Clear]: TableColumn;
   [TableColumnActionType.Delete]: TableColumn[];
   [TableColumnActionType.Move]: TableColumnMovedEvent;

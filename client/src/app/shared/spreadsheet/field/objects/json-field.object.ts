@@ -1,16 +1,40 @@
 import _ from 'lodash';
 
-import { JSONData } from '../interfaces/json-field.interface';
-import { DataType } from '../interfaces/field.interface';
-import { Field } from './field.object';
+import { JSONData, JSONFieldConfig } from '../interfaces/json-field.interface';
+import { DataType, FIELD_ICON_MAP } from '../interfaces/field.interface';
+import { Field, FieldValidationKey } from './field.object';
 
 export class JSONField extends Field<JSONData> {
-  static readonly dataType = DataType.JSON;
+  static readonly dataType: DataType = DataType.JSON;
 
-  readonly icon = 'icon icon-braces';
+  readonly dataType: DataType = DataType.JSON;
+  readonly icon: string = FIELD_ICON_MAP[DataType.JSON];
 
-  get dataType() {
-    return JSONField.dataType;
+  maxSize?: number;
+
+  constructor(config: JSONFieldConfig) {
+    super(config);
+
+    this.maxSize = config.maxSize;
+  }
+
+  override validate(data = this.data) {
+    let errors = super.validate(data);
+
+    if (!_.isNil(data)) {
+      if (new Blob([JSON.stringify(data)]).size > this.maxSize) {
+        errors = {
+          ...errors,
+          [FieldValidationKey.MaxSize]: {
+            field: this,
+            data,
+            maxSize: this.maxSize,
+          },
+        };
+      }
+    }
+
+    return errors;
   }
 
   override convertTextToData(text: string) {
@@ -22,6 +46,6 @@ export class JSONField extends Field<JSONData> {
   }
 
   override toString(data = this.data): string {
-    return !_.isNil(data) && !_.isString(data) ? JSON.stringify(data) : '';
+    return !_.isNil(data) ? JSON.stringify(data) : '';
   }
 }

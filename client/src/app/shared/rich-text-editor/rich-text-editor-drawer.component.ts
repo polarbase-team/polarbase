@@ -8,7 +8,6 @@ import { EditorModule } from 'primeng/editor';
   selector: 'rich-text-editor-drawer',
   templateUrl: './rich-text-editor-drawer.component.html',
   styleUrl: './rich-text-editor-drawer.component.scss',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, DrawerModule, ButtonModule, EditorModule],
 })

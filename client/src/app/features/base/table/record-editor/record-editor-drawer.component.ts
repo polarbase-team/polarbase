@@ -13,49 +13,44 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { finalize, Observable, map } from 'rxjs';
 
 import { DrawerModule } from 'primeng/drawer';
-import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
-import { TextareaModule } from 'primeng/textarea';
-import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { CheckboxModule } from 'primeng/checkbox';
-import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { AutoFocusModule } from 'primeng/autofocus';
 
-import { JSONEditorDrawerComponent } from '../../../../shared/json-editor/json-editor-drawer.component';
-import { RichTextEditorDrawerComponent } from '../../../../shared/rich-text-editor/rich-text-editor-drawer.component';
 import { DataType } from '../../../../shared/spreadsheet/field/interfaces/field.interface';
 import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
+import { TextFieldEditorComponent } from '../field-editors/text/editor.component';
+import { LongTextFieldEditorComponent } from '../field-editors/long-text/editor.component';
+import { IntegerFieldEditorComponent } from '../field-editors/integer/editor.component';
+import { NumberFieldEditorComponent } from '../field-editors/number/editor.component';
+import { SelectFieldEditorComponent } from '../field-editors/select/editor.component';
+import { CheckboxFieldEditorComponent } from '../field-editors/checkbox/editor.component';
+import { DateFieldEditorComponent } from '../field-editors/date/editor.component';
+import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
 import { TableDefinition, TableService } from '../table.service';
 
 @Component({
   selector: 'record-editor-drawer',
   templateUrl: './record-editor-drawer.component.html',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
-    FormsModule,
     DrawerModule,
-    InputTextModule,
     ButtonModule,
-    TextareaModule,
-    SelectModule,
     DividerModule,
-    InputNumberModule,
-    CheckboxModule,
-    DatePickerModule,
     ToastModule,
-    AutoFocusModule,
-    RichTextEditorDrawerComponent,
-    JSONEditorDrawerComponent,
+    TextFieldEditorComponent,
+    LongTextFieldEditorComponent,
+    IntegerFieldEditorComponent,
+    NumberFieldEditorComponent,
+    SelectFieldEditorComponent,
+    CheckboxFieldEditorComponent,
+    DateFieldEditorComponent,
+    JSONFieldEditorComponent,
   ],
   providers: [MessageService],
 })
@@ -74,12 +69,6 @@ export class RecordEditorDrawerComponent {
   protected isSaving = signal<boolean>(false);
   protected DataType = DataType;
   protected updatedRecord: Record<string, any> = {};
-  protected visibleRichTextEditor = false;
-  protected editingRichTextField: Field;
-  protected editingRichText = '';
-  protected visibleJSONEditor = false;
-  protected editingJSONField: Field;
-  protected editingJSONText = '';
 
   constructor(
     private destroyRef: DestroyRef,
@@ -107,7 +96,7 @@ export class RecordEditorDrawerComponent {
 
   protected save() {
     const isInvalid = this.requiredFields().find(
-      (field: Field) => !field.params.isPrimary && _.isNil(this.updatedRecord[field.name]),
+      (field: Field) => !field.params.primary && _.isNil(this.updatedRecord[field.name]),
     );
 
     if (isInvalid) {
@@ -128,9 +117,7 @@ export class RecordEditorDrawerComponent {
     switch (this.mode()) {
       case 'add':
         if (_.isNil(data[tableColumnPk])) data[tableColumnPk] = id;
-        fn = this.tblService
-          .bulkCreateRecords(tableName, [data])
-          .pipe(map(({ data }) => data.returning[0]));
+        fn = this.tblService.bulkCreateRecords(tableName, [data]);
         break;
       case 'edit':
         fn = this.tblService.bulkUpdateRecords(tableName, [
@@ -144,11 +131,13 @@ export class RecordEditorDrawerComponent {
 
     this.isSaving.set(true);
     fn.pipe(
+      map(({ data }) => data.returning[0]),
       finalize(() => this.isSaving.set(false)),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe((record) => {
       this.visible.set(false);
       this.onSave.emit(record);
+      this.reset();
     });
   }
 
@@ -156,15 +145,8 @@ export class RecordEditorDrawerComponent {
     this.visible.set(false);
   }
 
-  protected openRichTextEditor(field: Field) {
-    this.editingRichTextField = field;
-    this.editingRichText = field.toString(this.updatedRecord[field.name]);
-    this.visibleRichTextEditor = true;
-  }
-
-  protected openJSONEditor(field: Field) {
-    this.editingJSONField = field;
-    this.editingJSONText = field.toString(this.updatedRecord[field.name]);
-    this.visibleJSONEditor = true;
+  protected reset() {
+    this.updatedRecord = {};
+    this.isSaving.set(false);
   }
 }

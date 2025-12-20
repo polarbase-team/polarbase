@@ -13,7 +13,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
+import { MenuItem } from 'primeng/api';
+import { SplitButtonModule } from 'primeng/splitbutton';
 
+import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
 import { TableColumn } from '../../../../shared/spreadsheet/models/table-column';
 import { TableRow } from '../../../../shared/spreadsheet/models/table-row';
 import { TableConfig } from '../../../../shared/spreadsheet/models/table';
@@ -28,21 +31,31 @@ import {
   TableCellActionType,
   TableCellEditedEvent,
 } from '../../../../shared/spreadsheet/events/table-cell';
+import {
+  TableColumnAction,
+  TableColumnActionType,
+} from '../../../../shared/spreadsheet/events/table-column';
+import { ColumnEditorDrawerComponent } from '../column-editor/column-editor-drawer.component';
 import { RecordEditorDrawerComponent } from '../record-editor/record-editor-drawer.component';
-import { TableDefinition, TableService } from '../table.service';
+import { ColumnDefinition, TableDefinition, TableService } from '../table.service';
 import { TableRealtimeService } from '../table-realtime.service';
 
 @Component({
   selector: 'table-detail',
   templateUrl: './table-detail.component.html',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonModule, DividerModule, SpreadsheetComponent, RecordEditorDrawerComponent],
+  imports: [
+    ButtonModule,
+    DividerModule,
+    SplitButtonModule,
+    SpreadsheetComponent,
+    RecordEditorDrawerComponent,
+    ColumnEditorDrawerComponent,
+  ],
 })
 export class TableDetailComponent {
   protected config = signal<TableConfig>({
     sideSpacing: 20,
-    column: { addable: false, deletable: false },
     row: { insertable: false, reorderable: false },
   });
   protected columns = signal<TableColumn[]>([]);
@@ -51,9 +64,29 @@ export class TableDetailComponent {
     return this.columns().map((c) => c.field);
   });
   protected tblService = inject(TableService);
+  protected updatedColumn: ColumnDefinition;
+  protected updatedColumnField: Field;
+  protected updatedColumnMode: 'add' | 'edit' = 'add';
+  protected visibleColumnEditor: boolean;
   protected updatedRecord: Record<string, any>;
   protected updatedRecordMode: 'add' | 'edit' | 'view' = 'add';
   protected visibleRecordEditor: boolean;
+  protected insertMenuItems: MenuItem[] = [
+    {
+      label: 'Insert row',
+      icon: 'icon icon-rows-3',
+      command: () => {
+        this.addNewRecord();
+      },
+    },
+    {
+      label: 'Insert column',
+      icon: 'icon icon-columns-3',
+      command: () => {
+        this.addNewColumn();
+      },
+    },
+  ];
 
   constructor(
     private destroyRef: DestroyRef,
@@ -100,6 +133,22 @@ export class TableDetailComponent {
       });
   }
 
+  protected onColumnAction(action: TableColumnAction) {
+    const { tableName } = this.tblService.selectedTable();
+    switch (action.type) {
+      case TableColumnActionType.Add:
+        this.addNewColumn();
+        break;
+      case TableColumnActionType.Edit:
+        this.editColumn(action.payload as TableColumn);
+        break;
+      case TableColumnActionType.Delete:
+        const { id: columnName } = action.payload as TableColumn;
+        this.tblService.deleteColumn(tableName, columnName as string);
+        break;
+    }
+  }
+
   protected onRowAction(action: TableRowAction) {
     const { tableName, tableColumnPk } = this.tblService.selectedTable();
     switch (action.type) {
@@ -108,7 +157,7 @@ export class TableDetailComponent {
         const records = [];
         for (const { row } of action.payload as TableRowAddedEvent[]) {
           rows.push(row);
-          records.push(row.data);
+          records.push(row.data || {});
         }
         this.tblService
           .bulkCreateRecords(tableName, records)
@@ -156,21 +205,42 @@ export class TableDetailComponent {
     }
   }
 
-  protected onRecordSave(record: Record<string, any>) {
+  protected onColumnSave(savedColumn: ColumnDefinition) {
+    const column: TableColumn = {
+      id: savedColumn.name,
+      field: this.tblService.buildField(savedColumn),
+    };
+    this.columns.update((arr) => [...arr, column]);
+  }
+
+  protected onRecordSave(savedRecord: Record<string, any>) {
     const { tableColumnPk } = this.tblService.selectedTable();
-    const recordId = record[tableColumnPk];
+    const recordId = savedRecord[tableColumnPk];
 
     if (this.updatedRecordMode === 'add') {
       const newRow: TableRow = {
         id: recordId,
-        data: record,
+        data: savedRecord,
       };
       this.rows.update((arr) => [...arr, newRow]);
     } else {
       this.rows.update((rows) =>
-        rows.map((row) => (row.id === recordId ? { ...row, data: record } : row)),
+        rows.map((row) => (row.id === recordId ? { ...row, data: savedRecord } : row)),
       );
     }
+  }
+
+  protected addNewColumn() {
+    this.updatedColumn = null;
+    this.updatedColumnMode = 'add';
+    this.visibleColumnEditor = true;
+  }
+
+  protected editColumn(column: TableColumn) {
+    this.updatedColumn = column.field.params;
+    this.updatedColumnField = column.field;
+    this.updatedColumnMode = 'edit';
+    this.visibleColumnEditor = true;
   }
 
   protected addNewRecord() {
@@ -190,10 +260,9 @@ export class TableDetailComponent {
       .subscribe((columnDefs) => {
         const length = columnDefs.length;
         const columns: TableColumn[] = columnDefs.map((c) => ({
-          id: c.columnName,
-          primary: c.isPrimary,
-          editable: !c.isPrimary,
-          hidden: c.isPrimary && length > 1,
+          id: c.name,
+          primary: c.primary,
+          editable: !c.primary,
           field: this.tblService.buildField(c),
         }));
         this.columns.set(null);

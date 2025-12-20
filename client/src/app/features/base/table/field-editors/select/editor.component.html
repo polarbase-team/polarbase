@@ -1,0 +1,17 @@
+@let fieldName = field().name;
+
+<div class="flex flex-col gap-2 w-full">
+  @if (label() !== false) {
+    <label [attr.for]="fieldName">{{ fieldName }}</label>
+  }
+  <p-select
+    [inputId]="fieldName"
+    [placeholder]="placeholder() ?? 'Select here...'"
+    [pAutoFocus]="autoFocus()"
+    [readonly]="viewOnly()"
+    [(ngModel)]="data"
+    [options]="field().options"
+    appendTo="body"
+    class="w-full"
+  />
+</div>

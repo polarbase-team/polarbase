@@ -19,7 +19,7 @@ export class ParseCalculatedResultPipe implements PipeTransform {
         break;
       case CalculateType.EarliestDate:
       case CalculateType.LatestDate:
-        data = dayjs(data).format('DD/MM/YYYY');
+        data = dayjs(data).format('YYYY-MM-DD');
         break;
       case CalculateType.DateRange:
         data = data / (1000 * 60 * 60 * 24);

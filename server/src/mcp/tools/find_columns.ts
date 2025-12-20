@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { findColumnsTool } from '../../agent/tools/find_coumns';
+import { findColumnsTool } from '../../agent/tools/find_columns';
 
 export default function register(server: FastMCP) {
   server.addTool({

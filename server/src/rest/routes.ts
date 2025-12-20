@@ -5,6 +5,7 @@ import pg from '../plugins/pg';
 import { apiKeyAuth } from '../api-keys/auth';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
+import { DataType } from './utils/column';
 
 const REST_RATE_LIMIT = parseInt(process.env.REST_RATE_LIMIT!, 10);
 const REST_PREFIX = process.env.REST_PREFIX || '/rest';
@@ -158,8 +159,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   /**
    * GET /rest/tables → list of allowed tables + comments
    */
-  .get('/tables', async () => {
-    return await tableService.getAll();
+  .get('/tables', () => {
+    return tableService.getAll();
   })
 
   /**
@@ -174,7 +175,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         return err('Table not found');
       }
 
-      return await tableService.getSchema({ tableName: table });
+      return tableService.getSchema({ tableName: table });
     },
     {
       params: t.Object({ table: t.String() }),
@@ -186,41 +187,25 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
    */
   .post(
     '/tables',
-    async ({ body }) => {
-      return await tableService.createTable(body);
+    ({ body }) => {
+      return tableService.createTable(body);
     },
     {
       body: t.Object({
         tableName: t.String(),
         tableComment: t.Optional(t.String()),
-        columns: t.Optional(
-          t.Array(
-            t.Object({
-              name: t.String(),
-              type: t.String(),
-              nullable: t.Optional(t.Boolean()),
-              unique: t.Optional(t.Boolean()),
-              primary: t.Optional(t.Boolean()),
-              enumValues: t.Optional(t.Array(t.String(), { minItems: 1 })),
-              default: t.Optional(t.Any()),
-              comment: t.Optional(t.String()),
-            }),
-            { minItems: 1 }
-          )
-        ),
-        autoAddingPrimaryKey: t.Optional(t.Boolean()),
         timestamps: t.Optional(t.Boolean()),
       }),
     }
   )
 
   /**
-   * POST /rest/tables/:table → partial update of table (rename, update comment)
+   * PATCH /rest/tables/:table → partial update of table (rename, update comment)
    */
   .patch(
     '/tables/:table',
-    async ({ params: { table }, body }) => {
-      return await tableService.updateTable({ tableName: table, data: body });
+    ({ params: { table }, body }) => {
+      return tableService.updateTable({ tableName: table, data: body });
     },
     {
       body: t.Object(
@@ -238,8 +223,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
    */
   .delete(
     '/tables/:table',
-    async ({ params: { table }, query: { cascade } }) => {
-      return await tableService.deleteTable({ tableName: table, cascade });
+    ({ params: { table }, query: { cascade } }) => {
+      return tableService.deleteTable({ tableName: table, cascade });
     },
     {
       params: t.Object({ table: t.String() }),
@@ -248,13 +233,125 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   )
 
   /**
+   * POST /rest/tables/:table → create new column
+   */
+  .post(
+    '/tables/:table/columns',
+    ({ params: { table }, body }) => {
+      return tableService.createColumn({
+        tableName: table,
+        column: {
+          name: body.name,
+          dataType: body.dataType as DataType,
+          nullable: body.nullable,
+          unique: body.unique,
+          defaultValue: body.defaultValue,
+          comment: body.comment,
+          options: body.options,
+          validation: body.validation,
+        },
+      });
+    },
+    {
+      params: t.Object({ table: t.String() }),
+      body: t.Object({
+        name: t.String({ minLength: 1 }),
+        dataType: t.String({
+          enum: Object.values(DataType) as [string, ...string[]],
+        }),
+        nullable: t.Optional(t.Nullable(t.Boolean())),
+        unique: t.Optional(t.Nullable(t.Boolean())),
+        defaultValue: t.Optional(t.Nullable(t.Any())),
+        comment: t.Optional(t.Nullable(t.String())),
+        options: t.Optional(t.Nullable(t.Array(t.String()))),
+        validation: t.Optional(
+          t.Nullable(
+            t.Object({
+              minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
+              maxLength: t.Optional(t.Nullable(t.Numeric({ minimum: 1 }))),
+              minValue: t.Optional(t.Nullable(t.Numeric())),
+              maxValue: t.Optional(t.Nullable(t.Numeric())),
+              minDate: t.Optional(t.Nullable(t.String())),
+              maxDate: t.Optional(t.Nullable(t.String())),
+              maxSize: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
+            })
+          )
+        ),
+      }),
+    }
+  )
+
+  /**
+   * PUT /rest/tables/:table/columns/:column → update column
+   */
+  .put(
+    '/tables/:table/columns/:column',
+    ({ params: { table, column }, body }) => {
+      return tableService.updateColumn({
+        tableName: table,
+        columnName: column,
+        column: {
+          name: body.name,
+          dataType: body.dataType as DataType,
+          nullable: body.nullable,
+          unique: body.unique,
+          defaultValue: body.defaultValue,
+          comment: body.comment,
+          options: body.options,
+          validation: body.validation,
+        },
+      });
+    },
+    {
+      params: t.Object({ table: t.String(), column: t.String() }),
+      body: t.Object({
+        name: t.String({ minLength: 1 }),
+        dataType: t.String({
+          enum: Object.values(DataType) as [string, ...string[]],
+        }),
+        nullable: t.Nullable(t.Boolean()),
+        unique: t.Nullable(t.Boolean()),
+        defaultValue: t.Nullable(t.Any()),
+        comment: t.Nullable(t.String()),
+        options: t.Nullable(t.Array(t.String())),
+        validation: t.Nullable(
+          t.Object({
+            minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
+            maxLength: t.Optional(t.Nullable(t.Numeric({ minimum: 1 }))),
+            minValue: t.Optional(t.Nullable(t.Numeric())),
+            maxValue: t.Optional(t.Nullable(t.Numeric())),
+            minDate: t.Optional(t.Nullable(t.String())),
+            maxDate: t.Optional(t.Nullable(t.String())),
+            maxSize: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
+          })
+        ),
+      }),
+    }
+  )
+
+  /**
+   * DELETE /rest/tables/:table/columns/:column → delete column
+   */
+  .delete(
+    '/tables/:table/columns/:column',
+    ({ params: { table, column } }) => {
+      return tableService.deleteColumn({
+        tableName: table,
+        columnName: column,
+      });
+    },
+    {
+      params: t.Object({ table: t.String(), column: t.String() }),
+    }
+  )
+
+  /**
    * GET /rest/:table → paginated list with optional filters
    */
   .get(
     '/:table',
-    async ({ params: { table }, query }) => {
-      const result = await tableRecordService.getAll(table, query);
-      return result;
+    ({ params: { table }, query }) => {
+      return tableRecordService.getAll(table, query);
     },
     {
       query: t.Object({
@@ -273,8 +370,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
    */
   .get(
     '/:table/:id',
-    async ({ params: { table, id } }) => {
-      return await tableRecordService.getOne(table, id);
+    ({ params: { table, id } }) => {
+      return tableRecordService.getOne(table, id);
     },
     { params: t.Object({ table: t.String(), id: t.Numeric() }) }
   )
@@ -284,10 +381,10 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
    */
   .post(
     '/:table',
-    async ({ params: { table }, body }) => {
-      return await tableRecordService.create(table, body);
+    ({ params: { table }, body }) => {
+      return tableRecordService.create(table, body);
     },
-    { body: t.Record(t.String(), t.Any(), { minProperties: 1 }) }
+    { body: t.Record(t.String(), t.Any()) }
   )
 
   /**
@@ -295,8 +392,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
    */
   .patch(
     '/:table/:id',
-    async ({ params: { table, id }, body }) => {
-      return await tableRecordService.update(table, id, body);
+    ({ params: { table, id }, body }) => {
+      return tableRecordService.update(table, id, body);
     },
     {
       params: t.Object({ table: t.String(), id: t.Numeric() }),
@@ -321,11 +418,11 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
    */
   .post(
     '/:table/bulk-create',
-    async ({ params: { table }, body }) => {
-      return await tableRecordService.bulkCreate(table, body);
+    ({ params: { table }, body }) => {
+      return tableRecordService.bulkCreate(table, body);
     },
     {
-      body: t.Array(t.Record(t.String(), t.Any(), { minProperties: 1 }), {
+      body: t.Array(t.Record(t.String(), t.Any()), {
         minItems: 1,
         maxItems: 10000,
       }),
@@ -337,8 +434,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
    */
   .patch(
     '/:table/bulk-update',
-    async ({ params: { table }, body }) => {
-      return await tableRecordService.bulkUpdate(table, body);
+    ({ params: { table }, body }) => {
+      return tableRecordService.bulkUpdate(table, body);
     },
     {
       body: t.Array(
@@ -355,8 +452,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
    */
   .post(
     '/:table/bulk-delete',
-    async ({ params: { table }, body }) => {
-      return await tableRecordService.bulkDelete(table, body);
+    ({ params: { table }, body }) => {
+      return tableRecordService.bulkDelete(table, body);
     },
     {
       body: t.Union([

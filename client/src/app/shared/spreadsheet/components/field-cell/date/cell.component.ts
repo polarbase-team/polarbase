@@ -15,7 +15,6 @@ import { FieldCellEditable } from '../field-cell-editable';
   templateUrl: './cell.component.html',
   styleUrl: '../field-cell.scss',
   host: { class: 'date-field-cell' },
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, OverlayModule, DatePickerModule, DateValuePipe],
 })

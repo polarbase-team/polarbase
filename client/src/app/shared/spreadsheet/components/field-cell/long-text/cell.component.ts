@@ -10,7 +10,6 @@ import { RichTextEditorDrawerComponent } from '../../../../rich-text-editor/rich
   templateUrl: './cell.component.html',
   styleUrls: ['../field-cell.scss', '../field-cell-inputable.scss'],
   host: { class: 'long-text-field-cell' },
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [InputBoxComponent, RichTextEditorDrawerComponent],
 })

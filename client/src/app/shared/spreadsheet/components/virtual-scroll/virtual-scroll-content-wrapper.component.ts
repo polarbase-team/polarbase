@@ -17,7 +17,6 @@ class VirtualScrollContentWrapperComponent {
   selector: '[virtualScrollLeftContentWrapper]',
   template: '<ng-content></ng-content>',
   styles: [':host { position: relative; display: block; }'],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollLeftContentWrapperComponent extends VirtualScrollContentWrapperComponent {}
@@ -26,7 +25,6 @@ export class VirtualScrollLeftContentWrapperComponent extends VirtualScrollConte
   selector: '[virtualScrollRightContentWrapper]',
   template: '<ng-content></ng-content>',
   styles: [':host { position: relative; display: block; }'],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VirtualScrollRightContentWrapperComponent extends VirtualScrollContentWrapperComponent {}

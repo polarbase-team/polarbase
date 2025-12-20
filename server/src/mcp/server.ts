@@ -7,7 +7,7 @@ import registerTablesResource from './resources/tables';
 import registerColumnsResource from './resources/columns';
 import registerSuggestTableStructurePrompt from './prompts/suggest_table_structure';
 import registerFindTablesTool from './tools/find_tables';
-import registerFindColumnsTool from './tools/find_coumns';
+import registerFindColumnsTool from './tools/find_columns';
 import registerCreateTableTool from './tools/create_table';
 import registerSelectFromTableTool from './tools/select_from_table';
 import registerInsertIntoTableTool from './tools/insert_into_table';

@@ -1,17 +1,9 @@
 import _ from 'lodash';
 
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-
 import { finalize } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
@@ -24,14 +16,15 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
 
-import { TableService, TableDefinition } from '../table.service';
+import { TableService, TableDefinition, TableFormData } from '../table.service';
 import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.component';
 
 @Component({
   selector: 'table-list',
   templateUrl: './table-list.component.html',
-  standalone: true,
+  host: { class: 'flex flex-col h-full' },
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
@@ -44,6 +37,7 @@ import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.
     CheckboxModule,
     MessageModule,
     TooltipModule,
+    SkeletonModule,
     TableEditorDrawerComponent,
   ],
   providers: [ConfirmationService],
@@ -60,6 +54,7 @@ export class TableListComponent {
   protected updatedTable: TableDefinition;
   protected updatedTableMode: 'add' | 'edit' = 'add';
   protected isCascadeDeleteEnabled = false;
+  protected refreshTables = _.debounce(() => this.getTables(), 1000, { leading: true });
 
   constructor(
     private destroyRef: DestroyRef,
@@ -73,53 +68,58 @@ export class TableListComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((params) => {
         tableFromQueryParam = params['table'];
-      });
-
-    effect(() => {
-      const tables = this.tables();
-      if (tableFromQueryParam && tables.length) {
-        const table = tables.find((t) => t.tableName === tableFromQueryParam);
-        if (table) {
-          this.tblService.selectedTable.set(table);
+        if (!this.tables().length) {
+          this.getTables(tableFromQueryParam);
         }
-      }
-    });
+      });
   }
 
-  ngAfterViewInit() {
+  private getTables(tableNameWillSelect?: string) {
+    this.isLoading.set(true);
     this.tblService
       .getTables()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.isLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((tables) => {
         this.tables.set(tables);
         this.filteredTables.set(tables);
+        this.searchQuery = '';
+
+        if (tableNameWillSelect) {
+          const table = tables.find((t) => t.tableName === tableNameWillSelect);
+          this.selectTable(table);
+        }
       });
   }
 
-  protected onTableSearch(query: string) {
+  protected searchTable() {
     const tables = this.tables();
-    if (query.length) {
-      this.filteredTables.set(
-        tables.filter(
-          (t) => t.tableName.search(query) !== -1 || (t.tableComment || '').search(query) !== -1,
-        ),
-      );
-    } else {
+
+    let query = this.searchQuery.trim();
+    if (!query) {
       this.filteredTables.set([...tables]);
+      return;
     }
+
+    query = query.toLowerCase();
+    this.filteredTables.set(
+      tables.filter(
+        (t) =>
+          t.tableName.toLowerCase().includes(query) ||
+          (t.tableComment || '').toLowerCase().includes(query),
+      ),
+    );
   }
 
-  protected onTableSelected(table: TableDefinition) {
+  protected selectTable(table: TableDefinition) {
     this.tblService.selectedTable.set(table);
     this.router.navigate([], {
       relativeTo: this.activatedRoute,
       queryParams: { table: table.tableName },
       queryParamsHandling: 'merge',
     });
-  }
-
-  protected onTableEditorSave() {
-    this.refreshTables();
   }
 
   protected addNewTable() {
@@ -181,20 +181,7 @@ export class TableListComponent {
     menu.show(event);
   }
 
-  protected refreshTables = _.debounce(() => this.getTables(), 1000, { leading: true });
-
-  private getTables() {
-    this.isLoading.set(true);
-    this.tblService
-      .getTables()
-      .pipe(
-        finalize(() => this.isLoading.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((tables) => {
-        this.tables.set(tables);
-        this.filteredTables.set(tables);
-        this.searchQuery = '';
-      });
+  protected onTableEditorSave(savedTable: TableFormData) {
+    this.getTables(savedTable.tableName);
   }
 }

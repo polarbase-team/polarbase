@@ -1,4 +1,5 @@
 import _ from 'lodash';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -41,7 +42,6 @@ export type InputBoxContent = string | number;
     '[attr.type]': 'type()',
     '[attr.placeholder]': 'placeholder()',
   },
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InputBoxComponent {

@@ -2,104 +2,91 @@
   [(visible)]="visible"
   position="right"
   [header]="mode() === 'edit' ? `Edit table: ${table().tableName}` : 'New table'"
-  [modal]="false"
   styleClass="!w-150 custom-drawer"
+  (onHide)="reset()"
 >
   <ng-template #content>
     <form #tableForm="ngForm" (ngSubmit)="onSubmit()">
-      <div class="flex flex-col gap-12">
-        <div class="grid grid-cols-3 w-full gap-12">
-          <label for="name" class="col-span-1">
-            <p class="font-medium">Name</p>
-            <p class="text-surface-500 text-xs">
-              Only letters, numbers, space, _, $ allowed and must start with a letter or _.
-            </p>
-          </label>
-          <div class="flex flex-col gap-1 col-span-2">
-            <input
-              pInputText
-              id="name"
-              name="tableName"
-              [pAutoFocus]="true"
-              [invalid]="tableName.invalid && (tableName.touched || tableForm.submitted)"
-              [(ngModel)]="updatedTable.tableName"
-              #tableName="ngModel"
-              placeholder="Input here..."
-              required
-              pattern="[a-zA-Z_][a-zA-Z0-9_$ ]*"
-            />
-            @if (tableName.invalid && (tableName.touched || tableForm.submitted)) {
-              <p-message severity="error" size="small" variant="simple">
-                @if (tableName.errors['required']) {
-                  Table name is required.
-                } @else if (tableName.errors?.['pattern']) {
-                  Invalid table name.
+      <div class="p-5">
+        <div class="flex flex-col gap-12">
+          <div class="grid grid-cols-3 w-full gap-12">
+            <label class="col-span-1">
+              <p class="font-medium text-sm">General</p>
+            </label>
+            <div class="flex flex-col col-span-2 gap-8">
+              <div class="flex flex-col gap-1">
+                <label for="name" class="text-sm">
+                  Name
+                  <i class="icon icon-asterisk text-red-500"></i>
+                </label>
+                <input
+                  pInputText
+                  id="name"
+                  name="tableName"
+                  [pAutoFocus]="true"
+                  [invalid]="tableName.invalid && (tableName.touched || tableForm.submitted)"
+                  [(ngModel)]="tableFormData.tableName"
+                  #tableName="ngModel"
+                  placeholder="Input here..."
+                  required
+                  pattern="[a-zA-Z_][a-zA-Z0-9_$ ]*"
+                />
+                @if (tableName.invalid && (tableName.touched || tableForm.submitted)) {
+                  <p-message severity="error" size="small" variant="simple">
+                    @if (tableName.errors['required']) {
+                      Table name is required.
+                    } @else if (tableName.errors?.['pattern']) {
+                      Invalid table name.
+                    }
+                  </p-message>
                 }
-              </p-message>
-            }
-          </div>
-        </div>
-        <div class="grid grid-cols-3 w-full gap-12">
-          <label for="description" class="col-span-1">
-            <p class="font-medium">Description</p>
-          </label>
-          <textarea
-            pTextarea
-            id="description"
-            name="description"
-            [(ngModel)]="updatedTable.tableComment"
-            rows="5"
-            class="col-span-2"
-            placeholder="Input here..."
-          ></textarea>
-        </div>
-        <p-divider align="center" type="solid">
-          <b>Advanced settings</b>
-        </p-divider>
-        @if (mode() === 'edit') {
-          <p-message severity="info" class="w-full">
-            <p>
-              Note: To modify columns or other advanced settings, please use the Table Editor after
-              saving the table details.
-            </p>
-          </p-message>
-        } @else {
-          <div class="grid grid-cols-3 w-full gap-12">
-            <label for="description" class="col-span-1">
-              <p class="font-medium">Primary Key</p>
-              <p class="text-surface-500 text-xs">
-                Auto-Adding a primary key "id" column for this table.
-              </p>
-            </label>
-            <div class="col-span-2">
-              <p-checkbox
-                id="autoAddingPrimaryKey"
-                name="autoAddingPrimaryKey"
-                [(ngModel)]="updatedTable.autoAddingPrimaryKey"
-                [binary]="true"
-                size="large"
-              />
+                <p class="text-surface-500 text-xs">
+                  Only letters, numbers, space, _, $ allowed and must start with a letter or _.
+                </p>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label for="description" class="text-sm">Description</label>
+                <textarea
+                  pTextarea
+                  id="description"
+                  name="description"
+                  [(ngModel)]="tableFormData.tableComment"
+                  rows="5"
+                  class="col-span-2"
+                  placeholder="Input here..."
+                ></textarea>
+              </div>
             </div>
           </div>
-          <div class="grid grid-cols-3 w-full gap-12">
-            <label for="description" class="col-span-1">
-              <p class="font-medium">Timestamps</p>
-              <p class="text-surface-500 text-xs">
-                Enable automatic "Created At" and "Updated At" columns for this table.
-              </p>
-            </label>
-            <div class="col-span-2">
-              <p-checkbox
-                id="timestamps"
-                name="timestamps"
-                [(ngModel)]="updatedTable.timestamps"
-                [binary]="true"
-                size="large"
-              />
-            </div>
-          </div>
-        }
+        </div>
       </div>
+      <p-divider />
+      @if (mode() === 'add') {
+        <div class="p-5">
+          <div class="grid grid-cols-3 w-full gap-12">
+            <label for="description" class="col-span-1">
+              <p class="font-medium text-sm">Settings</p>
+            </label>
+            <div class="flex flex-col gap-8 col-span-2">
+              <div class="flex gap-4">
+                <p-checkbox
+                  id="timestamps"
+                  name="timestamps"
+                  [(ngModel)]="tableFormData.timestamps"
+                  [binary]="true"
+                  size="large"
+                />
+                <div>
+                  <label for="timestamps" class="text-sm">Timestamps</label>
+                  <p class="text-surface-500 text-xs">
+                    Enable automatic "Created At" and "Updated At" columns for this table.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </form>
   </ng-template>
   <ng-template #footer>

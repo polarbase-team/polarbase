@@ -2,5 +2,6 @@ import { FieldConfig } from './field.interface';
 
 export type NumberData = number;
 export interface NumberFieldConfig extends FieldConfig<NumberData> {
-  allowNegative?: boolean;
+  min?: number;
+  max?: number;
 }

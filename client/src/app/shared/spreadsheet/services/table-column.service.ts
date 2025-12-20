@@ -159,6 +159,20 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
+  addColumn() {
+    this.host.columnAction.emit({
+      type: TableColumnActionType.Add,
+      payload: null,
+    });
+  }
+
+  editColumn(column: TableColumn) {
+    this.host.columnAction.emit({
+      type: TableColumnActionType.Edit,
+      payload: column,
+    });
+  }
+
   showColumn(column: TableColumn) {
     if (!column) return;
 
@@ -182,11 +196,7 @@ export class TableColumnService extends TableBaseService {
   }
 
   calculateByColumn(column: TableColumn, calculateType: CalculateType) {
-    if (
-      column.calculateType === calculateType ||
-      this.calculatedColumns().find((c) => c.id === column.id)
-    )
-      return;
+    if (column.calculateType === calculateType) return;
 
     column.calculateType = calculateType;
     this.calculatedColumns.update((arr) => [...arr, column]);
@@ -516,14 +526,26 @@ export class TableColumnService extends TableBaseService {
         });
       }
     } else {
-      if (config.freezable) {
+      if (config.updatable && !column.primary) {
         items.push({
-          label: 'Freeze up to This Column',
-          icon: 'icon icon-panel-right-close',
+          label: 'Edit column',
+          icon: 'icon icon-pencil',
           command: () => {
-            this.tableService.setFrozenCount(columnIndex);
+            this.editColumn(column);
           },
         });
+      }
+      if (config.freezable) {
+        items.push(
+          { separator: true },
+          {
+            label: 'Freeze up to This Column',
+            icon: 'icon icon-panel-right-close',
+            command: () => {
+              this.tableService.setFrozenCount(columnIndex);
+            },
+          },
+        );
       }
       if (config.sortable) {
         items.push(
@@ -559,20 +581,9 @@ export class TableColumnService extends TableBaseService {
           {
             label: 'Group by',
             icon: 'icon icon-group',
-            items: [
-              {
-                label: 'Ascending',
-                command: () => {
-                  this.groupByColumn(column, 'asc');
-                },
-              },
-              {
-                label: 'Descending',
-                command: () => {
-                  this.groupByColumn(column, 'desc');
-                },
-              },
-            ],
+            command: () => {
+              this.groupByColumn(column, 'asc');
+            },
           },
         );
         if (column.groupSortType) {
@@ -597,7 +608,7 @@ export class TableColumnService extends TableBaseService {
           },
         );
       }
-      if (config.deletable) {
+      if (config.deletable && !column.primary) {
         items.push(
           { separator: true },
           {

@@ -1,4 +1,19 @@
 import pg from '../../plugins/pg';
+import { getTableList, getTableSchema } from '../utils/table';
+import {
+  addLengthCheck,
+  addSizeCheck,
+  addRangeCheck,
+  specificType,
+  DataType,
+  Column,
+  removeLengthCheck,
+  removeRangeCheck,
+  removeSizeCheck,
+  getConstraintName,
+  addDateRangeCheck,
+  removeDateRangeCheck,
+} from '../utils/column';
 
 /**
  * List of table names that are forbidden to access via this REST API.
@@ -9,202 +24,15 @@ const REST_BLACKLISTED_TABLES = (
 ).split(',');
 
 /**
- * Retrieves the list of tables in the public schema (excluding blacklisted ones)
- * along with their comments.
- */
-const getTableList = (schemaName = 'pubic') => {
-  return pg('pg_class as c')
-    .select({
-      tableName: 'c.relname',
-      tableComment: 'descr.description',
-      tableColumnPk: pg.raw(`
-        (
-          SELECT a.attname
-          FROM pg_index i
-          JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
-          WHERE i.indrelid = c.oid AND i.indisprimary
-          LIMIT 1
-        )
-      `),
-    })
-    .leftJoin('pg_namespace as ns', 'c.relnamespace', 'ns.oid')
-    .leftJoin('pg_description as descr', function () {
-      this.on('descr.objoid', 'c.oid').andOn(pg.raw('descr.objsubid = 0'));
-    })
-    .where({
-      'ns.nspname': schemaName,
-      'c.relkind': 'r', // r = ordinary table
-    })
-    .modify((qb) => {
-      if (REST_BLACKLISTED_TABLES.length > 0) {
-        qb.whereNotIn('c.relname', REST_BLACKLISTED_TABLES);
-      }
-    })
-    .orderBy('c.relname');
-};
-
-/**
- * Builds a detailed schema for a given table:
- * - column info
- * - primary key flags
- * - column comments
- * - enum values for enum types
- */
-const getTableSchema = async (tableName: string, schemaName = 'public') => {
-  // 1. Basic column information
-  const columns = await pg('information_schema.columns')
-    .select(
-      'column_name',
-      'data_type',
-      'udt_name as raw_type',
-      'is_nullable',
-      'character_maximum_length as max_length',
-      'column_default as default_value',
-      'ordinal_position'
-    )
-    .where({ table_schema: 'public', table_name: tableName })
-    .orderBy('ordinal_position');
-
-  // 2. Column comments from pg_description
-  const comments = await pg('pg_description')
-    .select(
-      'pg_description.objsubid as ordinal_position',
-      'pg_description.description',
-      'information_schema.columns.column_name'
-    )
-    .join('pg_class', 'pg_description.objoid', 'pg_class.oid')
-    .join('pg_namespace', 'pg_class.relnamespace', 'pg_namespace.oid')
-    .leftJoin('information_schema.columns', function () {
-      this.on('information_schema.columns.table_name', '=', 'pg_class.relname')
-        .andOn(
-          'information_schema.columns.table_schema',
-          '=',
-          'pg_namespace.nspname'
-        )
-        .andOn(
-          'information_schema.columns.ordinal_position',
-          '=',
-          'pg_description.objsubid'
-        );
-    })
-    .where({
-      'pg_namespace.nspname': schemaName,
-      'pg_class.relname': tableName,
-    });
-
-  const commentMap = Object.fromEntries(
-    comments
-      .map((c: any) => [c.column_name, c.description])
-      .filter(([_, desc]) => desc != null)
-  );
-
-  // 3. Primary key columns
-  const primaryKeys = await pg('information_schema.key_column_usage')
-    .select('column_name')
-    .join('information_schema.table_constraints', function () {
-      this.on(
-        'table_constraints.constraint_name',
-        '=',
-        'key_column_usage.constraint_name'
-      )
-        .andOn(
-          'table_constraints.table_schema',
-          '=',
-          'key_column_usage.table_schema'
-        )
-        .andOn(
-          'table_constraints.table_name',
-          '=',
-          'key_column_usage.table_name'
-        );
-    })
-    .where({
-      'key_column_usage.table_schema': 'public',
-      'key_column_usage.table_name': tableName,
-      'table_constraints.constraint_type': 'PRIMARY KEY',
-    });
-
-  const primaryKeySet = new Set(primaryKeys.map((pk: any) => pk.column_name));
-
-  // 4. Enum type values
-  const enumColumns = await pg('information_schema.columns')
-    .select('column_name', 'udt_name')
-    .where({ table_schema: 'public', table_name: tableName })
-    .whereRaw(`udt_name IN (SELECT typname FROM pg_type WHERE typtype = 'e')`);
-
-  const enumMap: Record<string, string> = {};
-
-  for (const col of enumColumns) {
-    const result = await pg('pg_enum')
-      .select(
-        pg.raw("string_agg(enumlabel, ', ' ORDER BY enumsortorder) as labels")
-      )
-      .whereRaw(`enumtypid = (SELECT oid FROM pg_type WHERE typname = ?)`, [
-        col.udt_name,
-      ])
-      .first();
-
-    if (result?.labels) {
-      enumMap[col.column_name] = result.labels;
-    }
-  }
-
-  // 5. Fetch foreign key information
-  const foreignKeys = await pg('information_schema.key_column_usage as kcu')
-    .select(
-      'kcu.column_name',
-      'tc.table_name as referenced_table_name',
-      'ccu.column_name as referenced_column_name'
-    )
-    .join('information_schema.table_constraints as tc', function () {
-      this.on('tc.constraint_name', '=', 'kcu.constraint_name')
-        .andOn('tc.table_schema', '=', 'kcu.table_schema')
-        .andOn('tc.table_name', '=', 'kcu.table_name');
-    })
-    .join('information_schema.constraint_column_usage as ccu', function () {
-      this.on('ccu.constraint_name', '=', 'tc.constraint_name').andOn(
-        'ccu.table_schema',
-        '=',
-        'tc.table_schema'
-      );
-    })
-    .where({
-      'kcu.table_schema': 'public',
-      'kcu.table_name': tableName,
-      'tc.constraint_type': 'FOREIGN KEY',
-    });
-
-  const foreignKeyMap = Object.fromEntries(
-    foreignKeys.map((fk: any) => [
-      fk.column_name,
-      {
-        table: fk.referenced_table_name,
-        column: fk.referenced_column_name || 'id',
-      },
-    ])
-  );
-
-  // 6. Combine everything into a clean schema object
-  return columns.map((col) => ({
-    columnName: col.column_name,
-    dataType: col.data_type,
-    rawType: col.raw_type,
-    isPrimary: primaryKeySet.has(col.column_name),
-    isNullable: col.is_nullable === 'YES',
-    maxLength: col.max_length,
-    defaultValue: col.default_value,
-    comment: commentMap[col.column_name] ?? null,
-    enumValues: enumMap[col.column_name] ?? null,
-    foreignKey: foreignKeyMap[col.column_name] || null,
-  }));
-};
-
-/**
  * Main REST router exposing CRUD + bulk operations for all public tables.
  */
 export class TableService {
   async getAll({ schemaName = 'public' }: { schemaName?: string } = {}) {
-    const allowedTables = await getTableList(schemaName);
+    const allowedTables = await getTableList(
+      pg,
+      schemaName,
+      REST_BLACKLISTED_TABLES
+    );
     return allowedTables;
   }
 
@@ -218,7 +46,7 @@ export class TableService {
     const exists = await pg.schema.hasTable(tableName);
     if (!exists) throw new Error('Table not found');
 
-    const schema = await getTableSchema(tableName, schemaName);
+    const schema = await getTableSchema(pg, schemaName, tableName);
     return schema;
   }
 
@@ -226,72 +54,23 @@ export class TableService {
     schemaName = 'public',
     tableName,
     tableComment,
-    columns,
-    autoAddingPrimaryKey = true,
     timestamps = true,
   }: {
     schemaName?: string;
     tableName: string;
     tableComment?: string;
-    columns?: Array<{
-      name: string;
-      type: string;
-      nullable?: boolean;
-      primary?: boolean;
-      unique?: boolean;
-      default?: any;
-      enumValues?: string[];
-      comment?: string;
-    }>;
-    autoAddingPrimaryKey?: boolean;
     timestamps?: boolean;
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
+    const schemaBuilder = pg.schema.withSchema(schemaName);
 
-    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
+    const exists = await schemaBuilder.hasTable(tableName);
     if (exists) {
       throw new Error(`Table ${fullTableName} already exists`);
     }
 
-    await pg.schema.withSchema(schemaName).createTable(tableName, (table) => {
-      if (autoAddingPrimaryKey) table.increments('id').primary();
-
-      columns?.forEach((col) => {
-        let columnBuilder;
-
-        switch (col.type.toLowerCase()) {
-          case 'string':
-          case 'varchar':
-            columnBuilder = table.string(col.name);
-            break;
-          case 'text':
-            columnBuilder = table.text(col.name);
-            break;
-          case 'integer':
-            columnBuilder = table.integer(col.name);
-            break;
-          case 'boolean':
-            columnBuilder = table.boolean(col.name);
-            break;
-          case 'timestamp':
-            columnBuilder = table.timestamp(col.name);
-            break;
-          case 'enum':
-            if (!col.enumValues?.length) {
-              throw new Error(`enumValues is required for column ${col.name}`);
-            }
-            columnBuilder = table.enum(col.name, col.enumValues);
-            break;
-          default:
-            throw new Error(`Unsupported column type: ${col.type}`);
-        }
-
-        if (col.nullable === false) columnBuilder.notNullable();
-        if (col.unique) columnBuilder.unique();
-        if (col.default !== undefined) columnBuilder.defaultTo(col.default);
-        if (col.primary) columnBuilder.primary();
-        if (col.comment) columnBuilder.comment(col.comment);
-      });
+    await schemaBuilder.createTable(tableName, (table) => {
+      table.uuid('id').primary().defaultTo(pg.raw('gen_random_uuid()'));
 
       if (timestamps) {
         table.timestamps();
@@ -319,8 +98,9 @@ export class TableService {
   }) {
     const { tableName: newTableName, tableComment: newTableComment } = data;
     const fullTableName = `${schemaName}.${tableName}`;
+    const schemaBuilder = pg.schema.withSchema(schemaName);
 
-    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
+    const exists = await schemaBuilder.hasTable(tableName);
     if (!exists) {
       throw new Error(`Table ${fullTableName} not found`);
     }
@@ -341,9 +121,11 @@ export class TableService {
     }
 
     if (newTableComment !== undefined) {
-      await pg.schema.withSchema(schemaName).table(finalTableName, (table) => {
-        table.comment(newTableComment ?? '');
-      });
+      await pg.schema
+        .withSchema(schemaName)
+        .alterTable(finalTableName, (table) => {
+          table.comment(newTableComment ?? '');
+        });
     }
 
     return { message: `Table ${fullTableName} updated successfully` };
@@ -359,8 +141,9 @@ export class TableService {
     cascade?: boolean;
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
+    const schemaBuilder = pg.schema.withSchema(schemaName);
 
-    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
+    const exists = await schemaBuilder.hasTable(tableName);
     if (!exists) {
       throw new Error(`Table ${fullTableName} not found`);
     }
@@ -370,76 +153,365 @@ export class TableService {
         `DROP TABLE IF EXISTS "${schemaName}"."${tableName}" CASCADE;`
       );
     } else {
-      await pg.schema.withSchema(schemaName).dropTable(tableName);
+      await schemaBuilder.dropTable(tableName);
     }
 
     return { message: `Table ${fullTableName} deleted successfully` };
   }
 
-  async addColumn({
+  async createColumn({
+    schemaName = 'public',
+    tableName,
+    column,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    column: {
+      name: string;
+      dataType: DataType;
+      nullable?: boolean | null;
+      unique?: boolean | null;
+      defaultValue?: any | null;
+      comment?: string | null;
+      options?: string[] | null;
+      validation?: {
+        minLength?: number | null;
+        maxLength?: number | null;
+        minValue?: number | null;
+        maxValue?: number | null;
+        minDate?: string | null;
+        maxDate?: string | null;
+        maxSize?: number | null;
+      } | null;
+    };
+  }) {
+    const {
+      name,
+      dataType,
+      nullable,
+      unique,
+      defaultValue,
+      comment,
+      options,
+      validation,
+    } = column;
+    const {
+      minLength,
+      maxLength,
+      minValue,
+      maxValue,
+      minDate,
+      maxDate,
+      maxSize,
+    } = validation || {};
+
+    const fullTableName = `"${schemaName}"."${tableName}"`;
+    const schemaBuilder = pg.schema.withSchema(schemaName);
+
+    const tableExists = await pg.schema
+      .withSchema(schemaName)
+      .hasTable(tableName);
+    if (!tableExists) throw new Error(`Table ${fullTableName} not found`);
+
+    const columnExists = await pg.schema
+      .withSchema(schemaName)
+      .hasColumn(tableName, name);
+    if (columnExists)
+      throw new Error(`Column "${name}" already exists in ${fullTableName}`);
+
+    try {
+      await schemaBuilder.alterTable(tableName, (tableBuilder) => {
+        const columnBuilder = specificType(tableBuilder, {
+          name,
+          dataType,
+          options,
+        });
+
+        if (nullable) columnBuilder.nullable();
+        if (unique) columnBuilder.unique();
+        if (defaultValue !== undefined && defaultValue !== null)
+          columnBuilder.defaultTo(defaultValue);
+        if (comment) columnBuilder.comment(comment);
+
+        addLengthCheck(tableBuilder, tableName, name, minLength!, maxLength!);
+        addRangeCheck(tableBuilder, tableName, name, minValue!, maxValue!);
+        addDateRangeCheck(tableBuilder, tableName, name, minDate!, maxDate!);
+        addSizeCheck(tableBuilder, tableName, name, maxSize!);
+      });
+    } catch (error) {
+      // Drop column
+      await pg.raw(`ALTER TABLE ?? DROP COLUMN IF EXISTS ??`, [
+        tableName,
+        name,
+      ]);
+
+      throw error;
+    }
+
+    return (await getTableSchema(pg, schemaName, tableName, name))[0];
+  }
+
+  async updateColumn({
     schemaName = 'public',
     tableName,
     columnName,
-    type,
-    nullable = true,
-    unique = false,
-    default: def,
-    enumValues,
-    comment,
+    column,
   }: {
     schemaName?: string;
     tableName: string;
     columnName: string;
-    type: string;
-    nullable?: boolean;
-    unique?: boolean;
-    default?: any;
-    enumValues?: string[];
-    comment?: string;
+    column: {
+      name: string;
+      dataType: DataType;
+      nullable: boolean | null;
+      unique: boolean | null;
+      defaultValue: any | null;
+      comment: string | null;
+      options: string[] | null;
+      validation: {
+        minLength?: number | null;
+        maxLength?: number | null;
+        minValue?: number | null;
+        maxValue?: number | null;
+        minDate?: string | null;
+        maxDate?: string | null;
+        maxSize?: number | null;
+      } | null;
+    };
   }) {
-    const fullTableName = `${schemaName}.${tableName}`;
+    const {
+      name: newName,
+      dataType,
+      nullable,
+      unique,
+      defaultValue,
+      comment,
+      options,
+      validation,
+    } = column;
+    const {
+      minLength,
+      maxLength,
+      minValue,
+      maxValue,
+      minDate,
+      maxDate,
+      maxSize,
+    } = validation || {};
 
-    const exists = await pg.schema.withSchema(schemaName).hasTable(tableName);
-    if (!exists) {
-      throw new Error(`Table ${fullTableName} not found`);
-    }
+    const fullTableName = `"${schemaName}"."${tableName}"`;
 
-    await pg.schema.withSchema(schemaName).table(tableName, (table) => {
-      let columnBuilder;
+    const tableExists = await pg.schema
+      .withSchema(schemaName)
+      .hasTable(tableName);
+    if (!tableExists) throw new Error(`Table ${fullTableName} not found`);
 
-      switch (type.toLowerCase()) {
-        case 'string':
-        case 'varchar':
-          columnBuilder = table.string(columnName);
-          break;
-        case 'text':
-          columnBuilder = table.text(columnName);
-          break;
-        case 'integer':
-          columnBuilder = table.integer(columnName);
-          break;
-        case 'boolean':
-          columnBuilder = table.boolean(columnName);
-          break;
-        case 'timestamp':
-          columnBuilder = table.timestamp(columnName);
-          break;
-        case 'enum':
-          if (!enumValues?.length) {
-            throw new Error(`enumValues is required for column ${columnName}`);
+    const columnExists = await pg.schema
+      .withSchema(schemaName)
+      .hasColumn(tableName, columnName);
+    if (!columnExists)
+      throw new Error(`Column "${columnName}" not found in ${fullTableName}`);
+
+    const [oldSchema] = (await getTableSchema(
+      pg,
+      schemaName,
+      tableName,
+      columnName
+    )) as Column[];
+
+    let recreateConstraints = false;
+
+    await pg.schema
+      .withSchema(schemaName)
+      .alterTable(tableName, (tableBuilder) => {
+        const columnBuilder = specificType(tableBuilder, {
+          name: columnName,
+          dataType: dataType || oldSchema.dataType,
+          options,
+        } as any).alter();
+
+        if (newName !== oldSchema.name) {
+          tableBuilder.renameColumn(columnName, newName);
+          recreateConstraints = true;
+        }
+
+        if (nullable !== oldSchema.nullable) {
+          if (nullable === true) columnBuilder.nullable();
+          else if (nullable === false) columnBuilder.notNullable();
+        }
+
+        if (unique !== oldSchema.unique) {
+          if (unique === true) columnBuilder.unique();
+          else if (unique === false) tableBuilder.dropUnique([columnName]);
+        }
+
+        if (defaultValue !== oldSchema.defaultValue) {
+          columnBuilder.defaultTo(defaultValue);
+        }
+
+        if (comment !== oldSchema.comment) {
+          columnBuilder.comment(comment || '');
+        }
+
+        if (
+          recreateConstraints ||
+          minLength !== oldSchema.validation?.minLength ||
+          maxLength !== oldSchema.validation?.maxLength
+        ) {
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'range'
+            );
+            if (
+              oldSchema.metadata.constraints?.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeLengthCheck(tableBuilder, tableName, columnName);
+            }
           }
-          columnBuilder = table.enum(columnName, enumValues);
-          break;
-        default:
-          throw new Error(`Unsupported column type: ${type}`);
-      }
 
-      if (nullable === false) columnBuilder.notNullable();
-      if (unique) columnBuilder.unique();
-      if (def !== undefined) columnBuilder.defaultTo(def);
-      if (comment) columnBuilder.comment(comment);
-    });
+          addLengthCheck(
+            tableBuilder,
+            tableName,
+            newName,
+            minLength!,
+            maxLength!
+          );
+        }
 
-    return { message: `Column ${columnName} added to ${fullTableName}` };
+        if (
+          recreateConstraints ||
+          minValue !== oldSchema.validation?.minValue ||
+          maxValue !== oldSchema.validation?.maxValue
+        ) {
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'range'
+            );
+            if (
+              oldSchema.metadata.constraints.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeRangeCheck(tableBuilder, tableName, columnName);
+            }
+          }
+
+          addRangeCheck(tableBuilder, tableName, newName, minValue!, maxValue!);
+        }
+
+        if (
+          recreateConstraints ||
+          minDate !== oldSchema.validation?.minDate ||
+          maxDate !== oldSchema.validation?.maxDate
+        ) {
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'range'
+            );
+            if (
+              oldSchema.metadata.constraints.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeDateRangeCheck(tableBuilder, tableName, columnName);
+            }
+          }
+
+          addDateRangeCheck(
+            tableBuilder,
+            tableName,
+            newName,
+            minDate!,
+            maxDate!
+          );
+        }
+
+        if (recreateConstraints || maxSize !== oldSchema.validation?.maxSize) {
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'size'
+            );
+            if (
+              oldSchema.metadata.constraints?.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeSizeCheck(tableBuilder, tableName, columnName);
+            }
+          }
+
+          addSizeCheck(tableBuilder, tableName, newName, maxSize!);
+        }
+      })
+      .then(() => {
+        if (recreateConstraints) {
+          return pg.raw(
+            `
+            ALTER TABLE public."${tableName}"
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'length'
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'range'
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'date-range'
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'size'
+            )}"
+          `
+          );
+        }
+      });
+
+    return (await getTableSchema(pg, schemaName, tableName, newName))[0];
+  }
+
+  async deleteColumn({
+    schemaName = 'public',
+    tableName,
+    columnName,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    columnName: string;
+  }) {
+    const fullTableName = `"${schemaName}"."${tableName}"`;
+
+    const tableExists = await pg.schema
+      .withSchema(schemaName)
+      .hasTable(tableName);
+    if (!tableExists) throw new Error(`Table ${fullTableName} not found`);
+
+    const columnExists = await pg.schema
+      .withSchema(schemaName)
+      .hasColumn(tableName, columnName);
+    if (!columnExists)
+      throw new Error(`Column "${columnName}" not found in ${fullTableName}`);
+
+    await pg.schema
+      .withSchema(schemaName)
+      .alterTable(tableName, (tableBuilder) => {
+        tableBuilder.dropColumn(columnName);
+      });
   }
 }

@@ -1,4 +1,12 @@
-import { Component, DestroyRef, effect, OnInit, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, SlicePipe } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -14,8 +22,6 @@ import { ToastModule } from 'primeng/toast';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
-
-import { ApiKey, ApiKeyService } from '../api-key.service';
 import { DrawerModule } from 'primeng/drawer';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { MessageModule } from 'primeng/message';
@@ -23,9 +29,21 @@ import { DividerModule } from 'primeng/divider';
 import { CheckboxModule } from 'primeng/checkbox';
 import { Tooltip } from 'primeng/tooltip';
 
+import { ApiKey, ApiKeyService } from '../api-key.service';
+
+const DEFAULT_VALUE = {
+  scopes: {
+    rest: true,
+    agent: true,
+    mcp: true,
+    realtime: true,
+  },
+} as ApiKey;
+
 @Component({
   selector: 'app-api-key-management',
   templateUrl: './api-key-management.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     ClipboardModule,
@@ -58,9 +76,7 @@ export class ApiKeyManagementComponent implements OnInit {
   protected apiKeyForm = viewChild<NgForm>('apiKeyForm');
   protected isCreating = signal(false);
   protected isCreationMode = false;
-  protected newApiKey: ApiKey = {
-    scopes: { rest: true, agent: true, mcp: true, realtime: true },
-  } as ApiKey;
+  protected newApiKey: ApiKey = { ...DEFAULT_VALUE };
 
   constructor(
     private destroyRef: DestroyRef,
@@ -78,6 +94,11 @@ export class ApiKeyManagementComponent implements OnInit {
     this.loadApiKeys();
   }
 
+  protected reset() {
+    this.apiKeyForm().reset();
+    this.newApiKey = { ...DEFAULT_VALUE };
+  }
+
   protected loadApiKeys() {
     this.apiKeyService
       .getKeys()
@@ -88,15 +109,18 @@ export class ApiKeyManagementComponent implements OnInit {
   }
 
   protected searchByName() {
-    if (!this.searchQuery.trim()) {
-      this.filteredKeys.set([...this.apiKeys()]);
-    } else {
-      this.filteredKeys.set(
-        this.apiKeys().filter((key) =>
-          key.name.toLowerCase().includes(this.searchQuery.toLowerCase()),
-        ),
-      );
+    const apiKeys = this.apiKeys();
+
+    let query = this.searchQuery.trim();
+    if (!query) {
+      this.filteredKeys.set([...apiKeys]);
+      return;
     }
+
+    query = query.toLowerCase();
+    this.filteredKeys.set(
+      apiKeys.filter((key) => key.name.toLowerCase().includes(this.searchQuery.toLowerCase())),
+    );
   }
 
   protected revokeKey(apiKey: ApiKey) {
@@ -155,9 +179,10 @@ export class ApiKeyManagementComponent implements OnInit {
         finalize(() => this.isCreating.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((apiKey) => {
+      .subscribe(() => {
         this.isCreationMode = false;
         this.loadApiKeys();
+        this.reset();
       });
   }
 }

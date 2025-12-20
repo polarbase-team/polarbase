@@ -59,8 +59,8 @@
         <p-inputgroup-addon>
           <div class="text-center">
             <span class="text-sm font-medium">
-              {{ tableService.layout.cell.search.currentMatchIndex || 0 }}/{{
-                tableService.searchResults.length - 1
+              {{ (tableService.layout.cell.search.currentMatchIndex || 0) + 1 }}/{{
+                tableService.searchResults.length
               }}
             </span>
           </div>
@@ -145,22 +145,23 @@
           } @else {
             <i [class]="`${column.field.icon}`"></i>
           }
-          <div
-            class="text-sm white-space-nowrap overflow-hidden truncate"
-            [attr.title]="column.field.name"
-          >
+          <div class="text-sm white-space-nowrap overflow-hidden truncate">
             {{ column.field.name }}
           </div>
           @if (column.field.required) {
             <i class="icon icon-asterisk text-red-500"></i>
           }
           @if (column.field.description?.length) {
-            <i
-              class="icon icon-info text-surface-500"
-              [pTooltip]="column.field.description"
-              tooltipPosition="bottom"
-            ></i>
+            <i class="icon icon-info text-surface-500"></i>
           }
+          <div class="flex flex-1 justify-end">
+            <p-button
+              icon="icon icon-chevron-down"
+              size="small"
+              [text]="true"
+              severity="secondary"
+            />
+          </div>
         </div>
         <div
           class="header-cell cell"
@@ -194,6 +195,15 @@
             tooltipPosition="bottom"
           ></i>
         }
+        <div class="flex flex-1 justify-end">
+          <p-button
+            icon="icon icon-chevron-down"
+            size="small"
+            [text]="true"
+            severity="secondary"
+            (click)="tableColumnService.openContextMenu($event, column, columnIndex)"
+          />
+        </div>
         @if (tableService.config().column.resizable) {
           <div
             class="header-cell__resize-handle"
@@ -266,7 +276,7 @@
           ></ng-container>
         }
         @if (tableService.config().column.addable) {
-          <div class="header-cell cell header-action-cell">
+          <div class="header-cell cell header-action-cell" (click)="tableColumnService.addColumn()">
             <i class="icon icon-circle-plus"></i>
           </div>
         }
@@ -495,7 +505,7 @@
                       @if (row === tableRowService.pendingRow) {
                         <a
                           safe-area
-                          class="text-xs text-blue-500 pointer-events-auto"
+                          class="text-xs text-blue-500 cursor-pointer hover:underline"
                           (click)="tableRowService.cancelPendingRow()"
                           >Cancel</a
                         >

@@ -94,6 +94,7 @@ const DEFAULT_CONFIG: TableConfig = {
     reorderable: true,
     calculable: true,
     addable: true,
+    updatable: true,
     deletable: true,
     freezable: true,
     groupable: true,
@@ -288,6 +289,7 @@ export class TableService extends TableBaseService {
     this.searchResults = searchResults;
     this.layout.cell.search = search;
     this.layout.cell.focused = focused;
+    this.cdRef.markForCheck();
 
     this.host.action.emit({
       type: TableActionType.Search,

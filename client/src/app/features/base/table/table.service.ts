@@ -6,8 +6,14 @@ import {
   DataType,
   FieldConfig,
 } from '../../../shared/spreadsheet/field/interfaces/field.interface';
-import { DropdownFieldConfig } from '../../../shared/spreadsheet/field/interfaces/dropdown-field.interface';
+import { IntegerFieldConfig } from '../../../shared/spreadsheet/field/interfaces/integer-field.interface';
+import { SelectFieldConfig } from '../../../shared/spreadsheet/field/interfaces/select-field.interface';
 import { buildField } from '../../../shared/spreadsheet/field/utils';
+import { NumberFieldConfig } from '../../../shared/spreadsheet/field/interfaces/number-field.interface';
+import { TextFieldConfig } from '../../../shared/spreadsheet/field/interfaces/text-field.interface';
+import { LongTextFieldConfig } from '../../../shared/spreadsheet/field/interfaces/long-text-field.interface';
+import { JSONFieldConfig } from '../../../shared/spreadsheet/field/interfaces/json-field.interface';
+import { DateFieldConfig } from '../../../shared/spreadsheet/field/interfaces/date-field.interface';
 
 export interface TableDefinition {
   tableName: string;
@@ -15,25 +21,36 @@ export interface TableDefinition {
   tableColumnPk: string;
 }
 
-export interface ColumnDefinition {
-  columnName: string;
-  dataType: string;
-  rawType: string;
-  isPrimary: boolean;
-  isNullable: boolean;
-  maxLength: number | null;
-  defaultValue: any;
-  comment: string | null;
-  enumValues: string[] | null;
-}
-
-export interface TableCreation {
+export interface TableFormData {
   tableName: string;
   tableComment?: string;
   columns?: ColumnDefinition[];
-  autoAddingPrimaryKey?: boolean;
   timestamps?: boolean;
 }
+
+export interface ColumnDefinition {
+  name: string;
+  dataType: DataType;
+  primary: boolean;
+  nullable: boolean;
+  unique: boolean;
+  defaultValue: any | null;
+  comment: string | null;
+  options: string[] | null;
+  foreignKey: { table: string; column: string } | null;
+  validation: {
+    minLength?: number | null;
+    maxLength?: number | null;
+    minValue?: number | null;
+    maxValue?: number | null;
+    minDate?: string | null;
+    maxDate?: string | null;
+    maxSize?: number | null;
+  } | null;
+  metadata: any;
+}
+
+export interface ColumnFormData extends Omit<ColumnDefinition, 'primary'> {}
 
 interface Response<T = any> {
   success: boolean;
@@ -41,41 +58,15 @@ interface Response<T = any> {
   data: T;
 }
 
-const PG_TYPE_MAPPING = {
-  // Integer
-  smallint: DataType.Integer,
+const DATA_TYPE_MAPPING = {
   integer: DataType.Integer,
-  bigint: DataType.Integer,
-  smallserial: DataType.Integer,
-  serial: DataType.Integer,
-  bigserial: DataType.Integer,
-
-  // Number
-  numeric: DataType.Number,
-  real: DataType.Number,
-  'double precision': DataType.Number,
-
-  // Text
-  character: DataType.Text,
-  'character varying': DataType.Text,
-  uuid: DataType.Text,
-  bit: DataType.Text,
-  'bit varying': DataType.Text,
-
-  // Long Text
-  text: DataType.LongText,
-
-  // Checkbox
-  boolean: DataType.Checkbox,
-
-  // Date
+  number: DataType.Number,
+  text: DataType.Text,
+  'long-text': DataType.LongText,
+  checkbox: DataType.Checkbox,
   date: DataType.Date,
-  timestamp: DataType.Date,
-  time: DataType.Date,
-
-  // JSON
+  select: DataType.Select,
   json: DataType.JSON,
-  jsonb: DataType.JSON,
 };
 
 @Injectable({
@@ -100,16 +91,34 @@ export class TableService {
       .pipe(map((res) => res.data));
   }
 
-  createTable(table: TableCreation) {
-    return this.http.post<Response>(`${this.apiUrl}/tables`, table);
+  createTable(table: TableFormData) {
+    return this.http.post<Response<TableDefinition>>(`${this.apiUrl}/tables`, table);
   }
 
-  updateTable(tableName: string, table: Pick<TableCreation, 'tableName' | 'tableComment'>) {
-    return this.http.patch<Response>(`${this.apiUrl}/tables/${tableName}`, table);
+  updateTable(tableName: string, table: Pick<TableFormData, 'tableName' | 'tableComment'>) {
+    return this.http.patch<Response<TableDefinition>>(`${this.apiUrl}/tables/${tableName}`, table);
   }
 
   deleteTable(tableName: string, casecade = false) {
     return this.http.delete<Response>(`${this.apiUrl}/tables/${tableName}?cascade=${casecade}`);
+  }
+
+  createColumn(tableName: string, column: ColumnFormData) {
+    return this.http.post<Response<ColumnDefinition>>(
+      `${this.apiUrl}/tables/${tableName}/columns`,
+      column,
+    );
+  }
+
+  updateColumn(tableName: string, columnName: string, column: ColumnFormData) {
+    return this.http.put<Response<ColumnDefinition>>(
+      `${this.apiUrl}/tables/${tableName}/columns/${columnName}`,
+      column,
+    );
+  }
+
+  deleteColumn(tableName: string, columnName: string) {
+    return this.http.delete(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`);
   }
 
   getRecords(tableName: string): Observable<Record<string, any>[]> {
@@ -141,27 +150,41 @@ export class TableService {
   }
 
   buildField(column: ColumnDefinition) {
-    let dataType: DataType;
+    const dataType: DataType = DATA_TYPE_MAPPING[column.dataType] || DataType.Text;
     const config: FieldConfig = {
-      name: column.columnName,
+      name: column.name,
       description: column.comment,
-      required: !column.isNullable,
+      required: !column.nullable,
       initialData: column.defaultValue,
       params: column,
     };
 
-    if (column.enumValues) {
-      dataType = DataType.Dropdown;
-      (config as DropdownFieldConfig).options = column.enumValues;
-    } else {
-      const pgType = column.dataType;
-      const normalizedType = pgType
-        .toLowerCase()
-        .split('(')[0]
-        .trim()
-        .split(' without')[0]
-        .split(' with')[0];
-      dataType = PG_TYPE_MAPPING[normalizedType] || DataType.Text;
+    switch (dataType) {
+      case DataType.Text:
+        (config as TextFieldConfig).minLength = column.validation?.minLength;
+        (config as TextFieldConfig).maxLength = column.validation?.maxLength;
+        break;
+      case DataType.LongText:
+        (config as LongTextFieldConfig).maxSize = column.validation?.maxSize;
+        break;
+      case DataType.Integer:
+        (config as IntegerFieldConfig).min = column.validation?.minValue;
+        (config as IntegerFieldConfig).max = column.validation?.maxValue;
+        break;
+      case DataType.Number:
+        (config as NumberFieldConfig).min = column.validation?.minValue;
+        (config as NumberFieldConfig).max = column.validation?.maxValue;
+        break;
+      case DataType.Date:
+        (config as DateFieldConfig).min = column.validation?.minDate;
+        (config as DateFieldConfig).max = column.validation?.maxDate;
+        break;
+      case DataType.Select:
+        (config as SelectFieldConfig).options = column.options;
+        break;
+      case DataType.JSON:
+        (config as JSONFieldConfig).maxSize = column.validation?.maxSize;
+        break;
     }
 
     return buildField(dataType, config);

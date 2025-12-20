@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -14,7 +14,8 @@ import { setApiKey } from '../../../core/guards/api-key.guard';
 
 @Component({
   selector: 'api-key-entry',
-  standalone: true,
+  templateUrl: './api-key-entry.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     CardModule,
@@ -25,7 +26,6 @@ import { setApiKey } from '../../../core/guards/api-key.guard';
     MessageModule,
     FluidModule,
   ],
-  templateUrl: './api-key-entry.component.html',
 })
 export class ApiKeyEntryComponent {
   protected apiKey = '';
