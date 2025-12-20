@@ -54,13 +54,11 @@ export class TableService {
     schemaName = 'public',
     tableName,
     tableComment,
-    autoAddingPrimaryKey = true,
     timestamps = true,
   }: {
     schemaName?: string;
     tableName: string;
     tableComment?: string;
-    autoAddingPrimaryKey?: boolean;
     timestamps?: boolean;
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
@@ -72,7 +70,7 @@ export class TableService {
     }
 
     await schemaBuilder.createTable(tableName, (table) => {
-      if (autoAddingPrimaryKey) table.increments('id').primary();
+      table.uuid('id').primary().defaultTo(pg.raw('gen_random_uuid()'));
 
       if (timestamps) {
         table.timestamps();

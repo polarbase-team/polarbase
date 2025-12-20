@@ -70,21 +70,6 @@
             <div class="flex flex-col gap-8 col-span-2">
               <div class="flex gap-4">
                 <p-checkbox
-                  id="autoAddingPrimaryKey"
-                  name="autoAddingPrimaryKey"
-                  [(ngModel)]="tableFormData.autoAddingPrimaryKey"
-                  [binary]="true"
-                  size="large"
-                />
-                <div>
-                  <label for="autoAddingPrimaryKey" class="text-sm">Primary Key</label>
-                  <p class="text-surface-500 text-xs">
-                    Auto-Adding a primary key "id" column for this table.
-                  </p>
-                </div>
-              </div>
-              <div class="flex gap-4">
-                <p-checkbox
                   id="timestamps"
                   name="timestamps"
                   [(ngModel)]="tableFormData.timestamps"

@@ -21,6 +21,13 @@ export interface TableDefinition {
   tableColumnPk: string;
 }
 
+export interface TableFormData {
+  tableName: string;
+  tableComment?: string;
+  columns?: ColumnDefinition[];
+  timestamps?: boolean;
+}
+
 export interface ColumnDefinition {
   name: string;
   dataType: DataType;
@@ -41,14 +48,6 @@ export interface ColumnDefinition {
     maxSize?: number | null;
   } | null;
   metadata: any;
-}
-
-export interface TableFormData {
-  tableName: string;
-  tableComment?: string;
-  columns?: ColumnDefinition[];
-  autoAddingPrimaryKey?: boolean;
-  timestamps?: boolean;
 }
 
 export interface ColumnFormData extends Omit<ColumnDefinition, 'primary'> {}

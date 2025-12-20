@@ -157,7 +157,7 @@ export class TableDetailComponent {
         const records = [];
         for (const { row } of action.payload as TableRowAddedEvent[]) {
           rows.push(row);
-          records.push(row.data);
+          records.push(row.data || {});
         }
         this.tblService
           .bulkCreateRecords(tableName, records)
@@ -263,7 +263,6 @@ export class TableDetailComponent {
           id: c.name,
           primary: c.primary,
           editable: !c.primary,
-          hidden: c.primary && length > 1,
           field: this.tblService.buildField(c),
         }));
         this.columns.set(null);

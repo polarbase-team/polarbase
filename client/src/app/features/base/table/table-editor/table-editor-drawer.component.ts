@@ -24,10 +24,7 @@ import { DividerModule } from 'primeng/divider';
 
 import { TableFormData, TableDefinition, TableService } from '../table.service';
 
-const DEFAULT_VALUE = {
-  autoAddingPrimaryKey: true,
-  timestamps: true,
-} as TableFormData;
+const DEFAULT_VALUE = { timestamps: true } as TableFormData;
 
 @Component({
   selector: 'table-editor-drawer',

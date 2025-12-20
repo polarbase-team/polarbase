@@ -194,7 +194,6 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       body: t.Object({
         tableName: t.String(),
         tableComment: t.Optional(t.String()),
-        autoAddingPrimaryKey: t.Optional(t.Boolean()),
         timestamps: t.Optional(t.Boolean()),
       }),
     }
