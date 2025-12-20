@@ -16,7 +16,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SkeletonModule } from 'primeng/skeleton';
 
 import { TableService, TableDefinition, TableFormData } from '../table.service';
 import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.component';
@@ -37,8 +37,8 @@ import { TableEditorDrawerComponent } from '../table-editor/table-editor-drawer.
     CheckboxModule,
     MessageModule,
     TooltipModule,
+    SkeletonModule,
     TableEditorDrawerComponent,
-    ProgressSpinnerModule,
   ],
   providers: [ConfirmationService],
 })

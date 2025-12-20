@@ -70,13 +70,10 @@
   </p-iconfield>
 </div>
 @if (isLoading()) {
-  <div class="flex items-center">
-    <p-progress-spinner
-      strokeWidth="8"
-      fill="transparent"
-      animationDuration=".5s"
-      [style]="{ width: '20px', height: '20px' }"
-    />
+  <div class="flex flex-col px-4 gap-2">
+    <p-skeleton height="3rem" />
+    <p-skeleton height="3rem" />
+    <p-skeleton height="3rem" />
   </div>
 } @else {
   <ul class="list-none p-0 m-0 overflow-y-auto max-h-full">
