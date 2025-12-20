@@ -9,6 +9,6 @@ import { DateData } from '../field/interfaces/date-field.interface';
 })
 export class DateValuePipe implements PipeTransform {
   transform(value: DateData) {
-    return dayjs(value).format();
+    return dayjs(value).format('YYYY-MM-DD HH:mm');
   }
 }

@@ -38,7 +38,7 @@ export abstract class Field<T = any> {
     this.params = config.params;
   }
 
-  validate(data: T = this.data!, isAllowEmpty?: boolean): FieldValidationErrors | null {
+  validate(data: T = this.data, isAllowEmpty?: boolean): FieldValidationErrors | null {
     if (!isAllowEmpty && this.required && _.isNil(data)) {
       return { [FieldValidationKey.Required]: true };
     }
@@ -49,7 +49,7 @@ export abstract class Field<T = any> {
     return undefined;
   }
 
-  compareData(source: T, destination = this.data!) {
+  compareData(source: T, destination = this.data) {
     return _.isEqual(source, destination);
   }
 
@@ -57,7 +57,7 @@ export abstract class Field<T = any> {
     return { data: _.cloneDeep(this.data) };
   }
 
-  toString(data = this.data!) {
+  toString(data = this.data) {
     return _.toString(data);
   }
 }

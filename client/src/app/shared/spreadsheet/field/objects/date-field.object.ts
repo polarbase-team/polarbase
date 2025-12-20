@@ -21,7 +21,7 @@ export class DateField extends Field<DateData> {
     this.max = config.max;
   }
 
-  override validate(data = this.data!) {
+  override validate(data = this.data) {
     let errors = super.validate(data);
 
     if (!_.isNil(data)) {
@@ -59,7 +59,7 @@ export class DateField extends Field<DateData> {
     return errors;
   }
 
-  override compareData(source: DateData, destination = this.data!) {
+  override compareData(source: DateData, destination = this.data) {
     if (_.isNil(source) && _.isNil(destination)) {
       return super.compareData(source, destination);
     }
@@ -67,7 +67,7 @@ export class DateField extends Field<DateData> {
     return dayjs(source).isSame(destination);
   }
 
-  override toString(data: DateData = this.data!) {
-    return dayjs(data).format();
+  override toString(data: DateData = this.data) {
+    return data ? dayjs(data).format('YYYY-MM-DD HH:mm') : '';
   }
 }

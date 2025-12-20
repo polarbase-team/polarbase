@@ -20,7 +20,7 @@ export class NumberField extends Field<NumberData> {
     this.max = config.max;
   }
 
-  override validate(data = this.data!) {
+  override validate(data = this.data) {
     let errors = super.validate(data);
 
     if (!_.isNil(data)) {

@@ -23,7 +23,6 @@ import { AutoFocusModule } from 'primeng/autofocus';
 import { DividerModule } from 'primeng/divider';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FluidModule } from 'primeng/fluid';
 
@@ -61,7 +60,6 @@ const DEFAULT_VALUE = {
     DividerModule,
     SelectModule,
     InputNumberModule,
-    SelectButtonModule,
     DatePickerModule,
     FluidModule,
     TextFieldEditorComponent,

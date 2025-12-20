@@ -20,7 +20,7 @@ export class TextField extends Field<TextData> {
     this.maxLength = config.maxLength;
   }
 
-  override validate(data = this.data!) {
+  override validate(data = this.data) {
     let errors = super.validate(data);
 
     if (!_.isNil(data)) {

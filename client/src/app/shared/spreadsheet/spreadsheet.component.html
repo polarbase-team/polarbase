@@ -59,8 +59,8 @@
         <p-inputgroup-addon>
           <div class="text-center">
             <span class="text-sm font-medium">
-              {{ tableService.layout.cell.search.currentMatchIndex || 0 }}/{{
-                tableService.searchResults.length - 1
+              {{ (tableService.layout.cell.search.currentMatchIndex || 0) + 1 }}/{{
+                tableService.searchResults.length
               }}
             </span>
           </div>

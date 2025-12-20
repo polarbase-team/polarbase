@@ -18,7 +18,7 @@ export class JSONField extends Field<JSONData> {
     this.maxSize = config.maxSize;
   }
 
-  override validate(data = this.data!) {
+  override validate(data = this.data) {
     let errors = super.validate(data);
 
     if (!_.isNil(data)) {

@@ -191,14 +191,6 @@
               }
               @case (DataType.Select) {
                 <div class="flex flex-col gap-1">
-                  <label class="text-sm">Mode</label>
-                  <p-selectbutton
-                    name="maxValue"
-                    [(ngModel)]="selectionState"
-                    [options]="selectionStateOptions"
-                  />
-                </div>
-                <div class="flex flex-col gap-1">
                   <label class="text-sm">Options</label>
                   <div class="flex flex-col gap-2">
                     @for (option of options(); track $index; let idx = $index) {
