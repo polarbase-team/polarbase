@@ -1,12 +1,13 @@
 # Stage 1: Build Angular production
-FROM node:22-alpine AS builder
+FROM oven/bun:1 AS builder
 WORKDIR /app
 
-COPY client/package*.json ./
-RUN npm ci
+# Cache dependencies
+COPY client/package.json ./
+RUN bun install
 
 COPY client/ .
-RUN npx ng build --configuration=production
+RUN bun ng build --configuration=production
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine

@@ -3,8 +3,8 @@ FROM oven/bun:1 AS base
 WORKDIR /app
 
 # Cache dependencies
-COPY server/package.json server/bun.lock ./
-RUN bun install --frozen-lockfile
+COPY server/package.json ./
+RUN bun install
 
 # Copy source code
 COPY server/ .
