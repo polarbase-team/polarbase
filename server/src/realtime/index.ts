@@ -8,8 +8,8 @@ const REALTIME_PATH = process.env.REALTIME_PATH || '/realtime';
 const REALTIME_MAX_CLIENTS = Number(process.env.REALTIME_MAX_CLIENTS) || 1000;
 
 export async function enableRealtime(app: Elysia) {
-  setupReplication();
-  startCDC();
+  await setupReplication();
+  await startCDC();
 
   app.ws(`${REALTIME_PATH}`, {
     async open(ws) {

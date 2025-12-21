@@ -53,7 +53,8 @@ services:
       - XAI_API_KEY=
 
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   client:
@@ -70,7 +71,7 @@ services:
     image: postgres:16-alpine
     container_name: polarbase-db
     environment:
-      - POSTGRES_USER=polarbase
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=P@ssw0rd2025
       - POSTGRES_DB=polarbase
     volumes:
@@ -92,6 +93,13 @@ services:
       - 'max_worker_processes=20'
       - '-c'
       - 'max_slot_wal_keep_size=1GB'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d polarbase']
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+      start_interval: 2s
 
 volumes:
   postgres_data:
