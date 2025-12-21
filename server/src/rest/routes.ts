@@ -62,6 +62,22 @@ const err = (message: string, status = 400) => ({
 export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .use(
     openapi({
+      documentation: {
+        info: {
+          title: `${process.env.NAME || 'PolarBase'} Documentation`,
+          version: '1.0.0',
+        },
+        components: {
+          securitySchemes: {
+            ApiKeyAuth: {
+              type: 'apiKey',
+              name: 'x-api-key',
+              in: 'header',
+              description: 'API key to authorize (ex: ak_xxx)',
+            },
+          },
+        },
+      },
       references: fromTypes(),
     })
   )
