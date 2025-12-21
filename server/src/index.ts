@@ -32,9 +32,9 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
   const app = new Elysia({
     name: APP_NAME,
     serve: { hostname: APP_HOSTNAME },
-  })
-    .use(cors({ origin: CORS_ORIGINS }))
-    .use(apiKeyRoutes);
+  });
+
+  app.use(cors({ origin: CORS_ORIGINS })).use(apiKeyRoutes);
 
   let allGood = true;
 
