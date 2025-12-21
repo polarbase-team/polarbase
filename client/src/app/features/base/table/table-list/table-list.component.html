@@ -108,6 +108,13 @@
           />
         </a>
       </li>
+    } @empty {
+      <p class="text-center text-sm text-surface-500 italic py-2">
+        No table found.
+        <a class="font-medium hover:underline text-blue-500 cursor-pointer" (click)="addNewTable()"
+          >Create a new table?</a
+        >
+      </p>
     }
     <div class="mb-5"></div>
   </ul>
