@@ -7,7 +7,10 @@ COPY client/package.json ./
 RUN bun install
 
 COPY client/ .
-RUN bun ng build --configuration=production
+
+# Build
+ARG NG_CONFIG=production
+RUN bun ng build --configuration=${NG_CONFIG}
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine

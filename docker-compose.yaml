@@ -15,7 +15,7 @@ services:
       - DEBUG=false
 
       # Security
-      - CORS_ORIGINS="*"
+      - CORS_ORIGINS=*
       - SUPER_ADMIN_API_KEY=ak_0b13cb2bf04fc55cff3dab520eaccabca8d551a8922bd6b013455ab7a41ebccd
 
       # REST API
@@ -41,7 +41,7 @@ services:
       # PostgreSQL
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
-      - POSTGRES_USER=polarbase
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=P@ssw0rd2025
       - POSTGRES_DB=polarbase
 
@@ -60,6 +60,8 @@ services:
     build:
       context: .
       dockerfile: client/Dockerfile
+      args:
+        NG_CONFIG: production
     ports:
       - '8080:80'
     restart: unless-stopped

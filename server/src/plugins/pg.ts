@@ -3,8 +3,8 @@ import knex from 'knex';
 export const pgConfig = {
   host: process.env.POSTGRES_HOST || '0.0.0.0',
   port: Number(process.env.POSTGRES_PORT) || 5432,
-  user: process.env.POSTGRES_USER || 'polarbase',
-  password: process.env.POSTGRES_PASSWORD || 'polarbase@123456',
+  user: process.env.POSTGRES_USER || 'postgres',
+  password: process.env.POSTGRES_PASSWORD || 'P@ssw0rd2025',
   database: process.env.POSTGRES_DATABASE || 'polarbase',
   ssl:
     process.env.POSTGRES_SSL === 'true' ? { rejectUnauthorized: false } : false,
