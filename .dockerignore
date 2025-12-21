@@ -6,3 +6,4 @@ node_modules
 README.md
 Dockerfile
 docker-compose.yml
+*.db
