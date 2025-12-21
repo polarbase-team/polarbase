@@ -9,6 +9,10 @@ const clients = new Map<
 >();
 
 export class WebSocket {
+  static getClients() {
+    return clients;
+  }
+
   static addClient(ws: ServerWebSocket<{ id: string; data: Context }>) {
     const id = ws.data.id;
     clients.set(id, ws);

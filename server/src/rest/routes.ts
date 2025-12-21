@@ -7,7 +7,7 @@ import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
 import { DataType } from './utils/column';
 
-const REST_RATE_LIMIT = parseInt(process.env.REST_RATE_LIMIT!, 10);
+const REST_RATE_LIMIT = Number(process.env.REST_RATE_LIMIT) || 10;
 const REST_PREFIX = process.env.REST_PREFIX || '/rest';
 
 /**

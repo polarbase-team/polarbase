@@ -19,6 +19,7 @@
     "@elysiajs/openapi": "^1.4.11",
     "@types/pg": "^8.15.6",
     "ai": "^5.0.108",
+    "chalk": "^5.6.2",
     "dotenv": "^17.2.3",
     "elysia": "latest",
     "fastmcp": "^3.22.0",

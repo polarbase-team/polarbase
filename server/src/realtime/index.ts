@@ -5,21 +5,30 @@ import { apiKeyAuth } from '../api-keys/auth';
 import { setupReplication, startCDC } from './cdc';
 
 const REALTIME_PATH = process.env.REALTIME_PATH || '/realtime';
+const REALTIME_MAX_CLIENTS = Number(process.env.REALTIME_MAX_CLIENTS) || 1000;
 
 export async function enableRealtime(app: Elysia) {
-  setupReplication();
-  startCDC();
+  await setupReplication();
+  await startCDC();
 
   app.ws(`${REALTIME_PATH}`, {
     async open(ws) {
-      const apiKey = ws.data.headers['x-api-key'];
+      if (
+        REALTIME_MAX_CLIENTS > 0 &&
+        WebSocket.getClients().size >= REALTIME_MAX_CLIENTS
+      ) {
+        ws.close(1013, 'Server full: Too many connections');
+        return;
+      }
+
+      const apiKey = ws.data.query['x-api-key'];
       if (!apiKey) {
         ws.close(1008, 'Missing API Key');
         return;
       }
       try {
         const authData = await apiKeyAuth(apiKey);
-        if (!authData.scopes.rest) {
+        if (!authData.scopes.realtime) {
           ws.close(
             1008,
             'Access denied: you do not have permission to access this resource.'

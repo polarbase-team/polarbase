@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
+import { environment } from '@environments/environment';
+
 export interface ApiKey {
   id: number;
   key: string;
@@ -19,7 +21,7 @@ export interface ApiKey {
   providedIn: 'root',
 })
 export class ApiKeyService {
-  private apiUrl = 'http://localhost:3000/api-keys';
+  private apiUrl = `${environment.apiUrl}/api-keys`;
 
   constructor(private http: HttpClient) {}
 
