@@ -38,7 +38,7 @@ export class WebsocketService {
   /**
    * Connects (or returns existing connection) to the WebSocket server.
    *
-   * @param url Full WebSocket URL (e.g. ws://localhost:3000/realtime or wss://...)
+   * @param url Full WebSocket URL
    * @returns Observable that emits every incoming message
    */
   public connect(url: string): Observable<WebSocketMessage> {

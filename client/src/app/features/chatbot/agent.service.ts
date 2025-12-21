@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
+import { environment } from '@environments/environment';
+
 @Injectable()
 export class AgentService {
-  private apiUrl = 'http://localhost:3000/agent';
+  private apiUrl = `${environment.apiUrl}/agent`;
 
   constructor(private http: HttpClient) {}
 

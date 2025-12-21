@@ -8,6 +8,8 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { ImageModule } from 'primeng/image';
 
+import { environment } from '@environments/environment';
+
 import { removeApiKey } from '../../core/guards/api-key.guard';
 import { ChatBotComponent } from '../../features/chatbot/chatbot.component';
 
@@ -57,7 +59,7 @@ export class MainLayoutComponent implements OnInit {
   }
 
   protected openAPIDocs() {
-    window.open('http://localhost:3000/rest/openapi', '_blank');
+    window.open(`${environment.apiUrl}/rest/openapi`, '_blank');
   }
 
   protected logout() {

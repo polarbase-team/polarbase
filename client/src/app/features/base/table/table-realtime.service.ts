@@ -2,6 +2,8 @@ import { DestroyRef, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, filter } from 'rxjs';
 
+import { environment } from '@environments/environment';
+
 import { WebSocketMessage, WebsocketService } from '../../../shared/websocket/websocket.service';
 import { TableService } from './table.service';
 
@@ -37,7 +39,7 @@ export type TableRealtimeMessage<T = Record<string, any>> = {
   providedIn: 'root',
 })
 export class TableRealtimeService {
-  private wsUrl = 'ws://localhost:3000/realtime';
+  private wsUrl = `${environment.wsUrl}/realtime`;
   private messages$ = new Subject<TableRealtimeMessage>();
 
   constructor(

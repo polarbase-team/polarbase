@@ -2,6 +2,8 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
+import { environment } from '@environments/environment';
+
 import {
   DataType,
   FieldConfig,
@@ -75,7 +77,7 @@ const DATA_TYPE_MAPPING = {
 export class TableService {
   selectedTable = signal<TableDefinition>(null);
 
-  private apiUrl = 'http://localhost:3000/rest';
+  private apiUrl = `${environment.apiUrl}/rest`;
 
   constructor(private http: HttpClient) {}
 
