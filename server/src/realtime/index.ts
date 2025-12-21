@@ -21,14 +21,14 @@ export async function enableRealtime(app: Elysia) {
         return;
       }
 
-      const apiKey = ws.data.headers['x-api-key'];
+      const apiKey = ws.data.query['x-api-key'];
       if (!apiKey) {
         ws.close(1008, 'Missing API Key');
         return;
       }
       try {
         const authData = await apiKeyAuth(apiKey);
-        if (!authData.scopes.rest) {
+        if (!authData.scopes.realtime) {
           ws.close(
             1008,
             'Access denied: you do not have permission to access this resource.'

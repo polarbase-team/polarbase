@@ -23,5 +23,4 @@ export default knex({
     propagateCreateError: false,
   },
   acquireConnectionTimeout: 60000,
-  debug: process.env.NODE_ENV === 'development',
 });
