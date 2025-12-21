@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import chalk from 'chalk';
 
+import { compression } from './plugins/compression';
 import { apiKeyRoutes } from './api-keys/routes';
 import { enableRest } from './rest';
 import { enableAgent } from './agent';
@@ -34,7 +35,10 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
     serve: { hostname: APP_HOSTNAME },
   });
 
-  app.use(cors({ origin: CORS_ORIGINS })).use(apiKeyRoutes);
+  app
+    .use(compression)
+    .use(cors({ origin: CORS_ORIGINS }))
+    .use(apiKeyRoutes);
 
   let allGood = true;
 
