@@ -37,7 +37,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
         model,
         temperature,
       });
-      return result.toTextStreamResponse();
+      return result.toUIMessageStream();
     },
     {
       body: t.Object({

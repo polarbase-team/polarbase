@@ -1,4 +1,4 @@
-import { streamText, ModelMessage, tool } from 'ai';
+import { streamText, ModelMessage, tool, stepCountIs } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
@@ -83,6 +83,7 @@ export async function generateAIResponse({
     system: instructions,
     messages,
     temperature,
+    stopWhen: [stepCountIs(10)],
     tools: {
       findColumnsTool: tool(findColumnsTool),
       findTablesTool: tool(findTablesTool),

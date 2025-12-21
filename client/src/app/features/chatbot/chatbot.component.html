@@ -30,7 +30,7 @@
     <p-scrollpanel #scrollContainer class="w-full h-full">
       @if (messages().length) {
         <div class="px-6 py-8 mb-30">
-          <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-8">
             @for (msg of messages(); track msg.timestamp) {
               <div
                 class="flex"
@@ -43,7 +43,8 @@
                     <p class="m-0 white-space-pre-wrap">{{ msg.content }}</p>
                   </div>
                 } @else {
-                  <div class="leading-6">
+                  <div class="flex gap-2 leading-6">
+                    <i class="icon icon-sparkles" style="color: var(--p-primary-color)"></i>
                     <p class="m-0 white-space-pre-wrap" [innerHTML]="msg.content | safeHtml"></p>
                   </div>
                 }
@@ -59,6 +60,15 @@
                 animationDuration=".5s"
                 [style]="{ width: '20px', height: '20px' }"
               />
+            </div>
+          }
+
+          @if (callingTool()) {
+            <div class="mt-4">
+              <p class="text-sm text-gray-700 italic">
+                Tool calling: <span class="font-medium">{{ callingTool() }}</span
+                >...
+              </p>
             </div>
           }
         </div>
@@ -94,7 +104,7 @@
       <p-button
         icon="icon icon-send"
         [rounded]="true"
-        [disabled]="!inputText().length || isStreaming()"
+        [disabled]="!inputText.length || isStreaming()"
         (click)="sendMessage()"
       />
     </div>
