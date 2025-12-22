@@ -122,8 +122,7 @@ export const createTableTool = {
       });
 
       // Check existing tables
-      const tablesResource = await loadTables();
-      const tables = JSON.parse(tablesResource.text || '[]') as string[];
+      const tables = await loadTables();
       if (tables.includes(tableName)) {
         throw new Error(`Table '${tableName}' already exists.`);
       }
@@ -181,9 +180,8 @@ export const createTableTool = {
         table: referencedTable,
         column: referencedColumn,
       } of refChecks) {
-        const refColsResource = await loadColumns(referencedTable);
-        const refColsArr = JSON.parse(refColsResource.text || '[]') as any[];
-        const refColNames = refColsArr.map((x) => x.name);
+        const columns = await loadColumns(referencedTable);
+        const refColNames = columns.map((x) => x.name);
         if (!refColNames.includes(referencedColumn)) {
           throw new Error(
             `Column '${colName}' references column '${referencedColumn}' in table '${referencedTable}' which does not exist.`

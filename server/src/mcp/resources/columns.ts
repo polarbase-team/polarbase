@@ -26,7 +26,17 @@ export default function register(server: FastMCP) {
     ],
     async load({ tableName }) {
       try {
-        return await loadColumns(tableName);
+        const columns = await loadColumns(tableName);
+        return {
+          text: JSON.stringify(
+            columns.map((col) => ({
+              name: col.column_name,
+              type: col.data_type,
+            })),
+            null,
+            2
+          ),
+        };
       } catch (error) {
         const err = error as any;
         throw new UserError(

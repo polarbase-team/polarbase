@@ -9,16 +9,7 @@ export async function loadColumns(tableName: string) {
     if (columns.length === 0) {
       throw new Error(`Table ${tableName} not found or has no columns`);
     }
-    return {
-      text: JSON.stringify(
-        columns.map((col) => ({
-          name: col.column_name,
-          type: col.data_type,
-        })),
-        null,
-        2
-      ),
-    };
+    return columns;
   } catch (error) {
     const err = error as any;
     throw new Error(

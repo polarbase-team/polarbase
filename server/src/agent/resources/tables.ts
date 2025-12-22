@@ -5,8 +5,5 @@ export async function loadTables() {
     .select('table_name')
     .from('information_schema.tables')
     .where({ table_schema: 'public' });
-  const tables = result.map((row) => row.table_name);
-  return {
-    text: JSON.stringify(tables, null, 2),
-  };
+  return result.map((row) => row.table_name);
 }

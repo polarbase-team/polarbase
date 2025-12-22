@@ -1,10 +1,10 @@
+import { Result } from 'pg';
 import { z } from 'zod';
 
 import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
 import { loadColumns } from '../resources/columns';
-import { Result } from 'pg';
 
 const inputSchema = z.object({
   table: z
@@ -36,18 +36,14 @@ export const deleteFromTableTool = {
     try {
       const { table, where } = args;
 
-      const tablesResource = await loadTables();
-      const tables = JSON.parse(tablesResource.text || '[]') as string[];
+      // Validate table name
+      const tables = await loadTables();
       if (!tables.includes(table)) {
-        throw new Error(`Table '${table}' does not exist.'}`);
+        throw new Error(`Table '${table}' does not exist.`);
       }
 
-      // Validate column names in WHERE condition
-      const columnsResource = await loadColumns(table);
-      const columns = JSON.parse(columnsResource.text || '[]') as {
-        name: string;
-        type: string;
-      }[];
+      // Validate column names
+      const columns = await loadColumns(table);
       const validColumns = columns.map((col) => col.name);
       for (const key of Object.keys(where)) {
         if (!validColumns.includes(key)) {

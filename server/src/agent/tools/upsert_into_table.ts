@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { Result } from 'pg';
+import { z } from 'zod';
 
 import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
@@ -45,18 +45,14 @@ export const upsertIntoTableTool = {
     try {
       const { table, data, conflictTarget, updateColumns } = args;
 
-      const tablesResource = await loadTables();
-      const tables = JSON.parse(tablesResource.text || '[]') as string[];
+      // Validate table name
+      const tables = await loadTables();
       if (!tables.includes(table)) {
         throw new Error(`Table '${table}' does not exist.`);
       }
 
       // Validate column names
-      const columnsResource = await loadColumns(table);
-      const columns = JSON.parse(columnsResource.text || '[]') as {
-        name: string;
-        type: string;
-      }[];
+      const columns = await loadColumns(table);
       const validColumns = columns.map((col) => col.name);
       for (const record of data) {
         for (const key of Object.keys(record)) {

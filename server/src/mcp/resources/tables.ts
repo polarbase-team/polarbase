@@ -9,7 +9,10 @@ export default function register(server: FastMCP) {
     mimeType: 'application/json',
     async load() {
       try {
-        return await loadTables();
+        const tables = await loadTables();
+        return {
+          text: JSON.stringify(tables, null, 2),
+        };
       } catch (error) {
         const err = error as Error;
         throw new UserError(`Failed to fetch tables: ${err.message}`);

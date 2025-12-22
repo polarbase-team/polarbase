@@ -60,8 +60,7 @@ export const selectFromTableTool = {
       const { select, from, where, group, order, limit, offset } = args;
 
       // Validate table name
-      const tablesResource = await loadTables();
-      const tables = JSON.parse(tablesResource.text || '[]') as string[];
+      const tables = await loadTables();
       if (!tables.includes(from)) {
         throw new Error(`Table '${from}' does not exist.`);
       }
