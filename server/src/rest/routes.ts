@@ -18,8 +18,8 @@ const REST_BLACKLISTED_TABLES = (
   process.env.REST_BLACKLISTED_TABLES || ''
 ).split(',');
 
-const tableService = new TableService();
-const tableRecordService = new TableRecordService();
+const tableService = new TableService(REST_BLACKLISTED_TABLES);
+const tableRecordService = new TableRecordService(REST_BLACKLISTED_TABLES);
 
 /**
  * Simple in-memory rate limiter (per IP).
