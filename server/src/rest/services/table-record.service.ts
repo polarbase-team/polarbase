@@ -1,6 +1,8 @@
 import { Knex } from 'knex';
 
 import pg from '../../plugins/pg';
+import { getTableSchema } from '../utils/table';
+import { DataType } from '../utils/column';
 
 export class TableRecordService {
   private blacklistedTables: string[] = [];
@@ -29,44 +31,91 @@ export class TableRecordService {
   }: {
     schemaName?: string;
     tableName: string;
-    query: Record<string, any>;
+    query: {
+      where?: Record<string, any>;
+      search?: string;
+      fields?: string;
+      order?: string;
+      page?: string;
+      limit?: string;
+    };
   }) {
     this.checkBlacklist(tableName, schemaName);
 
     const {
+      where,
+      search,
+      fields,
+      order = '1:asc', // default order first column
       page = '1',
       limit = '20',
-      search,
-      order = 'id:asc',
-      where,
-      fields,
     } = query;
 
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(1000, Math.max(1, Number(limit)));
 
     let qb = pg(tableName).withSchema(schemaName);
-    if (where) qb = qb.where(JSON.parse(where as string));
-    if (search) {
-      const cols = await pg(tableName).withSchema(schemaName).columnInfo();
-      qb = qb.where((b) =>
-        Object.keys(cols).forEach((col) =>
-          b.orWhere(col, 'like', `%${search}%`)
-        )
-      );
-    }
-    if (fields) qb = qb.select(fields.split(',').map((f: string) => f.trim()));
-    const [col, dir] = order.split(':');
-    qb = qb.orderBy(col, dir === 'desc' ? 'desc' : 'asc');
 
-    const [data, total] = await Promise.all([
+    // SELECT fields (if specified)
+    if (fields) {
+      const fieldList = fields.split(',').map((f: string) => f.trim());
+      qb = qb.select(fieldList);
+    }
+
+    // WHERE conditions
+    if (where) {
+      let whereClause: Record<string, any>;
+      if (typeof where === 'string') {
+        try {
+          whereClause = JSON.parse(where);
+        } catch (e) {
+          throw new Error('Invalid JSON in where parameter');
+        }
+      } else {
+        whereClause = where;
+      }
+      if (Object.keys(whereClause).length > 0) {
+        qb = qb.where(whereClause);
+      }
+    }
+
+    // Global SEARCH across text columns
+    if (search && search.trim()) {
+      const cols = await getTableSchema(pg, schemaName, tableName);
+      const textColumns = cols.filter((col) => {
+        return col.dataType === DataType.Text;
+      });
+
+      if (textColumns.length > 0) {
+        qb = qb.where((builder) => {
+          textColumns.forEach((col, index) => {
+            if (index === 0) {
+              builder.where(col.name, 'ilike', `%${search.trim()}%`);
+            } else {
+              builder.orWhere(col.name, 'ilike', `%${search.trim()}%`);
+            }
+          });
+        });
+      }
+    }
+
+    // ORDER BY
+    if (order) {
+      const [colExpr, dir] = order.split(':');
+      const direction = dir === 'desc' ? 'desc' : 'asc';
+      qb = qb.orderByRaw(`${colExpr} ${direction}`);
+    }
+
+    // Pagination + total count
+    const [data, totalRecord] = await Promise.all([
       qb
         .clone()
         .limit(limitNum)
         .offset((pageNum - 1) * limitNum),
-      qb.clone().count('* as total').groupBy('id').first(),
+      qb.clone().count('* as total').first(),
     ]);
-    const totalNum = Number(total?.total || 0);
+
+    const totalNum = Number(totalRecord?.total || 0);
 
     return {
       rows: data,
@@ -74,7 +123,7 @@ export class TableRecordService {
         page: pageNum,
         limit: limitNum,
         total: totalNum,
-        pages: Math.ceil(totalNum / limitNum),
+        pages: Math.ceil(totalNum / limitNum || 1),
       },
     };
   }
@@ -96,6 +145,100 @@ export class TableRecordService {
       .first();
     if (!record) throw new Error('Not found');
     return record;
+  }
+
+  async aggregate({
+    schemaName = 'public',
+    tableName,
+    query,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    query: {
+      select: string[];
+      where?: Record<string, any>;
+      group?: string[];
+      having?: Record<string, any>;
+      order?: string;
+      page?: string;
+      limit?: string;
+    };
+  }) {
+    this.checkBlacklist(tableName, schemaName);
+
+    const {
+      select,
+      where,
+      group,
+      having,
+      order = '1:asc', // default order first column
+      page = '1',
+      limit = '20',
+    } = query;
+
+    const pageNum = Math.max(1, Number(page));
+    const limitNum = Math.min(1000, Math.max(1, Number(limit)));
+
+    let qb = pg(tableName).withSchema(schemaName);
+
+    // SELECT
+    select.forEach((expr) => {
+      qb = qb.select(pg.raw(expr));
+    });
+
+    // WHERE
+    if (where && Object.keys(where).length > 0) {
+      qb = qb.where(where);
+    }
+
+    // GROUP BY
+    if (group && group.length > 0) {
+      qb = qb.groupBy(group);
+    }
+
+    // HAVING
+    if (having && Object.keys(having).length > 0) {
+      Object.entries(having).forEach(([key, value]) => {
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          'operator' in value &&
+          'value' in value
+        ) {
+          qb = qb.having(key, value.operator, value.value);
+        } else {
+          qb = qb.having(key, '=', value);
+        }
+      });
+    }
+
+    // ORDER BY
+    if (order) {
+      const [colExpr, dir] = order.split(':');
+      const direction = dir === 'desc' ? 'desc' : 'asc';
+      qb = qb.orderByRaw(`${colExpr} ${direction}`);
+    }
+
+    // Pagination + total
+    const [data, totalRecord] = await Promise.all([
+      qb
+        .clone()
+        .limit(limitNum)
+        .offset((pageNum - 1) * limitNum),
+      qb.clone().count('* as total').first(),
+    ]);
+
+    const totalNum = Number(totalRecord?.total || 0);
+
+    return {
+      rows: data,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: totalNum,
+        pages: Math.ceil(totalNum / limitNum || 1),
+      },
+    };
   }
 
   async create({
@@ -235,7 +378,7 @@ export class TableRecordService {
   }: {
     schemaName?: string;
     tableName: string;
-    body: { ids?: number[]; where?: { [x: string]: any } };
+    body: { ids?: number[]; where?: Record<string, any> };
   }) {
     this.checkBlacklist(tableName, schemaName);
 
