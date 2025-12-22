@@ -367,7 +367,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .get(
     '/:table',
     ({ params: { table }, query }) => {
-      return tableRecordService.getAll(table, query);
+      return tableRecordService.getAll({ tableName: table, query });
     },
     {
       query: t.Object({
@@ -387,7 +387,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .get(
     '/:table/:id',
     ({ params: { table, id } }) => {
-      return tableRecordService.getOne(table, id);
+      return tableRecordService.getOne({ tableName: table, id });
     },
     { params: t.Object({ table: t.String(), id: t.Numeric() }) }
   )
@@ -398,7 +398,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .post(
     '/:table',
     ({ params: { table }, body }) => {
-      return tableRecordService.create(table, body);
+      return tableRecordService.create({ tableName: table, body });
     },
     { body: t.Record(t.String(), t.Any()) }
   )
@@ -409,7 +409,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .patch(
     '/:table/:id',
     ({ params: { table, id }, body }) => {
-      return tableRecordService.update(table, id, body);
+      return tableRecordService.update({ tableName: table, id, body });
     },
     {
       params: t.Object({ table: t.String(), id: t.Numeric() }),
@@ -423,7 +423,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .delete(
     '/:table/:id',
     async ({ params: { table, id } }) => {
-      await tableRecordService.delete(table, id);
+      await tableRecordService.delete({ tableName: table, id });
       return null;
     },
     { params: t.Object({ table: t.String(), id: t.Numeric() }) }
@@ -435,7 +435,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .post(
     '/:table/bulk-create',
     ({ params: { table }, body }) => {
-      return tableRecordService.bulkCreate(table, body);
+      return tableRecordService.bulkCreate({ tableName: table, records: body });
     },
     {
       body: t.Array(t.Record(t.String(), t.Any()), {
@@ -451,7 +451,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .patch(
     '/:table/bulk-update',
     ({ params: { table }, body }) => {
-      return tableRecordService.bulkUpdate(table, body);
+      return tableRecordService.bulkUpdate({ tableName: table, updates: body });
     },
     {
       body: t.Array(
@@ -469,7 +469,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .post(
     '/:table/bulk-delete',
     ({ params: { table }, body }) => {
-      return tableRecordService.bulkDelete(table, body);
+      return tableRecordService.bulkDelete({ tableName: table, body });
     },
     {
       body: t.Union([
