@@ -3,11 +3,15 @@ import { Knex } from 'knex';
 import pg from '../../plugins/pg';
 
 export class TableRecordService {
-  async getAll(
-    tableName: string,
-    query: Record<string, any>,
-    schemaName = 'public'
-  ) {
+  async getAll({
+    schemaName = 'public',
+    tableName,
+    query,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    query: Record<string, any>;
+  }) {
     const {
       page = '1',
       limit = '20',
@@ -54,7 +58,15 @@ export class TableRecordService {
     };
   }
 
-  async getOne(tableName: string, id: string | number, schemaName = 'public') {
+  async getOne({
+    schemaName = 'public',
+    tableName,
+    id,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    id: string | number;
+  }) {
     const record = await pg(tableName)
       .withSchema(schemaName)
       .where({ id })
@@ -63,11 +75,15 @@ export class TableRecordService {
     return record;
   }
 
-  async create(
-    tableName: string,
-    body: Record<string, any>,
-    schemaName = 'public'
-  ) {
+  async create({
+    schemaName = 'public',
+    tableName,
+    body,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    body: Record<string, any>;
+  }) {
     const record = await pg(tableName)
       .withSchema(schemaName)
       .insert(body)
@@ -75,12 +91,17 @@ export class TableRecordService {
     return record;
   }
 
-  async update(
-    tableName: string,
-    id: string | number,
-    body: Record<string, any>,
-    schemaName = 'public'
-  ) {
+  async update({
+    schemaName = 'public',
+    tableName,
+    id,
+    body,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    id: string | number;
+    body: Record<string, any>;
+  }) {
     const record = await pg(tableName)
       .withSchema(schemaName)
       .where({ id: Number(id) })
@@ -90,7 +111,15 @@ export class TableRecordService {
     return record;
   }
 
-  async delete(tableName: string, id: string | number, schemaName = 'public') {
+  async delete({
+    schemaName = 'public',
+    tableName,
+    id,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    id: string | number;
+  }) {
     const deleted = await pg(tableName)
       .withSchema(schemaName)
       .where({ id })
@@ -99,11 +128,15 @@ export class TableRecordService {
     return null;
   }
 
-  async bulkCreate(
-    tableName: string,
-    records: Record<string, any>[],
-    schemaName = 'public'
-  ) {
+  async bulkCreate({
+    schemaName = 'public',
+    tableName,
+    records,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    records: Record<string, any>[];
+  }) {
     const returning = [] as any[];
     const chunk = 500;
 
@@ -120,11 +153,15 @@ export class TableRecordService {
     return { insertedCount: returning.length, returning };
   }
 
-  async bulkUpdate(
-    tableName: string,
-    updates: Array<{ where: Record<string, any>; data: Record<string, any> }>,
-    schemaName = 'public'
-  ) {
+  async bulkUpdate({
+    schemaName = 'public',
+    tableName,
+    updates,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    updates: Array<{ where: Record<string, any>; data: Record<string, any> }>;
+  }) {
     if (!Array.isArray(updates) || updates.length === 0) {
       throw new Error('updates must be a non-empty array');
     }
@@ -158,11 +195,15 @@ export class TableRecordService {
     return { updatedCount: results.length, returning: results };
   }
 
-  async bulkDelete(
-    tableName: string,
-    body: { ids?: number[]; where?: { [x: string]: any } },
-    schemaName = 'public'
-  ) {
+  async bulkDelete({
+    schemaName = 'public',
+    tableName,
+    body,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    body: { ids?: number[]; where?: { [x: string]: any } };
+  }) {
     let deleted = 0;
 
     const { ids, where } = body;
