@@ -123,7 +123,7 @@ export const createTableTool = {
 
       // Check existing tables
       const tables = await loadTables();
-      if (tables.includes(tableName)) {
+      if (tables.find((t) => t.tableName === tableName)) {
         throw new Error(`Table '${tableName}' already exists.`);
       }
 
@@ -161,7 +161,7 @@ export const createTableTool = {
               `Column '${col.name}' has invalid references: missing table or column.`
             );
           }
-          if (!tables.includes(referencedTable)) {
+          if (!tables.find((t) => t.tableName === referencedTable)) {
             throw new Error(
               `Column '${col.name}' references a table '${referencedTable}' that does not exist.`
             );

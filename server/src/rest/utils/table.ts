@@ -8,16 +8,22 @@ import {
   DATE_RANGE_CHECK_SUFFIX,
 } from './column';
 
+export interface Table {
+  tableName: string;
+  tableComment: string;
+  tableColumnPk: string;
+}
+
 /**
  * Retrieves the list of tables in the public schema (excluding blacklisted ones)
  * along with their comments.
  */
-export const getTableList = (
+export const getTableList = async (
   pg: Knex,
   schemaName: string,
   blacklisted: string[] = []
 ) => {
-  return pg('pg_class as c')
+  const tables: Table[] = await pg('pg_class as c')
     .select({
       tableName: 'c.relname',
       tableComment: 'descr.description',
@@ -45,6 +51,8 @@ export const getTableList = (
       }
     })
     .orderBy('c.relname');
+
+  return tables;
 };
 
 /**

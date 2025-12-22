@@ -61,7 +61,7 @@ export const selectFromTableTool = {
 
       // Validate table name
       const tables = await loadTables();
-      if (!tables.includes(from)) {
+      if (!tables.find((t) => t.tableName === from)) {
         throw new Error(`Table '${from}' does not exist.`);
       }
 

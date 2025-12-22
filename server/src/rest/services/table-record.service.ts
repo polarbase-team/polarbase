@@ -2,7 +2,35 @@ import { Knex } from 'knex';
 
 import pg from '../../plugins/pg';
 
+/**
+ * List of table names that are forbidden to access via this REST API.
+ * Configured via environment variable REST_BLACKLISTED_TABLES (comma-separated).
+ */
+const REST_BLACKLISTED_TABLES = (process.env.REST_BLACKLISTED_TABLES || '')
+  .split(',')
+  .map((t) => t.trim())
+  .filter(Boolean);
+
 export class TableRecordService {
+  private blacklistedTables: string[] = REST_BLACKLISTED_TABLES;
+
+  constructor(blacklistedTables?: string[]) {
+    if (blacklistedTables) {
+      this.blacklistedTables = blacklistedTables;
+    }
+  }
+
+  private checkBlacklist(tableName: string, schemaName: string = 'public') {
+    const fullName = `${schemaName}.${tableName}`;
+
+    if (
+      this.blacklistedTables.includes(tableName) ||
+      this.blacklistedTables.includes(fullName)
+    ) {
+      throw new Error(`Access to table "${fullName}" is forbidden`);
+    }
+  }
+
   async getAll({
     schemaName = 'public',
     tableName,
@@ -12,6 +40,8 @@ export class TableRecordService {
     tableName: string;
     query: Record<string, any>;
   }) {
+    this.checkBlacklist(tableName, schemaName);
+
     const {
       page = '1',
       limit = '20',
@@ -67,6 +97,8 @@ export class TableRecordService {
     tableName: string;
     id: string | number;
   }) {
+    this.checkBlacklist(tableName, schemaName);
+
     const record = await pg(tableName)
       .withSchema(schemaName)
       .where({ id })
@@ -84,6 +116,8 @@ export class TableRecordService {
     tableName: string;
     body: Record<string, any>;
   }) {
+    this.checkBlacklist(tableName, schemaName);
+
     const record = await pg(tableName)
       .withSchema(schemaName)
       .insert(body)
@@ -102,12 +136,14 @@ export class TableRecordService {
     id: string | number;
     body: Record<string, any>;
   }) {
+    this.checkBlacklist(tableName, schemaName);
+
     const record = await pg(tableName)
       .withSchema(schemaName)
       .where({ id: Number(id) })
       .update(body)
       .returning('*');
-    if (!record) throw new Error('Not found');
+    if (!record || record.length === 0) throw new Error('Not found');
     return record;
   }
 
@@ -120,6 +156,8 @@ export class TableRecordService {
     tableName: string;
     id: string | number;
   }) {
+    this.checkBlacklist(tableName, schemaName);
+
     const deleted = await pg(tableName)
       .withSchema(schemaName)
       .where({ id })
@@ -137,6 +175,8 @@ export class TableRecordService {
     tableName: string;
     records: Record<string, any>[];
   }) {
+    this.checkBlacklist(tableName, schemaName);
+
     const returning = [] as any[];
     const chunk = 500;
 
@@ -162,6 +202,8 @@ export class TableRecordService {
     tableName: string;
     updates: Array<{ where: Record<string, any>; data: Record<string, any> }>;
   }) {
+    this.checkBlacklist(tableName, schemaName);
+
     if (!Array.isArray(updates) || updates.length === 0) {
       throw new Error('updates must be a non-empty array');
     }
@@ -204,6 +246,8 @@ export class TableRecordService {
     tableName: string;
     body: { ids?: number[]; where?: { [x: string]: any } };
   }) {
+    this.checkBlacklist(tableName, schemaName);
+
     let deleted = 0;
 
     const { ids, where } = body;

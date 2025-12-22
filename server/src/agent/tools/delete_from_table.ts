@@ -38,7 +38,7 @@ export const deleteFromTableTool = {
 
       // Validate table name
       const tables = await loadTables();
-      if (!tables.includes(table)) {
+      if (!tables.find((t) => t.tableName === table)) {
         throw new Error(`Table '${table}' does not exist.`);
       }
 
