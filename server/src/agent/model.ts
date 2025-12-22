@@ -11,7 +11,6 @@ import { findTablesTool } from './tools/find_tables';
 import { insertIntoTableTool } from './tools/insert_into_table';
 import { selectFromTableTool } from './tools/select_from_table';
 import { updateFromTableTool } from './tools/update_from_table';
-import { upsertIntoTableTool } from './tools/upsert_into_table';
 import instructions from './instructions';
 
 const DEFAULT_MODEL = process.env.LLM_DEFAULT_MODEL || 'gemini-2.5-flash';
@@ -92,7 +91,6 @@ export async function generateAIResponse({
       insertIntoTableTool: tool(insertIntoTableTool),
       selectFromTableTool: tool(selectFromTableTool),
       updateFromTableTool: tool(updateFromTableTool),
-      upsertIntoTableTool: tool(upsertIntoTableTool),
     },
   });
 }
