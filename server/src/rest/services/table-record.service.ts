@@ -24,7 +24,7 @@ export class TableRecordService {
     }
   }
 
-  async getAll({
+  async select({
     schemaName = 'public',
     tableName,
     query,
@@ -36,47 +36,28 @@ export class TableRecordService {
       search?: string;
       fields?: string;
       order?: string;
-      page?: string;
-      limit?: string;
+      page?: number;
+      limit?: number;
     };
   }) {
     this.checkBlacklist(tableName, schemaName);
 
-    const {
-      where,
-      search,
-      fields,
-      order = '1:asc', // default order first column
-      page = '1',
-      limit = '20',
-    } = query;
+    const { where, search, fields, order, page = 1, limit = 10000 } = query;
 
-    const pageNum = Math.max(1, Number(page));
-    const limitNum = Math.min(1000, Math.max(1, Number(limit)));
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(10000, Math.max(1, limit));
 
     let qb = pg(tableName).withSchema(schemaName);
 
     // SELECT fields (if specified)
     if (fields) {
-      const fieldList = fields.split(',').map((f: string) => f.trim());
+      const fieldList = fields.split(',').map((f) => f.trim());
       qb = qb.select(fieldList);
     }
 
     // WHERE conditions
-    if (where) {
-      let whereClause: Record<string, any>;
-      if (typeof where === 'string') {
-        try {
-          whereClause = JSON.parse(where);
-        } catch (e) {
-          throw new Error('Invalid JSON in where parameter');
-        }
-      } else {
-        whereClause = where;
-      }
-      if (Object.keys(whereClause).length > 0) {
-        qb = qb.where(whereClause);
-      }
+    if (where && Object.keys(where).length > 0) {
+      qb = qb.where(where);
     }
 
     // Global SEARCH across text columns
@@ -101,9 +82,9 @@ export class TableRecordService {
 
     // ORDER BY
     if (order) {
-      const [colExpr, dir] = order.split(':');
-      const direction = dir === 'desc' ? 'desc' : 'asc';
-      qb = qb.orderByRaw(`${colExpr} ${direction}`);
+      const [col, dir] = order.split(':');
+      const direction = dir.toLowerCase() === 'desc' ? 'desc' : 'asc';
+      qb = qb.orderBy(col, direction);
     }
 
     // Pagination + total count
@@ -128,25 +109,6 @@ export class TableRecordService {
     };
   }
 
-  async getOne({
-    schemaName = 'public',
-    tableName,
-    id,
-  }: {
-    schemaName?: string;
-    tableName: string;
-    id: string | number;
-  }) {
-    this.checkBlacklist(tableName, schemaName);
-
-    const record = await pg(tableName)
-      .withSchema(schemaName)
-      .where({ id })
-      .first();
-    if (!record) throw new Error('Not found');
-    return record;
-  }
-
   async aggregate({
     schemaName = 'public',
     tableName,
@@ -160,8 +122,8 @@ export class TableRecordService {
       group?: string[];
       having?: Record<string, any>;
       order?: string;
-      page?: string;
-      limit?: string;
+      page?: number;
+      limit?: number;
     };
   }) {
     this.checkBlacklist(tableName, schemaName);
@@ -171,13 +133,13 @@ export class TableRecordService {
       where,
       group,
       having,
-      order = '1:asc', // default order first column
-      page = '1',
-      limit = '20',
+      order,
+      page = 1,
+      limit = 10000,
     } = query;
 
-    const pageNum = Math.max(1, Number(page));
-    const limitNum = Math.min(1000, Math.max(1, Number(limit)));
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(10000, Math.max(1, limit));
 
     let qb = pg(tableName).withSchema(schemaName);
 
@@ -214,9 +176,9 @@ export class TableRecordService {
 
     // ORDER BY
     if (order) {
-      const [colExpr, dir] = order.split(':');
-      const direction = dir === 'desc' ? 'desc' : 'asc';
-      qb = qb.orderByRaw(`${colExpr} ${direction}`);
+      const [col, dir] = order.split(':');
+      const direction = dir.toLowerCase() === 'desc' ? 'desc' : 'asc';
+      qb = qb.orderBy(col, direction);
     }
 
     // Pagination + total
@@ -241,66 +203,82 @@ export class TableRecordService {
     };
   }
 
-  async create({
+  insert({
     schemaName = 'public',
     tableName,
-    body,
+    record,
   }: {
     schemaName?: string;
     tableName: string;
-    body: Record<string, any>;
+    record: Record<string, any>;
   }) {
     this.checkBlacklist(tableName, schemaName);
 
-    const record = await pg(tableName)
-      .withSchema(schemaName)
-      .insert(body)
-      .returning('*');
-    return record;
+    return pg(tableName).withSchema(schemaName).insert(record).returning('*');
   }
 
   async update({
     schemaName = 'public',
     tableName,
-    id,
-    body,
+    update,
   }: {
     schemaName?: string;
     tableName: string;
-    id: string | number;
-    body: Record<string, any>;
+    update: {
+      where: Record<string, any>;
+      data: Record<string, any>;
+    };
   }) {
     this.checkBlacklist(tableName, schemaName);
 
+    const { where, data } = update;
     const record = await pg(tableName)
       .withSchema(schemaName)
-      .where({ id: Number(id) })
-      .update(body)
+      .where(where)
+      .update(data)
       .returning('*');
-    if (!record || record.length === 0) throw new Error('Not found');
+    if (!record?.length) throw new Error('Not found');
     return record;
   }
 
   async delete({
     schemaName = 'public',
     tableName,
-    id,
+    condition,
   }: {
     schemaName?: string;
     tableName: string;
-    id: string | number;
+    condition: {
+      where?: Record<string, any>;
+      whereIn?: Record<string, any[]>;
+    };
   }) {
     this.checkBlacklist(tableName, schemaName);
 
-    const deleted = await pg(tableName)
-      .withSchema(schemaName)
-      .where({ id })
-      .del();
-    if (!deleted) throw new Error('Not found');
-    return null;
+    let deleted = 0;
+
+    const { where, whereIn } = condition;
+    if (where && Object.keys(where).length) {
+      deleted = await pg(tableName)
+        .withSchema(schemaName)
+        .where(where)
+        .delete();
+    } else if (whereIn && Object.keys(whereIn).length) {
+      const query = pg(tableName).withSchema(schemaName);
+      for (const [column, values] of Object.entries(whereIn)) {
+        if (Array.isArray(values) && values.length > 0) {
+          query.whereIn(column, values);
+        }
+      }
+      deleted = await query.delete();
+    } else {
+      throw new Error('Missing where conditions');
+    }
+
+    return { deletedCount: deleted };
   }
 
-  async bulkCreate({
+  async bulkInsert({
     schemaName = 'public',
     tableName,
     records,
@@ -334,11 +312,14 @@ export class TableRecordService {
   }: {
     schemaName?: string;
     tableName: string;
-    updates: Array<{ where: Record<string, any>; data: Record<string, any> }>;
+    updates: {
+      where: Record<string, any>;
+      data: Record<string, any>;
+    }[];
   }) {
     this.checkBlacklist(tableName, schemaName);
 
-    if (!Array.isArray(updates) || updates.length === 0) {
+    if (!Array.isArray(updates) || !updates.length) {
       throw new Error('updates must be a non-empty array');
     }
 
@@ -346,12 +327,12 @@ export class TableRecordService {
       const affectedRows = [];
 
       for (const { where, data } of updates) {
-        if (!where || Object.keys(where).length === 0) {
+        if (!where || !Object.keys(where).length) {
           throw new Error(
             'Each update item must have a non-empty "where" clause'
           );
         }
-        if (!data || Object.keys(data).length === 0) {
+        if (!data || !Object.keys(data).length) {
           throw new Error(
             'Each update item must have a non-empty "data" object'
           );
@@ -369,36 +350,5 @@ export class TableRecordService {
     });
 
     return { updatedCount: results.length, returning: results };
-  }
-
-  async bulkDelete({
-    schemaName = 'public',
-    tableName,
-    body,
-  }: {
-    schemaName?: string;
-    tableName: string;
-    body: { ids?: number[]; where?: Record<string, any> };
-  }) {
-    this.checkBlacklist(tableName, schemaName);
-
-    let deleted = 0;
-
-    const { ids, where } = body;
-    if (ids?.length) {
-      deleted = await pg(tableName)
-        .withSchema(schemaName)
-        .whereIn('id', ids)
-        .delete();
-    } else if (where && Object.keys(where).length) {
-      deleted = await pg(tableName)
-        .withSchema(schemaName)
-        .where(where)
-        .delete();
-    } else {
-      throw new Error('Provide ids[] or where{}');
-    }
-
-    return { deletedCount: deleted };
   }
 }

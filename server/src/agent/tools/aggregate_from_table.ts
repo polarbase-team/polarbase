@@ -51,16 +51,9 @@ const inputSchema = z.object({
     .int()
     .positive()
     .optional()
-    .default(20)
     .describe('Maximum number of rows to return.'),
 
-  page: z
-    .number()
-    .int()
-    .positive()
-    .optional()
-    .default(1)
-    .describe('Current page.'),
+  page: z.number().int().positive().optional().describe('Current page.'),
 });
 
 export const aggregateFromTableTool = {
@@ -88,8 +81,8 @@ export const aggregateFromTableTool = {
         group,
         having,
         order,
-        limit = 20,
-        page = 1,
+        limit,
+        page,
       } = args;
 
       // Validate table
@@ -108,8 +101,8 @@ export const aggregateFromTableTool = {
           group,
           having,
           order,
-          limit: limit.toString(),
-          page: page.toString(),
+          limit,
+          page,
         },
       });
 

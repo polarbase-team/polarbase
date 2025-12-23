@@ -46,16 +46,9 @@ const inputSchema = z.object({
     .int()
     .positive()
     .optional()
-    .default(20)
     .describe('Maximum number of rows per page.'),
 
-  page: z
-    .number()
-    .int()
-    .positive()
-    .optional()
-    .default(1)
-    .describe('Current page number.'),
+  page: z.number().int().positive().optional().describe('Current page number.'),
 });
 
 export const listFromTableTool = {
@@ -83,8 +76,8 @@ export const listFromTableTool = {
         where,
         search,
         order,
-        limit = 20,
-        page = 1,
+        limit,
+        page,
       } = args;
 
       // Validate table
@@ -93,8 +86,8 @@ export const listFromTableTool = {
         throw new Error(`Table '${tableName}' does not exist.`);
       }
 
-      // Call the getAll method from the service
-      const result = await tableRecordService.getAll({
+      // Call the select method from the service
+      const result = await tableRecordService.select({
         tableName,
         schemaName: 'public',
         query: {
@@ -102,8 +95,8 @@ export const listFromTableTool = {
           where,
           search,
           order,
-          page: page.toString(),
-          limit: limit.toString(),
+          page,
+          limit,
         },
       });
 
