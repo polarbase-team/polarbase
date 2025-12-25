@@ -125,14 +125,14 @@ export const aggregateFromTableTool = {
         },
       });
 
-      // Limit displayed rows
-      const MAX_DISPLAY_ROWS = 15;
-      const displayedRows = result.rows.slice(0, MAX_DISPLAY_ROWS);
+      // Limit displayed records
+      const MAX_DISPLAY_RECORDS = 15;
+      const displayedRecords = result.rows.slice(0, MAX_DISPLAY_RECORDS);
 
       log.info('Aggregation query completed', {
         table: tableName,
-        totalRows: result.pagination.total,
-        returnedRows: displayedRows.length,
+        totalRecords: result.pagination.total,
+        returnedRecords: displayedRecords.length,
       });
 
       return {
@@ -143,10 +143,10 @@ export const aggregateFromTableTool = {
               {
                 status: 'success',
                 message: `Aggregation result from table "${tableName}"`,
-                total_rows: result.pagination.total,
-                returned_rows: displayedRows.length,
+                totalRecords: result.pagination.total,
+                returnedRecords: displayedRecords.length,
                 pagination: result.pagination,
-                data: displayedRows,
+                data: displayedRecords,
               },
               null,
               2

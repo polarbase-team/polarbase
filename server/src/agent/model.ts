@@ -7,11 +7,10 @@ import { createXai } from '@ai-sdk/xai';
 import instructions from './instructions';
 import { findColumnsTool } from './tools/find-columns';
 import { findTablesTool } from './tools/find-tables';
-// import { createTableTool } from './tools/create-table';
 import { listFromTableTool } from './tools/list-from-table';
 import { aggregateFromTableTool } from './tools/aggregate-from-table';
-// import { insertIntoTableTool } from './tools/insert-into-table';
-// import { updateFromTableTool } from './tools/update-from-table';
+import { insertIntoTableTool } from './tools/insert-into-table';
+import { updateFromTableTool } from './tools/update-from-table';
 import { deleteFromTableTool } from './tools/delete-from-table';
 
 const DEFAULT_MODEL = process.env.LLM_DEFAULT_MODEL || 'gemini-2.5-flash';
@@ -87,11 +86,10 @@ export async function generateAIResponse({
     tools: {
       findColumnsTool: tool(findColumnsTool),
       findTablesTool: tool(findTablesTool),
-      // createTableTool: tool(createTableTool),
       listFromTableTool: tool(listFromTableTool),
       aggregateFromTableTool: tool(aggregateFromTableTool),
-      // insertIntoTableTool: tool(insertIntoTableTool),
-      // updateFromTableTool: tool(updateFromTableTool),
+      insertIntoTableTool: tool(insertIntoTableTool),
+      updateFromTableTool: tool(updateFromTableTool),
       deleteFromTableTool: tool(deleteFromTableTool),
     },
   });
