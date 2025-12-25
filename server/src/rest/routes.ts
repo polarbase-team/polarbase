@@ -19,8 +19,8 @@ const REST_BLACKLISTED_TABLES = (
   process.env.REST_BLACKLISTED_TABLES || ''
 ).split(',');
 
-const tableService = new TableService(REST_BLACKLISTED_TABLES);
-const tableRecordService = new TableRecordService(REST_BLACKLISTED_TABLES);
+const tableService = new TableService();
+const tableRecordService = new TableRecordService();
 
 /**
  * Simple in-memory rate limiter (per IP).
@@ -176,8 +176,9 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   /**
    * GET /rest/tables → list of allowed tables + comments
    */
-  .get('/tables', () => {
-    return tableService.getAll();
+  .get('/tables', async () => {
+    const tables = await tableService.getAll();
+    return tables.filter((t) => !REST_BLACKLISTED_TABLES.includes(t.tableName));
   })
 
   /**

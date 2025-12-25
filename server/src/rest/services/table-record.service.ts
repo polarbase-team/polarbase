@@ -6,25 +6,6 @@ import { DataType } from '../utils/column';
 import { buildWhereClause, WhereFilter } from '../utils/record';
 
 export class TableRecordService {
-  private blacklistedTables: string[] = [];
-
-  constructor(blacklistedTables?: string[]) {
-    if (blacklistedTables) {
-      this.blacklistedTables = blacklistedTables;
-    }
-  }
-
-  private checkBlacklist(tableName: string, schemaName: string = 'public') {
-    const fullName = `${schemaName}.${tableName}`;
-
-    if (
-      this.blacklistedTables.includes(tableName) ||
-      this.blacklistedTables.includes(fullName)
-    ) {
-      throw new Error(`Access to table "${fullName}" is forbidden`);
-    }
-  }
-
   async select({
     schemaName = 'public',
     tableName,
@@ -41,8 +22,6 @@ export class TableRecordService {
       limit?: number;
     };
   }) {
-    this.checkBlacklist(tableName, schemaName);
-
     const { where, search, fields, order, page = 1, limit = 10000 } = query;
 
     const pageNum = Math.max(1, page);
@@ -127,8 +106,6 @@ export class TableRecordService {
       limit?: number;
     };
   }) {
-    this.checkBlacklist(tableName, schemaName);
-
     const {
       select,
       where,
@@ -213,8 +190,6 @@ export class TableRecordService {
     tableName: string;
     records: Record<string, any>[];
   }) {
-    this.checkBlacklist(tableName, schemaName);
-
     const returning = [] as any[];
     const chunk = 500;
 
@@ -243,8 +218,6 @@ export class TableRecordService {
       data: Record<string, any>;
     }[];
   }) {
-    this.checkBlacklist(tableName, schemaName);
-
     if (!Array.isArray(updates) || !updates.length) {
       throw new Error('updates must be a non-empty array');
     }
@@ -288,8 +261,6 @@ export class TableRecordService {
       where: WhereFilter;
     };
   }) {
-    this.checkBlacklist(tableName, schemaName);
-
     let deleted = 0;
 
     const { where } = condition;
