@@ -1,7 +1,11 @@
 <div align="center">
    <img src="assets/logo.png" width="200" height="200" alt="PolarBase">
    <br>
-   <span style="font-size: 48px; font-weight: bold;">PolarBase</span>
+   <svg height="80" width="100%" viewBox="0 0 600 80" xmlns="http://www.w3.org/2000/svg">
+      <text x="50%" y="50" font-size="48" font-weight="bold" fill="currentColor" text-anchor="middle" dominant-baseline="middle">
+         PolarBase
+      </text>
+   </svg>
    <br>
    <b>Open-source No-code Database platform</b> <br />
    <b>Spreadsheet-like UI • AI-powered • No SQL required • Self-hosted</b> <br />
