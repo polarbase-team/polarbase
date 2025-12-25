@@ -12,7 +12,7 @@ import { listFromTableTool } from './tools/list-from-table';
 import { aggregateFromTableTool } from './tools/aggregate-from-table';
 // import { insertIntoTableTool } from './tools/insert-into-table';
 // import { updateFromTableTool } from './tools/update-from-table';
-// import { deleteFromTableTool } from './tools/delete-from-table';
+import { deleteFromTableTool } from './tools/delete-from-table';
 
 const DEFAULT_MODEL = process.env.LLM_DEFAULT_MODEL || 'gemini-2.5-flash';
 
@@ -90,9 +90,9 @@ export async function generateAIResponse({
       // createTableTool: tool(createTableTool),
       listFromTableTool: tool(listFromTableTool),
       aggregateFromTableTool: tool(aggregateFromTableTool),
-      // deleteFromTableTool: tool(deleteFromTableTool),
       // insertIntoTableTool: tool(insertIntoTableTool),
       // updateFromTableTool: tool(updateFromTableTool),
+      deleteFromTableTool: tool(deleteFromTableTool),
     },
   });
 }
