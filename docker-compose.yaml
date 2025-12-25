@@ -27,6 +27,7 @@ services:
       # AGENT API
       - AGENT_ENABLED=true
       - AGENT_PREFIX=/agent
+      - AGENT_BLACKLISTED_TABLES=
 
       # MCP Server
       - MCP_ENABLED=true

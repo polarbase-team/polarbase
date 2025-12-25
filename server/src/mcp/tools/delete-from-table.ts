@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { deleteFromTableTool } from '../../agent/tools/delete_from_table';
+import { deleteFromTableTool } from '../../agent/tools/delete-from-table';
 
 export default function register(server: FastMCP) {
   server.addTool({

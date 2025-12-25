@@ -1,20 +1,20 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { createTableTool } from '../../agent/tools/create_table';
+import { updateFromTableTool } from '../../agent/tools/update-from-table';
 
 export default function register(server: FastMCP) {
   server.addTool({
-    name: createTableTool.name,
-    description: createTableTool.description,
-    parameters: createTableTool.inputSchema,
+    name: updateFromTableTool.name,
+    description: updateFromTableTool.description,
+    parameters: updateFromTableTool.inputSchema,
     annotations: {
-      title: 'Create Database Table',
+      title: 'Update Data in Table',
       readOnlyHint: false,
       destructiveHint: true,
     },
     async execute(args) {
       try {
-        return (await createTableTool.execute(args)) as any;
+        return (await updateFromTableTool.execute(args)) as any;
       } catch (error) {
         const err = error as Error;
         throw new UserError(err.message);

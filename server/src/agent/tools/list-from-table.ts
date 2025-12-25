@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
+import { ConditionSchema } from '../schema/condition.schema';
 import { TableRecordService } from '../../rest/services/table-record.service';
 
 const tableRecordService = new TableRecordService();
@@ -20,12 +21,16 @@ const inputSchema = z.object({
       'Comma-separated list of columns to retrieve. Example: "id, name, email, created_at". Defaults to all columns (*).'
     ),
 
-  where: z
-    .record(z.any(), z.any())
-    .optional()
-    .describe(
-      'WHERE filter conditions as a key-value object. Example: { status: "active", age: { operator: ">", value: 18 } }.'
-    ),
+  where: ConditionSchema.optional().describe(
+    `Advanced WHERE filter conditions following WhereFilter structure.
+    Examples:
+    - Simple: { status: "active" }
+    - With operator: { age: { gt: 18 } }
+    - Multiple columns: { status: "active", role: { in: ["admin", "moderator"] } }
+    - Logic AND: { and: [{ status: "active" }, { age: { gte: 18 } }] }
+    - Logic OR: { or: [{ category: "electronics" }, { category: "fashion" }] }
+    - Nested: { and: [{ status: "active" }, { or: [{ age: { lt: 30 } }, { vip: true }] }] }`
+  ),
 
   search: z
     .string()
@@ -55,16 +60,18 @@ export const listFromTableTool = {
   name: 'listFromTable',
   description: `
     Retrieves a detailed list of records from a database table, with support for filtering, global search, column selection, sorting, and pagination.
+    Now supports advanced WHERE conditions including operators (gt, in, ilike, etc.) and logical grouping (and/or) via WhereFilter structure.
+    
     Best suited for questions like:
     - "List the 20 most recent orders"
-    - "Show customers located in Hanoi"
-    - "Find products with 'iPhone' in the name"
-    - "View details of orders with pending status"
+    - "Show customers older than 18 and located in Hanoi"
+    - "Find products with 'iPhone' in the name or description"
+    - "View orders that are either pending or shipped in the last 7 days"
 
-    Advantages: Powerful search feature, no need for exact filter conditions.
+    Advantages: Powerful global search + full SQL-like filtering capability.
     Usage steps:
     1. Call findTables to select the appropriate table.
-    2. (Optional) Call findColumns to get accurate column names for fields, order, or where clauses.
+    2. (Optional) Call findColumns to get accurate column names.
   `,
   inputSchema,
 
@@ -100,14 +107,14 @@ export const listFromTableTool = {
         },
       });
 
-      // Limit displayed rows for the AI (to avoid overly long responses)
-      const MAX_DISPLAY_ROWS = 15;
-      const displayedRows = result.rows.slice(0, MAX_DISPLAY_ROWS);
+      // Limit displayed records
+      const MAX_DISPLAY_RECORDS = 10;
+      const displayedRecords = result.rows.slice(0, MAX_DISPLAY_RECORDS);
 
       log.info('List query completed', {
         table: tableName,
-        totalRows: result.pagination.total,
-        returnedRows: displayedRows.length,
+        totalRecords: result.pagination.total,
+        returnedRecords: displayedRecords.length,
       });
 
       return {
@@ -118,10 +125,10 @@ export const listFromTableTool = {
               {
                 status: 'success',
                 message: `List result from table "${tableName}"`,
-                total_rows: result.pagination.total,
-                returned_rows: displayedRows.length,
+                totalRecords: result.pagination.total,
+                returnedRecords: displayedRecords.length,
                 pagination: result.pagination,
-                data: displayedRows,
+                data: displayedRecords,
               },
               null,
               2

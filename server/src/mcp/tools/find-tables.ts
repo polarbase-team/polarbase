@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { findTablesTool } from '../../agent/tools/find_tables';
+import { findTablesTool } from '../../agent/tools/find-tables';
 
 export default function register(server: FastMCP) {
   server.addTool({

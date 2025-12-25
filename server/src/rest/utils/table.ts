@@ -15,14 +15,10 @@ export interface Table {
 }
 
 /**
- * Retrieves the list of tables in the public schema (excluding blacklisted ones)
+ * Retrieves the list of tables in the public schema
  * along with their comments.
  */
-export const getTableList = async (
-  pg: Knex,
-  schemaName: string,
-  blacklisted: string[] = []
-) => {
+export const getTableList = async (pg: Knex, schemaName: string) => {
   const tables: Table[] = await pg('pg_class as c')
     .select({
       tableName: 'c.relname',
@@ -44,11 +40,6 @@ export const getTableList = async (
     .where({
       'ns.nspname': schemaName,
       'c.relkind': 'r', // r = ordinary table
-    })
-    .modify((qb) => {
-      if (blacklisted.length > 0) {
-        qb.whereNotIn('c.relname', blacklisted);
-      }
     })
     .orderBy('c.relname');
 

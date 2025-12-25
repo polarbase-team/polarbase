@@ -19,21 +19,9 @@ import {
  * Main REST router exposing CRUD + bulk operations for all public tables.
  */
 export class TableService {
-  private blacklistedTables: string[] = [];
-
-  constructor(blacklistedTables?: string[]) {
-    if (blacklistedTables) {
-      this.blacklistedTables = blacklistedTables;
-    }
-  }
-
   async getAll({ schemaName = 'public' }: { schemaName?: string } = {}) {
-    const allowedTables = await getTableList(
-      pg,
-      schemaName,
-      this.blacklistedTables
-    );
-    return allowedTables;
+    const tables = await getTableList(pg, schemaName);
+    return tables;
   }
 
   async getSchema({
