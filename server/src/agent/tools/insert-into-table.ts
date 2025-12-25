@@ -15,7 +15,7 @@ const inputSchema = z.object({
     ),
 
   data: z
-    .array(z.record(z.any(), z.any()))
+    .array(z.any())
     .min(1, { message: 'At least one record must be provided' })
     .max(500, { message: 'Maximum 500 records per insert request' })
     .describe(

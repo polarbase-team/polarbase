@@ -10,11 +10,18 @@ const tableRecordService = new TableRecordService();
 
 const UpdateOperationSchema = z.object({
   data: z
-    .record(z.any(), z.any())
-    .refine((obj) => Object.keys(obj).length > 0, {
-      message: 'Update data must contain at least one column to update',
-    })
-    .describe('Object with column names and new values to set.'),
+    .any()
+    .refine(
+      (obj) => obj && typeof obj === 'object' && Object.keys(obj).length > 0,
+      {
+        message: 'Update data must contain at least one column to update',
+      }
+    )
+    .describe(
+      'A dictionary object where keys are column names and values are the new data to be updated. ' +
+        'Example: { status: "active", age: 25 }. ' +
+        'Check valid columns using findColumns before calling this.'
+    ),
 
   where: ConditionSchema.describe(
     'Advanced WHERE condition to select records to update (required and must be specific).'

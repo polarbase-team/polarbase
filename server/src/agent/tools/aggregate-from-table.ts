@@ -126,7 +126,7 @@ export const aggregateFromTableTool = {
       });
 
       // Limit displayed records
-      const MAX_DISPLAY_RECORDS = 15;
+      const MAX_DISPLAY_RECORDS = 10;
       const displayedRecords = result.rows.slice(0, MAX_DISPLAY_RECORDS);
 
       log.info('Aggregation query completed', {
