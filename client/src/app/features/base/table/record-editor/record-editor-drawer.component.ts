@@ -117,15 +117,10 @@ export class RecordEditorDrawerComponent {
     switch (this.mode()) {
       case 'add':
         if (_.isNil(data[tableColumnPk])) data[tableColumnPk] = id;
-        fn = this.tblService.bulkCreateRecords(tableName, [data]);
+        fn = this.tblService.createRecords(tableName, [data]);
         break;
       case 'edit':
-        fn = this.tblService.bulkUpdateRecords(tableName, [
-          {
-            where: { [tableColumnPk]: id },
-            data,
-          },
-        ]);
+        fn = this.tblService.updateRecords(tableName, [{ id, data }]);
         break;
     }
 

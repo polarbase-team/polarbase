@@ -6,6 +6,7 @@ import { apiKeyAuth } from '../api-keys/auth';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
 import { DataType } from './utils/column';
+import { WhereFilter } from './utils/record';
 
 const REST_RATE_LIMIT = Number(process.env.REST_RATE_LIMIT) || 10;
 const REST_PREFIX = process.env.REST_PREFIX || '/rest';
@@ -367,29 +368,29 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .get(
     '/:table',
     ({ params: { table }, query }) => {
-      const { where, ...remain } = query;
-      let whereClause: Record<string, any>;
-      if (typeof where === 'string') {
+      const { filter, sort, ...remain } = query;
+      let whereClause: WhereFilter;
+      if (typeof filter === 'string') {
         try {
-          whereClause = JSON.parse(where);
+          whereClause = JSON.parse(filter);
         } catch (e) {
-          throw new Error('Invalid JSON in where parameter');
+          throw new Error('Invalid JSON in filter parameter');
         }
       }
 
       return tableRecordService.select({
         tableName: table,
-        query: { ...remain, where: whereClause! },
+        query: { ...remain, where: whereClause!, order: sort },
       });
     },
     {
       query: t.Object({
+        fields: t.Optional(t.String()),
+        search: t.Optional(t.String()),
+        filter: t.Optional(t.String()),
+        sort: t.Optional(t.String({ pattern: '^[^:]+:(asc|desc)$' })),
         page: t.Optional(t.Numeric({ minimum: 1 })),
         limit: t.Optional(t.Numeric({ minimum: 1, maximum: 10000 })),
-        search: t.Optional(t.String()),
-        order: t.Optional(t.String({ pattern: '^[^:]+:(asc|desc)$' })),
-        where: t.Optional(t.String()),
-        fields: t.Optional(t.String()),
       }),
     }
   )
@@ -412,7 +413,12 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
 
       return result.rows[0];
     },
-    { params: t.Object({ table: t.String(), id: t.Numeric() }) }
+    {
+      params: t.Object({
+        table: t.String(),
+        id: t.Union([t.String(), t.Numeric()]),
+      }),
+    }
   )
 
   /**
@@ -421,7 +427,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .post(
     '/:table',
     ({ params: { table }, body }) => {
-      return tableRecordService.insert({ tableName: table, record: body });
+      return tableRecordService.insert({ tableName: table, records: [body] });
     },
     { body: t.Record(t.String(), t.Any()) }
   )
@@ -434,11 +440,14 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     ({ params: { table, id }, body }) => {
       return tableRecordService.update({
         tableName: table,
-        update: { where: { id }, data: body },
+        updates: [{ where: { id }, data: body }],
       });
     },
     {
-      params: t.Object({ table: t.String(), id: t.Numeric() }),
+      params: t.Object({
+        table: t.String(),
+        id: t.Union([t.String(), t.Numeric()]),
+      }),
       body: t.Record(t.String(), t.Any(), { minProperties: 1 }),
     }
   )
@@ -454,7 +463,12 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         condition: { where: { id } },
       });
     },
-    { params: t.Object({ table: t.String(), id: t.Numeric() }) }
+    {
+      params: t.Object({
+        table: t.String(),
+        id: t.Union([t.String(), t.Numeric()]),
+      }),
+    }
   )
 
   /**
@@ -463,7 +477,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .post(
     '/:table/bulk-create',
     ({ params: { table }, body }) => {
-      return tableRecordService.bulkInsert({ tableName: table, records: body });
+      return tableRecordService.insert({ tableName: table, records: body });
     },
     {
       body: t.Array(t.Record(t.String(), t.Any()), {
@@ -474,37 +488,54 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   )
 
   /**
-   * PATCH /rest/:table/bulk-update → update many records by where clause
+   * PATCH /rest/:table/bulk-update → update many records by ids (max 10,000)
    */
   .patch(
     '/:table/bulk-update',
     ({ params: { table }, body }) => {
-      return tableRecordService.bulkUpdate({ tableName: table, updates: body });
+      const updates: {
+        where: WhereFilter;
+        data: Record<string, any>;
+      }[] = [];
+      for (const { id, data } of body) {
+        updates.push({
+          where: { id },
+          data,
+        });
+      }
+      return tableRecordService.update({ tableName: table, updates });
     },
     {
       body: t.Array(
         t.Object({
-          where: t.Record(t.String(), t.Any(), { minProperties: 1 }),
+          id: t.Union([t.String(), t.Numeric()]),
           data: t.Record(t.String(), t.Any(), { minProperties: 1 }),
-        })
+        }),
+        {
+          minItems: 1,
+          maxItems: 10000,
+        }
       ),
     }
   )
 
   /**
-   * POST /rest/:table/bulk-delete → delete many records (by ids or where)
+   * POST /rest/:table/bulk-delete → delete many records by ids (max 10,000)
    */
   .post(
     '/:table/bulk-delete',
     ({ params: { table }, body }) => {
       return tableRecordService.delete({
         tableName: table,
-        condition: { whereIn: { id: body.ids } },
+        condition: { where: { id: { in: body.ids } } },
       });
     },
     {
       body: t.Object({
-        ids: t.Array(t.Number(), { minItems: 1, maxItems: 10000 }),
+        ids: t.Array(t.Union([t.String(), t.Numeric()]), {
+          minItems: 1,
+          maxItems: 10000,
+        }),
       }),
     }
   );

@@ -3,6 +3,7 @@ import { Knex } from 'knex';
 import pg from '../../plugins/pg';
 import { getTableSchema } from '../utils/table';
 import { DataType } from '../utils/column';
+import { buildWhereClause, WhereFilter } from '../utils/record';
 
 export class TableRecordService {
   private blacklistedTables: string[] = [];
@@ -203,82 +204,7 @@ export class TableRecordService {
     };
   }
 
-  insert({
-    schemaName = 'public',
-    tableName,
-    record,
-  }: {
-    schemaName?: string;
-    tableName: string;
-    record: Record<string, any>;
-  }) {
-    this.checkBlacklist(tableName, schemaName);
-
-    return pg(tableName).withSchema(schemaName).insert(record).returning('*');
-  }
-
-  async update({
-    schemaName = 'public',
-    tableName,
-    update,
-  }: {
-    schemaName?: string;
-    tableName: string;
-    update: {
-      where: Record<string, any>;
-      data: Record<string, any>;
-    };
-  }) {
-    this.checkBlacklist(tableName, schemaName);
-
-    const { where, data } = update;
-    const record = await pg(tableName)
-      .withSchema(schemaName)
-      .where(where)
-      .update(data)
-      .returning('*');
-    if (!record?.length) throw new Error('Not found');
-    return record;
-  }
-
-  async delete({
-    schemaName = 'public',
-    tableName,
-    condition,
-  }: {
-    schemaName?: string;
-    tableName: string;
-    condition: {
-      where?: Record<string, any>;
-      whereIn?: Record<string, any[]>;
-    };
-  }) {
-    this.checkBlacklist(tableName, schemaName);
-
-    let deleted = 0;
-
-    const { where, whereIn } = condition;
-    if (where && Object.keys(where).length) {
-      deleted = await pg(tableName)
-        .withSchema(schemaName)
-        .where(where)
-        .delete();
-    } else if (whereIn && Object.keys(whereIn).length) {
-      const query = pg(tableName).withSchema(schemaName);
-      for (const [column, values] of Object.entries(whereIn)) {
-        if (Array.isArray(values) && values.length > 0) {
-          query.whereIn(column, values);
-        }
-      }
-      deleted = await query.delete();
-    } else {
-      throw new Error('Missing where conditions');
-    }
-
-    return { deletedCount: deleted };
-  }
-
-  async bulkInsert({
+  async insert({
     schemaName = 'public',
     tableName,
     records,
@@ -305,7 +231,7 @@ export class TableRecordService {
     return { insertedCount: returning.length, returning };
   }
 
-  async bulkUpdate({
+  async update({
     schemaName = 'public',
     tableName,
     updates,
@@ -313,7 +239,7 @@ export class TableRecordService {
     schemaName?: string;
     tableName: string;
     updates: {
-      where: Record<string, any>;
+      where: WhereFilter;
       data: Record<string, any>;
     }[];
   }) {
@@ -338,9 +264,8 @@ export class TableRecordService {
           );
         }
 
-        const affected = await trx(tableName)
-          .withSchema(schemaName)
-          .where(where)
+        const qb = trx(tableName).withSchema(schemaName);
+        const affected = await buildWhereClause(qb, where)
           .update(data)
           .returning('*');
         affectedRows.push(...affected);
@@ -350,5 +275,31 @@ export class TableRecordService {
     });
 
     return { updatedCount: results.length, returning: results };
+  }
+
+  async delete({
+    schemaName = 'public',
+    tableName,
+    condition,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    condition: {
+      where: WhereFilter;
+    };
+  }) {
+    this.checkBlacklist(tableName, schemaName);
+
+    let deleted = 0;
+
+    const { where } = condition;
+    if (where && Object.keys(where).length) {
+      const qb = pg(tableName).withSchema(schemaName);
+      deleted = await buildWhereClause(qb, where).delete();
+    } else {
+      throw new Error('Missing where conditions');
+    }
+
+    return { deletedCount: deleted };
   }
 }
