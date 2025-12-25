@@ -5,14 +5,14 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
 
 import instructions from './instructions';
-import { findColumnsTool } from './tools/find_columns';
-import { findTablesTool } from './tools/find_tables';
-// import { createTableTool } from './tools/create_table';
-import { listFromTableTool } from './tools/list_from_table';
-import { aggregateFromTableTool } from './tools/aggregate_from_table';
-// import { insertIntoTableTool } from './tools/insert_into_table';
-// import { updateFromTableTool } from './tools/update_from_table';
-// import { deleteFromTableTool } from './tools/delete_from_table';
+import { findColumnsTool } from './tools/find-columns';
+import { findTablesTool } from './tools/find-tables';
+// import { createTableTool } from './tools/create-table';
+import { listFromTableTool } from './tools/list-from-table';
+import { aggregateFromTableTool } from './tools/aggregate-from-table';
+// import { insertIntoTableTool } from './tools/insert-into-table';
+// import { updateFromTableTool } from './tools/update-from-table';
+// import { deleteFromTableTool } from './tools/delete-from-table';
 
 const DEFAULT_MODEL = process.env.LLM_DEFAULT_MODEL || 'gemini-2.5-flash';
 

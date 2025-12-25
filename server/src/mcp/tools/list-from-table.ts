@@ -1,20 +1,20 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { aggregateFromTableTool } from '../../agent/tools/aggregate_from_table';
+import { listFromTableTool } from '../../agent/tools/list-from-table';
 
 export default function register(server: FastMCP) {
   server.addTool({
-    name: aggregateFromTableTool.name,
-    description: aggregateFromTableTool.description,
-    parameters: aggregateFromTableTool.inputSchema,
+    name: listFromTableTool.name,
+    description: listFromTableTool.description,
+    parameters: listFromTableTool.inputSchema,
     annotations: {
-      title: 'Aggregate Data from Table',
+      title: 'List Data from Table',
       readOnlyHint: true,
       openWorldHint: false,
     },
     async execute(args) {
       try {
-        return (await aggregateFromTableTool.execute(args)) as any;
+        return (await listFromTableTool.execute(args)) as any;
       } catch (error) {
         const err = error as Error;
         throw new UserError(err.message);

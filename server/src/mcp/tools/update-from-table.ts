@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { updateFromTableTool } from '../../agent/tools/update_from_table';
+import { updateFromTableTool } from '../../agent/tools/update-from-table';
 
 export default function register(server: FastMCP) {
   server.addTool({

@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { createTableTool } from '../../agent/tools/create_table';
+import { createTableTool } from '../../agent/tools/create-table';
 
 export default function register(server: FastMCP) {
   server.addTool({
