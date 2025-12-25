@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { log } from '../../utils/logger';
 import { loadTables } from '../resources/tables';
+import { ConditionSchema } from '../schema/condition.schema';
 import { TableRecordService } from '../../rest/services/table-record.service';
 
 const tableRecordService = new TableRecordService();
@@ -10,40 +11,51 @@ const inputSchema = z.object({
   from: z
     .string()
     .describe(
-      'Name of the table to aggregate from. Call findTables to get the list of valid tables.'
+      'Name of the table to aggregate from. Use findTables to get the list of valid tables.'
     ),
 
   select: z
     .array(z.string())
     .min(1)
     .describe(
-      'List of columns or aggregation functions. Examples: ["status", "COUNT(*) as total_count", "SUM(amount) as total_amount", "AVG(score) as avg_score"]'
+      'List of columns or aggregation expressions. Examples:\n' +
+        '- Simple column: "status"\n' +
+        '- Aggregations: "COUNT(*) as total", "SUM(amount) as revenue", "AVG(score) as avg_score", "MAX(created_at) as latest"\n' +
+        'Use "as alias" to name the result column.'
     ),
 
-  where: z
-    .record(z.any(), z.any())
-    .optional()
-    .describe('WHERE conditions as a key-value object.'),
+  where: ConditionSchema.optional().describe(
+    `Advanced WHERE filter conditions (same as listFromTable).\n` +
+      `Examples:\n` +
+      `- { status: "completed" }\n` +
+      `- { amount: { gt: 1000 } }\n` +
+      `- { and: [{ status: "completed" }, { created_at: { gte: "2024-01-01" } }] }\n` +
+      `- { or: [{ category: "electronics" }, { category: "fashion" }] }`
+  ),
 
   group: z
     .array(z.string())
     .optional()
     .describe(
-      'Columns to GROUP BY. Required when using aggregation functions.'
+      'Columns to GROUP BY. Required if using aggregation functions like COUNT, SUM, AVG, etc.\n' +
+        'Example: ["status", "DATE(created_at)"]'
     ),
 
-  having: z
-    .record(z.any(), z.any())
-    .optional()
-    .describe(
-      'HAVING conditions after GROUP BY. Examples: { "total_count": { operator: ">", value: 10 } } or { "total_amount": 1000 }'
-    ),
+  having: ConditionSchema.optional().describe(
+    `Advanced HAVING filter (applied after GROUP BY).\n` +
+      `Uses the same structure as WHERE, but on aggregated/grouped columns.\n` +
+      `Examples:\n` +
+      `- { total: { gt: 100 } }\n` +
+      `- { revenue: { gte: 5000 } }\n` +
+      `- { and: [{ count: { gt: 10 } }, { avg_score: { lt: 4.0 } }] }\n` +
+      `- { or: [{ status: "premium" }, { total_orders: { gt: 50 } }] }`
+  ),
 
   order: z
     .string()
     .optional()
     .describe(
-      'Sort the results. Examples: "total_amount:desc" or "status:asc"'
+      'Sort results. Examples: "revenue:desc", "status:asc", "total:desc"'
     ),
 
   limit: z
@@ -51,24 +63,29 @@ const inputSchema = z.object({
     .int()
     .positive()
     .optional()
-    .describe('Maximum number of rows to return.'),
+    .describe('Maximum number of rows per page.'),
 
-  page: z.number().int().positive().optional().describe('Current page.'),
+  page: z.number().int().positive().optional().describe('Current page number.'),
 });
 
 export const aggregateFromTableTool = {
   name: 'aggregateFromTable',
   description: `
-    Perform aggregation queries (COUNT, SUM, AVG, MAX, MIN, GROUP BY, HAVING) on a table.
-    Very useful for statistical questions and reports:
-    - "How many orders by status?"
-    - "Total revenue by month?"
-    - "Top 10 customers with the highest spending?"
-   
+    Performs powerful aggregation queries with COUNT, SUM, AVG, MAX, MIN, GROUP BY, and HAVING clauses.
+    Ideal for reports, statistics, dashboards, and analytical questions.
+
+    Examples of use:
+    - "Total revenue and number of orders by month"
+    - "Top 10 products by sales volume"
+    - "Number of active users per country (only countries with more than 100 users)"
+    - "Average order value by customer segment, excluding refunded orders"
+
+    Now supports advanced WHERE and HAVING conditions with operators (gt, in, etc.) and logical AND/OR grouping.
+
     Usage steps:
-    1. Call findTables to get the appropriate table name.
-    2. Call findColumns to know which columns can be used for grouping or in HAVING.
-    3. Build the select array containing aggregation functions + grouping columns.
+    1. Use findTables to choose the correct table.
+    2. Use findColumns to understand available columns and their types.
+    3. Build meaningful SELECT expressions and GROUP BY columns.
   `,
   inputSchema,
 
@@ -85,13 +102,15 @@ export const aggregateFromTableTool = {
         page,
       } = args;
 
-      // Validate table
+      // Validate table exists
       const tables = await loadTables();
       if (!tables.find((t) => t.tableName === tableName)) {
-        throw new Error(`Table '${tableName}' does not exist.`);
+        throw new Error(
+          `Table '${tableName}' does not exist. Use findTables to see available tables.`
+        );
       }
 
-      // Call the aggregate method from the service
+      // Call aggregate method (service already supports full WhereFilter for where/having)
       const result = await tableRecordService.aggregate({
         tableName,
         schemaName: 'public',
@@ -101,12 +120,12 @@ export const aggregateFromTableTool = {
           group,
           having,
           order,
-          limit,
           page,
+          limit,
         },
       });
 
-      // Limit displayed rows for the AI (to avoid overly long responses)
+      // Limit displayed rows
       const MAX_DISPLAY_ROWS = 15;
       const displayedRows = result.rows.slice(0, MAX_DISPLAY_ROWS);
 
