@@ -85,7 +85,7 @@ export class TableService {
           // Compact and readable – great for public-facing IDs (e.g., in URLs)
           // Uses gen_random_bytes() for high entropy + custom charset
           table
-            .text('id')
+            .string('id', 16)
             .primary()
             .defaultTo(
               pg.raw(`
