@@ -26,7 +26,7 @@ export interface TableDefinition {
 export interface TableFormData {
   tableName: string;
   tableComment?: string;
-  columns?: ColumnDefinition[];
+  idType?: 'integer' | 'biginteger' | 'uuid' | 'shortid';
   timestamps?: boolean;
 }
 

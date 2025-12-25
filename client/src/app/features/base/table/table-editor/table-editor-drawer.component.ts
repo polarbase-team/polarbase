@@ -21,10 +21,11 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { DividerModule } from 'primeng/divider';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 import { TableFormData, TableDefinition, TableService } from '../table.service';
 
-const DEFAULT_VALUE = { timestamps: true } as TableFormData;
+const DEFAULT_VALUE = { idType: 'integer', timestamps: true } as TableFormData;
 
 @Component({
   selector: 'table-editor-drawer',
@@ -40,6 +41,7 @@ const DEFAULT_VALUE = { timestamps: true } as TableFormData;
     MessageModule,
     AutoFocusModule,
     DividerModule,
+    RadioButtonModule,
   ],
 })
 export class TableEditorDrawerComponent {
