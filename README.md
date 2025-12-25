@@ -1,14 +1,10 @@
 <div align="center">
-   <img src="assets/logo.png" width="200" height="200" alt="PolarBase">
+   <img src="assets/logo.png" width="150" height="150" alt="PolarBase">
    <br>
-   <svg height="80" width="100%" viewBox="0 0 600 80" xmlns="http://www.w3.org/2000/svg">
-      <text x="50%" y="50" font-size="48" font-weight="bold" fill="currentColor" text-anchor="middle" dominant-baseline="middle">
-         PolarBase
-      </text>
-   </svg>
-   <br>
-   <b>Open-source No-code Database platform</b> <br />
-   <b>Spreadsheet-like UI • AI-powered • No SQL required • Self-hosted</b> <br />
+   <b>PolarBase</b>
+   <div align="center">✨ ✨ ✨</div>
+   <span>Open-source No-code Database platform</span> <br />
+   <span>Spreadsheet-like UI • AI-powered • No SQL required • Self-hosted</span> <br />
    <br>
 </div>
 
@@ -18,8 +14,6 @@
 [![GitHub license](https://img.shields.io/github/license/polarbase-team/polarbase)](https://github.com/polarbase-team/polarbase/blob/main/LICENSE)
 
 </div>
-
-<div align="center">✨ ✨ ✨</div>
 
 ## 1. Introduction
 
