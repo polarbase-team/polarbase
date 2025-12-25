@@ -69,6 +69,82 @@
             </label>
             <div class="flex flex-col gap-8 col-span-2">
               <div class="flex gap-4">
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-medium">ID type</label>
+                  <div class="flex flex-col gap-2">
+                    <!-- 1. Integer  (Recommended default) -->
+                    <div class="flex gap-4">
+                      <p-radiobutton
+                        inputId="integer"
+                        value="integer"
+                        name="idType"
+                        [(ngModel)]="tableFormData.idType"
+                      />
+                      <div>
+                        <label for="integer" class="text-sm">Integer</label>
+                        <p class="text-surface-500 text-xs">Ex: 1, 2, 3, ..., 2147483647</p>
+                        <p class="text-surface-500 text-xs">Limited to ~2.1 billion rows</p>
+                      </div>
+                    </div>
+
+                    <!-- 2. Big Integer -->
+                    <div class="flex gap-4">
+                      <p-radiobutton
+                        inputId="biginteger"
+                        value="biginteger"
+                        name="idType"
+                        [(ngModel)]="tableFormData.idType"
+                      />
+                      <div>
+                        <label for="biginteger" class="text-sm">Big Integer</label>
+                        <p class="text-surface-500 text-xs">
+                          Ex: 1, 123456789, 9223372036854775807
+                        </p>
+                        <p class="text-surface-500 text-xs">
+                          Recommended – supports up to ~9 quintillion rows
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- 3. UUID -->
+                    <div class="flex gap-4">
+                      <p-radiobutton
+                        inputId="uuid"
+                        value="uuid"
+                        name="idType"
+                        [(ngModel)]="tableFormData.idType"
+                      />
+                      <div>
+                        <label for="uuid" class="text-sm">UUID</label>
+                        <p class="text-surface-500 text-xs">
+                          Ex: 17bd48cc-61c1-4ee1-96bf-6059bfe6d69b
+                        </p>
+                        <p class="text-surface-500 text-xs">
+                          Globally unique, good for distributed systems
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- 4. Short ID (random 16 characters) -->
+                    <div class="flex gap-4">
+                      <p-radiobutton
+                        inputId="shortid"
+                        value="shortid"
+                        name="idType"
+                        [(ngModel)]="tableFormData.idType"
+                      />
+                      <div>
+                        <label for="shortid" class="text-sm">Short ID (alphanumeric)</label>
+                        <p class="text-surface-500 text-xs">Ex: aEF1xWKBLzb4XLrx</p>
+                        <p class="text-surface-500 text-xs">
+                          Compact & URL-friendly, suitable for public IDs
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-4">
                 <p-checkbox
                   id="timestamps"
                   name="timestamps"
