@@ -122,9 +122,8 @@ export const createTableTool = {
       });
 
       // Check existing tables
-      const tablesResource = await loadTables();
-      const tables = JSON.parse(tablesResource.text || '[]') as string[];
-      if (tables.includes(tableName)) {
+      const tables = await loadTables();
+      if (tables.find((t) => t.tableName === tableName)) {
         throw new Error(`Table '${tableName}' already exists.`);
       }
 
@@ -162,7 +161,7 @@ export const createTableTool = {
               `Column '${col.name}' has invalid references: missing table or column.`
             );
           }
-          if (!tables.includes(referencedTable)) {
+          if (!tables.find((t) => t.tableName === referencedTable)) {
             throw new Error(
               `Column '${col.name}' references a table '${referencedTable}' that does not exist.`
             );
@@ -181,9 +180,8 @@ export const createTableTool = {
         table: referencedTable,
         column: referencedColumn,
       } of refChecks) {
-        const refColsResource = await loadColumns(referencedTable);
-        const refColsArr = JSON.parse(refColsResource.text || '[]') as any[];
-        const refColNames = refColsArr.map((x) => x.name);
+        const columns = await loadColumns(referencedTable);
+        const refColNames = columns.map((x) => x.name);
         if (!refColNames.includes(referencedColumn)) {
           throw new Error(
             `Column '${colName}' references column '${referencedColumn}' in table '${referencedTable}' which does not exist.`

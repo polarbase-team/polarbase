@@ -1,51 +1,103 @@
 import { Knex } from 'knex';
 
 import pg from '../../plugins/pg';
+import { getTableSchema } from '../utils/table';
+import { DataType } from '../utils/column';
+import { buildWhereClause, WhereFilter } from '../utils/record';
 
 export class TableRecordService {
-  async getAll({
+  private blacklistedTables: string[] = [];
+
+  constructor(blacklistedTables?: string[]) {
+    if (blacklistedTables) {
+      this.blacklistedTables = blacklistedTables;
+    }
+  }
+
+  private checkBlacklist(tableName: string, schemaName: string = 'public') {
+    const fullName = `${schemaName}.${tableName}`;
+
+    if (
+      this.blacklistedTables.includes(tableName) ||
+      this.blacklistedTables.includes(fullName)
+    ) {
+      throw new Error(`Access to table "${fullName}" is forbidden`);
+    }
+  }
+
+  async select({
     schemaName = 'public',
     tableName,
     query,
   }: {
     schemaName?: string;
     tableName: string;
-    query: Record<string, any>;
+    query: {
+      where?: Record<string, any>;
+      search?: string;
+      fields?: string;
+      order?: string;
+      page?: number;
+      limit?: number;
+    };
   }) {
-    const {
-      page = '1',
-      limit = '20',
-      search,
-      order = 'id:asc',
-      where,
-      fields,
-    } = query;
+    this.checkBlacklist(tableName, schemaName);
 
-    const pageNum = Math.max(1, Number(page));
-    const limitNum = Math.min(1000, Math.max(1, Number(limit)));
+    const { where, search, fields, order, page = 1, limit = 10000 } = query;
+
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(10000, Math.max(1, limit));
 
     let qb = pg(tableName).withSchema(schemaName);
-    if (where) qb = qb.where(JSON.parse(where as string));
-    if (search) {
-      const cols = await pg(tableName).withSchema(schemaName).columnInfo();
-      qb = qb.where((b) =>
-        Object.keys(cols).forEach((col) =>
-          b.orWhere(col, 'like', `%${search}%`)
-        )
-      );
-    }
-    if (fields) qb = qb.select(fields.split(',').map((f: string) => f.trim()));
-    const [col, dir] = order.split(':');
-    qb = qb.orderBy(col, dir === 'desc' ? 'desc' : 'asc');
 
-    const [data, total] = await Promise.all([
+    // SELECT fields (if specified)
+    if (fields) {
+      const fieldList = fields.split(',').map((f) => f.trim());
+      qb = qb.select(fieldList);
+    }
+
+    // WHERE conditions
+    if (where && Object.keys(where).length > 0) {
+      qb = qb.where(where);
+    }
+
+    // Global SEARCH across text columns
+    if (search && search.trim()) {
+      const cols = await getTableSchema(pg, schemaName, tableName);
+      const textColumns = cols.filter((col) => {
+        return col.dataType === DataType.Text;
+      });
+
+      if (textColumns.length > 0) {
+        qb = qb.where((builder) => {
+          textColumns.forEach((col, index) => {
+            if (index === 0) {
+              builder.where(col.name, 'ilike', `%${search.trim()}%`);
+            } else {
+              builder.orWhere(col.name, 'ilike', `%${search.trim()}%`);
+            }
+          });
+        });
+      }
+    }
+
+    // ORDER BY
+    if (order) {
+      const [col, dir] = order.split(':');
+      const direction = dir.toLowerCase() === 'desc' ? 'desc' : 'asc';
+      qb = qb.orderBy(col, direction);
+    }
+
+    // Pagination + total count
+    const [data, totalRecord] = await Promise.all([
       qb
         .clone()
         .limit(limitNum)
         .offset((pageNum - 1) * limitNum),
-      qb.clone().count('* as total').groupBy('id').first(),
+      qb.clone().count('* as total').first(),
     ]);
-    const totalNum = Number(total?.total || 0);
+
+    const totalNum = Number(totalRecord?.total || 0);
 
     return {
       rows: data,
@@ -53,82 +105,106 @@ export class TableRecordService {
         page: pageNum,
         limit: limitNum,
         total: totalNum,
-        pages: Math.ceil(totalNum / limitNum),
+        pages: Math.ceil(totalNum / limitNum || 1),
       },
     };
   }
 
-  async getOne({
+  async aggregate({
     schemaName = 'public',
     tableName,
-    id,
+    query,
   }: {
     schemaName?: string;
     tableName: string;
-    id: string | number;
+    query: {
+      select: string[];
+      where?: Record<string, any>;
+      group?: string[];
+      having?: Record<string, any>;
+      order?: string;
+      page?: number;
+      limit?: number;
+    };
   }) {
-    const record = await pg(tableName)
-      .withSchema(schemaName)
-      .where({ id })
-      .first();
-    if (!record) throw new Error('Not found');
-    return record;
+    this.checkBlacklist(tableName, schemaName);
+
+    const {
+      select,
+      where,
+      group,
+      having,
+      order,
+      page = 1,
+      limit = 10000,
+    } = query;
+
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(10000, Math.max(1, limit));
+
+    let qb = pg(tableName).withSchema(schemaName);
+
+    // SELECT
+    select.forEach((expr) => {
+      qb = qb.select(pg.raw(expr));
+    });
+
+    // WHERE
+    if (where && Object.keys(where).length > 0) {
+      qb = qb.where(where);
+    }
+
+    // GROUP BY
+    if (group && group.length > 0) {
+      qb = qb.groupBy(group);
+    }
+
+    // HAVING
+    if (having && Object.keys(having).length > 0) {
+      Object.entries(having).forEach(([key, value]) => {
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          'operator' in value &&
+          'value' in value
+        ) {
+          qb = qb.having(key, value.operator, value.value);
+        } else {
+          qb = qb.having(key, '=', value);
+        }
+      });
+    }
+
+    // ORDER BY
+    if (order) {
+      const [col, dir] = order.split(':');
+      const direction = dir.toLowerCase() === 'desc' ? 'desc' : 'asc';
+      qb = qb.orderBy(col, direction);
+    }
+
+    // Pagination + total
+    const [data, totalRecord] = await Promise.all([
+      qb
+        .clone()
+        .limit(limitNum)
+        .offset((pageNum - 1) * limitNum),
+      qb.clone().count('* as total').first(),
+    ]);
+
+    const totalNum = Number(totalRecord?.total || 0);
+
+    return {
+      rows: data,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: totalNum,
+        pages: Math.ceil(totalNum / limitNum || 1),
+      },
+    };
   }
 
-  async create({
-    schemaName = 'public',
-    tableName,
-    body,
-  }: {
-    schemaName?: string;
-    tableName: string;
-    body: Record<string, any>;
-  }) {
-    const record = await pg(tableName)
-      .withSchema(schemaName)
-      .insert(body)
-      .returning('*');
-    return record;
-  }
-
-  async update({
-    schemaName = 'public',
-    tableName,
-    id,
-    body,
-  }: {
-    schemaName?: string;
-    tableName: string;
-    id: string | number;
-    body: Record<string, any>;
-  }) {
-    const record = await pg(tableName)
-      .withSchema(schemaName)
-      .where({ id: Number(id) })
-      .update(body)
-      .returning('*');
-    if (!record) throw new Error('Not found');
-    return record;
-  }
-
-  async delete({
-    schemaName = 'public',
-    tableName,
-    id,
-  }: {
-    schemaName?: string;
-    tableName: string;
-    id: string | number;
-  }) {
-    const deleted = await pg(tableName)
-      .withSchema(schemaName)
-      .where({ id })
-      .del();
-    if (!deleted) throw new Error('Not found');
-    return null;
-  }
-
-  async bulkCreate({
+  async insert({
     schemaName = 'public',
     tableName,
     records,
@@ -137,6 +213,8 @@ export class TableRecordService {
     tableName: string;
     records: Record<string, any>[];
   }) {
+    this.checkBlacklist(tableName, schemaName);
+
     const returning = [] as any[];
     const chunk = 500;
 
@@ -153,16 +231,21 @@ export class TableRecordService {
     return { insertedCount: returning.length, returning };
   }
 
-  async bulkUpdate({
+  async update({
     schemaName = 'public',
     tableName,
     updates,
   }: {
     schemaName?: string;
     tableName: string;
-    updates: Array<{ where: Record<string, any>; data: Record<string, any> }>;
+    updates: {
+      where: WhereFilter;
+      data: Record<string, any>;
+    }[];
   }) {
-    if (!Array.isArray(updates) || updates.length === 0) {
+    this.checkBlacklist(tableName, schemaName);
+
+    if (!Array.isArray(updates) || !updates.length) {
       throw new Error('updates must be a non-empty array');
     }
 
@@ -170,20 +253,19 @@ export class TableRecordService {
       const affectedRows = [];
 
       for (const { where, data } of updates) {
-        if (!where || Object.keys(where).length === 0) {
+        if (!where || !Object.keys(where).length) {
           throw new Error(
             'Each update item must have a non-empty "where" clause'
           );
         }
-        if (!data || Object.keys(data).length === 0) {
+        if (!data || !Object.keys(data).length) {
           throw new Error(
             'Each update item must have a non-empty "data" object'
           );
         }
 
-        const affected = await trx(tableName)
-          .withSchema(schemaName)
-          .where(where)
+        const qb = trx(tableName).withSchema(schemaName);
+        const affected = await buildWhereClause(qb, where)
           .update(data)
           .returning('*');
         affectedRows.push(...affected);
@@ -195,30 +277,27 @@ export class TableRecordService {
     return { updatedCount: results.length, returning: results };
   }
 
-  async bulkDelete({
+  async delete({
     schemaName = 'public',
     tableName,
-    body,
+    condition,
   }: {
     schemaName?: string;
     tableName: string;
-    body: { ids?: number[]; where?: { [x: string]: any } };
+    condition: {
+      where: WhereFilter;
+    };
   }) {
+    this.checkBlacklist(tableName, schemaName);
+
     let deleted = 0;
 
-    const { ids, where } = body;
-    if (ids?.length) {
-      deleted = await pg(tableName)
-        .withSchema(schemaName)
-        .whereIn('id', ids)
-        .delete();
-    } else if (where && Object.keys(where).length) {
-      deleted = await pg(tableName)
-        .withSchema(schemaName)
-        .where(where)
-        .delete();
+    const { where } = condition;
+    if (where && Object.keys(where).length) {
+      const qb = pg(tableName).withSchema(schemaName);
+      deleted = await buildWhereClause(qb, where).delete();
     } else {
-      throw new Error('Provide ids[] or where{}');
+      throw new Error('Missing where conditions');
     }
 
     return { deletedCount: deleted };

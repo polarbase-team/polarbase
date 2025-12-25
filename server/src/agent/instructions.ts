@@ -10,5 +10,5 @@ export default `
   To manipulate data:
   - Call 'findTables' to validate table names for 'table' or 'from' parameters.
   - Call 'findColumns' to validate column names for 'select', 'data', 'where', 'conflictTarget', or 'updateColumns'.
-  - Use 'selectFromTable', 'insertIntoTable', 'upsertIntoTable', 'updateTable', or 'deleteFromTable'.
+  - Use 'selectFromTable', 'insertIntoTable', 'updateTable', or 'deleteFromTable'.
 `;

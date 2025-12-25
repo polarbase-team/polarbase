@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import pg from '../../plugins/pg';
 import { log } from '../../utils/logger';
+import { loadTables } from '../resources/tables';
 
 const inputSchema = z.object({});
 
@@ -9,17 +9,12 @@ export const findTablesTool = {
   name: 'findTables',
   description: `
     Retrieves a list of all tables in the database.
-    Use this tool to get valid table names before calling other tools like 'selectFromTable', 'insertIntoTable', etc.
-    Returns a JSON array of table names.
+    Returns a JSON array of allowed tables.
   `,
   inputSchema,
   async execute(args: z.infer<typeof inputSchema>) {
     try {
-      const result = await pg
-        .select('table_name')
-        .from('information_schema.tables')
-        .where({ table_schema: 'public' });
-      const tables = result.map((row) => row.table_name);
+      const tables = await loadTables();
 
       log.info('Fetched table list', { tables });
 
@@ -27,7 +22,15 @@ export const findTablesTool = {
         content: [
           {
             type: 'text',
-            text: JSON.stringify({ status: 'success', tables }, null, 2),
+            text: JSON.stringify(
+              {
+                status: 'success',
+                message: 'List of accessible tables retrieved successfully.',
+                tables,
+              },
+              null,
+              2
+            ),
           },
         ],
       };

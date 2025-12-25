@@ -10,6 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { delay } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -105,7 +106,7 @@ export class TableDetailComponent {
   ngOnInit() {
     this.tblRealtimeService
       .enable()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(delay(200), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ({ tableKeyColumn, action, record }) => {
           switch (action) {
@@ -160,7 +161,7 @@ export class TableDetailComponent {
           records.push(row.data || {});
         }
         this.tblService
-          .bulkCreateRecords(tableName, records)
+          .createRecords(tableName, records)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe(({ data }) => {
             for (let i = 0; i < rows.length; i++) {
@@ -174,7 +175,7 @@ export class TableDetailComponent {
       case TableRowActionType.Delete:
         const recordIds = (action.payload as TableRow[]).map((row) => row.id);
         this.tblService
-          .bulkDeleteRecords(tableName, recordIds)
+          .deleteRecords(tableName, recordIds)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;
@@ -193,12 +194,12 @@ export class TableDetailComponent {
       case TableCellActionType.Paste:
       case TableCellActionType.Clear:
       case TableCellActionType.Fill:
-        const recordUpdates: { where: any; data: any }[] = [];
+        const recordUpdates: { id: string | number; data: any }[] = [];
         for (const { row, newData } of action.payload as TableCellEditedEvent[]) {
-          recordUpdates.push({ where: { id: row.id }, data: newData });
+          recordUpdates.push({ id: row.id, data: newData });
         }
         this.tblService
-          .bulkUpdateRecords(tableName, recordUpdates)
+          .updateRecords(tableName, recordUpdates)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;
@@ -258,7 +259,6 @@ export class TableDetailComponent {
       .getTableSchema(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((columnDefs) => {
-        const length = columnDefs.length;
         const columns: TableColumn[] = columnDefs.map((c) => ({
           id: c.name,
           primary: c.primary,

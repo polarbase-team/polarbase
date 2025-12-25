@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { HttpDownloadProgressEvent, HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
@@ -20,13 +19,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ImageModule } from 'primeng/image';
 import { SafeHtmlPipe } from 'primeng/menu';
 
-import { AgentService } from './agent.service';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+import { AgentService, ChatMessage, StreamEvent } from './agent.service';
 
 @Component({
   selector: 'chatbot',
@@ -49,11 +42,11 @@ export class ChatBotComponent {
   fullscreen = output<boolean>();
   onClose = output<void>();
 
-  messages = signal<Message[]>([]);
-  inputText = signal('');
-  isTyping = signal(false);
-  isStreaming = signal(false);
-
+  protected messages = signal<ChatMessage[]>([]);
+  protected isTyping = signal(false);
+  protected isStreaming = signal(false);
+  protected callingTool = signal('');
+  protected inputText = '';
   protected isFullscreen = false;
 
   private scrollContainer = viewChild<ScrollPanel>('scrollContainer');
@@ -73,14 +66,14 @@ export class ChatBotComponent {
       if (this.visible()) {
         setTimeout(() => {
           this.scrollToBottom();
-          this.editor()!.nativeElement.focus();
+          this.editor().nativeElement.focus();
         }, 100);
       }
     });
   }
 
   scrollToBottom() {
-    this.scrollContainer()!.scrollTop(999999);
+    this.scrollContainer().scrollTop(999999);
   }
 
   protected toggleFullscreen() {
@@ -96,49 +89,59 @@ export class ChatBotComponent {
 
   protected startNewChat() {
     this.messages.set([]);
-    this.inputText.set('');
-    this.editor()!.nativeElement.innerHTML = '';
-    this.editor()!.nativeElement.focus();
+    this.inputText = this.editor().nativeElement.innerHTML = '';
+    this.editor().nativeElement.focus();
   }
 
   protected sendMessage() {
-    const text = this.inputText().trim();
+    const text = this.inputText;
     if (!text) return;
 
-    this.messages.update((m) => [...m, { role: 'user', content: text, timestamp: new Date() }]);
-    this.editor()!.nativeElement.innerHTML = '';
-    this.inputText.set('');
-    this.isTyping.set(true);
-    this.isStreaming.set(true);
+    this.inputText = this.editor().nativeElement.innerHTML = '';
+
+    const userMessage: ChatMessage = { role: 'user', content: text, timestamp: new Date() };
+    const messages = [...this.messages(), userMessage];
+    this.messages.set(messages);
     this.scrollToBottom();
 
-    const message: Message = { role: 'assistant', content: '', timestamp: new Date() };
-    this.messages.update((m) => [...m, message]);
+    this.isTyping.set(true);
+    this.isStreaming.set(true);
+
+    const botMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date() };
     this.agentService
-      .chat(text)
+      .chat(this.messages())
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((event) => {
-        if (event.type === HttpEventType.DownloadProgress) {
-          const progressEvent = event as HttpDownloadProgressEvent;
-          message.content = progressEvent.partialText || '';
-          this.messages.update((m) => [...m]);
-        } else if (event.type === HttpEventType.Response) {
-          message.content = event.body as string;
-          this.messages.update((m) => [...m]);
+      .subscribe({
+        next: (events: StreamEvent[]) => {
+          if (!events.length) return;
+
+          this.isTyping.set(false);
+
+          events.forEach((event) => {
+            if (event.type === 'text') {
+              botMessage.content += event.value;
+              this.messages.set([...messages, botMessage]);
+              this.scrollToBottom();
+            } else if (event.type === 'tool') {
+              this.callingTool.set(event.value);
+            }
+          });
+        },
+        complete: () => {
+          this.isTyping.set(false);
           this.isStreaming.set(false);
-        }
-        this.isTyping.set(false);
+          this.callingTool.set('');
+        },
       });
   }
 
   protected onInput(event: InputEvent) {
     const target: any = event.target;
 
-    const text = target.innerText;
-    this.inputText.set(text);
-
     const trimmed = target.innerText.trim();
     if (trimmed === '') target.innerText = '';
+
+    this.inputText = trimmed;
   }
 
   protected onEnter(event: KeyboardEvent) {

@@ -1,12 +1,13 @@
-import pg from '../../plugins/pg';
+/**
+ * Resource: Load list of accessible tables in the 'public' schema.
+ *
+ * @returns {Promise<Array<object>>} Array of table objects with full details
+ */
+import { TableService } from '../../rest/services/table.service';
+
+const tableService = new TableService();
 
 export async function loadTables() {
-  const result = await pg
-    .select('table_name')
-    .from('information_schema.tables')
-    .where({ table_schema: 'public' });
-  const tables = result.map((row) => row.table_name);
-  return {
-    text: JSON.stringify(tables, null, 2),
-  };
+  const allowedTables = await tableService.getAll({ schemaName: 'public' });
+  return allowedTables;
 }

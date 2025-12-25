@@ -16,22 +16,22 @@ import {
 } from '../utils/column';
 
 /**
- * List of table names that are forbidden to access via this REST API.
- * Configured via environment variable REST_BLACKLISTED_TABLES (comma-separated).
- */
-const REST_BLACKLISTED_TABLES = (
-  process.env.REST_BLACKLISTED_TABLES || ''
-).split(',');
-
-/**
  * Main REST router exposing CRUD + bulk operations for all public tables.
  */
 export class TableService {
+  private blacklistedTables: string[] = [];
+
+  constructor(blacklistedTables?: string[]) {
+    if (blacklistedTables) {
+      this.blacklistedTables = blacklistedTables;
+    }
+  }
+
   async getAll({ schemaName = 'public' }: { schemaName?: string } = {}) {
     const allowedTables = await getTableList(
       pg,
       schemaName,
-      REST_BLACKLISTED_TABLES
+      this.blacklistedTables
     );
     return allowedTables;
   }
