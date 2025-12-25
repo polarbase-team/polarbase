@@ -119,7 +119,7 @@ export class ChatBotComponent {
 
           events.forEach((event) => {
             if (event.type === 'text') {
-              botMessage.content += event.value;
+              botMessage.content += event.value.replace(/(?:\r\n|\r|\n)/g, '<br>');
               this.messages.set([...messages, botMessage]);
               this.scrollToBottom();
             } else if (event.type === 'tool') {

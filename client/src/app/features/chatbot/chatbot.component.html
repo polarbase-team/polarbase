@@ -95,7 +95,7 @@
       <p-button icon="icon icon-paperclip" [rounded]="true" [text]="true" severity="secondary" />
       <div
         #editor
-        contenteditable="true"
+        contenteditable="plaintext-only"
         data-placeholder="How can I help?"
         class="w-full min-w-0 h-fit outline-0 empty:before:content-[attr(data-placeholder)] empty:before:text-surface-500 empty:before:pointer-events-none"
         (input)="onInput($any($event))"
