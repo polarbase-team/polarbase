@@ -1,0 +1,9 @@
+<p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
+
+<p-button
+  label="Row height"
+  icon="icon icon-ruler"
+  variant="outlined"
+  severity="secondary"
+  (click)="menu.show($event)"
+/>
