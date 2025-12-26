@@ -43,6 +43,10 @@
         [currentColumns]="tableColumnService.sortedColumns()"
         (onApply)="tableService.onApplySort($event)"
       />
+      <row-size-options
+        [rowSize]="$any(tableRowService.rowSize)"
+        (rowSizeChange)="tableRowService.setRowSize($event)"
+      />
     </div>
     <p-inputgroup class="w-xs max-w-xs">
       <p-iconfield>

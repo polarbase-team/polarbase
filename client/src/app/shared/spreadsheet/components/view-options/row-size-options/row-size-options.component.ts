@@ -1,0 +1,44 @@
+import { Component, ChangeDetectionStrategy, model } from '@angular/core';
+
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+
+import { RowSize } from '../../../services/table-row.service';
+
+@Component({
+  selector: 'row-size-options',
+  templateUrl: './row-size-options.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [MenuModule, ButtonModule],
+})
+export class RowSizeOptionsComponent {
+  rowSize = model<RowSize>();
+
+  protected menuItems: MenuItem[] = [
+    {
+      label: 'Small',
+      command: () => {
+        this.rowSize.set('S');
+      },
+    },
+    {
+      label: 'Medium',
+      command: () => {
+        this.rowSize.set('M');
+      },
+    },
+    {
+      label: 'Large',
+      command: () => {
+        this.rowSize.set('L');
+      },
+    },
+    {
+      label: 'X-Large',
+      command: () => {
+        this.rowSize.set('XL');
+      },
+    },
+  ];
+}

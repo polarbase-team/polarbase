@@ -64,7 +64,9 @@ import { Keyboard } from './utils/keyboard';
 // Components & Directives
 import { VirtualScrollComponent } from './components/virtual-scroll/virtual-scroll.component';
 import { VirtualScrollViewportComponent } from './components/virtual-scroll/virtual-scroll-viewport.component';
-import { DataViewOptionsComponent } from './components/view-options/data-view-options.component';
+import { ColumnViewOptionsComponent } from './components/view-options/column-view-options/column-view-options.component';
+import { DataViewOptionsComponent } from './components/view-options/data-view-options/data-view-options.component';
+import { RowSizeOptionsComponent } from './components/view-options/row-size-options/row-size-options.component';
 import { FieldCellService } from './components/field-cell/field-cell.service';
 
 import { VirtualScrollGroupRepeaterDirective } from './components/virtual-scroll/virtual-scroll-group-repeater.directive';
@@ -94,7 +96,6 @@ import { TableColumn } from './models/table-column';
 import { TableRow } from './models/table-row';
 import { TableGroup } from './models/table-group';
 import { ParseCalculatedResultPipe } from './pipes/parse-calculated-result.pipe';
-import { ColumnViewOptionsComponent } from './components/view-options/column-view-options.component';
 
 const stack: SpreadsheetComponent[] = [];
 
@@ -138,8 +139,9 @@ const stack: SpreadsheetComponent[] = [];
     VirtualScrollRightContentWrapperComponent,
     FieldCellFactoryDirective,
     DataViewOptionsComponent,
-    ParseCalculatedResultPipe,
     ColumnViewOptionsComponent,
+    RowSizeOptionsComponent,
+    ParseCalculatedResultPipe,
   ],
   providers: [
     MessageService,

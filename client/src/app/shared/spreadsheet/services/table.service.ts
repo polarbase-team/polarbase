@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 
 import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
-import { OrderingRule } from '../components/view-options/data-view-options.component';
+import { OrderingRule } from '../components/view-options/data-view-options/data-view-options.component';
 import { calculateBy, makeUpCalculatedData } from '../utils/calculate';
 import { groupBy } from '../utils/group';
 import { sortBy } from '../utils/sort';
@@ -539,7 +539,9 @@ export class TableService extends TableBaseService {
     });
   }
 
-  positionFillHandle(index = this.layout.cell.selection.end, retryIfNotRendered?: boolean) {
+  positionFillHandle(index = this.layout.cell.selection?.end, retryIfNotRendered?: boolean) {
+    if (!index) return;
+
     const ele = this.tableCellService.cellElementAt(index);
 
     if (!ele) {

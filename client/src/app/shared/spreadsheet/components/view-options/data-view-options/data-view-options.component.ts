@@ -19,7 +19,7 @@ import { DividerModule } from 'primeng/divider';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 
-import { TableColumn } from '../../models/table-column';
+import { TableColumn } from '../../../models/table-column';
 
 export interface OrderingRule {
   column: TableColumn;

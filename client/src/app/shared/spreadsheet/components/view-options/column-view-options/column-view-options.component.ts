@@ -10,7 +10,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DividerModule } from 'primeng/divider';
 import { MenuModule } from 'primeng/menu';
 
-import { TableColumn } from '../../models/table-column';
+import { TableColumn } from '../../../models/table-column';
 
 @Component({
   selector: 'column-view-options',
