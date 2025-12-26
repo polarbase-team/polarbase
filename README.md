@@ -106,7 +106,7 @@ Install it quickly by following the official instructions: [https://bun.sh/docs/
      - Client (frontend):
        ```bash
        cd client
-       bun run dev
+       bun start
        ```
        Runs on `http://localhost:4200`
 

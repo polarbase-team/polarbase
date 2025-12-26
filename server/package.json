@@ -1,10 +1,25 @@
 {
   "name": "polarbase-server",
-  "version": "1.0.0",
-  "keywords": [],
+  "version": "0.1.0",
+  "keywords": [
+    "postgresql",
+    "backend-as-a-service",
+    "open-source",
+    "mcp-server",
+    "ai-agents",
+    "multi-view-ui",
+    "spreadsheet",
+    "developer-tools",
+    "bun",
+    "elysiajs",
+    "angular",
+    "typescript",
+    "low-code",
+    "realtime-database"
+  ],
   "author": "Qui Nguyen",
   "license": "MIT",
-  "description": "Talk to your database, chill while AI handles the SQL",
+  "description": "Extensible Open-source Data Backend for PostgreSQL. Features a multi-view UI (Spreadsheet, Dashboard, Calendar), AI-Agent integration via MCP, and zero vendor lock-in.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts"
