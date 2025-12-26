@@ -199,7 +199,9 @@ export class TableColumnService extends TableBaseService {
     if (column.calculateType === calculateType) return;
 
     column.calculateType = calculateType;
-    this.calculatedColumns.update((arr) => [...arr, column]);
+    if (!this.calculatedColumns().find((c) => c.id === column.id)) {
+      this.calculatedColumns.update((arr) => [...arr, column]);
+    }
     this.tableService.calculate();
     this.host.columnAction.emit({
       type: TableColumnActionType.Calculate,
@@ -219,11 +221,12 @@ export class TableColumnService extends TableBaseService {
   }
 
   groupByColumn(column: TableColumn, sortType: SortType = 'asc') {
-    if (column.groupSortType === sortType || this.groupedColumns().find((c) => c.id === column.id))
-      return;
+    if (column.groupSortType === sortType) return;
 
     column.groupSortType = sortType;
-    this.groupedColumns.update((arr) => [...arr, column]);
+    if (!this.groupedColumns().find((c) => c.id === column.id)) {
+      this.groupedColumns.update((arr) => [...arr, column]);
+    }
     this.tableService.group();
     this.host.columnAction.emit({
       type: TableColumnActionType.Group,
@@ -245,11 +248,12 @@ export class TableColumnService extends TableBaseService {
   }
 
   sortByColumn(column: TableColumn, sortType: SortType = 'asc') {
-    if (column.sortType === sortType || this.sortedColumns().find((c) => c.id === column.id))
-      return;
+    if (column.sortType === sortType) return;
 
     column.sortType = sortType;
-    this.sortedColumns.update((arr) => [...arr, column]);
+    if (!this.sortedColumns().find((c) => c.id === column.id)) {
+      this.sortedColumns.update((arr) => [...arr, column]);
+    }
     this.tableService.sort();
     this.host.columnAction.emit({
       type: TableColumnActionType.Sort,
