@@ -1,22 +1,17 @@
 import { Elysia, t } from 'elysia';
-import crypto from 'crypto';
 
 import { ApiKey, db } from './db';
+import { generateApiKey } from './auth';
 
 const SUPER_ADMIN_API_KEY = process.env.SUPER_ADMIN_API_KEY;
 
-// Generates a new random API key string.
-export const generateApiKey = () => {
-  return 'ak_' + crypto.randomBytes(32).toString('hex');
-};
-
 export const apiKeyRoutes = new Elysia({ prefix: '/api-keys' })
   // Middleware: Only allow super admin API key to access these routes
-  .onBeforeHandle(({ headers, set }) => {
+  .derive(({ headers, set }) => {
     const apiKey = headers['x-api-key'];
     if (!apiKey || apiKey !== SUPER_ADMIN_API_KEY) {
       set.status = 401;
-      return { error: 'Invalid or missing x-api-key' };
+      throw new Error('Invalid or missing x-api-key');
     }
   })
 
