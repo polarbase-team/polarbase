@@ -1,6 +1,7 @@
-import { Pipe, PipeTransform } from '@angular/core';
 import dayjs from 'dayjs';
+import { Pipe, PipeTransform } from '@angular/core';
 
+import { environment } from '@environments/environment';
 import { CalculateType } from '../utils/calculate';
 
 @Pipe({
@@ -19,7 +20,7 @@ export class ParseCalculatedResultPipe implements PipeTransform {
         break;
       case CalculateType.EarliestDate:
       case CalculateType.LatestDate:
-        data = dayjs(data).format('YYYY-MM-DD');
+        data = dayjs(data).format(environment.dateFormat ?? 'YYYY-MM-DD');
         break;
       case CalculateType.DateRange:
         data = data / (1000 * 60 * 60 * 24);

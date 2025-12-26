@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import dayjs from 'dayjs';
 
+import { environment } from '@environments/environment';
 import { DateData, DateFieldConfig } from '../interfaces/date-field.interface';
 import { DataType, FIELD_ICON_MAP } from '../interfaces/field.interface';
 import { Field, FieldValidationKey } from './field.object';
@@ -68,6 +69,6 @@ export class DateField extends Field<DateData> {
   }
 
   override toString(data: DateData = this.data) {
-    return data ? dayjs(data).format('YYYY-MM-DD HH:mm') : '';
+    return data ? dayjs(data).format(environment.dateTimeFormat ?? 'YYYY-MM-DD HH:mm') : '';
   }
 }
