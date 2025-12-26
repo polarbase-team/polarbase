@@ -62,8 +62,6 @@ services:
     build:
       context: .
       dockerfile: client/Dockerfile
-      args:
-        NG_CONFIG: production
     ports:
       - '8080:80'
     restart: unless-stopped

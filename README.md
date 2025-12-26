@@ -129,12 +129,6 @@ docker compose up --build
 - Access at `http://localhost:8080`.
 - Customize with environment variables in `docker-compose.yml`.
 
-**For development environment** (to build the client with development configuration):
-
-```bash
-docker compose build client --build-arg NG_CONFIG=development && docker compose up
-```
-
 For a custom setup:
 
 ```bash
