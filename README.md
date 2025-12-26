@@ -3,8 +3,8 @@
    <br>
    <b>PolarBase</b>
    <div align="center">✨ ✨ ✨</div>
-   <span>Open-source No-code Database platform</span> <br />
-   <span>Spreadsheet-like UI • AI-powered • No SQL required • Self-hosted</span> <br />
+   <span>Open-source Extensible Data Backend</span> <br />
+   <span>Multi-view UI • Agent-ready • Zero Lock-in • Postgre-native</span> <br />
    <br>
 </div>
 
@@ -17,16 +17,20 @@
 
 ## 1. Introduction
 
-**Polarbase** is an open-source platform that directly harnesses PostgreSQL's powerful core engine for optimal performance, minimizing extra backend layers. It offers a simple, intuitive interface exclusively for PostgreSQL databases.
+**Polarbase** is an open-source **Extensible Data Backend** that directly harnesses PostgreSQL's powerful core engine. It bridges the gap between raw database management and custom enterprise solutions by providing a multi-view interface and a developer-centric toolkit.
 
-**Simplify your Postgres workflow with modern tools and an intuitive UI.**  
-[Demo](https://demo.polarbase.example.com)
+**Simplify your Postgres workflow with an intuitive UI and build data-driven apps faster.** [Explore Demo](https://demo.polarbase.example.com)
 
-Currently in **Public Beta**—star and watch the repo for updates!
+---
 
-Polarbase prioritizes simplicity, performance, and data integrity: it uses SQLite only for storing metadata and layout configurations, keeping your main database clean and free from platform-specific data. This ensures no vendor lock-in—you can always use your PostgreSQL database independently.
+### Why Polarbase?
 
-Ideal for small to medium-sized solutions where ease of use and minimal overhead matter most.
+- **Multi-View Workspace:** Go beyond simple tables. Manage your data through specialized views—**Spreadsheet** for rapid editing, **Dashboards** for insights, and **Forms/Calendars** for operational workflows.
+- **Extensible Architecture:** Designed as a foundation, not a silo. With upcoming **SDKs** and native **MCP (Model Context Protocol)** support, Polarbase is ready to power custom frontend applications and AI Agents.
+- **Zero Vendor Lock-in:** We use SQLite exclusively for metadata and layout configurations. Your PostgreSQL database remains clean, independent, and untouched by platform-specific schemas.
+- **Developer-First & Lightweight:** Built for small to medium enterprise solutions where performance, ease of use, and minimal backend overhead matter most.
+
+> **Polarbase is currently in Public Beta.** > We are actively building the future of extensible backends. Please **Star** and **Watch** the repo for updates!
 
 ## 2. Screenshots
 
@@ -37,7 +41,7 @@ Ideal for small to medium-sized solutions where ease of use and minimal overhead
 ## 3. Key Features
 
 - **REST API for DB**: Secure and efficient API endpoints to interact with your PostgreSQL database.
-- **AI Agent for DB**: Intelligent agent to assist with database operations (no SQL generation involved).
+- **AI Agent for DB**: Intelligent agent to assist with database operations. Focuses on data reasoning and operational assistance.
 - **MCP Server for DB**: Model Context Protocol server for streamlined administration.
 - **Realtime for DB**: Real-time updates and synchronization for dynamic data handling (via WebSocket).
 - **Frontend with Spreadsheet-UI**: User-friendly spreadsheet-style interface for data visualization and manipulation.
@@ -156,7 +160,7 @@ docker run -e GEMINI_API_KEY=<YOUR_GEMINI_KEY> -p 3000:3000 polarbase-team/polar
 
 ## 8. Libraries & Technologies Used
 
-- **Knex**: For type-safe database querying and migrations.
+- **Knexjs**: For type-safe database querying and migrations.
 - **ai-sdk**: Integration for AI agents and providers (Gemini, OpenAI).
 - **fast-mcp**: Efficient implementation of the Model Context Protocol server.
 - **PrimeNG**: Rich set of UI components for Angular.
