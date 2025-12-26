@@ -1,0 +1,30 @@
+@if (isInputting) {
+  <input-box
+    type="text"
+    [content]="data"
+    (edited)="onInputBoxEdited($event)"
+    (input)="onInputBoxInput($event)"
+    (focus)="onInputBoxFocus($event)"
+    (blur)="onInputBoxBlur($event)"
+    (contentChange)="onInputBoxChange($event)"
+  />
+} @else {
+  <div class="flex items-start justify-between w-full">
+    <div class="field-cell__text-content">
+      {{ data }}
+    </div>
+    @if (selecting) {
+      <rich-text-editor-drawer
+        [(visible)]="visibleRichTextEditor"
+        [value]="data"
+        (onSave)="save($any($event))"
+      />
+      <div
+        class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
+        (click)="visibleRichTextEditor = true"
+      >
+        <i class="icon icon-maximize-2"></i>
+      </div>
+    }
+  </div>
+}

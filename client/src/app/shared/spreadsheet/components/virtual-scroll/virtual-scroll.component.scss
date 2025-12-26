@@ -1,0 +1,68 @@
+$name: '.virtual-scroll';
+
+:host(#{$name}) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden !important;
+  touch-action: none !important;
+  contain: layout style paint;
+
+  &#{$name}--scrolling {
+    #{$name}-overlay {
+      z-index: 9999;
+    }
+  }
+
+  #{$name}-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  #{$name}-track {
+    position: absolute;
+    z-index: 1;
+
+    &#{$name}-horizontal-track {
+      bottom: 0;
+      height: 10px;
+
+      #{$name}-thumb {
+        min-width: 20px;
+      }
+    }
+
+    &#{$name}-vertical-track {
+      right: 0;
+      width: 10px;
+
+      #{$name}-thumb {
+        min-height: 20px;
+      }
+    }
+
+    &-container {
+      position: absolute;
+      inset: 0;
+    }
+
+    #{$name}-thumb {
+      position: relative;
+      width: 100%;
+      min-width: 10px;
+      height: 100%;
+      min-height: 10px;
+      box-shadow: rgb(255, 255, 255) 0 0 0 1px inset;
+      border-radius: 7px;
+      background-color: var(--p-surface-300);
+      will-change: transform;
+
+      &:hover,
+      &:active {
+        background-color: var(--p-surface-400);
+      }
+    }
+  }
+}

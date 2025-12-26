@@ -1,0 +1,16 @@
+<p-drawer
+  [(visible)]="visible"
+  position="right"
+  header="Rich Text Editor"
+  styleClass="!w-180 custom-drawer rich-text-editor-drawer"
+>
+  <ng-template #content>
+    <p-editor [(ngModel)]="value" [readonly]="viewOnly()" class="h-full !flex flex-col" />
+  </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" (click)="cancel()" />
+      <p-button label="Save" (click)="save()" />
+    </div>
+  </ng-template>
+</p-drawer>

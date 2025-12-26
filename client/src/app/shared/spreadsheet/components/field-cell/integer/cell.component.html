@@ -1,0 +1,16 @@
+@if (isInputting) {
+  <input-box
+    type="integer"
+    [content]="data"
+    (edited)="onInputBoxEdited($event)"
+    (input)="onInputBoxInput($event)"
+    (focus)="onInputBoxFocus($event)"
+    (blur)="onInputBoxBlur($event)"
+    (contentChange)="onInputBoxChange($event)"
+  ></input-box>
+}
+@if (data !== undefined && data !== null) {
+  <div class="w-full h-full text-right text-overflow-ellipsis">
+    {{ data }}
+  </div>
+}

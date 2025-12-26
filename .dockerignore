@@ -1,0 +1,9 @@
+server/.env
+.env
+node_modules
+.git
+.gitignore
+README.md
+Dockerfile
+docker-compose.yml
+server/PolarBase.db

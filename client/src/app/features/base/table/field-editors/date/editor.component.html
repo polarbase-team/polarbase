@@ -1,0 +1,19 @@
+@let fieldName = field().name;
+
+<div class="flex flex-col gap-2 w-full">
+  @if (label() !== false) {
+    <label [attr.for]="fieldName">{{ fieldName }}</label>
+  }
+  <p-datepicker
+    [inputId]="fieldName"
+    [placeholder]="placeholder() ?? 'Input here...'"
+    [pAutoFocus]="autoFocus()"
+    [readonlyInput]="viewOnly()"
+    [disabled]="viewOnly()"
+    [(ngModel)]="data"
+    [showTime]="true"
+    [showClear]="true"
+    [fluid]="true"
+    appendTo="body"
+  />
+</div>

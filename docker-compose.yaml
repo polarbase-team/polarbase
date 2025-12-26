@@ -1,0 +1,107 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      # Core
+      - NODE_ENV=production
+      - NAME=PolarBase
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+      - VERBOSE=false
+      - DEBUG=false
+
+      # Security
+      - CORS_ORIGINS=*
+      - SUPER_ADMIN_API_KEY=ak_0b13cb2bf04fc55cff3dab520eaccabca8d551a8922bd6b013455ab7a41ebccd
+
+      # REST API
+      - REST_ENABLED=true
+      - REST_PREFIX=/rest
+      - REST_RATE_LIMIT=100
+      - REST_BLACKLISTED_TABLES=
+
+      # AGENT API
+      - AGENT_ENABLED=true
+      - AGENT_PREFIX=/agent
+      - AGENT_BLACKLISTED_TABLES=
+
+      # MCP Server
+      - MCP_ENABLED=true
+      - MCP_PORT=8080
+      - MCP_PATH=/mcp
+
+      # Realtime Engine
+      - REALTIME_ENABLED=true
+      - REALTIME_PATH=/realtime
+      - REALTIME_MAX_CLIENTS=1000
+
+      # PostgreSQL
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=P@ssw0rd2025
+      - POSTGRES_DB=polarbase
+
+      # LLM
+      - LLM_DEFAULT_MODEL=gemini-2.5-flash
+      - OPENAI_API_KEY=
+      - GEMINI_API_KEY=
+      - ANTHROPIC_API_KEY=
+      - XAI_API_KEY=
+
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        NG_CONFIG: production
+    ports:
+      - '8080:80'
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: polarbase-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=P@ssw0rd2025
+      - POSTGRES_DB=polarbase
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sample.sql:/docker-entrypoint-initdb.d/sample.sql # To skip: comment or remove this line
+    ports:
+      - '5432:5432'
+    restart: unless-stopped
+    command:
+      - 'postgres'
+      - '-c'
+      - 'wal_level=logical'
+      - '-c'
+      - 'max_replication_slots=20'
+      - '-c'
+      - 'max_wal_senders=20'
+      - '-c'
+      - 'max_logical_replication_workers=20'
+      - '-c'
+      - 'max_worker_processes=20'
+      - '-c'
+      - 'max_slot_wal_keep_size=1GB'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d polarbase']
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+      start_interval: 2s
+
+volumes:
+  postgres_data:

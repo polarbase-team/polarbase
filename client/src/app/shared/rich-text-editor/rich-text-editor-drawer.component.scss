@@ -1,0 +1,17 @@
+::ng-deep {
+  .rich-text-editor-drawer {
+    .p-editor {
+      .p-editor-toolbar {
+        border-radius: 0;
+        border-top: 0 !important;
+        border-left: 0 !important;
+        border-right: 0 !important;
+      }
+
+      .p-editor-content {
+        border-radius: 0;
+        border: 0;
+      }
+    }
+  }
+}

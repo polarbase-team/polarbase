@@ -1,5 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
-import db from '../../plugins/db';
+
+import { loadColumns } from '../../agent/resources/columns';
 
 export default function register(server: FastMCP) {
   server.addResourceTemplate({
@@ -25,37 +26,9 @@ export default function register(server: FastMCP) {
     ],
     async load({ tableName }) {
       try {
-        let columns: any[] = [];
-        if (db.client.config.client === 'pg') {
-          columns = await db
-            .select('column_name', 'data_type')
-            .from('information_schema.columns')
-            .where({ table_schema: 'public', table_name: tableName });
-        } else if (db.client.config.client === 'mysql') {
-          const result = await db.raw(`SHOW COLUMNS FROM \`${tableName}\``);
-          columns = result[0].map((row: any) => ({
-            column_name: row.Field,
-            data_type: row.Type,
-          }));
-        } else if (db.client.config.client === 'sqlite3') {
-          const result = await db.raw(`PRAGMA table_info(${tableName})`);
-          columns = result.map((row: any) => ({
-            column_name: row.name,
-            data_type: row.type,
-          }));
-        }
-        if (columns.length === 0) {
-          throw new UserError(`Table ${tableName} not found or has no columns`);
-        }
+        const columns = await loadColumns(tableName);
         return {
-          text: JSON.stringify(
-            columns.map((col: any) => ({
-              name: col.column_name,
-              type: col.data_type,
-            })),
-            null,
-            2
-          ),
+          text: JSON.stringify(columns, null, 2),
         };
       } catch (error) {
         const err = error as any;

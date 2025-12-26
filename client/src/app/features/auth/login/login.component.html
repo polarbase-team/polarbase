@@ -1,0 +1,43 @@
+<div class="flex min-h-screen items-center justify-center bg-gray-50">
+  <p-card class="w-full max-w-md shadow-lg">
+    <ng-template pTemplate="header">
+      <div class="flex flex-col items-center pt-6 pb-2 gap-2">
+        <img src="assets/images/logo.png" alt="Logo" class="h-20" />
+        <p class="font-medium text-lg">Welcome to PolarBase</p>
+      </div>
+    </ng-template>
+
+    <form #apiKeyForm="ngForm" class="flex flex-col gap-6" (submit)="onSubmit()">
+      <div class="flex flex-col gap-1">
+        <p-iconField iconPosition="left">
+          <p-inputIcon class="icon icon-key" />
+          <input
+            pInputText
+            name="apiKey"
+            [(ngModel)]="apiKey"
+            placeholder="Enter your API Key to continue"
+            class="w-full"
+            type="password"
+            pSize="large"
+            required
+          />
+        </p-iconField>
+        @if (error()) {
+          <p-message severity="error" size="small" variant="simple">
+            {{ error() }}
+          </p-message>
+        }
+      </div>
+      <button
+        pButton
+        type="submit"
+        label="Continue"
+        [loading]="loading"
+        [disabled]="apiKeyForm.invalid"
+        severity="primary"
+        size="large"
+        fluid
+      ></button>
+    </form>
+  </p-card>
+</div>

@@ -1,0 +1,48 @@
+@let hasSelectedTable = !!tblService.selectedTable();
+
+<div class="base w-full h-full" [class.sidebar--invisible]="!sidebarVisible()">
+  <div class="base-sidebar border-r-1 border-surface-200">
+    <table-list />
+  </div>
+  <div class="base-table-detail w-full h-full">
+    <p-tabs value="0" class="w-full" [class.h-full]="hasSelectedTable">
+      <p-tablist>
+        <div class="flex items-center p-1">
+          <p-button
+            [icon]="`icon ${sidebarVisible() ? 'icon-panel-left-close' : 'icon-panel-right-close'}`"
+            [text]="true"
+            size="large"
+            [pTooltip]="sidebarVisible() ? 'Collaspe sidebar' : 'Expand sidebar'"
+            tooltipPosition="bottom"
+            severity="secondary"
+            (click)="toggleSidebar()"
+          />
+        </div>
+        @if (hasSelectedTable) {
+          <p-tab value="0">
+            <div class="flex items-center">
+              <i class="icon icon-table-2 mr-2"></i>
+              <span>{{ tblService.selectedTable().tableName }}</span>
+            </div>
+          </p-tab>
+        }
+      </p-tablist>
+      @if (hasSelectedTable) {
+        <p-tabpanels class="flex-1 !p-0">
+          <p-tabpanel value="0">
+            <table-detail />
+          </p-tabpanel>
+        </p-tabpanels>
+      }
+    </p-tabs>
+
+    @if (!hasSelectedTable) {
+      <div class="flex flex-col w-full h-full items-center pt-50 bg-gray-50">
+        <p-image src="assets/images/chill-bear.png" width="320" height="320" />
+        <p class="text-surface-500 italic flex items-center" style="margin-top: -45px">
+          <span>Unlock insights by picking any table to explore its data!</span>
+        </p>
+      </div>
+    }
+  </div>
+</div>
