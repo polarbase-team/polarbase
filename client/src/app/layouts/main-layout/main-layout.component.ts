@@ -64,6 +64,6 @@ export class MainLayoutComponent implements OnInit {
 
   protected logout() {
     removeApiKey();
-    this.router.navigate(['/entry']);
+    this.router.navigate(['/auth/login']);
   }
 }

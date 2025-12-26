@@ -28,7 +28,7 @@ export class ApiKeyGuard implements CanActivate {
     if (hasApiKey()) {
       return true;
     }
-    this.router.navigate(['/entry']);
+    this.router.navigate(['/auth/login']);
     return false;
   }
 }

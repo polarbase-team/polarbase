@@ -1,6 +1,13 @@
+import crypto from 'crypto';
+
 import { ApiKey } from './db';
 
 const SUPER_ADMIN_API_KEY = process.env.SUPER_ADMIN_API_KEY;
+
+// Generates a new random API key string.
+export const generateApiKey = () => {
+  return 'ak_' + crypto.randomBytes(32).toString('hex');
+};
 
 /**
  * Authenticates an API key.
