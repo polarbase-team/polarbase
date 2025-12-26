@@ -562,6 +562,8 @@ export class TableService extends TableBaseService {
 
   private _positionFillHandle(index: CellIndex) {
     const ele = this.tableCellService.cellElementAt(index);
+    if (!ele) return;
+
     const eleDOMRect = ele.getBoundingClientRect();
     const containerDOMRect = this.host.virtualScroll.viewport.element.getBoundingClientRect();
     const offset: CellOffset = {
