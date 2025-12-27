@@ -47,6 +47,8 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=P@ssw0rd2025
       - POSTGRES_DB=polarbase
+      - POSTGRES_SSL=false
+      - POSTGRES_MAX_CONNECTIONS=20
 
       # LLM
       - LLM_DEFAULT_MODEL=gemini-2.5-flash

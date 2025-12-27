@@ -13,9 +13,10 @@ RUN bun ng build --configuration=production
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
+ENV BACKEND_URL=http://server:3000
 COPY --from=builder /app/dist/polarbase-client/browser /usr/share/nginx/html
 
 # Config Nginx for SPA
-COPY client/nginx.conf /etc/nginx/conf.d/default.conf
+COPY client/nginx.conf /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
