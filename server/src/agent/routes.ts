@@ -1,8 +1,11 @@
 import { Elysia, t } from 'elysia';
 
+import { checkRateLimit } from '../utils/rate-limit';
+import { err } from '../utils/api-response';
 import { apiKeyAuth } from '../api-keys/auth';
 import { generateAIResponse } from './model';
 
+const AGENT_RATE_LIMIT = Number(process.env.AGENT_RATE_LIMIT) || 10;
 const AGENT_PREFIX = process.env.AGENT_PREFIX || '/agent';
 
 export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
@@ -25,6 +28,17 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
     } catch (e) {
       set.status ??= 401;
       throw e ?? new Error('Invalid or missing x-api-key');
+    }
+  })
+
+  /**
+   * Global rate-limit middleware (429 if exceeded)
+   */
+  .onBeforeHandle(({ request, set }) => {
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(ip, AGENT_RATE_LIMIT, AGENT_PREFIX)) {
+      set.status = 429;
+      return err('Too many requests', 429);
     }
   })
 

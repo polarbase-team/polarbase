@@ -1,6 +1,7 @@
 export const environment = {
-  apiUrl: 'http://localhost:3000',
-  wsUrl: 'ws://localhost:3000',
+  production: false,
+  apiUrl: '/api',
+  wsUrl: '/ws',
   dateFormat: 'DD/MM/YYYY',
   dateTimeFormat: 'DD/MM/YYYY HH:mm',
 };

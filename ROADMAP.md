@@ -38,6 +38,13 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **New Field Types:** Multi-Select, Email, URL, Auto-number, and GeoPoint (Lat/Long).
 - **Attachment Field:** Support for Local and S3 storage using custom PostgreSQL types.
 
+### 🗄️ Multi-Schema Management
+
+- **Isolated Schema Support:** Ability to create, manage, and toggle between multiple PostgreSQL schemas within a single database instance.
+- **Schema-Scoped Operations:** Dedicated API endpoints and UI contexts that respect schema boundaries.
+- **Cross-Schema Relations:** Support for Reference Fields (Foreign Keys) that bridge tables across different schemas.
+- **Schema Migrations:** Visual tools to track and manage versioning for individual schemas.
+
 ### 🤖 Agentic Backend (AI & MCP)
 
 - **Natural Language Schema:** Describe requirements and the Agent will update the DB schema.

@@ -5,6 +5,7 @@ services:
       dockerfile: server/Dockerfile
     ports:
       - '3000:3000'
+      - '8080:8080'
     environment:
       # Core
       - NODE_ENV=production
@@ -27,6 +28,7 @@ services:
       # AGENT API
       - AGENT_ENABLED=true
       - AGENT_PREFIX=/agent
+      - AGENT_RATE_LIMIT=10
       - AGENT_BLACKLISTED_TABLES=
 
       # MCP Server
@@ -62,10 +64,8 @@ services:
     build:
       context: .
       dockerfile: client/Dockerfile
-      args:
-        NG_CONFIG: production
     ports:
-      - '8080:80'
+      - '80:80'
     restart: unless-stopped
 
   db:

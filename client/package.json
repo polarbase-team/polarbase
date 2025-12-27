@@ -22,7 +22,7 @@
   "description": "Extensible Open-source Data Backend for PostgreSQL. Features a multi-view UI (Spreadsheet, Dashboard, Calendar), AI-Agent integration via MCP, and zero vendor lock-in.",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
