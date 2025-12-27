@@ -47,7 +47,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=P@ssw0rd2025
       - POSTGRES_DB=polarbase
-      - POSTGRES_SSL=true
+      - POSTGRES_SSL=false
       - POSTGRES_MAX_CONNECTIONS=20
 
       # LLM
