@@ -1,1 +1,49 @@
+<div class="bg-slate-100 border-b border-slate-200 px-4 py-3 text-center text-sm shadow-sm">
+  <p class="text-slate-600 font-medium">
+    <span
+      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 mr-2"
+      >DEMO</span
+    >
+    You are exploring the PolarBase admin dashboard. Database resets automatically. Real-time data
+    and AI agents are currently disabled.
+  </p>
+
+  <div class="flex justify-center items-center mt-1.5 space-x-2">
+    <span class="text-slate-500">To log in, use this key:</span>
+    <code class="font-mono font-bold">ak_demo_polarbase_2025</code>
+
+    <div class="relative flex items-center">
+      <button
+        onclick="
+          const btn = this;
+          const icon = btn.querySelector('.icon-copy');
+          const tooltip = btn.querySelector('.tooltip');
+
+          navigator.clipboard.writeText('ak_demo_polarbase_2025');
+
+          tooltip.classList.remove('opacity-0', 'translate-y-1');
+          tooltip.classList.add('opacity-100', '-translate-y-1');
+          btn.classList.add('text-green-600');
+
+          setTimeout(() => {
+            tooltip.classList.add('opacity-0', 'translate-y-1');
+            tooltip.classList.remove('opacity-100', '-translate-y-1');
+            btn.classList.remove('text-green-600');
+          }, 1500);
+        "
+        class="p-1 hover:bg-slate-200 rounded-md transition-all duration-200 active:scale-90 text-slate-400 focus:outline-none h-6"
+        title="Copy to clipboard"
+      >
+        <i class="icon icon-copy text-lg leading-none"></i>
+
+        <span
+          class="tooltip absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 translate-y-1 transition-all duration-300 pointer-events-none"
+        >
+          Copied!
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <router-outlet />
