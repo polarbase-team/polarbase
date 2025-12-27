@@ -33,6 +33,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ### 🖼️ Multi-View Workspace
 
 - **Multi-View Foundation:** Building the core architecture to support switching between different data lenses (Spreadsheet, Calendar, Kanban,...).
+- **Layout Configuration Storage:** Support storing UI layout configurations (column widths, filters, view states) directly in **SQLite** to maintain a clean main database.
 - **Advanced Filtering:** Support for single and group conditions for complex datasets.
 - **Reference Field:** Native support for table relations (Foreign Keys) within the UI.
 - **New Field Types:** Multi-Select, Email, URL, Auto-number, and GeoPoint (Lat/Long).
@@ -84,6 +85,10 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **CLI Tool:** Command-line interface for deployments and environment configs.
 - **Audit Logs:** Detailed tracking of every change for compliance.
 - **Pglite Integration:** Enabling "One-click Installation" capabilities.
+
+### 🗄️ Database Ecosystem
+
+- **CockroachDB Integration:** Researching compatibility with CockroachDB for distributed SQL and global scaling capabilities.
 
 ---
 
