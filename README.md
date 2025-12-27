@@ -20,7 +20,7 @@
 **Polarbase** is an open-source **Extensible Data Backend** that directly harnesses PostgreSQL's powerful core engine. It bridges the gap between raw database management and custom enterprise solutions by providing a multi-view interface and a developer-centric toolkit.
 
 **Simplify your Postgres workflow with an intuitive UI and build data-driven apps faster.**<br>
-[Explore Demo](https://demo.polarbase.example.com) • [View Roadmap](https://www.google.com/search?q=./ROADMAP.md)
+[Explore Demo](https://only-laura-polarbase-b97c3a27.koyeb.app) • [View Roadmap](./ROADMAP.md)
 
 ---
 
@@ -61,7 +61,7 @@
 
 ### Cloud Version (Quick Try)
 
-Visit our [hosted demo](https://demo.polarbase.example.com) to explore without installation.
+Visit our [hosted demo](https://only-laura-polarbase-b97c3a27.koyeb.app) to explore without installation.
 
 ### Install Bun
 
@@ -147,7 +147,7 @@ docker run -e GEMINI_API_KEY=<YOUR_GEMINI_KEY> -p 3000:3000 polarbase-team/polar
 
 ## 7. Try It Out
 
-1. Go to the [app](https://demo.polarbase.example.com).
+1. Go to the [app](https://only-laura-polarbase-b97c3a27.koyeb.app).
 2. Connect your PostgreSQL database.
 3. Use the REST API or AI agent for operations.
 4. Explore realtime features and spreadsheet-UI for data management.
