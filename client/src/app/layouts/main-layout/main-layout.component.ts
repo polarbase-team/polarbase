@@ -69,6 +69,10 @@ export class MainLayoutComponent implements OnInit {
     window.open(`${environment.apiUrl}/rest/openapi`, '_blank');
   }
 
+  protected openGitHub() {
+    window.open('https://github.com/polarbase-team/polarbase', '_blank');
+  }
+
   protected logout() {
     removeApiKey();
     this.router.navigate(['/auth/login']);

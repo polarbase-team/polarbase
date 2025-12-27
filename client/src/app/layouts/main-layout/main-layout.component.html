@@ -66,6 +66,13 @@
       <ul class="p-2 flex flex-col gap-2 mb-4">
         <li
           class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
+          [pTooltip]="'Github'"
+          (click)="openGitHub()"
+        >
+          <i class="icon icon-github" style="font-size: 16px"></i>
+        </li>
+        <li
+          class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
           [pTooltip]="'Logout'"
           (click)="logout()"
         >
