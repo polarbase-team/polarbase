@@ -3,8 +3,8 @@
    <br>
    <b>PolarBase</b>
    <div align="center">✨ ✨ ✨</div>
-   <span>Open-source Extensible Data Backend</span> <br />
-   <span>Multi-view UI • Agent-ready • Zero Lock-in • Postgre-native</span> <br />
+   <span>Open-source Extensible Data Backend</span> <br>
+   <span>Multi-view UI • Agent-ready • Zero Lock-in • Postgre-native</span> <br>
    <br>
 </div>
 
@@ -19,7 +19,8 @@
 
 **Polarbase** is an open-source **Extensible Data Backend** that directly harnesses PostgreSQL's powerful core engine. It bridges the gap between raw database management and custom enterprise solutions by providing a multi-view interface and a developer-centric toolkit.
 
-**Simplify your Postgres workflow with an intuitive UI and build data-driven apps faster.** [Explore Demo](https://demo.polarbase.example.com)
+**Simplify your Postgres workflow with an intuitive UI and build data-driven apps faster.**<br>
+[Explore Demo](https://demo.polarbase.example.com) • [View Roadmap](https://www.google.com/search?q=./ROADMAP.md)
 
 ---
 
