@@ -2,13 +2,15 @@ import { Elysia, t } from 'elysia';
 import { openapi, fromTypes } from '@elysiajs/openapi';
 
 import pg from '../plugins/pg';
+import { checkRateLimit } from '../utils/rate-limit';
+import { err, json } from '../utils/api-response';
 import { apiKeyAuth } from '../api-keys/auth';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
 import { DataType } from './utils/column';
 import { WhereFilter } from './utils/record';
 
-const REST_RATE_LIMIT = Number(process.env.REST_RATE_LIMIT) || 10;
+const REST_RATE_LIMIT = Number(process.env.REST_RATE_LIMIT) || 100;
 const REST_PREFIX = process.env.REST_PREFIX || '/rest';
 
 /**
@@ -21,41 +23,6 @@ const REST_BLACKLISTED_TABLES = (
 
 const tableService = new TableService();
 const tableRecordService = new TableRecordService();
-
-/**
- * Simple in-memory rate limiter (per IP).
- * Allows max 300 requests per minute.
- */
-const rateLimit = new Map<string, { count: number; reset: number }>();
-
-const checkRateLimit = (ip: string): boolean => {
-  const now = Date.now();
-  const rec = rateLimit.get(ip) || { count: 0, reset: now + 60_000 };
-  if (now > rec.reset) rec.count = 0;
-  if (rec.count >= REST_RATE_LIMIT) return false;
-  rec.count++;
-  rateLimit.set(ip, rec);
-  return true;
-};
-
-/**
- * Standard success response format.
- */
-const json = (data: any, meta?: any) => ({
-  success: true,
-  data,
-  meta,
-  timestamp: new Date().toISOString(),
-});
-
-/**
- * Standard error response format.
- */
-const err = (message: string, status = 400) => ({
-  success: false,
-  error: message,
-  timestamp: new Date().toISOString(),
-});
 
 /**
  * Main REST router exposing CRUD + bulk operations for all public tables.
@@ -84,17 +51,6 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   )
 
   /**
-   * Global rate-limit middleware (429 if exceeded)
-   */
-  .onBeforeHandle(({ request, set }) => {
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
-    if (!checkRateLimit(ip)) {
-      set.status = 429;
-      return err('Too many requests', 429);
-    }
-  })
-
-  /**
    * Global API key authentication middleware (401 if invalid)
    */
   .derive(async ({ headers, set }) => {
@@ -113,6 +69,17 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     } catch (e) {
       set.status ??= 401;
       throw e ?? new Error('Invalid or missing x-api-key');
+    }
+  })
+
+  /**
+   * Global rate-limit middleware (429 if exceeded)
+   */
+  .onBeforeHandle(({ request, set }) => {
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(ip, REST_RATE_LIMIT, REST_PREFIX)) {
+      set.status = 429;
+      return err('Too many requests', 429);
     }
   })
 
