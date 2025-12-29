@@ -10,7 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { delay } from 'rxjs';
+import { delay, forkJoin } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -144,8 +144,12 @@ export class TableDetailComponent {
         this.editColumn(action.payload as TableColumn);
         break;
       case TableColumnActionType.Delete:
-        const { id: columnName } = action.payload as TableColumn;
-        this.tblService.deleteColumn(tableName, columnName as string);
+        const columns = action.payload as TableColumn[];
+        const obs = {};
+        for (const column of columns) {
+          obs[column.id] = this.tblService.deleteColumn(tableName, column.id as string);
+        }
+        forkJoin(obs).subscribe();
         break;
     }
   }
