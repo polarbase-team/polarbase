@@ -1,5 +1,5 @@
 import pg from '../../plugins/pg';
-import { getTableList, getTableSchema } from '../utils/table';
+import { getTableList, getTableSchema, toPgArray } from '../utils/table';
 import {
   addLengthCheck,
   addSizeCheck,
@@ -265,6 +265,7 @@ export class TableService {
     try {
       await schemaBuilder.alterTable(tableName, (tableBuilder) => {
         const columnBuilder = specificType(tableBuilder, {
+          tableName,
           name,
           dataType,
           options,
@@ -275,8 +276,13 @@ export class TableService {
 
         if (unique) columnBuilder.unique();
 
-        if (defaultValue !== undefined && defaultValue !== null)
-          columnBuilder.defaultTo(defaultValue);
+        if (defaultValue !== undefined && defaultValue !== null) {
+          if (dataType === DataType.MultiSelect) {
+            columnBuilder.defaultTo(toPgArray(defaultValue));
+          } else {
+            columnBuilder.defaultTo(defaultValue);
+          }
+        }
 
         if (comment) columnBuilder.comment(comment);
 
@@ -372,6 +378,7 @@ export class TableService {
       .withSchema(schemaName)
       .alterTable(tableName, (tableBuilder) => {
         const columnBuilder = specificType(tableBuilder, {
+          tableName,
           name: columnName,
           dataType: dataType || oldSchema.dataType,
           options,
@@ -393,7 +400,11 @@ export class TableService {
         }
 
         if (defaultValue !== oldSchema.defaultValue) {
-          columnBuilder.defaultTo(defaultValue);
+          if (dataType === DataType.MultiSelect) {
+            columnBuilder.defaultTo(toPgArray(defaultValue));
+          } else {
+            columnBuilder.defaultTo(defaultValue);
+          }
         }
 
         if (comment !== oldSchema.comment) {
