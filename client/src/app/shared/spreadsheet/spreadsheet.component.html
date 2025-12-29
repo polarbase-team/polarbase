@@ -17,74 +17,76 @@
   [style.paddingLeft.px]="tableService.config().sideSpacing"
   [style.paddingRight.px]="tableService.config().sideSpacing"
 >
-  <ng-container *ngTemplateOutlet="toolbarTemplate()"></ng-container>
-  <div class="flex w-full gap-2">
-    <div class="flex w-full gap-2">
-      <column-view-options
-        [sourceColumns]="sourceColumns()"
-        [visibleColumns]="tableColumnService.columns()"
-        (onToggle)="
-          $event.hidden
-            ? tableColumnService.hideColumn($event.column)
-            : tableColumnService.showColumn($event.column)
-        "
-        (onMove)="tableColumnService.moveColumn($event.column, $event.newIndex)"
-      />
-      <data-view-options
-        type="group"
-        [sourceColumns]="sourceColumns()"
-        [currentColumns]="tableColumnService.groupedColumns()"
-        [limit]="3"
-        (onApply)="tableService.onApplyGroup($event)"
-      />
-      <data-view-options
-        type="sort"
-        [sourceColumns]="sourceColumns()"
-        [currentColumns]="tableColumnService.sortedColumns()"
-        (onApply)="tableService.onApplySort($event)"
-      />
-      <row-size-options
-        [rowSize]="$any(tableRowService.rowSize)"
-        (rowSizeChange)="tableRowService.setRowSize($event)"
-      />
-    </div>
-    <p-inputgroup class="w-xs max-w-xs">
-      <p-iconfield>
-        <p-inputicon class="icon icon-search !z-2" />
-        <input
-          type="text"
-          pInputText
-          placeholder="Search"
-          (input)="tableService.onSearch($any($event))"
-          (keydown.enter)="tableService.searchNext()"
+  <div class="flex flex-wrap flex-1 gap-y-2">
+    <ng-container *ngTemplateOutlet="toolbarTemplate()"></ng-container>
+    <div class="flex flex-wrap flex-auto justify-between gap-2">
+      <div class="flex flex-wrap gap-2">
+        <column-view-options
+          [sourceColumns]="sourceColumns()"
+          [visibleColumns]="tableColumnService.columns()"
+          (onToggle)="
+            $event.hidden
+              ? tableColumnService.hideColumn($event.column)
+              : tableColumnService.showColumn($event.column)
+          "
+          (onMove)="tableColumnService.moveColumn($event.column, $event.newIndex)"
         />
-      </p-iconfield>
-      @if (tableService.searchResults?.length) {
-        <p-inputgroup-addon>
-          <div class="text-center">
-            <span class="text-sm font-medium">
-              {{ (tableService.layout.cell.search.currentMatchIndex || 0) + 1 }}/{{
-                tableService.searchResults.length
-              }}
-            </span>
-          </div>
-        </p-inputgroup-addon>
-        <p-inputgroup-addon>
-          <div class="flex gap-2 justify-content-space-around px-2">
-            <i
-              class="icon icon-chevron-up cursor-pointer"
-              style="font-size: 16px"
-              (click)="tableService.searchPrevious()"
-            ></i>
-            <i
-              class="icon icon-chevron-down cursor-pointer"
-              style="font-size: 16px"
-              (click)="tableService.searchNext()"
-            ></i>
-          </div>
-        </p-inputgroup-addon>
-      }
-    </p-inputgroup>
+        <data-view-options
+          type="group"
+          [sourceColumns]="sourceColumns()"
+          [currentColumns]="tableColumnService.groupedColumns()"
+          [limit]="3"
+          (onApply)="tableService.onApplyGroup($event)"
+        />
+        <data-view-options
+          type="sort"
+          [sourceColumns]="sourceColumns()"
+          [currentColumns]="tableColumnService.sortedColumns()"
+          (onApply)="tableService.onApplySort($event)"
+        />
+        <row-size-options
+          [rowSize]="$any(tableRowService.rowSize)"
+          (rowSizeChange)="tableRowService.setRowSize($event)"
+        />
+      </div>
+      <p-inputgroup class="w-xs max-w-xs">
+        <p-iconfield>
+          <p-inputicon class="icon icon-search !z-2" />
+          <input
+            type="text"
+            pInputText
+            placeholder="Search"
+            (input)="tableService.onSearch($any($event))"
+            (keydown.enter)="tableService.searchNext()"
+          />
+        </p-iconfield>
+        @if (tableService.searchResults?.length) {
+          <p-inputgroup-addon>
+            <div class="text-center">
+              <span class="text-sm font-medium">
+                {{ (tableService.layout.cell.search.currentMatchIndex || 0) + 1 }}/{{
+                  tableService.searchResults.length
+                }}
+              </span>
+            </div>
+          </p-inputgroup-addon>
+          <p-inputgroup-addon>
+            <div class="flex gap-2 justify-content-space-around px-2">
+              <i
+                class="icon icon-chevron-up cursor-pointer"
+                style="font-size: 16px"
+                (click)="tableService.searchPrevious()"
+              ></i>
+              <i
+                class="icon icon-chevron-down cursor-pointer"
+                style="font-size: 16px"
+                (click)="tableService.searchNext()"
+              ></i>
+            </div>
+          </p-inputgroup-addon>
+        }
+      </p-inputgroup>
+    </div>
   </div>
 </div>
 
