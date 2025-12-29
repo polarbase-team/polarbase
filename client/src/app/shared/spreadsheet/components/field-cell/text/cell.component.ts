@@ -12,4 +12,8 @@ import { InputBoxComponent } from '../input-box.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [InputBoxComponent],
 })
-export class TextFieldCellComponent extends FieldCellInputable<TextData> {}
+export class TextFieldCellComponent extends FieldCellInputable<TextData> {
+  override save(data: TextData) {
+    super.save(data || null);
+  }
+}
