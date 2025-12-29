@@ -315,18 +315,18 @@ export const getTableSchema = async (
       value: defaultValue,
       rawValue: rawDefaultValue,
       isSpecialExpression: hasSpecialDefault,
-    } = parsePostgresDefault(col.column_default);
+    } = parsePgDefault(col.column_default);
     const { constraints, ...validation } = validationMap[col.column_name] || {};
     const column: Column = {
       name: col.column_name,
       primary: primaryKeySet.has(col.column_name),
       nullable: col.is_nullable === 'YES',
       unique: uniqueSet.has(col.column_name),
-      defaultValue: hasSpecialDefault ? defaultValue : null,
+      defaultValue: !hasSpecialDefault ? defaultValue : null,
       comment: commentMap[col.column_name] ?? null,
       options: enumMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
-      validation: validation || null,
+      validation: Object.keys(validation).length ? validation : null,
       metadata: {
         pgDataType: col.data_type,
         pgRawType: col.udt_name,
@@ -341,7 +341,7 @@ export const getTableSchema = async (
   });
 };
 
-const parsePostgresDefault = (
+const parsePgDefault = (
   rawDefault: string | null
 ): {
   value: any;
