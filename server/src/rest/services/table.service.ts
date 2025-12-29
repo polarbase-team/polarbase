@@ -271,9 +271,13 @@ export class TableService {
         });
 
         if (nullable) columnBuilder.nullable();
+        else columnBuilder.notNullable();
+
         if (unique) columnBuilder.unique();
+
         if (defaultValue !== undefined && defaultValue !== null)
           columnBuilder.defaultTo(defaultValue);
+
         if (comment) columnBuilder.comment(comment);
 
         addLengthCheck(tableBuilder, tableName, name, minLength!, maxLength!);
