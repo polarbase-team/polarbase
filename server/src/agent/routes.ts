@@ -15,7 +15,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
   .derive(async ({ headers, set }) => {
     try {
       const apiKey = headers['x-api-key'];
-      if (!apiKey) throw new Error();
+      if (!apiKey) throw new Error('Invalid or missing x-api-key');
 
       const authData = await apiKeyAuth(apiKey);
       if (!authData.scopes.rest) {
@@ -27,7 +27,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
       return authData;
     } catch (e) {
       set.status ??= 401;
-      throw e ?? new Error('Invalid or missing x-api-key');
+      throw e;
     }
   })
 
