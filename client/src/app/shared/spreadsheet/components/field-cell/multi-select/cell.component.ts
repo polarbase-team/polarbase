@@ -61,13 +61,7 @@ export class MultiSelectFieldCellComponent extends FieldCellEditable<MultiSelect
   protected onMenuOpen() {
     this.items = _.chain(this.field.options)
       .difference(this.parsedData)
-      .map((option) => ({
-        label: option,
-        command: ({ item }) => {
-          this.parsedData.push(item.label);
-          this.save(this.parsedData);
-        },
-      }))
+      .map((option) => ({ label: option }))
       .value();
 
     if (!this.items.length) {
@@ -79,6 +73,11 @@ export class MultiSelectFieldCellComponent extends FieldCellEditable<MultiSelect
 
   protected onMenuClose() {
     this.markAsEditEnded();
+  }
+
+  protected addOption(option: MultiSelectOption) {
+    this.parsedData.push(option);
+    this.save(this.parsedData);
   }
 
   protected removeSelectedOption(option: MultiSelectOption) {

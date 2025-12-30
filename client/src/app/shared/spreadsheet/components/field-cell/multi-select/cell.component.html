@@ -21,5 +21,15 @@
     [popup]="true"
     (onShow)="onMenuOpen()"
     (onHide)="onMenuClose()"
-  />
+  >
+    <ng-template #item let-item>
+      <a
+        pRipple
+        class="flex p-menu-item-link"
+        (click)="$event.stopPropagation(); addOption(item.label)"
+      >
+        {{ item.label }}
+      </a>
+    </ng-template>
+  </p-menu>
 }
