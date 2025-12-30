@@ -82,6 +82,12 @@ export class TableService {
 
   constructor(private http: HttpClient) {}
 
+  getEnumTypes() {
+    return this.http
+      .get<Response<ColumnDefinition[]>>(`${this.apiUrl}/enum-types`)
+      .pipe(map((res) => res.data));
+  }
+
   getTables() {
     return this.http
       .get<Response<TableDefinition[]>>(`${this.apiUrl}/tables`)

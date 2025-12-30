@@ -1,3 +1,55 @@
+<ng-template #optionsBuilder>
+  <div class="flex flex-col gap-1">
+    <label class="text-sm">Options</label>
+    <div class="flex flex-col gap-2">
+      @for (option of options(); track $index; let idx = $index) {
+        <div class="flex">
+          <input
+            pInputText
+            [pAutoFocus]="true"
+            [ngModel]="option"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="editOption(idx, $event)"
+            placeholder="Input here..."
+            class="w-full"
+          />
+          <p-button
+            icon="icon icon-trash"
+            [text]="true"
+            severity="danger"
+            (click)="removeOption(idx)"
+          />
+        </div>
+      }
+      <div class="flex items-center gap-2">
+        <p-button icon="icon icon-plus" label="Add option" (click)="addOption()" />
+        or
+        <span class="hover:underline cursor-pointer" (click)="menu.show($event)"
+          >copy from existing</span
+        >
+        <p-menu
+          #menu
+          [model]="enumTypeMenuItems"
+          [popup]="true"
+          appendTo="body"
+          [style]="{ 'max-width': '300px' }"
+          (onShow)="onEnumTypesMenuOpen()"
+        >
+          <ng-template #start>
+            <div class="pt-3 px-5 pb-1 font-bold">Choose a enum type</div>
+          </ng-template>
+          <ng-template #item let-item>
+            <div class="px-4 py-2 cursor-pointer">
+              <p class="font-medium">{{ item.label }}</p>
+              <i class="text-sm text-surface-500">[{{ item.options }}]</i>
+            </div>
+          </ng-template>
+        </p-menu>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
 <p-drawer
   [(visible)]="visible"
   position="right"
@@ -197,62 +249,10 @@
                 </div>
               }
               @case (DataType.Select) {
-                <div class="flex flex-col gap-1">
-                  <label class="text-sm">Options</label>
-                  <div class="flex flex-col gap-2">
-                    @for (option of options(); track $index; let idx = $index) {
-                      <div class="flex">
-                        <input
-                          pInputText
-                          [pAutoFocus]="true"
-                          [ngModel]="option"
-                          [ngModelOptions]="{ standalone: true }"
-                          (ngModelChange)="editOption(idx, $event)"
-                          placeholder="Input here..."
-                          class="w-full"
-                        />
-                        <p-button
-                          icon="icon icon-trash"
-                          [text]="true"
-                          severity="danger"
-                          (click)="removeOption(idx)"
-                        />
-                      </div>
-                    }
-                    <div>
-                      <p-button icon="icon icon-plus" label="Add option" (click)="addOption()" />
-                    </div>
-                  </div>
-                </div>
+                <ng-container [ngTemplateOutlet]="optionsBuilder" />
               }
               @case (DataType.MultiSelect) {
-                <div class="flex flex-col gap-1">
-                  <label class="text-sm">Options</label>
-                  <div class="flex flex-col gap-2">
-                    @for (option of options(); track $index; let idx = $index) {
-                      <div class="flex">
-                        <input
-                          pInputText
-                          [pAutoFocus]="true"
-                          [ngModel]="option"
-                          [ngModelOptions]="{ standalone: true }"
-                          (ngModelChange)="editOption(idx, $event)"
-                          placeholder="Input here..."
-                          class="w-full"
-                        />
-                        <p-button
-                          icon="icon icon-trash"
-                          [text]="true"
-                          severity="danger"
-                          (click)="removeOption(idx)"
-                        />
-                      </div>
-                    }
-                    <div>
-                      <p-button icon="icon icon-plus" label="Add option" (click)="addOption()" />
-                    </div>
-                  </div>
-                </div>
+                <ng-container [ngTemplateOutlet]="optionsBuilder" />
               }
               @case (DataType.Checkbox) {}
               @case (DataType.JSON) {

@@ -15,9 +15,6 @@ import {
   removeDateRangeCheck,
 } from '../utils/column';
 
-/**
- * Main REST router exposing CRUD + bulk operations for all public tables.
- */
 export class TableService {
   async getAll({ schemaName = 'public' }: { schemaName?: string } = {}) {
     const tables = await getTableList(pg, schemaName);

@@ -9,6 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, NgForm } from '@angular/forms';
 import { finalize, Observable } from 'rxjs';
@@ -25,6 +26,8 @@ import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FluidModule } from 'primeng/fluid';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 
 import {
   DataType,
@@ -42,6 +45,7 @@ import { MultiSelectFieldEditorComponent } from '../field-editors/multi-select/e
 import { CheckboxFieldEditorComponent } from '../field-editors/checkbox/editor.component';
 import { DateFieldEditorComponent } from '../field-editors/date/editor.component';
 import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
+import { SchemaService } from '../schema.service';
 import { ColumnFormData, ColumnDefinition, TableDefinition, TableService } from '../table.service';
 
 const DEFAULT_VALUE = {
@@ -54,6 +58,7 @@ const DEFAULT_VALUE = {
   templateUrl: './column-editor-drawer.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CommonModule,
     FormsModule,
     DrawerModule,
     ButtonModule,
@@ -67,6 +72,7 @@ const DEFAULT_VALUE = {
     InputNumberModule,
     DatePickerModule,
     FluidModule,
+    MenuModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -98,12 +104,12 @@ export class ColumnEditorDrawerComponent {
   }));
   protected selectedDataType = signal<DataType>(null);
   protected options = signal<string[]>([]);
-  protected selectionState: string | undefined = 'Single';
-  protected readonly selectionStateOptions = ['Single', 'Multiple'];
+  protected enumTypeMenuItems: MenuItem[] | undefined;
   protected internalField: Field;
 
   constructor(
     private destroyRef: DestroyRef,
+    private schemaService: SchemaService,
     private tblService: TableService,
   ) {
     effect(() => {
@@ -190,5 +196,26 @@ export class ColumnEditorDrawerComponent {
 
   protected removeOption(idx: number) {
     this.options.update((arr) => arr.filter((o, i) => i !== idx));
+  }
+
+  protected onEnumTypesMenuOpen() {
+    if (this.enumTypeMenuItems?.length) return;
+
+    this.schemaService
+      .getEnumTypes()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((enumTypes) => {
+        console.log(enumTypes);
+        this.enumTypeMenuItems = [];
+        for (const enumType of enumTypes) {
+          this.enumTypeMenuItems.push({
+            label: enumType.enumName,
+            options: enumType.enumValues.join(', '),
+            command: () => {
+              this.options.set(enumType.enumValues);
+            },
+          });
+        }
+      });
   }
 }
