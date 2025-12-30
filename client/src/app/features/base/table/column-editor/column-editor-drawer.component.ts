@@ -32,11 +32,13 @@ import {
 } from '../../../../shared/spreadsheet/field/interfaces/field.interface';
 import { Field } from '../../../../shared/spreadsheet/field/objects/field.object';
 import { SelectField } from '../../../../shared/spreadsheet/field/objects/select-field.object';
+import { MultiSelectField } from '@app/shared/spreadsheet/field/objects/multi-select-field.object';
 import { TextFieldEditorComponent } from '../field-editors/text/editor.component';
 import { LongTextFieldEditorComponent } from '../field-editors/long-text/editor.component';
 import { IntegerFieldEditorComponent } from '../field-editors/integer/editor.component';
 import { NumberFieldEditorComponent } from '../field-editors/number/editor.component';
 import { SelectFieldEditorComponent } from '../field-editors/select/editor.component';
+import { MultiSelectFieldEditorComponent } from '../field-editors/multi-select/editor.component';
 import { CheckboxFieldEditorComponent } from '../field-editors/checkbox/editor.component';
 import { DateFieldEditorComponent } from '../field-editors/date/editor.component';
 import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
@@ -70,6 +72,7 @@ const DEFAULT_VALUE = {
     IntegerFieldEditorComponent,
     NumberFieldEditorComponent,
     SelectFieldEditorComponent,
+    MultiSelectFieldEditorComponent,
     CheckboxFieldEditorComponent,
     DateFieldEditorComponent,
     JSONFieldEditorComponent,
@@ -118,8 +121,13 @@ export class ColumnEditorDrawerComponent {
     effect(() => {
       const options = this.options() || [];
       this.columnFormData.options = [...options];
-      if (this.internalField?.dataType === DataType.Select) {
-        (this.internalField as SelectField).options = [...options];
+
+      switch (this.internalField?.dataType) {
+        case DataType.Select:
+          (this.internalField as SelectField).options = [...options];
+          break;
+        case DataType.MultiSelect:
+          (this.internalField as MultiSelectField).options = [...options];
       }
     });
   }

@@ -27,6 +27,7 @@ import { NumberFieldCellComponent } from './number/cell.component';
 import { DateFieldCellComponent } from './date/cell.component';
 import { CheckboxFieldCellComponent } from './checkbox/cell.component';
 import { SelectFieldCellComponent } from './select/cell.component';
+import { MultiSelectFieldCellComponent } from './multi-select/cell.component';
 import { JSONFieldCellComponent } from './json/cell.component';
 import { FieldCellSelectingState, FieldCellService } from './field-cell.service';
 import { TableRow } from '../../models/table-row';
@@ -41,6 +42,7 @@ const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
   [DataType.Date, DateFieldCellComponent],
   [DataType.Checkbox, CheckboxFieldCellComponent],
   [DataType.Select, SelectFieldCellComponent],
+  [DataType.MultiSelect, MultiSelectFieldCellComponent],
   [DataType.JSON, JSONFieldCellComponent],
 ]) as ReadonlyMap<DataType, Type<FieldCell>>;
 

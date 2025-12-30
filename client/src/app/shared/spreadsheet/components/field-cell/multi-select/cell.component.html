@@ -1,0 +1,25 @@
+@if (data !== undefined && data !== null) {
+  <div class="field-cell__block-content">
+    @for (option of parsedData; track option) {
+      <p-tag severity="secondary">
+        {{ option }}
+        @if (selecting && !readonly) {
+          <i
+            class="icon icon-x cursor-pointer text-surface-500"
+            (click)="removeSelectedOption(option)"
+          ></i>
+        }
+      </p-tag>
+    }
+  </div>
+}
+@if (selecting && !readonly) {
+  <p-menu
+    #menu
+    [model]="items"
+    appendTo="body"
+    [popup]="true"
+    (onShow)="onMenuOpened()"
+    (onHide)="onMenuClosed()"
+  />
+}

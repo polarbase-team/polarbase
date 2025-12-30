@@ -73,6 +73,15 @@
             class="col-span-2"
           />
         }
+        @case (DataType.MultiSelect) {
+          <multi-select-field-editor
+            [field]="field"
+            [(data)]="updatedRecord[field.name]"
+            [viewOnly]="viewOnly()"
+            [label]="false"
+            class="col-span-2"
+          />
+        }
         @case (DataType.Checkbox) {
           <checkbox-field-editor
             [field]="field"

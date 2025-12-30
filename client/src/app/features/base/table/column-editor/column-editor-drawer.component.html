@@ -225,6 +225,35 @@
                   </div>
                 </div>
               }
+              @case (DataType.MultiSelect) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Options</label>
+                  <div class="flex flex-col gap-2">
+                    @for (option of options(); track $index; let idx = $index) {
+                      <div class="flex">
+                        <input
+                          pInputText
+                          [pAutoFocus]="true"
+                          [ngModel]="option"
+                          [ngModelOptions]="{ standalone: true }"
+                          (ngModelChange)="editOption(idx, $event)"
+                          placeholder="Input here..."
+                          class="w-full"
+                        />
+                        <p-button
+                          icon="icon icon-trash"
+                          [text]="true"
+                          severity="danger"
+                          (click)="removeOption(idx)"
+                        />
+                      </div>
+                    }
+                    <div>
+                      <p-button icon="icon icon-plus" label="Add option" (click)="addOption()" />
+                    </div>
+                  </div>
+                </div>
+              }
               @case (DataType.Checkbox) {}
               @case (DataType.JSON) {
                 <div class="flex flex-col gap-1">
@@ -283,6 +312,14 @@
               }
               @case (DataType.Select) {
                 <select-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.MultiSelect) {
+                <multi-select-field-editor
                   [field]="internalField"
                   [(data)]="columnFormData.defaultValue"
                   [label]="false"

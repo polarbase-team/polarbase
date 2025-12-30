@@ -6,6 +6,7 @@ export const DataType = {
   Date: 'date',
   Checkbox: 'checkbox',
   Select: 'select',
+  MultiSelect: 'multi-select',
   JSON: 'json',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
@@ -18,6 +19,7 @@ export const FIELD_ICON_MAP: Record<DataType, string> = {
   [DataType.Date]: 'icon icon-calendar',
   [DataType.Checkbox]: 'icon icon-circle-check-big',
   [DataType.Select]: 'icon icon-square-check',
+  [DataType.MultiSelect]: 'icon icon-list-checks',
   [DataType.JSON]: 'icon icon-braces',
 } as const;
 

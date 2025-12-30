@@ -4,12 +4,13 @@
   @if (label() !== false) {
     <label [attr.for]="fieldName">{{ fieldName }}</label>
   }
-  <p-select
+  <p-multiselect
     [inputId]="fieldName"
     [placeholder]="placeholder() ?? 'Select here...'"
     [pAutoFocus]="autoFocus()"
     [readonly]="viewOnly()"
-    [(ngModel)]="data"
+    [(ngModel)]="parsedData"
+    (ngModelChange)="onDataChanges($event)"
     [options]="field().options"
     appendTo="body"
     fluid

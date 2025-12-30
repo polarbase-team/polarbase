@@ -28,6 +28,7 @@ import { LongTextFieldEditorComponent } from '../field-editors/long-text/editor.
 import { IntegerFieldEditorComponent } from '../field-editors/integer/editor.component';
 import { NumberFieldEditorComponent } from '../field-editors/number/editor.component';
 import { SelectFieldEditorComponent } from '../field-editors/select/editor.component';
+import { MultiSelectFieldEditorComponent } from '../field-editors/multi-select/editor.component';
 import { CheckboxFieldEditorComponent } from '../field-editors/checkbox/editor.component';
 import { DateFieldEditorComponent } from '../field-editors/date/editor.component';
 import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
@@ -48,6 +49,7 @@ import { TableDefinition, TableService } from '../table.service';
     IntegerFieldEditorComponent,
     NumberFieldEditorComponent,
     SelectFieldEditorComponent,
+    MultiSelectFieldEditorComponent,
     CheckboxFieldEditorComponent,
     DateFieldEditorComponent,
     JSONFieldEditorComponent,

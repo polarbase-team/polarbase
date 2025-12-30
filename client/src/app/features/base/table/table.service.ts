@@ -68,6 +68,7 @@ const DATA_TYPE_MAPPING = {
   checkbox: DataType.Checkbox,
   date: DataType.Date,
   select: DataType.Select,
+  'multi-select': DataType.MultiSelect,
   json: DataType.JSON,
 };
 
@@ -182,6 +183,7 @@ export class TableService {
         (config as DateFieldConfig).max = column.validation?.maxDate;
         break;
       case DataType.Select:
+      case DataType.MultiSelect:
         (config as SelectFieldConfig).options = column.options;
         break;
       case DataType.JSON:
