@@ -34,11 +34,11 @@ export class DateFieldCellComponent extends FieldCellEditable<DateData> {
     this.save();
   }
 
-  protected onMenuOpened() {
+  protected onMenuOpen() {
     this.markAsEditStarted();
   }
 
-  protected onMenuClosed() {
+  protected onMenuClose() {
     this.markAsEditEnded();
   }
 }

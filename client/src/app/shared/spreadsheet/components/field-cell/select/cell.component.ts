@@ -29,7 +29,7 @@ export class SelectFieldCellComponent extends FieldCellEditable<SelectData> {
     this.menu().show(e);
   }
 
-  protected onMenuOpened() {
+  protected onMenuOpen() {
     this.items = _.chain(this.field.options)
       .without(this.data)
       .map((option) => ({
@@ -45,7 +45,7 @@ export class SelectFieldCellComponent extends FieldCellEditable<SelectData> {
     this.markAsEditStarted();
   }
 
-  protected onMenuClosed() {
+  protected onMenuClose() {
     this.markAsEditEnded();
   }
 }

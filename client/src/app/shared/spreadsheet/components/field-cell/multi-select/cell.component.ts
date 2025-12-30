@@ -58,7 +58,7 @@ export class MultiSelectFieldCellComponent extends FieldCellEditable<MultiSelect
     this.menu().show(e);
   }
 
-  protected onMenuOpened() {
+  protected onMenuOpen() {
     this.items = _.chain(this.field.options)
       .difference(this.parsedData)
       .map((option) => ({
@@ -77,7 +77,7 @@ export class MultiSelectFieldCellComponent extends FieldCellEditable<MultiSelect
     this.markAsEditStarted();
   }
 
-  protected onMenuClosed() {
+  protected onMenuClose() {
     this.markAsEditEnded();
   }
 
