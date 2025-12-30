@@ -8,6 +8,7 @@ export const DataType = {
   Date: 'date',
   Checkbox: 'checkbox',
   Select: 'select',
+  MultiSelect: 'multi-select',
   JSON: 'json',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
@@ -74,7 +75,7 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
 export const mapDataType = (column: Column, pgDataType: string) => {
   let dataType: DataType = DataType.Text;
   if (column.options) {
-    dataType = DataType.Select;
+    dataType = pgDataType === 'ARRAY' ? DataType.MultiSelect : DataType.Select;
   } else {
     const normalizedType = pgDataType
       .toLowerCase()
@@ -90,46 +91,76 @@ export const mapDataType = (column: Column, pgDataType: string) => {
 export const specificType = (
   tableBuilder: Knex.TableBuilder,
   {
+    tableName,
     name,
     dataType,
     options,
   }: {
+    tableName: string;
     name: string;
     dataType: DataType;
     options?: string[] | null;
   }
 ) => {
   switch (dataType) {
-    case DataType.Text:
+    case DataType.Text: {
       return tableBuilder.string(name);
+    }
 
-    case DataType.LongText:
+    case DataType.LongText: {
       return tableBuilder.text(name);
+    }
 
-    case DataType.Integer:
+    case DataType.Integer: {
       return tableBuilder.integer(name);
+    }
 
-    case DataType.Number:
+    case DataType.Number: {
       return tableBuilder.decimal(name);
+    }
 
-    case DataType.Checkbox:
+    case DataType.Checkbox: {
       return tableBuilder.boolean(name);
+    }
 
-    case DataType.Date:
+    case DataType.Date: {
       return tableBuilder.timestamp(name);
+    }
 
-    case DataType.Select:
+    case DataType.Select: {
       if (!options?.length) {
         throw new Error(`options is required for Select column "${name}"`);
       }
+      const timestamp = +new Date();
+      const enumName = `${tableName}_${name}_enum_${timestamp}`;
       return tableBuilder.enum(name, options, {
         useNative: true,
-        enumName: `${name}_enum_${+new Date()}`,
+        enumName,
         existingType: false,
       });
+    }
 
-    case DataType.JSON:
+    case DataType.MultiSelect: {
+      if (!options?.length) {
+        throw new Error(
+          `options is required for Multi-Select column "${name}"`
+        );
+      }
+      const timestamp = +new Date();
+      const enumName = `${tableName}_${name}_enum_${timestamp}`;
+      const temp = `${tableName}_${name}_temp_${timestamp}`;
+      tableBuilder.enum(temp, options, {
+        useNative: true,
+        enumName,
+        existingType: false,
+      });
+      tableBuilder.dropColumn(temp);
+      return tableBuilder.specificType(name, `${enumName}[]`);
+    }
+
+    case DataType.JSON: {
       return tableBuilder.jsonb(name);
+    }
 
     default:
       throw new Error(`Unsupported column type: ${dataType}`);

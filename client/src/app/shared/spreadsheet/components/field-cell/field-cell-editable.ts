@@ -16,6 +16,7 @@ export class FieldCellEditable<T = any> extends FieldCellTouchable<T> {
   private _isEditing: boolean;
   private _isInvalid: boolean;
 
+  @HostBinding('class.field-cell-editable--editing')
   get isEditing() {
     return this._isEditing;
   }
@@ -35,6 +36,11 @@ export class FieldCellEditable<T = any> extends FieldCellTouchable<T> {
     this.cdRef.markForCheck();
     this.onSave();
     this.onSaveCallback?.(this.data);
+  }
+
+  protected override onDeselect() {
+    super.onDeselect();
+    this.markAsEditEnded();
   }
 
   protected onSave() {}

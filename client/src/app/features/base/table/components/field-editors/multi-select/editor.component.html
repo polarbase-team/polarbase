@@ -1,0 +1,18 @@
+@let fieldName = field().name;
+
+<div class="flex flex-col gap-2 w-full">
+  @if (label() !== false) {
+    <label [attr.for]="fieldName">{{ fieldName }}</label>
+  }
+  <p-multiselect
+    [inputId]="fieldName"
+    [placeholder]="placeholder() ?? 'Select here...'"
+    [pAutoFocus]="autoFocus()"
+    [readonly]="viewOnly()"
+    [(ngModel)]="parsedData"
+    (ngModelChange)="onDataChanges($event)"
+    [options]="field().options"
+    appendTo="body"
+    fluid
+  />
+</div>

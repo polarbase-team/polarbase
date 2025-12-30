@@ -1,0 +1,412 @@
+<ng-template #optionsBuilder>
+  <div class="flex flex-col gap-1">
+    <label class="text-sm">Options</label>
+    <div class="flex flex-col gap-2">
+      @for (option of options(); track $index; let idx = $index) {
+        <div class="flex">
+          <input
+            pInputText
+            [pAutoFocus]="true"
+            [ngModel]="option"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="editOption(idx, $event)"
+            placeholder="Input here..."
+            class="w-full"
+          />
+          <p-button
+            icon="icon icon-trash"
+            [text]="true"
+            severity="danger"
+            (click)="removeOption(idx)"
+          />
+        </div>
+      }
+      <div class="flex items-center gap-2">
+        <p-button icon="icon icon-plus" label="Add option" (click)="addOption()" />
+        or
+        <span class="hover:underline cursor-pointer" (click)="menu.show($event)"
+          >copy from existing</span
+        >
+        <p-menu
+          #menu
+          [model]="enumTypeMenuItems"
+          [popup]="true"
+          appendTo="body"
+          [style]="{ 'max-width': '300px' }"
+          (onShow)="onEnumTypesMenuOpen()"
+        >
+          <ng-template #start>
+            <div class="pt-3 px-5 pb-1 font-bold">Choose a enum type</div>
+          </ng-template>
+          <ng-template #item let-item>
+            <div class="px-4 py-2 cursor-pointer">
+              <p class="font-medium">{{ item.label }}</p>
+              <i class="text-sm text-surface-500">[{{ item.options }}]</i>
+            </div>
+          </ng-template>
+        </p-menu>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<p-drawer
+  [(visible)]="visible"
+  position="right"
+  [header]="mode() === 'edit' ? `Edit column: ${column().name}` : 'Add column'"
+  styleClass="!w-150 custom-drawer"
+  (onHide)="reset()"
+>
+  <ng-template #content>
+    <form #columnForm="ngForm" (ngSubmit)="onSubmit()">
+      <div class="p-5">
+        <div class="flex flex-col gap-12">
+          <div class="grid grid-cols-3 w-full gap-12">
+            <label class="col-span-1">
+              <p class="font-medium text-sm">General</p>
+            </label>
+            <div class="flex flex-col col-span-2 gap-8">
+              <div class="flex flex-col gap-1">
+                <label class="text-sm">
+                  Name
+                  <i class="icon icon-asterisk text-red-500"></i>
+                </label>
+                <input
+                  pInputText
+                  name="name"
+                  [pAutoFocus]="true"
+                  [invalid]="name.invalid && (name.touched || columnForm.submitted)"
+                  [(ngModel)]="columnFormData.name"
+                  #name="ngModel"
+                  placeholder="Input here..."
+                  required
+                  pattern="[a-zA-Z_][a-zA-Z0-9_$ ]*"
+                />
+                @if (name.invalid && (name.touched || columnForm.submitted)) {
+                  <p-message severity="error" size="small" variant="simple">
+                    @if (name.errors['required']) {
+                      Table name is required.
+                    } @else if (name.errors?.['pattern']) {
+                      Invalid table name.
+                    }
+                  </p-message>
+                }
+                <p class="text-surface-500 text-xs">
+                  Only letters, numbers, space, _, $ allowed and must start with a letter or _.
+                </p>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-sm">Description</label>
+                <textarea
+                  pTextarea
+                  name="description"
+                  [(ngModel)]="columnFormData.comment"
+                  rows="5"
+                  class="col-span-2"
+                  placeholder="Input here..."
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Data Type</p>
+          </label>
+          <div class="flex flex-col gap-8 col-span-2">
+            <div class="flex flex-col gap-1">
+              <label class="text-sm">
+                Type
+                <i class="icon icon-asterisk text-red-500"></i>
+              </label>
+              <p-select
+                name="type"
+                optionLabel="name"
+                optionValue="value"
+                [options]="dataTypes"
+                [(ngModel)]="selectedDataType"
+                (ngModelChange)="onSelectDataType($event)"
+                placeholder="Select here..."
+                required
+              >
+                <ng-template let-item #item>
+                  <div class="flex items-center gap-2">
+                    <i [class]="item.icon"></i>
+                    <span>{{ item.name }}</span>
+                  </div>
+                </ng-template>
+              </p-select>
+            </div>
+            @switch (selectedDataType()) {
+              @case (DataType.Text) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Min length</label>
+                  <p-inputnumber
+                    name="minLength"
+                    [(ngModel)]="columnFormData.validation.minLength"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max length</label>
+                  <p-inputnumber
+                    name="maxLength"
+                    [(ngModel)]="columnFormData.validation.maxLength"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.LongText) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max size (bytes)</label>
+                  <p-inputnumber
+                    name="maxSize"
+                    [(ngModel)]="columnFormData.validation.maxSize"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.Integer) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Min value</label>
+                  <p-inputnumber
+                    name="minValue"
+                    [(ngModel)]="columnFormData.validation.minValue"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max value</label>
+                  <p-inputnumber
+                    name="maxValue"
+                    [(ngModel)]="columnFormData.validation.maxValue"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.Number) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Min value</label>
+                  <p-inputnumber
+                    name="minValue"
+                    [(ngModel)]="columnFormData.validation.minValue"
+                    mode="decimal"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="5"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max value</label>
+                  <p-inputnumber
+                    name="maxValue"
+                    [(ngModel)]="columnFormData.validation.maxValue"
+                    mode="decimal"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="5"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.Date) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Min date</label>
+                  <p-datepicker
+                    name="minDate"
+                    [(ngModel)]="columnFormData.validation.minDate"
+                    [dataType]="'string'"
+                    [dateFormat]="'yy-mm-dd'"
+                    [showTime]="true"
+                    [showClear]="true"
+                    [fluid]="true"
+                    appendTo="body"
+                    placeholder="Select here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max date</label>
+                  <p-datepicker
+                    name="maxDate"
+                    [(ngModel)]="columnFormData.validation.maxDate"
+                    [dataType]="'string'"
+                    [dateFormat]="'yy-mm-dd'"
+                    [showTime]="true"
+                    [showClear]="true"
+                    [fluid]="true"
+                    appendTo="body"
+                    placeholder="Select here..."
+                  />
+                </div>
+              }
+              @case (DataType.Select) {
+                <ng-container [ngTemplateOutlet]="optionsBuilder" />
+              }
+              @case (DataType.MultiSelect) {
+                <ng-container [ngTemplateOutlet]="optionsBuilder" />
+              }
+              @case (DataType.Checkbox) {}
+              @case (DataType.JSON) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max size (bytes)</label>
+                  <p-inputnumber
+                    name="maxSize"
+                    [(ngModel)]="columnFormData.validation.maxSize"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Default Value</p>
+          </label>
+          <div class="flex flex-col gap-8 col-span-2">
+            @switch (selectedDataType()) {
+              @case (DataType.Text) {
+                <text-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.LongText) {
+                <long-text-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Integer) {
+                <integer-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Number) {
+                <number-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Select) {
+                <select-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.MultiSelect) {
+                <multi-select-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Checkbox) {
+                <checkbox-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Date) {
+                <date-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.JSON) {
+                <json-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @default {
+                <i class="text-sm text-surface-500">Select a data type first.</i>
+              }
+            }
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Constraints</p>
+          </label>
+          <div class="flex flex-col gap-8 col-span-2">
+            <div class="flex gap-4">
+              <p-checkbox
+                name="nullable"
+                [(ngModel)]="columnFormData.nullable"
+                [binary]="true"
+                size="large"
+              />
+              <div>
+                <label class="text-sm">Allow Nullable</label>
+                <p class="text-surface-500 text-xs">
+                  Allows the column to be left blank (optional).
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <p-checkbox
+                name="unique"
+                [(ngModel)]="columnFormData.unique"
+                [binary]="true"
+                size="large"
+              />
+              <div>
+                <label class="text-sm">Is Unique</label>
+                <p class="text-surface-500 text-xs">
+                  Ensures all values are different (no duplicates). Can be blank if allowed, unlike
+                  Primary Key.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" (click)="cancel()" />
+      <p-button
+        label="Save"
+        [loading]="isSaving()"
+        [disabled]="columnForm().invalid"
+        (click)="save()"
+      />
+    </div>
+  </ng-template>
+</p-drawer>

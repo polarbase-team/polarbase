@@ -7,6 +7,7 @@ import { NumberField } from './objects/number-field.object';
 import { DateField } from './objects/date-field.object';
 import { CheckboxField } from './objects/checkbox-field.object';
 import { SelectField } from './objects/select-field.object';
+import { MultiSelectField } from './objects/multi-select-field.object';
 import { JSONField } from './objects/json-field.object';
 
 export const FIELD_MAP = new Map([
@@ -17,6 +18,7 @@ export const FIELD_MAP = new Map([
   [DataType.Date, DateField],
   [DataType.Checkbox, CheckboxField],
   [DataType.Select, SelectField],
+  [DataType.MultiSelect, MultiSelectField],
   [DataType.JSON, JSONField],
 ]);
 

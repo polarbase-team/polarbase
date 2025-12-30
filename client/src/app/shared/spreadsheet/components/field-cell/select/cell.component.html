@@ -3,13 +3,13 @@
     <p-tag severity="secondary" [value]="data"></p-tag>
   </div>
 }
-@if (selecting) {
+@if (selecting && !readonly) {
   <p-menu
     #menu
     [model]="items"
     appendTo="body"
     [popup]="true"
-    (onShow)="onMenuOpened()"
-    (onHide)="onMenuClosed()"
+    (onShow)="onMenuOpen()"
+    (onHide)="onMenuClose()"
   />
 }

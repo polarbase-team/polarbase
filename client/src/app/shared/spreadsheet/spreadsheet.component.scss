@@ -91,7 +91,7 @@ $blank-row-height: 32px;
         }
       }
 
-      &:has(input-box:focus) {
+      &:has(.field-cell-editable--editing) {
         .fill-handle {
           display: none;
         }
@@ -696,11 +696,6 @@ $blank-row-height: 32px;
                 }
               }
             }
-          }
-          &:not(:has(.attachment-field-cell)) {
-            height: fit-content;
-            min-height: 100%;
-            max-height: 124px;
           }
         }
       }
