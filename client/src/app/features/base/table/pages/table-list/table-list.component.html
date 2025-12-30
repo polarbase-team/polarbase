@@ -60,12 +60,12 @@
   <p-iconfield>
     <p-inputicon class="icon icon-search" />
     <input
-      class="w-full"
       type="text"
       pInputText
       placeholder="Search table..."
       [(ngModel)]="searchQuery"
       (input)="searchTable()"
+      fluid
     />
   </p-iconfield>
 </div>

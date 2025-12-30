@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { TextareaModule } from 'primeng/textarea';
+import { FluidModule } from 'primeng/fluid';
 
 import { LongTextField } from '@app/shared/spreadsheet/field/objects/long-text-field.object';
 import { LongTextData } from '@app/shared/spreadsheet/field/interfaces/long-text-field.interface';
@@ -18,6 +19,7 @@ import { FieldEditorComponent } from '../editor.component';
     AutoFocusModule,
     TextareaModule,
     ButtonModule,
+    FluidModule,
     RichTextEditorDrawerComponent,
   ],
 })
