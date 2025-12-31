@@ -11,7 +11,7 @@
             [ngModelOptions]="{ standalone: true }"
             (ngModelChange)="editOption(idx, $event)"
             placeholder="Input here..."
-            class="w-full"
+            fluid
           />
           <p-button
             icon="icon icon-trash"
@@ -228,9 +228,9 @@
                     [dateFormat]="'yy-mm-dd'"
                     [showTime]="true"
                     [showClear]="true"
-                    [fluid]="true"
                     appendTo="body"
                     placeholder="Select here..."
+                    fluid
                   />
                 </div>
                 <div class="flex flex-col gap-1">
@@ -242,9 +242,9 @@
                     [dateFormat]="'yy-mm-dd'"
                     [showTime]="true"
                     [showClear]="true"
-                    [fluid]="true"
                     appendTo="body"
                     placeholder="Select here..."
+                    fluid
                   />
                 </div>
               }

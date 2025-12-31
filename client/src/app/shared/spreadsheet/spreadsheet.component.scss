@@ -687,6 +687,9 @@ $blank-row-height: 32px;
 
           &:has(.field-cell) {
             padding: 2px;
+            height: fit-content;
+            min-height: 100%;
+            max-height: 124px;
             ::ng-deep {
               .field-cell {
                 padding: 4px 6px 3px;
