@@ -65,6 +65,7 @@ export const getTableSchema = async (
       'column_name',
       'data_type',
       'udt_name',
+      'domain_name',
       'is_nullable',
       'character_maximum_length',
       'column_default',
@@ -340,12 +341,13 @@ export const getTableSchema = async (
       metadata: {
         pgDataType: col.data_type,
         pgRawType: col.udt_name,
+        pgDomainName: col.domain_name,
         pgDefaultValue: rawDefaultValue,
         constraints,
       },
     } as Column;
 
-    column.dataType = mapDataType(column, col.data_type);
+    column.dataType = mapDataType(column);
 
     return column;
   });

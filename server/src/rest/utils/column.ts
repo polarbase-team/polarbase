@@ -9,6 +9,7 @@ export const DataType = {
   Checkbox: 'checkbox',
   Select: 'select',
   MultiSelect: 'multi-select',
+  Email: 'email',
   JSON: 'json',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
@@ -67,25 +68,34 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
   timestamp: DataType.Date,
   time: DataType.Date,
 
+  // Email
+  email_address: DataType.Email,
+
   // JSON
   json: DataType.JSON,
   jsonb: DataType.JSON,
 };
 
-export const mapDataType = (column: Column, pgDataType: string) => {
-  let dataType: DataType = DataType.Text;
-  if (column.options) {
-    dataType = pgDataType === 'ARRAY' ? DataType.MultiSelect : DataType.Select;
-  } else {
-    const normalizedType = pgDataType
-      .toLowerCase()
-      .split('(')[0]
-      .trim()
-      .split(' without')[0]
-      .split(' with')[0];
-    dataType = PG_TYPE_MAPPING[normalizedType] || dataType;
+export const mapDataType = (column: Column) => {
+  const { pgDataType, pgDomainName } = column.metadata || {};
+
+  // 1. Check for custom domains first
+  if (pgDomainName === 'email_address') {
+    return DataType.Email;
   }
-  return dataType;
+
+  // 2. Handle Enums/Selects
+  if (column.options) {
+    return pgDataType === 'ARRAY' ? DataType.MultiSelect : DataType.Select;
+  }
+
+  const normalizedType = pgDataType
+    .toLowerCase()
+    .split('(')[0]
+    .trim()
+    .split(' without')[0]
+    .split(' with')[0];
+  return PG_TYPE_MAPPING[normalizedType] || DataType.Text;
 };
 
 export const specificType = (
@@ -160,6 +170,10 @@ export const specificType = (
 
     case DataType.JSON: {
       return tableBuilder.jsonb(name);
+    }
+
+    case DataType.Email: {
+      return tableBuilder.specificType(name, 'email_address');
     }
 
     default:

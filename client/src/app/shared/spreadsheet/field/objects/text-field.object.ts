@@ -49,8 +49,4 @@ export class TextField extends Field<TextData> {
 
     return errors;
   }
-
-  override convertTextToData(text: string) {
-    return text;
-  }
 }

@@ -45,8 +45,8 @@ export abstract class Field<T = any> {
     return null;
   }
 
-  convertTextToData(_text: string): T | undefined {
-    return undefined;
+  convertTextToData(text: string): T | undefined {
+    return text as T;
   }
 
   compareData(source: T, destination = this.data) {

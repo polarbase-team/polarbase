@@ -1,5 +1,7 @@
 import knex from 'knex';
 
+import { log } from '../utils/logger';
+
 export const pgConfig = {
   host: process.env.POSTGRES_HOST || '0.0.0.0',
   port: Number(process.env.POSTGRES_PORT) || 5432,
@@ -10,7 +12,7 @@ export const pgConfig = {
     process.env.POSTGRES_SSL === 'true' ? { rejectUnauthorized: false } : false,
 };
 
-export default knex({
+const pg = knex({
   client: 'postgres',
   connection: { ...pgConfig },
   pool: {
@@ -24,3 +26,28 @@ export default knex({
   },
   acquireConnectionTimeout: 60000,
 });
+
+/**
+ * Initialize Custom DB Types
+ * This runs a PL/pgSQL block to create the 'email_address' domain if it doesn't exist.
+ */
+export const initDatabaseTypes = async () => {
+  try {
+    await pg.raw(`
+      DO $$
+      BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'email_address') THEN
+              CREATE DOMAIN email_address AS TEXT
+              CHECK (VALUE ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\\.[A-Za-z]+$');
+          END IF;
+      END
+      $$;
+    `);
+    log.info('✅ Custom database types initialized');
+  } catch (error) {
+    log.error('❌ Failed to initialize database types:', error);
+    throw error;
+  }
+};
+
+export default pg;
