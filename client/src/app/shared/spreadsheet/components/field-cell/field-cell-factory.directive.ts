@@ -29,6 +29,7 @@ import { CheckboxFieldCellComponent } from './checkbox/cell.component';
 import { SelectFieldCellComponent } from './select/cell.component';
 import { MultiSelectFieldCellComponent } from './multi-select/cell.component';
 import { EmailFieldCellComponent } from './email/cell.component';
+import { UrlFieldCellComponent } from './url/cell.component';
 import { JSONFieldCellComponent } from './json/cell.component';
 import { FieldCellSelectingState, FieldCellService } from './field-cell.service';
 import { TableRow } from '../../models/table-row';
@@ -45,6 +46,7 @@ const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
   [DataType.Select, SelectFieldCellComponent],
   [DataType.MultiSelect, MultiSelectFieldCellComponent],
   [DataType.Email, EmailFieldCellComponent],
+  [DataType.Url, UrlFieldCellComponent],
   [DataType.JSON, JSONFieldCellComponent],
 ]) as ReadonlyMap<DataType, Type<FieldCell>>;
 

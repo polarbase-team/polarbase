@@ -32,6 +32,7 @@ import { MultiSelectFieldEditorComponent } from '../field-editors/multi-select/e
 import { CheckboxFieldEditorComponent } from '../field-editors/checkbox/editor.component';
 import { DateFieldEditorComponent } from '../field-editors/date/editor.component';
 import { EmailFieldEditorComponent } from '../field-editors/email/editor.component';
+import { UrlFieldEditorComponent } from '../field-editors/url/editor.component';
 import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
 import { TableDefinition, TableService } from '../../services/table.service';
 
@@ -54,6 +55,7 @@ import { TableDefinition, TableService } from '../../services/table.service';
     CheckboxFieldEditorComponent,
     DateFieldEditorComponent,
     EmailFieldEditorComponent,
+    UrlFieldEditorComponent,
     JSONFieldEditorComponent,
   ],
   providers: [MessageService],

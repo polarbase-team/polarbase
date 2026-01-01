@@ -8,6 +8,7 @@ export const DataType = {
   Select: 'select',
   MultiSelect: 'multi-select',
   Email: 'email',
+  Url: 'url',
   JSON: 'json',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
@@ -22,6 +23,7 @@ export const FIELD_ICON_MAP: Record<DataType, string> = {
   [DataType.Select]: 'icon icon-square-check',
   [DataType.MultiSelect]: 'icon icon-list-checks',
   [DataType.Email]: 'icon icon-mail',
+  [DataType.Url]: 'icon icon-link',
   [DataType.JSON]: 'icon icon-braces',
 } as const;
 

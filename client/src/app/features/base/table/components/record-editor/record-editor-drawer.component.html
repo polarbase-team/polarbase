@@ -109,6 +109,15 @@
             class="col-span-2"
           />
         }
+        @case (DataType.Url) {
+          <url-field-editor
+            [field]="field"
+            [(data)]="updatedRecord[field.name]"
+            [viewOnly]="viewOnly() || field.params.primary"
+            [label]="false"
+            class="col-span-2"
+          />
+        }
         @case (DataType.JSON) {
           <json-field-editor
             [field]="field"
