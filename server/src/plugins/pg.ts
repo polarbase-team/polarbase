@@ -29,16 +29,23 @@ const pg = knex({
 
 /**
  * Initialize Custom DB Types
- * This runs a PL/pgSQL block to create the 'email_address' domain if it doesn't exist.
+ * This runs a PL/pgSQL block to create the domains if it doesn't exist.
  */
 export const initDatabaseTypes = async () => {
   try {
     await pg.raw(`
       DO $$
       BEGIN
+          -- 1. Email Domain
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'email_address') THEN
               CREATE DOMAIN email_address AS TEXT
               CHECK (VALUE ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\\.[A-Za-z]+$');
+          END IF;
+
+          -- 2. URL Domain
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'url_address') THEN
+              CREATE DOMAIN url_address AS TEXT
+              CHECK (VALUE ~* '^https\\?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)\\?$');
           END IF;
       END
       $$;

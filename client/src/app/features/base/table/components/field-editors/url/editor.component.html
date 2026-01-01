@@ -6,9 +6,9 @@
   }
   <input
     pInputText
-    #email="ngModel"
-    type="email"
-    [pattern]="emailPattern"
+    #url="ngModel"
+    type="url"
+    [pattern]="urlPattern"
     [id]="fieldName"
     [placeholder]="placeholder() ?? 'Input here...'"
     [pAutoFocus]="autoFocus()"
@@ -16,10 +16,10 @@
     [(ngModel)]="data"
     fluid
   />
-  @if (email.invalid && email.touched) {
+  @if (url.invalid && url.touched) {
     <p-message severity="error" size="small" variant="simple">
-      @if (email.hasError('pattern')) {
-        Please enter a valid email.
+      @if (url.hasError('pattern')) {
+        Please enter a valid url.
       }
     </p-message>
   }

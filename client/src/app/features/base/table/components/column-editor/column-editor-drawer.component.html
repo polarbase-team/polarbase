@@ -351,6 +351,14 @@
                   class="col-span-2"
                 />
               }
+              @case (DataType.Url) {
+                <url-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
               @case (DataType.JSON) {
                 <json-field-editor
                   [field]="internalField"

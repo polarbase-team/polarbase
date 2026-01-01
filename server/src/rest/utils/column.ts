@@ -10,6 +10,7 @@ export const DataType = {
   Select: 'select',
   MultiSelect: 'multi-select',
   Email: 'email',
+  Url: 'url',
   JSON: 'json',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
@@ -71,6 +72,9 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
   // Email
   email_address: DataType.Email,
 
+  // Url
+  url_address: DataType.Url,
+
   // JSON
   json: DataType.JSON,
   jsonb: DataType.JSON,
@@ -82,6 +86,8 @@ export const mapDataType = (column: Column) => {
   // 1. Check for custom domains first
   if (pgDomainName === 'email_address') {
     return DataType.Email;
+  } else if (pgDomainName === 'url_address') {
+    return DataType.Url;
   }
 
   // 2. Handle Enums/Selects
@@ -174,6 +180,10 @@ export const specificType = (
 
     case DataType.Email: {
       return tableBuilder.specificType(name, 'email_address');
+    }
+
+    case DataType.Url: {
+      return tableBuilder.specificType(name, 'url_address');
     }
 
     default:
