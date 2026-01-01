@@ -255,6 +255,7 @@
                 <ng-container [ngTemplateOutlet]="optionsBuilder" />
               }
               @case (DataType.Checkbox) {}
+              @case (DataType.Email) {}
               @case (DataType.JSON) {
                 <div class="flex flex-col gap-1">
                   <label class="text-sm">Max size (bytes)</label>
@@ -336,6 +337,14 @@
               }
               @case (DataType.Date) {
                 <date-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Email) {
+                <email-field-editor
                   [field]="internalField"
                   [(data)]="columnFormData.defaultValue"
                   [label]="false"

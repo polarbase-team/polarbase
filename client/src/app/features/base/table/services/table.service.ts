@@ -66,6 +66,7 @@ const DATA_TYPE_MAPPING = {
   date: DataType.Date,
   select: DataType.Select,
   'multi-select': DataType.MultiSelect,
+  email: DataType.Email,
   json: DataType.JSON,
 };
 
@@ -188,6 +189,8 @@ export class TableService {
       case DataType.Select:
       case DataType.MultiSelect:
         (config as SelectFieldConfig).options = column.options;
+        break;
+      case DataType.Email:
         break;
       case DataType.JSON:
         (config as JSONFieldConfig).maxSize = column.validation?.maxSize;

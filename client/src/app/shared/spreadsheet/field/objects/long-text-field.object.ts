@@ -36,8 +36,4 @@ export class LongTextField extends Field<LongTextData> {
 
     return errors;
   }
-
-  override convertTextToData(text: string) {
-    return text;
-  }
 }
