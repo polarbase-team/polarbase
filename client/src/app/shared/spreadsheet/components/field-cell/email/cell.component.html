@@ -10,6 +10,8 @@
   />
 } @else {
   <div class="field-cell__text-content">
-    {{ data }}
+    <a [attr.href]="data ? `mailto:${data}` : '#'" class="text-blue-600 hover:underline">
+      {{ data }}
+    </a>
   </div>
 }
