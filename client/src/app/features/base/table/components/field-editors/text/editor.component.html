@@ -15,6 +15,9 @@
   }
   <input
     pInputText
+    #input="ngModel"
+    [required]="field().required"
+    [invalid]="input.invalid && input.touched"
     [id]="fieldName"
     [placeholder]="placeholder() ?? 'Input here...'"
     [pAutoFocus]="autoFocus()"
@@ -22,4 +25,11 @@
     [(ngModel)]="data"
     fluid
   />
+  @if (input.invalid && input.touched) {
+    <p-message severity="error" size="small" variant="simple">
+      @if (input.hasError('required')) {
+        {{ fieldName }} is required.
+      }
+    </p-message>
+  }
 </div>

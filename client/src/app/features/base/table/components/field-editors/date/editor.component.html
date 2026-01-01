@@ -14,6 +14,11 @@
     </label>
   }
   <p-datepicker
+    #input="ngModel"
+    [required]="field().required"
+    [minDate]="field().minDate"
+    [maxDate]="field().maxDate"
+    [invalid]="input.invalid && input.touched"
     [inputId]="fieldName"
     [placeholder]="placeholder() ?? 'Input here...'"
     [pAutoFocus]="autoFocus()"
@@ -27,4 +32,11 @@
     appendTo="body"
     fluid
   />
+  @if (input.invalid && input.touched) {
+    <p-message severity="error" size="small" variant="simple">
+      @if (input.hasError('required')) {
+        {{ fieldName }} is required.
+      }
+    </p-message>
+  }
 </div>

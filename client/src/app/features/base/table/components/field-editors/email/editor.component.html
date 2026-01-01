@@ -15,8 +15,9 @@
   }
   <input
     pInputText
-    #email="ngModel"
+    #input="ngModel"
     type="email"
+    [required]="field().required"
     [pattern]="emailPattern"
     [id]="fieldName"
     [placeholder]="placeholder() ?? 'Input here...'"
@@ -25,9 +26,12 @@
     [(ngModel)]="data"
     fluid
   />
-  @if (email.invalid && email.touched) {
+  @if (input.invalid && input.touched) {
     <p-message severity="error" size="small" variant="simple">
-      @if (email.hasError('pattern')) {
+      @if (input.hasError('required')) {
+        {{ fieldName }} is required.
+      }
+      @if (input.hasError('pattern')) {
         Please enter a valid email.
       }
     </p-message>

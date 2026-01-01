@@ -182,8 +182,8 @@ export class TableService {
         (config as NumberFieldConfig).max = column.validation?.maxValue;
         break;
       case DataType.Date:
-        (config as DateFieldConfig).min = column.validation?.minDate;
-        (config as DateFieldConfig).max = column.validation?.maxDate;
+        (config as DateFieldConfig).minDate = column.validation?.minDate;
+        (config as DateFieldConfig).maxDate = column.validation?.maxDate;
         break;
       case DataType.Select:
       case DataType.MultiSelect:

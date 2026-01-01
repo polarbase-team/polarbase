@@ -14,6 +14,10 @@
     </label>
   }
   <p-inputnumber
+    #input="ngModel"
+    [required]="field().required"
+    [min]="field().min"
+    [max]="field().max"
     [inputId]="fieldName"
     [placeholder]="placeholder() ?? 'Input here...'"
     [pAutoFocus]="autoFocus()"
@@ -25,4 +29,11 @@
     [maxFractionDigits]="5"
     fluid
   />
+  @if (input.invalid && input.touched) {
+    <p-message severity="error" size="small" variant="simple">
+      @if (input.hasError('required')) {
+        {{ fieldName }} is required.
+      }
+    </p-message>
+  }
 </div>

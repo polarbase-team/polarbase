@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { TextareaModule } from 'primeng/textarea';
 import { FluidModule } from 'primeng/fluid';
+import { MessageModule } from 'primeng/message';
 
 import { JSONField } from '@app/shared/spreadsheet/field/objects/json-field.object';
 import { JSONData } from '@app/shared/spreadsheet/field/interfaces/json-field.interface';
@@ -22,6 +23,7 @@ import { FieldEditorComponent } from '../editor.component';
     TextareaModule,
     ButtonModule,
     FluidModule,
+    MessageModule,
     JSONEditorDrawerComponent,
   ],
 })

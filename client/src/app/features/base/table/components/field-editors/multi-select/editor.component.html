@@ -14,6 +14,9 @@
     </label>
   }
   <p-multiselect
+    #input="ngModel"
+    [required]="field().required"
+    [invalid]="input.invalid && input.touched"
     [inputId]="fieldName"
     [placeholder]="placeholder() ?? 'Select here...'"
     [pAutoFocus]="autoFocus()"
@@ -24,4 +27,11 @@
     appendTo="body"
     fluid
   />
+  @if (input.invalid && input.touched) {
+    <p-message severity="error" size="small" variant="simple">
+      @if (input.hasError('required')) {
+        {{ fieldName }} is required.
+      }
+    </p-message>
+  }
 </div>

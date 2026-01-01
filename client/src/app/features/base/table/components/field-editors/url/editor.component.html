@@ -15,8 +15,9 @@
   }
   <input
     pInputText
-    #url="ngModel"
+    #input="ngModel"
     type="url"
+    [required]="field().required"
     [pattern]="urlPattern"
     [id]="fieldName"
     [placeholder]="placeholder() ?? 'Input here...'"
@@ -25,9 +26,12 @@
     [(ngModel)]="data"
     fluid
   />
-  @if (url.invalid && url.touched) {
+  @if (input.invalid && input.touched) {
     <p-message severity="error" size="small" variant="simple">
-      @if (url.hasError('pattern')) {
+      @if (input.hasError('required')) {
+        {{ fieldName }} is required.
+      }
+      @if (input.hasError('pattern')) {
         Please enter a valid url.
       }
     </p-message>
