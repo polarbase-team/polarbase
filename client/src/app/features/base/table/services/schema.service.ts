@@ -4,16 +4,12 @@ import { map } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
+import { ApiResponse } from '@app/core/models/api-response';
+
 export interface EnumTypeDefinition {
   schemaName: string;
   enumName: string;
   enumValues: string[];
-}
-
-interface Response<T = any> {
-  success: boolean;
-  message: string;
-  data: T;
 }
 
 @Injectable({
@@ -26,7 +22,7 @@ export class SchemaService {
 
   getEnumTypes() {
     return this.http
-      .get<Response<EnumTypeDefinition[]>>(`${this.apiUrl}/enum-types`)
+      .get<ApiResponse<EnumTypeDefinition[]>>(`${this.apiUrl}/enum-types`)
       .pipe(map((res) => res.data));
   }
 }
