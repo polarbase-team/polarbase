@@ -20,7 +20,7 @@
 **Polarbase** is an open-source **Extensible Data Backend** built directly on the PostgreSQL core. It acts as a powerful bridge that empowers developers to architect, manage, and scale complex databases with ease, combining enterprise-grade reliability with a modern, developer-centric experience.
 
 **Architect your database with an intuitive UI and deploy data-driven solutions in minutes.**<br>
-[Explore Demo](https://only-laura-polarbase-b97c3a27.koyeb.app) • [View Roadmap](./ROADMAP.md)
+[Explore Demo](https://polarbase-client.onrender.com) • [View Roadmap](./ROADMAP.md)
 
 ---
 
@@ -63,7 +63,7 @@
 
 ### Cloud Version (Quick Try)
 
-Visit our [hosted demo](https://only-laura-polarbase-b97c3a27.koyeb.app) to explore without installation.
+Visit our [hosted demo](https://polarbase-client.onrender.com) to explore without installation.
 
 ### Install Bun
 
