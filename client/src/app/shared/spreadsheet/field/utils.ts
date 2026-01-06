@@ -11,6 +11,7 @@ import { MultiSelectField } from './objects/multi-select-field.object';
 import { EmailField } from './objects/email-field.object';
 import { UrlField } from './objects/url-field.object';
 import { JSONField } from './objects/json-field.object';
+import { GeoPointField } from './objects/geo-point-field.object';
 
 export const FIELD_MAP = new Map([
   [DataType.Text, TextField as any],
@@ -24,6 +25,7 @@ export const FIELD_MAP = new Map([
   [DataType.Email, EmailField],
   [DataType.Url, UrlField],
   [DataType.JSON, JSONField],
+  [DataType.GeoPoint, GeoPointField],
 ]);
 
 export function buildField<T = Field>(dataType: DataType, config: FieldConfig<T>) {

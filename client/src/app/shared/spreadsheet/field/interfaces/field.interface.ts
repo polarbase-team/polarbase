@@ -10,6 +10,7 @@ export const DataType = {
   Email: 'email',
   Url: 'url',
   JSON: 'json',
+  GeoPoint: 'geo-point',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -25,6 +26,7 @@ export const FIELD_ICON_MAP: Record<DataType, string> = {
   [DataType.Email]: 'icon icon-mail',
   [DataType.Url]: 'icon icon-link',
   [DataType.JSON]: 'icon icon-braces',
+  [DataType.GeoPoint]: 'icon icon-map-pin',
 } as const;
 
 export interface FieldConfig<T = any> {

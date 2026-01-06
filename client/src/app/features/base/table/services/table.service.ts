@@ -64,6 +64,7 @@ const DATA_TYPE_MAPPING = {
   email: DataType.Email,
   url: DataType.Url,
   json: DataType.JSON,
+  'geo-point': DataType.GeoPoint,
 };
 
 @Injectable({
@@ -190,10 +191,13 @@ export class TableService {
         (config as SelectFieldConfig).options = column.options;
         break;
       case DataType.Email:
+        break;
       case DataType.Url:
         break;
       case DataType.JSON:
         (config as JSONFieldConfig).maxSize = column.validation?.maxSize;
+        break;
+      case DataType.GeoPoint:
         break;
     }
 

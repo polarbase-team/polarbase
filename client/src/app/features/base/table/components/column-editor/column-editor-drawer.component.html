@@ -367,6 +367,14 @@
                   class="col-span-2"
                 />
               }
+              @case (DataType.GeoPoint) {
+                <geo-point-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
               @default {
                 <i class="text-sm text-surface-500">Select a data type first.</i>
               }
