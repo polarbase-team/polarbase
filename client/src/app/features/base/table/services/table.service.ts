@@ -4,6 +4,7 @@ import { Observable, map } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
+import { ApiResponse } from '@app/core/models/api-response';
 import { DataType, FieldConfig } from '@app/shared/spreadsheet/field/interfaces/field.interface';
 import { IntegerFieldConfig } from '@app/shared/spreadsheet/field/interfaces/integer-field.interface';
 import { SelectFieldConfig } from '@app/shared/spreadsheet/field/interfaces/select-field.interface';
@@ -51,12 +52,6 @@ export interface ColumnDefinition {
 
 export interface ColumnFormData extends Omit<ColumnDefinition, 'primary'> {}
 
-interface Response<T = any> {
-  success: boolean;
-  message: string;
-  data: T;
-}
-
 const DATA_TYPE_MAPPING = {
   integer: DataType.Integer,
   number: DataType.Number,
@@ -84,43 +79,46 @@ export class TableService {
 
   getEnumTypes() {
     return this.http
-      .get<Response<ColumnDefinition[]>>(`${this.apiUrl}/enum-types`)
+      .get<ApiResponse<ColumnDefinition[]>>(`${this.apiUrl}/enum-types`)
       .pipe(map((res) => res.data));
   }
 
   getTables() {
     return this.http
-      .get<Response<TableDefinition[]>>(`${this.apiUrl}/tables`)
+      .get<ApiResponse<TableDefinition[]>>(`${this.apiUrl}/tables`)
       .pipe(map((res) => res.data));
   }
 
   getTableSchema(tableName: string) {
     return this.http
-      .get<Response<ColumnDefinition[]>>(`${this.apiUrl}/tables/${tableName}/schema`)
+      .get<ApiResponse<ColumnDefinition[]>>(`${this.apiUrl}/tables/${tableName}/schema`)
       .pipe(map((res) => res.data));
   }
 
   createTable(table: TableFormData) {
-    return this.http.post<Response<TableDefinition>>(`${this.apiUrl}/tables`, table);
+    return this.http.post<ApiResponse<TableDefinition>>(`${this.apiUrl}/tables`, table);
   }
 
   updateTable(tableName: string, table: Pick<TableFormData, 'tableName' | 'tableComment'>) {
-    return this.http.patch<Response<TableDefinition>>(`${this.apiUrl}/tables/${tableName}`, table);
+    return this.http.patch<ApiResponse<TableDefinition>>(
+      `${this.apiUrl}/tables/${tableName}`,
+      table,
+    );
   }
 
   deleteTable(tableName: string, casecade = false) {
-    return this.http.delete<Response>(`${this.apiUrl}/tables/${tableName}?cascade=${casecade}`);
+    return this.http.delete<ApiResponse>(`${this.apiUrl}/tables/${tableName}?cascade=${casecade}`);
   }
 
   createColumn(tableName: string, column: ColumnFormData) {
-    return this.http.post<Response<ColumnDefinition>>(
+    return this.http.post<ApiResponse<ColumnDefinition>>(
       `${this.apiUrl}/tables/${tableName}/columns`,
       column,
     );
   }
 
   updateColumn(tableName: string, columnName: string, column: ColumnFormData) {
-    return this.http.put<Response<ColumnDefinition>>(
+    return this.http.put<ApiResponse<ColumnDefinition>>(
       `${this.apiUrl}/tables/${tableName}/columns/${columnName}`,
       column,
     );
@@ -135,7 +133,7 @@ export class TableService {
   }
 
   createRecords(tableName: string, records: Record<string, any>[]) {
-    return this.http.post<Response<{ insertedCount: number; returning: Record<string, any>[] }>>(
+    return this.http.post<ApiResponse<{ insertedCount: number; returning: Record<string, any>[] }>>(
       `${this.apiUrl}/${tableName}/bulk-create`,
       records,
     );
@@ -145,14 +143,14 @@ export class TableService {
     tableName: string,
     recordUpdates: { id: string | number; data: Record<string, any> }[],
   ) {
-    return this.http.patch<Response<{ updatedCount: number; returning: any[] }>>(
+    return this.http.patch<ApiResponse<{ updatedCount: number; returning: any[] }>>(
       `${this.apiUrl}/${tableName}/bulk-update`,
       recordUpdates,
     );
   }
 
   deleteRecords(tableName: string, recordIds: (string | number)[]) {
-    return this.http.post<Response<{ deletedCount: number }>>(
+    return this.http.post<ApiResponse<{ deletedCount: number }>>(
       `${this.apiUrl}/${tableName}/bulk-delete`,
       { ids: recordIds },
     );
@@ -185,8 +183,8 @@ export class TableService {
         (config as NumberFieldConfig).max = column.validation?.maxValue;
         break;
       case DataType.Date:
-        (config as DateFieldConfig).min = column.validation?.minDate;
-        (config as DateFieldConfig).max = column.validation?.maxDate;
+        (config as DateFieldConfig).minDate = column.validation?.minDate;
+        (config as DateFieldConfig).maxDate = column.validation?.maxDate;
         break;
       case DataType.Select:
       case DataType.MultiSelect:

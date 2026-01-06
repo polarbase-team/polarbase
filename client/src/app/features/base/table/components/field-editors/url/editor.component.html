@@ -1,13 +1,26 @@
 @let fieldName = field().name;
+@let fieldDescription = field().description;
 
 <div class="flex flex-col gap-1 w-full">
   @if (label() !== false) {
-    <label [attr.for]="fieldName">{{ fieldName }}</label>
+    <label class="text-sm" [attr.for]="fieldName">
+      <p class="flex items-center gap-1">
+        <i [class]="field().icon"></i>
+        {{ fieldName }}
+        @if (field().required) {
+          <i class="icon icon-asterisk text-red-500"></i>
+        }
+      </p>
+      @if (fieldDescription) {
+        <p class="text-xs text-surface-500">{{ fieldDescription }}</p>
+      }
+    </label>
   }
   <input
     pInputText
-    #url="ngModel"
+    #input="ngModel"
     type="url"
+    [required]="field().required"
     [pattern]="urlPattern"
     [id]="fieldName"
     [placeholder]="placeholder() ?? 'Input here...'"
@@ -16,9 +29,12 @@
     [(ngModel)]="data"
     fluid
   />
-  @if (url.invalid && url.touched) {
+  @if (input.invalid && input.touched) {
     <p-message severity="error" size="small" variant="simple">
-      @if (url.hasError('pattern')) {
+      @if (input.hasError('required')) {
+        {{ fieldName }} is required.
+      }
+      @if (input.hasError('pattern')) {
         Please enter a valid url.
       }
     </p-message>

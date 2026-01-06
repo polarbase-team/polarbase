@@ -12,14 +12,14 @@ export class DateField extends Field<DateData> {
   readonly dataType: DataType = DataType.Date;
   readonly icon: string = FIELD_ICON_MAP[DataType.Date];
 
-  min?: string;
-  max?: string;
+  minDate?: Date;
+  maxDate?: Date;
 
   constructor(config: DateFieldConfig) {
     super(config);
 
-    this.min = config.min;
-    this.max = config.max;
+    if (config.minDate) this.minDate = new Date(config.minDate);
+    if (config.maxDate) this.maxDate = new Date(config.maxDate);
   }
 
   override validate(data = this.data) {
@@ -28,8 +28,8 @@ export class DateField extends Field<DateData> {
     if (!_.isNil(data)) {
       const date = dayjs(data);
 
-      if (!_.isNil(this.min)) {
-        const minDate = dayjs(this.min);
+      if (!_.isNil(this.minDate)) {
+        const minDate = dayjs(this.minDate);
         if (date.isBefore(minDate)) {
           errors = {
             ...errors,
@@ -42,8 +42,8 @@ export class DateField extends Field<DateData> {
         }
       }
 
-      if (!_.isNil(this.max)) {
-        const maxDate = dayjs(this.max);
+      if (!_.isNil(this.maxDate)) {
+        const maxDate = dayjs(this.maxDate);
         if (date.isAfter(maxDate)) {
           errors = {
             ...errors,

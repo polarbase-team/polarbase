@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { TextareaModule } from 'primeng/textarea';
 import { FluidModule } from 'primeng/fluid';
+import { MessageModule } from 'primeng/message';
 
 import { LongTextField } from '@app/shared/spreadsheet/field/objects/long-text-field.object';
 import { LongTextData } from '@app/shared/spreadsheet/field/interfaces/long-text-field.interface';
@@ -20,6 +21,7 @@ import { FieldEditorComponent } from '../editor.component';
     TextareaModule,
     ButtonModule,
     FluidModule,
+    MessageModule,
     RichTextEditorDrawerComponent,
   ],
 })
