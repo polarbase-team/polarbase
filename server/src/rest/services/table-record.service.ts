@@ -22,18 +22,19 @@ export class TableRecordService {
       limit?: number;
     };
   }) {
-    const { where, search, fields, order, page = 1, limit = 10000 } = query;
+    const {
+      where,
+      search,
+      fields,
+      order = 'id:asc',
+      page = 1,
+      limit = 10000,
+    } = query;
 
     const pageNum = Math.max(1, page);
     const limitNum = Math.min(10000, Math.max(1, limit));
 
     let qb = pg(tableName).withSchema(schemaName);
-
-    // SELECT fields (if specified)
-    if (fields) {
-      const fieldList = fields.split(',').map((f) => f.trim());
-      qb = qb.select(fieldList);
-    }
 
     // WHERE conditions
     if (where && Object.keys(where).length > 0) {
@@ -60,6 +61,14 @@ export class TableRecordService {
       }
     }
 
+    const countAllQb = qb.clone();
+
+    // SELECT fields (if specified)
+    if (fields) {
+      const fieldList = fields.split(',').map((f) => f.trim());
+      qb = qb.select(fieldList);
+    }
+
     // ORDER BY
     if (order) {
       const [col, dir] = order.split(':');
@@ -73,7 +82,7 @@ export class TableRecordService {
         .clone()
         .limit(limitNum)
         .offset((pageNum - 1) * limitNum),
-      qb.clone().count('* as total').first(),
+      countAllQb.count('* as total').first(),
     ]);
 
     const totalNum = Number(totalRecord?.total || 0);
