@@ -12,6 +12,7 @@ export const DataType = {
   Email: 'email',
   Url: 'url',
   JSON: 'json',
+  GeoPoint: 'geo-point',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -78,6 +79,9 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
   // JSON
   json: DataType.JSON,
   jsonb: DataType.JSON,
+
+  // GeoPoint
+  point: DataType.GeoPoint,
 };
 
 export const mapDataType = (column: Column) => {
@@ -174,16 +178,20 @@ export const specificType = (
       return tableBuilder.specificType(name, `${enumName}[]`);
     }
 
-    case DataType.JSON: {
-      return tableBuilder.jsonb(name);
-    }
-
     case DataType.Email: {
       return tableBuilder.specificType(name, 'email_address');
     }
 
     case DataType.Url: {
       return tableBuilder.specificType(name, 'url_address');
+    }
+
+    case DataType.JSON: {
+      return tableBuilder.jsonb(name);
+    }
+
+    case DataType.GeoPoint: {
+      return tableBuilder.specificType(name, 'point');
     }
 
     default:

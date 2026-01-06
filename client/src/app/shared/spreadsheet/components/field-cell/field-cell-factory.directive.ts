@@ -31,6 +31,7 @@ import { MultiSelectFieldCellComponent } from './multi-select/cell.component';
 import { EmailFieldCellComponent } from './email/cell.component';
 import { UrlFieldCellComponent } from './url/cell.component';
 import { JSONFieldCellComponent } from './json/cell.component';
+import { GeoPointFieldCellComponent } from './geo-point/cell.component';
 import { FieldCellSelectingState, FieldCellService } from './field-cell.service';
 import { TableRow } from '../../models/table-row';
 import { TableColumn } from '../../models/table-column';
@@ -48,6 +49,7 @@ const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
   [DataType.Email, EmailFieldCellComponent],
   [DataType.Url, UrlFieldCellComponent],
   [DataType.JSON, JSONFieldCellComponent],
+  [DataType.GeoPoint, GeoPointFieldCellComponent],
 ]) as ReadonlyMap<DataType, Type<FieldCell>>;
 
 @Directive({
