@@ -127,7 +127,15 @@
             class="col-span-2"
           />
         }
-        @case (DataType.GeoPoint) {}
+        @case (DataType.GeoPoint) {
+          <geo-point-field-editor
+            [field]="field"
+            [(data)]="updatedRecord[field.name]"
+            [viewOnly]="viewOnly() || field.params.primary"
+            [label]="false"
+            class="col-span-2"
+          />
+        }
       }
     }
   </div>

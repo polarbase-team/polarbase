@@ -44,6 +44,7 @@ import { DateFieldEditorComponent } from '../field-editors/date/editor.component
 import { EmailFieldEditorComponent } from '../field-editors/email/editor.component';
 import { UrlFieldEditorComponent } from '../field-editors/url/editor.component';
 import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
+import { GeoPointFieldEditorComponent } from '../field-editors/geo-point/editor.component';
 import { SchemaService } from '../../services/schema.service';
 import {
   ColumnFormData,
@@ -88,6 +89,7 @@ const DEFAULT_VALUE = {
     EmailFieldEditorComponent,
     UrlFieldEditorComponent,
     JSONFieldEditorComponent,
+    GeoPointFieldEditorComponent,
   ],
 })
 export class ColumnEditorDrawerComponent {
