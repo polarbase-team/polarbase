@@ -5,8 +5,8 @@ import { DatePickerModule } from 'primeng/datepicker';
 import dayjs from 'dayjs';
 
 import { DateValuePipe } from '../../../pipes/date-value.pipe';
-import { DateData } from '../../../field/interfaces/date-field.interface';
-import { DateField } from '../../../field/objects/date-field.object';
+import { DateData } from '@app/shared/field-system/models/date/field.interface';
+import { DateField } from '@app/shared/field-system/models/date/field.object';
 import { CellTouchEvent } from '../field-cell-touchable';
 import { FieldCellEditable } from '../field-cell-editable';
 

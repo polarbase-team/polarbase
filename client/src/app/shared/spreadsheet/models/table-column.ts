@@ -1,4 +1,4 @@
-import { Field } from '../field/objects/field.object';
+import { Field } from '../../field-system/models/field.object';
 import { CalculateType } from '../utils/calculate';
 import { SortType } from '../utils/sort';
 

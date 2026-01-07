@@ -17,7 +17,7 @@ import { DividerModule } from 'primeng/divider';
 import { MenuItem } from 'primeng/api';
 import { SplitButtonModule } from 'primeng/splitbutton';
 
-import { Field } from '@app/shared/spreadsheet/field/objects/field.object';
+import { Field } from '@app/shared/field-system/models/field.object';
 import { TableColumn } from '@app/shared/spreadsheet/models/table-column';
 import { TableRow } from '@app/shared/spreadsheet/models/table-row';
 import { TableConfig } from '@app/shared/spreadsheet/models/table';

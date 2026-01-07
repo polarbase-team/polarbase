@@ -6,8 +6,8 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { MapPickerDrawerComponent } from '@app/shared/map-picker/map-picker-drawer.component';
 import { MapLocation } from '@app/shared/map-picker/map-picker.component';
-import { formatPoint } from '@app/shared/spreadsheet/field/objects/geo-point-field.object';
-import { GeoPoint, GeoPointData } from '../../../field/interfaces/geo-point-field.interface';
+import { formatPoint } from '@app/shared/field-system/models/geo-point/field.object';
+import { GeoPoint, GeoPointData } from '@app/shared/field-system/models/geo-point/field.interface';
 import { PointFormatPipe } from '../../../pipes/point-format.pipe';
 import { FieldCellInputable } from '../field-cell-inputable';
 import { InputBoxComponent } from '../input-box.component';

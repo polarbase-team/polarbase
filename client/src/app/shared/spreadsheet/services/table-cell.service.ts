@@ -6,17 +6,17 @@ import { MessageService } from 'primeng/api';
 
 import { Clipboard, ClipboardData } from '../utils/clipboard';
 import { EmitEventController } from '../utils/emit-event-controller';
-import { DataType } from '../field/interfaces/field.interface';
+import { DataType } from '../../field-system/models/field.interface';
 import { Dimension } from './table.service';
 import { FieldCellService } from '../components/field-cell/field-cell.service';
-import { FieldValidationErrors, FieldValidationKey } from '../field/objects/field.object';
+import { FieldValidationErrors, FieldValidationKey } from '../../field-system/models/field.object';
 import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { TableBaseService } from './table-base.service';
 import { TableCell } from '../models/table-cell';
 import { TableCellActionType, TableCellEditedEvent } from '../events/table-cell';
 import { TableColumn } from '../models/table-column';
 import { TableRow, TableRowCellData } from '../models/table-row';
-import { formatPoint } from '../field/objects/geo-point-field.object';
+import { formatPoint } from '../../field-system/models/geo-point/field.object';
 
 export interface CellIndex {
   rowIndex: number;
