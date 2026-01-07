@@ -27,7 +27,7 @@
     [pAutoFocus]="autoFocus()"
     [readonly]="viewOnly()"
     [pKeyFilter]="geoRegex"
-    [ngModel]="data()"
+    [ngModel]="data() | pointFormat"
     (ngModelChange)="data.set($any($event))"
     fluid
   />

@@ -16,6 +16,7 @@ import { TableCell } from '../models/table-cell';
 import { TableCellActionType, TableCellEditedEvent } from '../events/table-cell';
 import { TableColumn } from '../models/table-column';
 import { TableRow, TableRowCellData } from '../models/table-row';
+import { formatPoint } from '../field/objects/geo-point-field.object';
 
 export interface CellIndex {
   rowIndex: number;
@@ -665,6 +666,10 @@ export class TableCellService extends TableBaseService {
                 metadata,
                 isDate: true,
               };
+              break;
+            }
+            case DataType.GeoPoint: {
+              sourceData[i][j] = { data: formatPoint(data) };
               break;
             }
             default:

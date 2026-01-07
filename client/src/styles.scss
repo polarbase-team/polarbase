@@ -1,6 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 @use './tailwind.css';
 @use 'primeicons/primeicons.css';
+@use 'leaflet/dist/leaflet.css';
 
 html {
   font-size: 14px;

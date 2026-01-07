@@ -12,6 +12,7 @@ import {
   GeoPointData,
   GeoPointPattern,
 } from '@app/shared/spreadsheet/field/interfaces/geo-point-field.interface';
+import { PointFormatPipe } from '@app/shared/spreadsheet/pipes/point-format.pipe';
 import { FieldEditorComponent } from '../editor.component';
 import { convertToHtmlPattern } from '@app/core/utils';
 
@@ -25,6 +26,7 @@ import { convertToHtmlPattern } from '@app/core/utils';
     KeyFilterModule,
     FluidModule,
     MessageModule,
+    PointFormatPipe,
   ],
 })
 export class GeoPointFieldEditorComponent extends FieldEditorComponent<
