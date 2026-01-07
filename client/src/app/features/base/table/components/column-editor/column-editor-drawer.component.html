@@ -138,6 +138,12 @@
                     <span>{{ item.name }}</span>
                   </div>
                 </ng-template>
+                <ng-template let-selectedItem pTemplate="selectedItem">
+                  <div class="flex items-center gap-2">
+                    <i [class]="selectedItem.icon"></i>
+                    <span>{{ selectedItem.name }}</span>
+                  </div>
+                </ng-template>
               </p-select>
             </div>
             @switch (selectedDataType()) {
