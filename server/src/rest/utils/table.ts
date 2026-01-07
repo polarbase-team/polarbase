@@ -47,11 +47,10 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
 };
 
 /**
- * Builds a detailed schema for a given table:
- * - column info
- * - primary key flags
- * - column comments
- * - enum values for enum types
+ * Retrieves and constructs a comprehensive schema for a specific table,
+ * including column metadata, primary key identification, column comments,
+ * associated enum values for enum-typed columns, and additional validation
+ * and foreign key details.
  */
 export const getTableSchema = async (
   pg: Knex,
@@ -184,26 +183,29 @@ export const getTableSchema = async (
   const foreignKeys = await pg('information_schema.key_column_usage as kcu')
     .select(
       'kcu.column_name',
-      'tc.table_name as referenced_table_name',
-      'ccu.column_name as referenced_column_name'
+      'ccu.table_name as referenced_table_name',
+      'ccu.column_name as referenced_column_name',
+      'rc.update_rule as on_update',
+      'rc.delete_rule as on_delete'
     )
-    .join('information_schema.table_constraints as tc', function () {
-      this.on('tc.constraint_name', '=', 'kcu.constraint_name')
-        .andOn('tc.table_schema', '=', 'kcu.table_schema')
-        .andOn('tc.table_name', '=', 'kcu.table_name');
+    .join('information_schema.referential_constraints as rc', function () {
+      this.on('rc.constraint_name', '=', 'kcu.constraint_name').andOn(
+        'rc.constraint_schema',
+        '=',
+        'kcu.constraint_schema'
+      );
     })
     .join('information_schema.constraint_column_usage as ccu', function () {
-      this.on('ccu.constraint_name', '=', 'tc.constraint_name').andOn(
-        'ccu.table_schema',
+      this.on('ccu.constraint_name', '=', 'rc.constraint_name').andOn(
+        'ccu.constraint_schema',
         '=',
-        'tc.table_schema'
+        'rc.constraint_schema'
       );
     })
     .where({
       'kcu.table_schema': schemaName,
       'kcu.table_name': tableName,
       ...(columnName ? { 'kcu.column_name': columnName } : {}),
-      'tc.constraint_type': 'FOREIGN KEY',
     });
 
   const foreignKeyMap = Object.fromEntries(
@@ -211,7 +213,9 @@ export const getTableSchema = async (
       fk.column_name,
       {
         table: fk.referenced_table_name,
-        column: fk.referenced_column_name || 'id',
+        column: fk.referenced_column_name,
+        onUpdate: fk.on_update,
+        onDelete: fk.on_delete,
       },
     ])
   );

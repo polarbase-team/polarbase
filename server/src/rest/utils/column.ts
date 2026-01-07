@@ -13,6 +13,7 @@ export const DataType = {
   Url: 'url',
   JSON: 'json',
   GeoPoint: 'geo-point',
+  Reference: 'reference',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -25,7 +26,12 @@ export interface Column {
   defaultValue: string;
   comment: string;
   options: string[];
-  foreignKey: any;
+  foreignKey: {
+    table: string;
+    column: string;
+    onUpdate?: string;
+    onDelete?: string;
+  };
   validation: {
     minLength?: number;
     maxLength?: number;
@@ -99,6 +105,11 @@ export const mapDataType = (column: Column) => {
     return pgDataType === 'ARRAY' ? DataType.MultiSelect : DataType.Select;
   }
 
+  // 3. Handle foreign keys
+  if (column.foreignKey) {
+    return DataType.Reference;
+  }
+
   const normalizedType = pgDataType
     .toLowerCase()
     .split('(')[0]
@@ -114,11 +125,18 @@ export const specificType = (
     tableName,
     name,
     dataType,
+    foreignKey,
     options,
   }: {
     tableName: string;
     name: string;
     dataType: DataType;
+    foreignKey?: {
+      table: string;
+      column: string;
+      onUpdate: 'set null' | 'cascade' | 'no action';
+      onDelete: 'set null' | 'cascade' | 'no action';
+    };
     options?: string[] | null;
   }
 ) => {
@@ -192,6 +210,15 @@ export const specificType = (
 
     case DataType.GeoPoint: {
       return tableBuilder.specificType(name, 'point');
+    }
+
+    case DataType.Reference: {
+      return tableBuilder
+        .foreign(name)
+        .references(foreignKey!.column)
+        .inTable(foreignKey!.table)
+        .onUpdate(foreignKey!.onUpdate)
+        .onDelete(foreignKey!.onUpdate);
     }
 
     default:

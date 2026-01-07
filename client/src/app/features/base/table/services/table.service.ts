@@ -37,7 +37,12 @@ export interface ColumnDefinition {
   defaultValue: any | null;
   comment: string | null;
   options: string[] | null;
-  foreignKey: { table: string; column: string } | null;
+  foreignKey: {
+    table: string;
+    column: string;
+    onUpdate?: string;
+    onDelete?: string;
+  } | null;
   validation: {
     minLength?: number | null;
     maxLength?: number | null;
@@ -65,6 +70,7 @@ const DATA_TYPE_MAPPING = {
   url: DataType.Url,
   json: DataType.JSON,
   'geo-point': DataType.GeoPoint,
+  // reference: DataType.Reference,
 };
 
 @Injectable({
@@ -198,6 +204,8 @@ export class TableService {
         (config as JSONFieldConfig).maxSize = column.validation?.maxSize;
         break;
       case DataType.GeoPoint:
+        break;
+      case DataType.Reference:
         break;
     }
 
