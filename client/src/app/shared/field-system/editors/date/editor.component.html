@@ -1,0 +1,45 @@
+@let fieldName = field().name;
+@let fieldDescription = field().description;
+
+<div class="flex flex-col gap-1 w-full">
+  @if (label() !== false) {
+    <label class="text-sm" [attr.for]="fieldName">
+      <p class="flex items-center gap-1">
+        <i [class]="field().icon"></i>
+        {{ fieldName }}
+        @if (field().required) {
+          <i class="icon icon-asterisk text-red-500"></i>
+        }
+      </p>
+      @if (fieldDescription) {
+        <p class="text-xs text-surface-500">{{ fieldDescription }}</p>
+      }
+    </label>
+  }
+  <p-datepicker
+    #input="ngModel"
+    [required]="field().required"
+    [minDate]="field().minDate"
+    [maxDate]="field().maxDate"
+    [invalid]="input.invalid && input.touched"
+    [inputId]="fieldName"
+    [placeholder]="placeholder() ?? 'Input here...'"
+    [pAutoFocus]="autoFocus()"
+    [readonlyInput]="viewOnly()"
+    [disabled]="viewOnly()"
+    [(ngModel)]="data"
+    [showTime]="true"
+    [showClear]="true"
+    [showIcon]="true"
+    [iconDisplay]="'input'"
+    appendTo="body"
+    fluid
+  />
+  @if (input.invalid && input.touched) {
+    <p-message severity="error" size="small" variant="simple">
+      @if (input.hasError('required')) {
+        {{ fieldName }} is required.
+      }
+    </p-message>
+  }
+</div>

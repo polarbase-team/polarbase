@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { NumberData } from '../../../field/interfaces/number-field.interface';
-import { NumberField } from '../../../field/objects/number-field.object';
+import { NumberData } from '@app/shared/field-system/models/number/field.interface';
+import { NumberField } from '@app/shared/field-system/models/number/field.object';
 import { FieldCellInputable } from '../field-cell-inputable';
 import { InputBoxComponent } from '../input-box.component';
 

@@ -10,7 +10,7 @@ import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-col
 import { TableBaseService } from './table-base.service';
 import { TableColumn } from '../models/table-column';
 import { TableColumnActionType } from '../events/table-column';
-import { DataType } from '../field/interfaces/field.interface';
+import { DataType } from '../../field-system/models/field.interface';
 
 const LABELS: Record<CalculateType, string> = {
   [CalculateType.Empty]: 'Count Empty',

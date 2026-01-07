@@ -8,7 +8,11 @@ export const DataType = {
   Date: 'date',
   Checkbox: 'checkbox',
   Select: 'select',
+  MultiSelect: 'multi-select',
+  Email: 'email',
+  Url: 'url',
   JSON: 'json',
+  GeoPoint: 'geo-point',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -66,70 +70,129 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
   timestamp: DataType.Date,
   time: DataType.Date,
 
+  // Email
+  email_address: DataType.Email,
+
+  // Url
+  url_address: DataType.Url,
+
   // JSON
   json: DataType.JSON,
   jsonb: DataType.JSON,
+
+  // GeoPoint
+  point: DataType.GeoPoint,
 };
 
-export const mapDataType = (column: Column, pgDataType: string) => {
-  let dataType: DataType = DataType.Text;
-  if (column.options) {
-    dataType = DataType.Select;
-  } else {
-    const normalizedType = pgDataType
-      .toLowerCase()
-      .split('(')[0]
-      .trim()
-      .split(' without')[0]
-      .split(' with')[0];
-    dataType = PG_TYPE_MAPPING[normalizedType] || dataType;
+export const mapDataType = (column: Column) => {
+  const { pgDataType, pgDomainName } = column.metadata || {};
+
+  // 1. Check for custom domains first
+  if (pgDomainName === 'email_address') {
+    return DataType.Email;
+  } else if (pgDomainName === 'url_address') {
+    return DataType.Url;
   }
-  return dataType;
+
+  // 2. Handle Enums/Selects
+  if (column.options) {
+    return pgDataType === 'ARRAY' ? DataType.MultiSelect : DataType.Select;
+  }
+
+  const normalizedType = pgDataType
+    .toLowerCase()
+    .split('(')[0]
+    .trim()
+    .split(' without')[0]
+    .split(' with')[0];
+  return PG_TYPE_MAPPING[normalizedType] || DataType.Text;
 };
 
 export const specificType = (
   tableBuilder: Knex.TableBuilder,
   {
+    tableName,
     name,
     dataType,
     options,
   }: {
+    tableName: string;
     name: string;
     dataType: DataType;
     options?: string[] | null;
   }
 ) => {
   switch (dataType) {
-    case DataType.Text:
+    case DataType.Text: {
       return tableBuilder.string(name);
+    }
 
-    case DataType.LongText:
+    case DataType.LongText: {
       return tableBuilder.text(name);
+    }
 
-    case DataType.Integer:
+    case DataType.Integer: {
       return tableBuilder.integer(name);
+    }
 
-    case DataType.Number:
+    case DataType.Number: {
       return tableBuilder.decimal(name);
+    }
 
-    case DataType.Checkbox:
+    case DataType.Checkbox: {
       return tableBuilder.boolean(name);
+    }
 
-    case DataType.Date:
+    case DataType.Date: {
       return tableBuilder.timestamp(name);
+    }
 
-    case DataType.Select:
+    case DataType.Select: {
       if (!options?.length) {
         throw new Error(`options is required for Select column "${name}"`);
       }
+      const timestamp = +new Date();
+      const enumName = `${tableName}_${name}_enum_${timestamp}`;
       return tableBuilder.enum(name, options, {
         useNative: true,
-        enumName: `${name}_enum_${+new Date()}`,
+        enumName,
         existingType: false,
       });
+    }
 
-    case DataType.JSON:
+    case DataType.MultiSelect: {
+      if (!options?.length) {
+        throw new Error(
+          `options is required for Multi-Select column "${name}"`
+        );
+      }
+      const timestamp = +new Date();
+      const enumName = `${tableName}_${name}_enum_${timestamp}`;
+      const temp = `${tableName}_${name}_temp_${timestamp}`;
+      tableBuilder.enum(temp, options, {
+        useNative: true,
+        enumName,
+        existingType: false,
+      });
+      tableBuilder.dropColumn(temp);
+      return tableBuilder.specificType(name, `${enumName}[]`);
+    }
+
+    case DataType.Email: {
+      return tableBuilder.specificType(name, 'email_address');
+    }
+
+    case DataType.Url: {
+      return tableBuilder.specificType(name, 'url_address');
+    }
+
+    case DataType.JSON: {
       return tableBuilder.jsonb(name);
+    }
+
+    case DataType.GeoPoint: {
+      return tableBuilder.specificType(name, 'point');
+    }
 
     default:
       throw new Error(`Unsupported column type: ${dataType}`);

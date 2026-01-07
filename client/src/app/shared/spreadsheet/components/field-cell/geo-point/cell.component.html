@@ -1,0 +1,32 @@
+@if (isInputting) {
+  <input-box
+    type="text"
+    [content]="pointStr"
+    (edited)="onInputBoxEdited($event)"
+    (input)="onInputBoxInput($event)"
+    (focus)="onInputBoxFocus($event)"
+    (blur)="onInputBoxBlur($event)"
+    (contentChange)="onInputBoxChange($event)"
+  />
+} @else {
+  <div class="flex items-start justify-between w-full">
+    <div class="field-cell__text-content">
+      {{ data | pointFormat }}
+    </div>
+    @if (selecting) {
+      <map-picker-drawer
+        [(visible)]="visibleMapPicker"
+        [loc]="loc"
+        (onSave)="onSaveNewLocation($event)"
+      />
+      <div
+        class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
+        [pTooltip]="'View on map'"
+        tooltipPosition="top"
+        (click)="openMap()"
+      >
+        <i class="icon icon-map"></i>
+      </div>
+    }
+  </div>
+}

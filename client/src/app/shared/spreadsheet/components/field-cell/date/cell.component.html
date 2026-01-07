@@ -1,6 +1,6 @@
 @if (data !== undefined && data !== null) {
   <div class="field-cell__text-content">
-    {{ data | dateValue }}
+    {{ data | dateFormat }}
   </div>
 }
 @if (selecting) {
@@ -9,8 +9,8 @@
     appendTo="body"
     [(visible)]="calendarVisible"
     [target]="eleRef.nativeElement"
-    (onShow)="onMenuOpened()"
-    (onHide)="onMenuClosed()"
+    (onShow)="onMenuOpen()"
+    (onHide)="onMenuClose()"
   >
     <p-datepicker
       [inline]="true"

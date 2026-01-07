@@ -5,6 +5,7 @@ import pg from '../plugins/pg';
 import { checkRateLimit } from '../utils/rate-limit';
 import { err, json } from '../utils/api-response';
 import { apiKeyAuth } from '../api-keys/auth';
+import { SchemaService } from './services/schema.service';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
 import { DataType } from './utils/column';
@@ -21,6 +22,7 @@ const REST_BLACKLISTED_TABLES = (
   process.env.REST_BLACKLISTED_TABLES || ''
 ).split(',');
 
+const schemaService = new SchemaService();
 const tableService = new TableService();
 const tableRecordService = new TableRecordService();
 
@@ -56,7 +58,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .derive(async ({ headers, set }) => {
     try {
       const apiKey = headers['x-api-key'];
-      if (!apiKey) throw new Error();
+      if (!apiKey) throw new Error('Invalid or missing x-api-key');
 
       const authData = await apiKeyAuth(apiKey);
       if (!authData.scopes.rest) {
@@ -68,7 +70,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       return authData;
     } catch (e) {
       set.status ??= 401;
-      throw e ?? new Error('Invalid or missing x-api-key');
+      throw e;
     }
   })
 
@@ -138,6 +140,13 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       set.status = 403;
       throw new Error(`Table "${params.table}" is not allowed`);
     }
+  })
+
+  /**
+   * GET /rest/enum-types → list of enum types
+   */
+  .get('/enum-types', async () => {
+    return schemaService.getEnumTypes();
   })
 
   /**

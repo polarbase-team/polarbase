@@ -1,0 +1,35 @@
+@if (data !== undefined && data !== null) {
+  <div class="field-cell__block-content">
+    @for (option of parsedData; track option) {
+      <p-tag severity="secondary">
+        {{ option }}
+        @if (selecting && !readonly) {
+          <i
+            class="icon icon-x cursor-pointer text-surface-500"
+            (click)="removeSelectedOption(option)"
+          ></i>
+        }
+      </p-tag>
+    }
+  </div>
+}
+@if (selecting && !readonly) {
+  <p-menu
+    #menu
+    [model]="items"
+    appendTo="body"
+    [popup]="true"
+    (onShow)="onMenuOpen()"
+    (onHide)="onMenuClose()"
+  >
+    <ng-template #item let-item>
+      <a
+        pRipple
+        class="flex p-menu-item-link"
+        (click)="$event.stopPropagation(); addOption(item.label)"
+      >
+        {{ item.label }}
+      </a>
+    </ng-template>
+  </p-menu>
+}
