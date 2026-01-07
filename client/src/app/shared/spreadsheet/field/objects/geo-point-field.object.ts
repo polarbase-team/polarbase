@@ -4,6 +4,25 @@ import { GeoPointData, GeoPointPattern } from '../interfaces/geo-point-field.int
 import { DataType, FIELD_ICON_MAP } from '../interfaces/field.interface';
 import { Field, FieldValidationKey } from './field.object';
 
+export const formatPoint = (data: GeoPointData) => {
+  if (!data) return '';
+
+  if (typeof data === 'string') {
+    return data
+      .replace(/[()]/g, '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter((part) => part !== '')
+      .join(', ');
+  }
+
+  if (typeof data === 'object' && Number.isFinite(data.x) && Number.isFinite(data.y)) {
+    return `${data.x}, ${data.y}`;
+  }
+
+  return '';
+};
+
 export class GeoPointField extends Field<GeoPointData> {
   static readonly dataType: DataType = DataType.GeoPoint;
 
@@ -26,5 +45,9 @@ export class GeoPointField extends Field<GeoPointData> {
     }
 
     return errors;
+  }
+
+  override toString(data = this.data) {
+    return formatPoint(data);
   }
 }

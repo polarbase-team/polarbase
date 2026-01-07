@@ -11,7 +11,7 @@
 } @else {
   <div class="flex items-start justify-between w-full">
     <div class="field-cell__text-content">
-      {{ data | pointValue }}
+      {{ data | pointFormat }}
     </div>
     @if (selecting) {
       <map-picker-drawer
