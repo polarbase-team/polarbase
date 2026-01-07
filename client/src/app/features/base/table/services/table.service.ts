@@ -5,15 +5,15 @@ import { Observable, map } from 'rxjs';
 import { environment } from '@environments/environment';
 
 import { ApiResponse } from '@app/core/models/api-response';
-import { DataType, FieldConfig } from '@app/shared/spreadsheet/field/interfaces/field.interface';
-import { IntegerFieldConfig } from '@app/shared/spreadsheet/field/interfaces/integer-field.interface';
-import { SelectFieldConfig } from '@app/shared/spreadsheet/field/interfaces/select-field.interface';
-import { buildField } from '@app/shared/spreadsheet/field/utils';
-import { NumberFieldConfig } from '@app/shared/spreadsheet/field/interfaces/number-field.interface';
-import { TextFieldConfig } from '@app/shared/spreadsheet/field/interfaces/text-field.interface';
-import { LongTextFieldConfig } from '@app/shared/spreadsheet/field/interfaces/long-text-field.interface';
-import { JSONFieldConfig } from '@app/shared/spreadsheet/field/interfaces/json-field.interface';
-import { DateFieldConfig } from '@app/shared/spreadsheet/field/interfaces/date-field.interface';
+import { DataType, FieldConfig } from '@app/shared/field-system/models/field.interface';
+import { IntegerFieldConfig } from '@app/shared/field-system/models/integer/field.interface';
+import { SelectFieldConfig } from '@app/shared/field-system/models/select/field.interface';
+import { NumberFieldConfig } from '@app/shared/field-system/models/number/field.interface';
+import { TextFieldConfig } from '@app/shared/field-system/models/text/field.interface';
+import { LongTextFieldConfig } from '@app/shared/field-system/models/long-text/field.interface';
+import { JSONFieldConfig } from '@app/shared/field-system/models/json/field.interface';
+import { DateFieldConfig } from '@app/shared/field-system/models/date/field.interface';
+import { buildField } from '@app/shared/field-system/models/utils';
 
 export interface TableDefinition {
   tableName: string;

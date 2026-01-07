@@ -9,7 +9,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import { Field } from '../../field/objects/field.object';
+import { Field } from '@app/shared/field-system/models/field.object';
 import { TableRow } from '../../models/table-row';
 
 export interface InputContext {

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { EmailData } from '../../../field/interfaces/email-field.interface';
+import { EmailData } from '@app/shared/field-system/models/email/field.interface';
 import { FieldCellInputable } from '../field-cell-inputable';
 import { InputBoxComponent } from '../input-box.component';
 

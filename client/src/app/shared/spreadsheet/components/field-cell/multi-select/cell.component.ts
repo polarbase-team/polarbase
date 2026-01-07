@@ -5,11 +5,11 @@ import { MenuItem } from 'primeng/api';
 import { Menu, MenuModule } from 'primeng/menu';
 import { TagModule } from 'primeng/tag';
 
-import { MultiSelectField } from '../../../field/objects/multi-select-field.object';
+import { MultiSelectField } from '@app/shared/field-system/models/multi-select/field.object';
 import {
   MultiSelectData,
   MultiSelectOption,
-} from '../../../field/interfaces/multi-select-field.interface';
+} from '@app/shared/field-system/models/multi-select/field.interface';
 import { CellTouchEvent } from '../field-cell-touchable';
 import { FieldCellEditable } from '../field-cell-editable';
 

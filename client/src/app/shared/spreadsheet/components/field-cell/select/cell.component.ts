@@ -5,8 +5,8 @@ import { MenuItem } from 'primeng/api';
 import { Menu, MenuModule } from 'primeng/menu';
 import { TagModule } from 'primeng/tag';
 
-import { SelectField } from '../../../field/objects/select-field.object';
-import { SelectData } from '../../../field/interfaces/select-field.interface';
+import { SelectField } from '@app/shared/field-system/models/select/field.object';
+import { SelectData } from '@app/shared/field-system/models/select/field.interface';
 import { CellTouchEvent } from '../field-cell-touchable';
 import { FieldCellEditable } from '../field-cell-editable';
 

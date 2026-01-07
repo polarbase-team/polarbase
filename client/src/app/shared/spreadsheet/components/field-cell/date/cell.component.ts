@@ -1,12 +1,12 @@
+import dayjs from 'dayjs';
 import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Overlay, OverlayModule } from 'primeng/overlay';
 import { DatePickerModule } from 'primeng/datepicker';
-import dayjs from 'dayjs';
 
-import { DateValuePipe } from '../../../pipes/date-value.pipe';
-import { DateData } from '../../../field/interfaces/date-field.interface';
-import { DateField } from '../../../field/objects/date-field.object';
+import { DateFormatPipe } from '@app/shared/field-system/pipes/date-format.pipe';
+import { DateData } from '@app/shared/field-system/models/date/field.interface';
+import { DateField } from '@app/shared/field-system/models/date/field.object';
 import { CellTouchEvent } from '../field-cell-touchable';
 import { FieldCellEditable } from '../field-cell-editable';
 
@@ -16,7 +16,7 @@ import { FieldCellEditable } from '../field-cell-editable';
   styleUrl: '../field-cell.scss',
   host: { class: 'date-field-cell' },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OverlayModule, DatePickerModule, DateValuePipe],
+  imports: [FormsModule, OverlayModule, DatePickerModule, DateFormatPipe],
 })
 export class DateFieldCellComponent extends FieldCellEditable<DateData> {
   declare field: DateField;

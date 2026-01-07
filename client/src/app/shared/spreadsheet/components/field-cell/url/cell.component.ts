@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { UrlData } from '../../../field/interfaces/url-field.interface';
+import { UrlData } from '@app/shared/field-system/models/url/field.interface';
 import { FieldCellInputable } from '../field-cell-inputable';
 import { InputBoxComponent } from '../input-box.component';
 

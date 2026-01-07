@@ -29,22 +29,22 @@ import { FluidModule } from 'primeng/fluid';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 
-import { DataType, FIELD_ICON_MAP } from '@app/shared/spreadsheet/field/interfaces/field.interface';
-import { Field } from '@app/shared/spreadsheet/field/objects/field.object';
-import { SelectField } from '@app/shared/spreadsheet/field/objects/select-field.object';
-import { MultiSelectField } from '@app/shared/spreadsheet/field/objects/multi-select-field.object';
-import { TextFieldEditorComponent } from '../field-editors/text/editor.component';
-import { LongTextFieldEditorComponent } from '../field-editors/long-text/editor.component';
-import { IntegerFieldEditorComponent } from '../field-editors/integer/editor.component';
-import { NumberFieldEditorComponent } from '../field-editors/number/editor.component';
-import { SelectFieldEditorComponent } from '../field-editors/select/editor.component';
-import { MultiSelectFieldEditorComponent } from '../field-editors/multi-select/editor.component';
-import { CheckboxFieldEditorComponent } from '../field-editors/checkbox/editor.component';
-import { DateFieldEditorComponent } from '../field-editors/date/editor.component';
-import { EmailFieldEditorComponent } from '../field-editors/email/editor.component';
-import { UrlFieldEditorComponent } from '../field-editors/url/editor.component';
-import { JSONFieldEditorComponent } from '../field-editors/json/editor.component';
-import { GeoPointFieldEditorComponent } from '../field-editors/geo-point/editor.component';
+import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
+import { Field } from '@app/shared/field-system/models/field.object';
+import { SelectField } from '@app/shared/field-system/models/select/field.object';
+import { MultiSelectField } from '@app/shared/field-system/models/multi-select/field.object';
+import { TextFieldEditorComponent } from '@app/shared/field-system/editors/text/editor.component';
+import { LongTextFieldEditorComponent } from '@app/shared/field-system/editors/long-text/editor.component';
+import { IntegerFieldEditorComponent } from '@app/shared/field-system/editors/integer/editor.component';
+import { NumberFieldEditorComponent } from '@app/shared/field-system/editors/number/editor.component';
+import { SelectFieldEditorComponent } from '@app/shared/field-system/editors/select/editor.component';
+import { MultiSelectFieldEditorComponent } from '@app/shared/field-system/editors/multi-select/editor.component';
+import { CheckboxFieldEditorComponent } from '@app/shared/field-system/editors/checkbox/editor.component';
+import { DateFieldEditorComponent } from '@app/shared/field-system/editors/date/editor.component';
+import { EmailFieldEditorComponent } from '@app/shared/field-system/editors/email/editor.component';
+import { UrlFieldEditorComponent } from '@app/shared/field-system/editors/url/editor.component';
+import { JSONFieldEditorComponent } from '@app/shared/field-system/editors/json/editor.component';
+import { GeoPointFieldEditorComponent } from '@app/shared/field-system/editors/geo-point/editor.component';
 import { SchemaService } from '../../services/schema.service';
 import {
   ColumnFormData,
