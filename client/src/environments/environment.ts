@@ -1,5 +1,6 @@
 export const environment = {
   production: false,
+  version: 'v0.2.0-beta',
   apiUrl: '/api',
   wsUrl: '/ws',
   dateFormat: 'DD/MM/YYYY',
