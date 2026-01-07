@@ -29,6 +29,7 @@ import { FluidModule } from 'primeng/fluid';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 
+import { sanitizeEmptyStrings } from '@app/core/utils';
 import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
 import { SelectField } from '@app/shared/field-system/models/select/field.object';
@@ -167,14 +168,11 @@ export class ColumnEditorDrawerComponent {
 
     let fn: Observable<any>;
 
+    const formData = sanitizeEmptyStrings(this.columnFormData);
     if (this.mode() === 'edit') {
-      fn = this.tblService.updateColumn(
-        this.table().tableName,
-        this.column().name,
-        this.columnFormData,
-      );
+      fn = this.tblService.updateColumn(this.table().tableName, this.column().name, formData);
     } else {
-      fn = this.tblService.createColumn(this.table().tableName, this.columnFormData);
+      fn = this.tblService.createColumn(this.table().tableName, formData);
     }
 
     fn.pipe(
