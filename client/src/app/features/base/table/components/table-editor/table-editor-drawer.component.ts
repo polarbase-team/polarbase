@@ -23,6 +23,7 @@ import { AutoFocusModule } from 'primeng/autofocus';
 import { DividerModule } from 'primeng/divider';
 import { RadioButtonModule } from 'primeng/radiobutton';
 
+import { sanitizeEmptyStrings } from '@app/core/utils';
 import { TableFormData, TableDefinition, TableService } from '../../services/table.service';
 
 const DEFAULT_VALUE = { idType: 'integer', timestamps: true } as TableFormData;
@@ -71,10 +72,11 @@ export class TableEditorDrawerComponent {
 
     let fn: Observable<any>;
 
+    const formData = sanitizeEmptyStrings(this.tableFormData);
     if (this.mode() === 'edit') {
-      fn = this.tblService.updateTable(this.table().tableName, this.tableFormData);
+      fn = this.tblService.updateTable(this.table().tableName, formData);
     } else {
-      fn = this.tblService.createTable(this.tableFormData);
+      fn = this.tblService.createTable(formData);
     }
 
     fn.pipe(
