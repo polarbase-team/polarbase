@@ -12,7 +12,7 @@ import {
   GeoPointData,
   GeoPointPattern,
 } from '@app/shared/field-system/models/geo-point/field.interface';
-import { PointFormatPipe } from '@app/shared/spreadsheet/pipes/point-format.pipe';
+import { PointFormatPipe } from '@app/shared/field-system/pipes/point-format.pipe';
 import { FieldEditorComponent } from '../editor.component';
 import { convertToHtmlPattern } from '@app/core/utils';
 

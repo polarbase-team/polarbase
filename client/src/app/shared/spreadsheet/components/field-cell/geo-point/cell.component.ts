@@ -8,7 +8,7 @@ import { MapPickerDrawerComponent } from '@app/shared/map-picker/map-picker-draw
 import { MapLocation } from '@app/shared/map-picker/map-picker.component';
 import { formatPoint } from '@app/shared/field-system/models/geo-point/field.object';
 import { GeoPoint, GeoPointData } from '@app/shared/field-system/models/geo-point/field.interface';
-import { PointFormatPipe } from '../../../pipes/point-format.pipe';
+import { PointFormatPipe } from '@app/shared/field-system/pipes/point-format.pipe';
 import { FieldCellInputable } from '../field-cell-inputable';
 import { InputBoxComponent } from '../input-box.component';
 import { CellTouchEvent } from '../field-cell-touchable';
