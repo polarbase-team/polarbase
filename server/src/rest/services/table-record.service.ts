@@ -31,22 +31,15 @@ export class TableRecordService {
       limit = 10000,
     } = query;
 
-    const pageNum = Math.max(1, page);
-    const limitNum = Math.min(10000, Math.max(1, limit));
-
     let qb = pg(tableName).withSchema(schemaName);
 
-    // WHERE conditions
-    if (where && Object.keys(where).length > 0) {
-      qb = qb.where(where);
-    }
+    // WHERE
+    if (where) qb = qb.where(where);
 
     // Global SEARCH across text columns
     if (search && search.trim()) {
       const cols = await getTableSchema(pg, schemaName, tableName);
-      const textColumns = cols.filter((col) => {
-        return col.dataType === DataType.Text;
-      });
+      const textColumns = cols.filter((col) => col.dataType === DataType.Text);
 
       if (textColumns.length > 0) {
         qb = qb.where((builder) => {
@@ -63,7 +56,7 @@ export class TableRecordService {
 
     const countAllQb = qb.clone();
 
-    // SELECT fields (if specified)
+    // SELECT (if specified)
     if (fields) {
       const fieldList = fields.split(',').map((f) => f.trim());
       qb = qb.select(fieldList);
@@ -72,11 +65,12 @@ export class TableRecordService {
     // ORDER BY
     if (order) {
       const [col, dir] = order.split(':');
-      const direction = dir.toLowerCase() === 'desc' ? 'desc' : 'asc';
-      qb = qb.orderBy(col, direction);
+      qb = qb.orderBy(col, dir.toLowerCase() === 'desc' ? 'desc' : 'asc');
     }
 
     // Pagination + total count
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(10000, Math.max(1, limit));
     const [data, totalRecord] = await Promise.all([
       qb
         .clone()
@@ -93,7 +87,7 @@ export class TableRecordService {
         page: pageNum,
         limit: limitNum,
         total: totalNum,
-        pages: Math.ceil(totalNum / limitNum || 1),
+        pages: Math.ceil(totalNum / limitNum) || 1,
       },
     };
   }
@@ -125,56 +119,45 @@ export class TableRecordService {
       limit = 10000,
     } = query;
 
-    const pageNum = Math.max(1, page);
-    const limitNum = Math.min(10000, Math.max(1, limit));
-
     let qb = pg(tableName).withSchema(schemaName);
 
     // SELECT
-    select.forEach((expr) => {
-      qb = qb.select(pg.raw(expr));
-    });
+    qb = qb.select(select.map((expr) => pg.raw(expr)));
 
     // WHERE
-    if (where && Object.keys(where).length > 0) {
-      qb = qb.where(where);
-    }
+    if (where) qb = qb.where(where);
 
     // GROUP BY
-    if (group && group.length > 0) {
-      qb = qb.groupBy(group);
-    }
+    if (group) qb = qb.groupBy(group);
 
     // HAVING
-    if (having && Object.keys(having).length > 0) {
+    if (having) {
       Object.entries(having).forEach(([key, value]) => {
-        if (
-          typeof value === 'object' &&
-          value !== null &&
-          'operator' in value &&
-          'value' in value
-        ) {
-          qb = qb.having(key, value.operator, value.value);
-        } else {
-          qb = qb.having(key, '=', value);
-        }
+        const isObj = typeof value === 'object' && value !== null;
+        const op = isObj ? value.operator : '=';
+        const val = isObj ? value.value : value;
+        qb.having(pg.raw(key), op, val);
       });
     }
 
     // ORDER BY
     if (order) {
       const [col, dir] = order.split(':');
-      const direction = dir.toLowerCase() === 'desc' ? 'desc' : 'asc';
-      qb = qb.orderBy(col, direction);
+      qb = qb.orderBy(col, dir.toLowerCase() === 'desc' ? 'desc' : 'asc');
     }
 
     // Pagination + total
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(10000, Math.max(1, limit));
     const [data, totalRecord] = await Promise.all([
       qb
         .clone()
         .limit(limitNum)
         .offset((pageNum - 1) * limitNum),
-      qb.clone().count('* as total').first(),
+      pg
+        .from(qb.clone().as('sub'))
+        .count('* as total')
+        .first<{ total: string | number } | undefined>(),
     ]);
 
     const totalNum = Number(totalRecord?.total || 0);
@@ -185,7 +168,7 @@ export class TableRecordService {
         page: pageNum,
         limit: limitNum,
         total: totalNum,
-        pages: Math.ceil(totalNum / limitNum || 1),
+        pages: Math.ceil(totalNum / limitNum) || 1,
       },
     };
   }
