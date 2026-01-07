@@ -12,3 +12,24 @@ export const convertToHtmlPattern = (regex: RegExp) => {
 
   return pattern;
 };
+
+/**
+ * Recursively converts all empty strings ("") in an object or array to null.
+ * Useful for cleaning up PrimeNG form data before API submission.
+ */
+export const sanitizeEmptyStrings = (data: any): any => {
+  if (data === '') return null;
+
+  if (Array.isArray(data)) {
+    return data.map((item) => sanitizeEmptyStrings(item));
+  }
+
+  if (typeof data === 'object' && data !== null) {
+    return Object.keys(data).reduce((acc, key) => {
+      acc[key] = sanitizeEmptyStrings(data[key]);
+      return acc;
+    }, {} as any);
+  }
+
+  return data;
+};
