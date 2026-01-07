@@ -65,6 +65,7 @@ export const getTableSchema = async (
       'column_name',
       'data_type',
       'udt_name',
+      'domain_name',
       'is_nullable',
       'character_maximum_length',
       'column_default',
@@ -143,29 +144,39 @@ export const getTableSchema = async (
   const primaryKeySet = new Set(primaryKeys.map((pk: any) => pk.column_name));
 
   // 4. Enum type values
-  const enumColumns = await pg('information_schema.columns')
-    .select('column_name', 'udt_name')
-    .where({
-      table_schema: schemaName,
-      table_name: tableName,
-      ...(columnName ? { column_name: columnName } : {}),
-    })
-    .whereRaw(`udt_name IN (SELECT typname FROM pg_type WHERE typtype = 'e')`);
+  const enumColumns = await pg.raw(
+    `
+      SELECT
+        c.column_name,
+        t.typname AS enum_type_name
+      FROM information_schema.columns c
+      JOIN pg_type t ON t.typname =
+        CASE
+          WHEN c.udt_name ~ '^_' THEN substring(c.udt_name FROM 2)
+          ELSE c.udt_name
+        END
+      WHERE c.table_schema = ?
+        AND c.table_name = ?
+        ${columnName ? 'AND c.column_name = ?' : ''}
+        AND t.typtype = 'e'
+    `,
+    [schemaName, tableName, ...(columnName ? [columnName] : [])]
+  );
 
   const enumMap: Record<string, string[]> = {};
 
-  for (const col of enumColumns) {
+  for (const col of enumColumns.rows) {
     const result = await pg('pg_enum')
       .select(
         pg.raw("string_agg(enumlabel, ', ' ORDER BY enumsortorder) as labels")
       )
       .whereRaw(`enumtypid = (SELECT oid FROM pg_type WHERE typname = ?)`, [
-        col.udt_name,
+        col.enum_type_name,
       ])
       .first();
 
     if (result?.labels) {
-      enumMap[col.column_name] = result.labels?.split(', ');
+      enumMap[col.column_name] = result.labels.split(', ');
     }
   }
 
@@ -315,33 +326,34 @@ export const getTableSchema = async (
       value: defaultValue,
       rawValue: rawDefaultValue,
       isSpecialExpression: hasSpecialDefault,
-    } = parsePostgresDefault(col.column_default);
+    } = parsePgDefault(col.column_default);
     const { constraints, ...validation } = validationMap[col.column_name] || {};
     const column: Column = {
       name: col.column_name,
       primary: primaryKeySet.has(col.column_name),
       nullable: col.is_nullable === 'YES',
       unique: uniqueSet.has(col.column_name),
-      defaultValue: hasSpecialDefault ? defaultValue : null,
+      defaultValue: !hasSpecialDefault ? defaultValue : null,
       comment: commentMap[col.column_name] ?? null,
       options: enumMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
-      validation: validation || null,
+      validation: Object.keys(validation).length ? validation : null,
       metadata: {
         pgDataType: col.data_type,
         pgRawType: col.udt_name,
+        pgDomainName: col.domain_name,
         pgDefaultValue: rawDefaultValue,
         constraints,
       },
     } as Column;
 
-    column.dataType = mapDataType(column, col.data_type);
+    column.dataType = mapDataType(column);
 
     return column;
   });
 };
 
-const parsePostgresDefault = (
+const parsePgDefault = (
   rawDefault: string | null
 ): {
   value: any;
@@ -356,7 +368,7 @@ const parsePostgresDefault = (
 
   let expr = rawDefault
     .trim()
-    .replace(/::[\w\s"']+$/, '')
+    .replace(/::[\w\s"'\[\]]+$/, '')
     .trim();
 
   const specialExpressionPatterns = [
@@ -409,6 +421,13 @@ const parsePostgresDefault = (
   if (expr === 'NULL') return { ...parsed, value: null };
 
   return { ...parsed, value: expr, isSpecialExpression: true };
+};
+
+export const toPgArray = (arr: string[] | null | undefined) => {
+  if (arr === null || arr === undefined) return null;
+  if (arr.length === 0) return '{}';
+  if (typeof arr === 'string') return arr;
+  return '{' + arr.map((item) => `"${item}"`).join(',') + '}';
 };
 
 const extractLengthRange = (definition: string) => {

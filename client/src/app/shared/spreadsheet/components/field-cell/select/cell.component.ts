@@ -1,12 +1,12 @@
 import _ from 'lodash';
 
-import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { Menu, MenuModule } from 'primeng/menu';
 import { TagModule } from 'primeng/tag';
 
-import { SelectField } from '../../../field/objects/select-field.object';
-import { SelectData } from '../../../field/interfaces/select-field.interface';
+import { SelectField } from '@app/shared/field-system/models/select/field.object';
+import { SelectData } from '@app/shared/field-system/models/select/field.interface';
 import { CellTouchEvent } from '../field-cell-touchable';
 import { FieldCellEditable } from '../field-cell-editable';
 
@@ -21,27 +21,31 @@ import { FieldCellEditable } from '../field-cell-editable';
 export class SelectFieldCellComponent extends FieldCellEditable<SelectData> {
   declare field: SelectField;
 
-  @ViewChild('menu') menu: Menu;
-
+  menu = viewChild<Menu>('menu');
   items: MenuItem[] | undefined;
-
-  ngOnInit() {
-    this.items = _.map(this.field.options, (option) => ({
-      label: option,
-      command: ({ item }) => this.save(item.label),
-    }));
-  }
 
   protected override onTouch(e: CellTouchEvent) {
     if (this.readonly) return;
-    this.menu.show(e);
+    this.menu().show(e);
   }
 
-  protected onMenuOpened() {
+  protected onMenuOpen() {
+    this.items = _.chain(this.field.options)
+      .without(this.data)
+      .map((option) => ({
+        label: option,
+        command: ({ item }) => this.save(item.label),
+      }))
+      .value();
+
+    if (!this.items.length) {
+      this.items = [{ label: 'No items available', disabled: true }];
+    }
+
     this.markAsEditStarted();
   }
 
-  protected onMenuClosed() {
+  protected onMenuClose() {
     this.markAsEditEnded();
   }
 }

@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import chalk from 'chalk';
 
+import { initDatabaseTypes } from './plugins/pg';
 import { compression } from './plugins/compression';
 import { authRoutes } from './auth/routes';
 import { apiKeyRoutes } from './api-keys/routes';
@@ -30,6 +31,13 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
   console.log('');
   console.log(chalk.bold.cyan(`   Starting ${APP_NAME} services...`));
   console.log('');
+
+  try {
+    await initDatabaseTypes();
+  } catch (err) {
+    console.error(chalk.red('   Critical: Database initialization failed!'));
+    process.exit(1); // Kill the app if types aren't ready
+  }
 
   const app = new Elysia({
     name: APP_NAME,

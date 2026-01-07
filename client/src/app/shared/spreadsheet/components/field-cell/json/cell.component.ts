@@ -2,8 +2,8 @@ import _ from 'lodash';
 
 import { ChangeDetectionStrategy, Component, SimpleChanges } from '@angular/core';
 
-import { JSONEditorDrawerComponent } from '../../../../json-editor/json-editor-drawer.component';
-import { JSONData } from '../../../field/interfaces/json-field.interface';
+import { JSONEditorDrawerComponent } from '@app/shared/json-editor/json-editor-drawer.component';
+import { JSONData } from '@app/shared/field-system/models/json/field.interface';
 import { FieldCellInputable } from '../field-cell-inputable';
 import { InputBoxComponent } from '../input-box.component';
 

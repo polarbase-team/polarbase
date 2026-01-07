@@ -5,9 +5,9 @@ import { ButtonModule } from 'primeng/button';
 import { ImageModule } from 'primeng/image';
 import { TooltipModule } from 'primeng/tooltip';
 
-import { TableListComponent } from './table/table-list/table-list.component';
-import { TableDetailComponent } from './table/table-detail/table-detail.component';
-import { TableService } from './table/table.service';
+import { TableListComponent } from './table/pages/table-list/table-list.component';
+import { TableDetailComponent } from './table/pages/table-detail/table-detail.component';
+import { TableService } from './table/services/table.service';
 
 @Component({
   selector: 'base',

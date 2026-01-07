@@ -1,6 +1,11 @@
 {
   "name": "polarbase",
   "version": "0.1.0",
+  "author": "Qui Nguyen",
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  },
+  "description": "Extensible Open-source Data Backend for PostgreSQL. Features a multi-view UI (Spreadsheet, Dashboard, Calendar), AI-Agent integration via MCP, and zero vendor lock-in.",
   "keywords": [
     "postgresql",
     "backend-as-a-service",
@@ -17,18 +22,13 @@
     "low-code",
     "realtime-database"
   ],
-  "author": "Qui Nguyen",
   "license": "MIT",
-  "description": "Extensible Open-source Data Backend for PostgreSQL. Features a multi-view UI (Spreadsheet, Dashboard, Calendar), AI-Agent integration via MCP, and zero vendor lock-in.",
-  "workspaces": [
-    "client",
-    "server"
-  ],
   "scripts": {
     "start": "concurrently \"bun --cwd server dev\" \"bun --cwd client start\"",
     "build": "bun --cwd client build"
   },
-  "devDependencies": {
-    "concurrently": "^8.0.0"
-  }
+  "workspaces": [
+    "client",
+    "server"
+  ]
 }

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { TextData } from '../../../field/interfaces/text-field.interface';
+import { TextData } from '@app/shared/field-system/models/text/field.interface';
 import { FieldCellInputable } from '../field-cell-inputable';
 import { InputBoxComponent } from '../input-box.component';
 
@@ -12,4 +12,8 @@ import { InputBoxComponent } from '../input-box.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [InputBoxComponent],
 })
-export class TextFieldCellComponent extends FieldCellInputable<TextData> {}
+export class TextFieldCellComponent extends FieldCellInputable<TextData> {
+  override save(data: TextData) {
+    super.save(data || null);
+  }
+}

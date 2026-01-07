@@ -16,8 +16,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 
-import { DataType } from '../../field/interfaces/field.interface';
-import { Field } from '../../field/objects/field.object';
+import { DataType } from '@app/shared/field-system/models/field.interface';
+import { Field } from '@app/shared/field-system/models/field.object';
 import { FieldCell } from './field-cell';
 import { FieldCellEditable } from './field-cell-editable';
 import { TextFieldCellComponent } from './text/cell.component';
@@ -27,7 +27,11 @@ import { NumberFieldCellComponent } from './number/cell.component';
 import { DateFieldCellComponent } from './date/cell.component';
 import { CheckboxFieldCellComponent } from './checkbox/cell.component';
 import { SelectFieldCellComponent } from './select/cell.component';
+import { MultiSelectFieldCellComponent } from './multi-select/cell.component';
+import { EmailFieldCellComponent } from './email/cell.component';
+import { UrlFieldCellComponent } from './url/cell.component';
 import { JSONFieldCellComponent } from './json/cell.component';
+import { GeoPointFieldCellComponent } from './geo-point/cell.component';
 import { FieldCellSelectingState, FieldCellService } from './field-cell.service';
 import { TableRow } from '../../models/table-row';
 import { TableColumn } from '../../models/table-column';
@@ -41,7 +45,11 @@ const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
   [DataType.Date, DateFieldCellComponent],
   [DataType.Checkbox, CheckboxFieldCellComponent],
   [DataType.Select, SelectFieldCellComponent],
+  [DataType.MultiSelect, MultiSelectFieldCellComponent],
+  [DataType.Email, EmailFieldCellComponent],
+  [DataType.Url, UrlFieldCellComponent],
   [DataType.JSON, JSONFieldCellComponent],
+  [DataType.GeoPoint, GeoPointFieldCellComponent],
 ]) as ReadonlyMap<DataType, Type<FieldCell>>;
 
 @Directive({
