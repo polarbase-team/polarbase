@@ -1,0 +1,17 @@
+<p-drawer
+  [(visible)]="visible"
+  position="right"
+  header="Map Picker"
+  styleClass="!w-180 custom-drawer"
+  (onShow)="mapPicker().refresh()"
+>
+  <ng-template #content>
+    <map-picker #mapPicker [(loc)]="loc" />
+  </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" (click)="cancel()" />
+      <p-button label="Save" (click)="save()" />
+    </div>
+  </ng-template>
+</p-drawer>

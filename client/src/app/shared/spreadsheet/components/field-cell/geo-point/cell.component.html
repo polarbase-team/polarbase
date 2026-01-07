@@ -9,9 +9,24 @@
     (contentChange)="onInputBoxChange($event)"
   />
 } @else {
-  <div class="field-cell__text-content">
-    <!-- <a [attr.href]="data ? `${data}` : '#'" class="text-blue-600 hover:underline"> -->
-    {{ data | pointValue }}
-    <!-- </a> -->
+  <div class="flex items-start justify-between w-full">
+    <div class="field-cell__text-content">
+      {{ data | pointValue }}
+    </div>
+    @if (selecting) {
+      <map-picker-drawer
+        [(visible)]="visibleMapPicker"
+        [loc]="loc"
+        (onSave)="onSaveNewLocation($event)"
+      />
+      <div
+        class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
+        [pTooltip]="'View on map'"
+        tooltipPosition="top"
+        (click)="openMap()"
+      >
+        <i class="icon icon-map"></i>
+      </div>
+    }
   </div>
 }
