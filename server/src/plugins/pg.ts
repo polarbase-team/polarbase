@@ -25,6 +25,7 @@ const pg = knex({
     propagateCreateError: false,
   },
   acquireConnectionTimeout: 60000,
+  debug: process.env.DEBUG === 'true',
 });
 
 /**

@@ -31,7 +31,7 @@
     (ngModelChange)="data.set($any($event))"
     fluid
   />
-  <small class="text-surface-500">Ex: 10.7626, 106.6601</small>
+  <p class="text-surface-500 text-xs">Ex: 10.7626, 106.6601</p>
   @if (input.invalid && input.touched) {
     <p-message severity="error" size="small" variant="simple">
       @if (input.hasError('required')) {
