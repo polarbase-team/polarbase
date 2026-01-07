@@ -181,7 +181,7 @@
               icon="icon icon-copy"
               severity="secondary"
               [text]="true"
-              [pTooltip]="'Copy to clipboard'"
+              pTooltip="Copy to clipboard"
               tooltipPosition="top"
               [cdkCopyToClipboard]="key.key"
               (cdkCopyToClipboardCopied)="onCopyKey()"
@@ -217,7 +217,7 @@
               icon="icon icon-trash"
               severity="danger"
               [text]="true"
-              [pTooltip]="'Revoke key'"
+              pTooltip="Revoke key"
               tooltipPosition="top"
               (click)="revokeKey(key)"
             />
