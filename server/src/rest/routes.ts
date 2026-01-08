@@ -8,7 +8,7 @@ import { apiKeyAuth } from '../api-keys/auth';
 import { SchemaService } from './services/schema.service';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
-import { DataType } from './utils/column';
+import { DataType, ReferentialAction } from './utils/column';
 import { WhereFilter } from './utils/record';
 
 const REST_RATE_LIMIT = Number(process.env.REST_RATE_LIMIT) || 100;
@@ -250,6 +250,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           defaultValue: body.defaultValue,
           comment: body.comment,
           options: body.options,
+          foreignKey: body.foreignKey,
           validation: body.validation,
         },
       });
@@ -258,14 +259,22 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({ table: t.String() }),
       body: t.Object({
         name: t.String({ minLength: 1 }),
-        dataType: t.String({
-          enum: Object.values(DataType) as [string, ...string[]],
-        }),
+        dataType: t.Enum(DataType),
         nullable: t.Optional(t.Nullable(t.Boolean())),
         unique: t.Optional(t.Nullable(t.Boolean())),
         defaultValue: t.Optional(t.Nullable(t.Any())),
         comment: t.Optional(t.Nullable(t.String())),
         options: t.Optional(t.Nullable(t.Array(t.String()))),
+        foreignKey: t.Optional(
+          t.Nullable(
+            t.Object({
+              table: t.String(),
+              column: t.Object({ name: t.String(), type: t.String() }),
+              onUpdate: t.Enum(ReferentialAction),
+              onDelete: t.Enum(ReferentialAction),
+            })
+          )
+        ),
         validation: t.Optional(
           t.Nullable(
             t.Object({
@@ -300,6 +309,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           defaultValue: body.defaultValue,
           comment: body.comment,
           options: body.options,
+          foreignKey: body.foreignKey,
           validation: body.validation,
         },
       });
@@ -308,14 +318,20 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({ table: t.String(), column: t.String() }),
       body: t.Object({
         name: t.String({ minLength: 1 }),
-        dataType: t.String({
-          enum: Object.values(DataType) as [string, ...string[]],
-        }),
+        dataType: t.Enum(DataType),
         nullable: t.Nullable(t.Boolean()),
         unique: t.Nullable(t.Boolean()),
         defaultValue: t.Nullable(t.Any()),
         comment: t.Nullable(t.String()),
         options: t.Nullable(t.Array(t.String())),
+        foreignKey: t.Nullable(
+          t.Object({
+            table: t.String(),
+            column: t.Object({ name: t.String(), type: t.String() }),
+            onUpdate: t.Enum(ReferentialAction),
+            onDelete: t.Enum(ReferentialAction),
+          })
+        ),
         validation: t.Nullable(
           t.Object({
             minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),

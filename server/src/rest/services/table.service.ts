@@ -13,6 +13,7 @@ import {
   getConstraintName,
   addDateRangeCheck,
   removeDateRangeCheck,
+  ReferentialAction,
 } from '../utils/column';
 
 export class TableService {
@@ -214,6 +215,12 @@ export class TableService {
       defaultValue?: any | null;
       comment?: string | null;
       options?: string[] | null;
+      foreignKey?: {
+        table: string;
+        column: { name: string; type: string };
+        onUpdate: ReferentialAction;
+        onDelete: ReferentialAction;
+      } | null;
       validation?: {
         minLength?: number | null;
         maxLength?: number | null;
@@ -233,6 +240,7 @@ export class TableService {
       defaultValue,
       comment,
       options,
+      foreignKey,
       validation,
     } = column;
     const {
@@ -266,6 +274,7 @@ export class TableService {
           name,
           dataType,
           options,
+          foreignKey,
         });
 
         if (nullable) columnBuilder.nullable();
@@ -318,6 +327,12 @@ export class TableService {
       defaultValue: any | null;
       comment: string | null;
       options: string[] | null;
+      foreignKey: {
+        table: string;
+        column: { name: string; type: string };
+        onUpdate: ReferentialAction;
+        onDelete: ReferentialAction;
+      } | null;
       validation: {
         minLength?: number | null;
         maxLength?: number | null;

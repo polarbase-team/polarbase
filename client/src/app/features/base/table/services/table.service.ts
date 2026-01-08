@@ -19,6 +19,7 @@ export interface TableDefinition {
   tableName: string;
   tableComment: string;
   tableColumnPk: string;
+  tableColumnPkType: string;
 }
 
 export interface TableFormData {
@@ -39,7 +40,7 @@ export interface ColumnDefinition {
   options: string[] | null;
   foreignKey: {
     table: string;
-    column: string;
+    column: { name: string; type: string };
     onUpdate?: string;
     onDelete?: string;
   } | null;
@@ -77,6 +78,7 @@ const DATA_TYPE_MAPPING = {
   providedIn: 'root',
 })
 export class TableService {
+  tables = signal<TableDefinition[]>([]);
   selectedTable = signal<TableDefinition>(null);
 
   private apiUrl = `${environment.apiUrl}/rest`;
@@ -90,9 +92,13 @@ export class TableService {
   }
 
   getTables() {
-    return this.http
-      .get<ApiResponse<TableDefinition[]>>(`${this.apiUrl}/tables`)
-      .pipe(map((res) => res.data));
+    return this.http.get<ApiResponse<TableDefinition[]>>(`${this.apiUrl}/tables`).pipe(
+      map((res) => {
+        const tables = res.data;
+        this.tables.set(tables);
+        return tables;
+      }),
+    );
   }
 
   getTableSchema(tableName: string) {

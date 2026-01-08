@@ -128,7 +128,7 @@
                 optionValue="value"
                 [options]="dataTypes"
                 [(ngModel)]="selectedDataType"
-                (ngModelChange)="onSelectDataType($event)"
+                (ngModelChange)="onDataTypeSelect($event)"
                 placeholder="Select here..."
                 required
               >
@@ -274,7 +274,44 @@
                 </div>
               }
               @case (DataType.GeoPoint) {}
-              @case (DataType.Reference) {}
+              @case (DataType.Reference) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Table</label>
+                  <p-select
+                    name="table"
+                    [options]="tableOptions"
+                    [(ngModel)]="columnFormData.foreignKey.table"
+                    (ngModelChange)="onTableSelect($event)"
+                    (onShow)="onTableSelectorOpen()"
+                    optionLabel="name"
+                    optionValue="value"
+                    placeholder="Select here..."
+                    required
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">On Update</label>
+                  <p-selectbutton
+                    name="onUpdate"
+                    [options]="referentialActions"
+                    [(ngModel)]="columnFormData.foreignKey.onUpdate"
+                    optionLabel="name"
+                    optionValue="value"
+                    fluid
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">On Delete</label>
+                  <p-selectbutton
+                    name="onDelete"
+                    [options]="referentialActions"
+                    [(ngModel)]="columnFormData.foreignKey.onDelete"
+                    optionLabel="name"
+                    optionValue="value"
+                    fluid
+                  />
+                </div>
+              }
             }
           </div>
         </div>

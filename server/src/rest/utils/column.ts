@@ -17,6 +17,14 @@ export const DataType = {
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
+export const ReferentialAction = {
+  NoAction: 'NO ACTION',
+  SetNull: 'SET NULL',
+  Cascade: 'CASCADE',
+} as const;
+export type ReferentialAction =
+  (typeof ReferentialAction)[keyof typeof ReferentialAction];
+
 export interface Column {
   name: string;
   dataType: DataType;
@@ -28,9 +36,9 @@ export interface Column {
   options: string[];
   foreignKey: {
     table: string;
-    column: string;
-    onUpdate?: string;
-    onDelete?: string;
+    column: { name: string; type: string };
+    onUpdate: ReferentialAction;
+    onDelete: ReferentialAction;
   };
   validation: {
     minLength?: number;
@@ -131,13 +139,13 @@ export const specificType = (
     tableName: string;
     name: string;
     dataType: DataType;
+    options?: string[] | null;
     foreignKey?: {
       table: string;
-      column: string;
-      onUpdate: 'set null' | 'cascade' | 'no action';
-      onDelete: 'set null' | 'cascade' | 'no action';
-    };
-    options?: string[] | null;
+      column: { name: string; type: string };
+      onUpdate: ReferentialAction;
+      onDelete: ReferentialAction;
+    } | null;
   }
 ) => {
   switch (dataType) {
@@ -213,12 +221,15 @@ export const specificType = (
     }
 
     case DataType.Reference: {
+      if (!foreignKey) {
+        throw new Error(`Foreign key metadata is required for column: ${name}`);
+      }
       return tableBuilder
-        .foreign(name)
-        .references(foreignKey!.column)
-        .inTable(foreignKey!.table)
-        .onUpdate(foreignKey!.onUpdate)
-        .onDelete(foreignKey!.onUpdate);
+        .specificType(name, foreignKey.column.type)
+        .references(foreignKey.column.name)
+        .inTable(foreignKey.table)
+        .onUpdate(foreignKey.onUpdate)
+        .onDelete(foreignKey.onUpdate);
     }
 
     default:

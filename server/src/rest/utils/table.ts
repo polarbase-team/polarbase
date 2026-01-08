@@ -32,6 +32,16 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
           LIMIT 1
         )
       `),
+      tableColumnPkType: pg.raw(`
+        (
+          SELECT t.typname
+          FROM pg_index i
+          JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+          JOIN pg_type t ON a.atttypid = t.oid
+          WHERE i.indrelid = c.oid AND i.indisprimary
+          LIMIT 1
+        )
+      `),
     })
     .leftJoin('pg_namespace as ns', 'c.relnamespace', 'ns.oid')
     .leftJoin('pg_description as descr', function () {
@@ -180,40 +190,42 @@ export const getTableSchema = async (
   }
 
   // 5. Fetch foreign key information
-  const foreignKeys = await pg('information_schema.key_column_usage as kcu')
-    .select(
-      'kcu.column_name',
-      'ccu.table_name as referenced_table_name',
-      'ccu.column_name as referenced_column_name',
-      'rc.update_rule as on_update',
-      'rc.delete_rule as on_delete'
-    )
-    .join('information_schema.referential_constraints as rc', function () {
-      this.on('rc.constraint_name', '=', 'kcu.constraint_name').andOn(
-        'rc.constraint_schema',
-        '=',
-        'kcu.constraint_schema'
-      );
-    })
-    .join('information_schema.constraint_column_usage as ccu', function () {
-      this.on('ccu.constraint_name', '=', 'rc.constraint_name').andOn(
-        'ccu.constraint_schema',
-        '=',
-        'rc.constraint_schema'
-      );
-    })
-    .where({
-      'kcu.table_schema': schemaName,
-      'kcu.table_name': tableName,
-      ...(columnName ? { 'kcu.column_name': columnName } : {}),
-    });
+  const foreignKeys = await pg.raw(
+    `
+      SELECT
+          kcu.column_name,
+          c.udt_name AS column_udt_type,
+          ccu.table_name AS referenced_table_name,
+          ccu.column_name AS referenced_column_name,
+          rc.update_rule AS on_update,
+          rc.delete_rule AS on_delete
+      FROM information_schema.key_column_usage AS kcu
+      -- Join để lấy quy tắc onDelete/onUpdate
+      JOIN information_schema.referential_constraints AS rc
+          ON kcu.constraint_name = rc.constraint_name
+          AND kcu.constraint_schema = rc.constraint_schema
+      -- Join để lấy thông tin bảng/cột được tham chiếu
+      JOIN information_schema.constraint_column_usage AS ccu
+          ON rc.unique_constraint_name = ccu.constraint_name
+          AND rc.unique_constraint_schema = ccu.constraint_schema
+      -- Join để lấy udt_name của cột hiện tại
+      JOIN information_schema.columns AS c
+          ON kcu.table_schema = c.table_schema
+          AND kcu.table_name = c.table_name
+          AND kcu.column_name = c.column_name
+      WHERE kcu.table_schema = ?
+        AND kcu.table_name = ?
+        ${columnName ? 'AND kcu.column_name = ?' : ''}
+    `,
+    [schemaName, tableName, ...(columnName ? [columnName] : [])]
+  );
 
   const foreignKeyMap = Object.fromEntries(
-    foreignKeys.map((fk: any) => [
+    foreignKeys.rows.map((fk: any) => [
       fk.column_name,
       {
         table: fk.referenced_table_name,
-        column: fk.referenced_column_name,
+        column: { name: fk.referenced_column_name, type: fk.column_udt_type },
         onUpdate: fk.on_update,
         onDelete: fk.on_delete,
       },
