@@ -9,8 +9,9 @@
   />
   <record-editor-drawer
     [(visible)]="visibleRecordEditor"
-    [fields]="fields()"
-    [record]="updatedRecord"
+    [table]="updatedRecord.table"
+    [fields]="updatedRecord.fields"
+    [record]="updatedRecord.data"
     [mode]="updatedRecordMode"
     (onSave)="onRecordSave($event)"
   />
@@ -18,6 +19,7 @@
     [config]="config()"
     [columns]="columns()"
     [rows]="rows()"
+    (action)="onTableAction($event)"
     (columnAction)="onColumnAction($event)"
     (rowAction)="onRowAction($event)"
     (cellAction)="onCellAction($event)"

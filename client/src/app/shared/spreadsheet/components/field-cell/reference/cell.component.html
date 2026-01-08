@@ -1,0 +1,20 @@
+<div class="flex items-start justify-between w-full">
+  @if (data !== undefined && data !== null) {
+    <div class="field-cell__block-content">
+      <p-tag
+        class="cursor-pointer"
+        severity="info"
+        [value]="$any(data)"
+        (click)="viewDetail.emit({ field, data })"
+      ></p-tag>
+    </div>
+  }
+  @if (selecting) {
+    <div
+      class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
+      (click)="visibleReferencePicker = true"
+    >
+      <i class="icon icon-chevron-down"></i>
+    </div>
+  }
+</div>

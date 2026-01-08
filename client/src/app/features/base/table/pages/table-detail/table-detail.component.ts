@@ -22,6 +22,7 @@ import { TableColumn } from '@app/shared/spreadsheet/models/table-column';
 import { TableRow } from '@app/shared/spreadsheet/models/table-row';
 import { TableConfig } from '@app/shared/spreadsheet/models/table';
 import { SpreadsheetComponent } from '@app/shared/spreadsheet/spreadsheet.component';
+import { TableAction, TableActionType } from '@app/shared/spreadsheet/events/table';
 import {
   TableRowAction,
   TableRowActionType,
@@ -36,10 +37,17 @@ import {
   TableColumnAction,
   TableColumnActionType,
 } from '@app/shared/spreadsheet/events/table-column';
+import { ReferenceViewDetailEvent } from '@app/shared/spreadsheet/components/field-cell/reference/cell.component';
 import { ColumnEditorDrawerComponent } from '../../components/column-editor/column-editor-drawer.component';
 import { RecordEditorDrawerComponent } from '../../components/record-editor/record-editor-drawer.component';
 import { ColumnDefinition, TableDefinition, TableService } from '../../services/table.service';
 import { TableRealtimeService } from '../../services/table-realtime.service';
+
+interface UpdatedRecord {
+  table: TableDefinition;
+  fields: Field[];
+  data: Record<string, any>;
+}
 
 @Component({
   selector: 'table-detail',
@@ -61,15 +69,12 @@ export class TableDetailComponent {
   });
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
-  protected fields = computed(() => {
-    return this.columns().map((c) => c.field);
-  });
   protected tblService = inject(TableService);
   protected updatedColumn: ColumnDefinition;
   protected updatedColumnField: Field;
   protected updatedColumnMode: 'add' | 'edit' = 'add';
   protected visibleColumnEditor: boolean;
-  protected updatedRecord: Record<string, any>;
+  protected updatedRecord: UpdatedRecord = {} as UpdatedRecord;
   protected updatedRecordMode: 'add' | 'edit' | 'view' = 'add';
   protected visibleRecordEditor: boolean;
   protected insertMenuItems: MenuItem[] = [
@@ -134,6 +139,33 @@ export class TableDetailComponent {
       });
   }
 
+  protected onTableAction(action: TableAction) {
+    switch (action.type) {
+      case TableActionType.ViewReferenceDetail: {
+        const { field, data } = action.payload as ReferenceViewDetailEvent;
+        const tableName = field.referenceTo;
+        const table = this.tblService.tables().find((t) => t.tableName === tableName);
+        if (!table) return;
+
+        this.tblService
+          .getTableSchema(tableName)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((columnDefs) => {
+            const fields = columnDefs.map((c) => this.tblService.buildField(c));
+            this.tblService
+              .getRecord(tableName, data)
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe((record) => {
+                this.updatedRecord = { table, fields, data: record };
+                this.updatedRecordMode = 'edit';
+                this.visibleRecordEditor = true;
+              });
+          });
+        break;
+      }
+    }
+  }
+
   protected onColumnAction(action: TableColumnAction) {
     const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
@@ -184,7 +216,11 @@ export class TableDetailComponent {
           .subscribe();
         break;
       case TableRowActionType.Expand:
-        this.updatedRecord = action.payload['data'];
+        this.updatedRecord = {
+          table: this.tblService.selectedTable(),
+          fields: this.columns().map((c) => c.field),
+          data: action.payload['data'],
+        };
         this.updatedRecordMode = 'edit';
         this.visibleRecordEditor = true;
         break;
@@ -249,7 +285,7 @@ export class TableDetailComponent {
   }
 
   protected addNewRecord() {
-    this.updatedRecord = {} as TableRow;
+    this.updatedRecord = {} as UpdatedRecord;
     this.updatedRecordMode = 'add';
     this.visibleRecordEditor = true;
   }

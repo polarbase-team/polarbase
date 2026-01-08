@@ -14,6 +14,7 @@ import { LongTextFieldConfig } from '@app/shared/field-system/models/long-text/f
 import { JSONFieldConfig } from '@app/shared/field-system/models/json/field.interface';
 import { DateFieldConfig } from '@app/shared/field-system/models/date/field.interface';
 import { buildField } from '@app/shared/field-system/models/utils';
+import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/field.interface';
 
 export interface TableDefinition {
   tableName: string;
@@ -71,7 +72,7 @@ const DATA_TYPE_MAPPING = {
   url: DataType.Url,
   json: DataType.JSON,
   'geo-point': DataType.GeoPoint,
-  // reference: DataType.Reference,
+  reference: DataType.Reference,
 };
 
 @Injectable({
@@ -144,6 +145,10 @@ export class TableService {
     return this.http.get(`${this.apiUrl}/${tableName}`).pipe(map((res) => res['data']['rows']));
   }
 
+  getRecord(tableName: string, recordId: number | string): Observable<Record<string, any>[]> {
+    return this.http.get(`${this.apiUrl}/${tableName}/${recordId}`).pipe(map((res) => res['data']));
+  }
+
   createRecords(tableName: string, records: Record<string, any>[]) {
     return this.http.post<ApiResponse<{ insertedCount: number; returning: Record<string, any>[] }>>(
       `${this.apiUrl}/${tableName}/bulk-create`,
@@ -212,6 +217,7 @@ export class TableService {
       case DataType.GeoPoint:
         break;
       case DataType.Reference:
+        (config as ReferenceFieldConfig).referenceTo = column.foreignKey.table;
         break;
     }
 

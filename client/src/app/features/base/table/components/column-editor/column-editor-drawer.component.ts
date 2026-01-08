@@ -177,6 +177,13 @@ export class ColumnEditorDrawerComponent {
           (this.internalField as MultiSelectField).options = [...options];
       }
     });
+
+    effect(() => {
+      this.tableOptions = [];
+      for (const table of this.tblService.tables()) {
+        this.tableOptions.push({ name: table.tableName, value: table.tableName });
+      }
+    });
   }
 
   protected save() {
@@ -277,15 +284,6 @@ export class ColumnEditorDrawerComponent {
           });
         }
       });
-  }
-
-  protected onTableSelectorOpen() {
-    if (this.tableOptions?.length) return;
-
-    this.tableOptions = [];
-    for (const table of this.tblService.tables()) {
-      this.tableOptions.push({ name: table.tableName, value: table.tableName });
-    }
   }
 
   protected onTableSelect(tableName: string) {

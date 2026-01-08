@@ -9,6 +9,7 @@ import {
   Input,
   OnChanges,
   OnDestroy,
+  output,
   SimpleChanges,
   Type,
   ViewContainerRef,
@@ -18,6 +19,7 @@ import { Subscription } from 'rxjs';
 
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
+import { ReferenceData } from '@app/shared/field-system/models/reference/field.interface';
 import { FieldCell } from './field-cell';
 import { FieldCellEditable } from './field-cell-editable';
 import { TextFieldCellComponent } from './text/cell.component';
@@ -32,6 +34,7 @@ import { EmailFieldCellComponent } from './email/cell.component';
 import { UrlFieldCellComponent } from './url/cell.component';
 import { JSONFieldCellComponent } from './json/cell.component';
 import { GeoPointFieldCellComponent } from './geo-point/cell.component';
+import { ReferenceFieldCellComponent, ReferenceViewDetailEvent } from './reference/cell.component';
 import { FieldCellSelectingState, FieldCellService } from './field-cell.service';
 import { TableRow } from '../../models/table-row';
 import { TableColumn } from '../../models/table-column';
@@ -50,6 +53,7 @@ const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
   [DataType.Url, UrlFieldCellComponent],
   [DataType.JSON, JSONFieldCellComponent],
   [DataType.GeoPoint, GeoPointFieldCellComponent],
+  [DataType.Reference, ReferenceFieldCellComponent],
 ]) as ReadonlyMap<DataType, Type<FieldCell>>;
 
 @Directive({
@@ -63,6 +67,8 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
   @Input() data: any;
   @Input() readonly: boolean;
   @Input() selecting: boolean;
+
+  viewDetail = output<ReferenceViewDetailEvent>();
 
   private cdRef = inject(ChangeDetectorRef);
   private vcRef = inject(ViewContainerRef);
@@ -141,6 +147,11 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
     this.dataType = this.field.dataType;
     this.insertCmp();
     this.isCreated = true;
+
+    const { instance } = this.cmpRef;
+    if (instance instanceof ReferenceFieldCellComponent) {
+      instance.viewDetail = this.viewDetail;
+    }
 
     if (this.selecting) {
       this.keepSelectingState();

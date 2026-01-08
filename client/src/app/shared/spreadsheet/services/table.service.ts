@@ -19,6 +19,8 @@ import { TableRow } from '../models/table-row';
 import { TableColumn } from '../models/table-column';
 import { TableCell } from '../models/table-cell';
 import { TableActionType } from '../events/table';
+import { ReferenceData } from '@app/shared/field-system/models/reference/field.interface';
+import { ReferenceViewDetailEvent } from '../components/field-cell/reference/cell.component';
 
 export const Dimension = {
   HeaderHeight: 36,
@@ -537,6 +539,10 @@ export class TableService extends TableBaseService {
       type: TableActionType.Freeze,
       payload: index,
     });
+  }
+
+  viewReferenceDetail(event: ReferenceViewDetailEvent) {
+    this.host.action.emit({ type: TableActionType.ViewReferenceDetail, payload: event });
   }
 
   positionFillHandle(index = this.layout.cell.selection?.end, retryIfNotRendered?: boolean) {

@@ -88,9 +88,12 @@ export class RecordEditorDrawerComponent {
     });
 
     effect(() => {
+      const fields = this.fields();
+      if (!fields) return;
+
       const requiredFields = [];
       const optionalFields = [];
-      for (const field of this.fields()) {
+      for (const field of fields) {
         if (field.required) {
           requiredFields.push(field);
         } else {
@@ -117,7 +120,7 @@ export class RecordEditorDrawerComponent {
       return;
     }
 
-    const { tableName, tableColumnPk } = this.tblService.selectedTable();
+    const { tableName, tableColumnPk } = this.table();
     const id = this.record()[tableColumnPk] ?? undefined;
     const data = { ...this.updatedRecord };
 
