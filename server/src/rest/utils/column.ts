@@ -229,7 +229,7 @@ export const specificType = (
         .references(foreignKey.column.name)
         .inTable(foreignKey.table)
         .onUpdate(foreignKey.onUpdate)
-        .onDelete(foreignKey.onUpdate);
+        .onDelete(foreignKey.onDelete);
     }
 
     default:
