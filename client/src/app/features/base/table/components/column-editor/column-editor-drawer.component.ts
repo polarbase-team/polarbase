@@ -129,22 +129,22 @@ export class ColumnEditorDrawerComponent {
   protected options = signal<string[]>([]);
 
   // Reference type
-  protected tableOptions: any[] | undefined;
-  protected referentialActions: any[] = [
+  protected tableOptions: { name: string; value: string }[] | undefined;
+  protected referentialActions: { name: string; value: string; help: string }[] = [
     {
       name: 'No Action',
       value: 'NO ACTION',
-      tooltip: 'Prevents deletion if other records still use this.',
+      help: 'Prevents changes if related data exists.',
     },
     {
       name: 'Set Null',
       value: 'SET NULL',
-      tooltip: 'Keeps the record but sets the reference to empty.',
+      help: 'Keeps record but clears the connection.',
     },
     {
       name: 'Cascade',
       value: 'CASCADE',
-      tooltip: 'Automatically updates/deletes related records.',
+      help: 'Automatically syncs updates and deletions.',
     },
   ];
 

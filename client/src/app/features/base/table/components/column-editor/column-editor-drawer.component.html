@@ -305,11 +305,7 @@
                     <ng-template #item let-item>
                       <p class="text-xs flex items-center gap-1">
                         <span>{{ item.name }}</span>
-                        <i
-                          class="icon icon-info"
-                          [pTooltip]="item.tooltip"
-                          tooltipPosition="top"
-                        ></i>
+                        <i class="icon icon-info" [pTooltip]="item.help" tooltipPosition="top"></i>
                       </p>
                     </ng-template>
                   </p-selectbutton>
