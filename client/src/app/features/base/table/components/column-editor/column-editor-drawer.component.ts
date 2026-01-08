@@ -29,6 +29,7 @@ import { FluidModule } from 'primeng/fluid';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { sanitizeEmptyStrings } from '@app/core/utils';
 import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
@@ -87,6 +88,7 @@ const DEFAULT_VALUE = {
     FluidModule,
     MenuModule,
     SelectButtonModule,
+    TooltipModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -129,9 +131,21 @@ export class ColumnEditorDrawerComponent {
   // Reference type
   protected tableOptions: any[] | undefined;
   protected referentialActions: any[] = [
-    { name: 'No Action', value: 'NO ACTION' },
-    { name: 'Set Null', value: 'SET NULL' },
-    { name: 'Cascade', value: 'CASCASDE' },
+    {
+      name: 'No Action',
+      value: 'NO ACTION',
+      tooltip: 'Prevents deletion if other records still use this.',
+    },
+    {
+      name: 'Set Null',
+      value: 'SET NULL',
+      tooltip: 'Keeps the record but sets the reference to empty.',
+    },
+    {
+      name: 'Cascade',
+      value: 'CASCADE',
+      tooltip: 'Automatically updates/deletes related records.',
+    },
   ];
 
   constructor(

@@ -276,7 +276,7 @@
               @case (DataType.GeoPoint) {}
               @case (DataType.Reference) {
                 <div class="flex flex-col gap-1">
-                  <label class="text-sm">Table</label>
+                  <label class="text-sm">Reference to</label>
                   <p-select
                     name="table"
                     [options]="tableOptions"
@@ -290,7 +290,10 @@
                   />
                 </div>
                 <div class="flex flex-col gap-1">
-                  <label class="text-sm">On Update</label>
+                  <label class="text-sm">
+                    On Update
+                    <p class="text-xs text-surface-500">When the parent record is modified...</p>
+                  </label>
                   <p-selectbutton
                     name="onUpdate"
                     [options]="referentialActions"
@@ -298,10 +301,24 @@
                     optionLabel="name"
                     optionValue="value"
                     fluid
-                  />
+                  >
+                    <ng-template #item let-item>
+                      <p class="text-xs flex items-center gap-1">
+                        <span>{{ item.name }}</span>
+                        <i
+                          class="icon icon-info"
+                          [pTooltip]="item.tooltip"
+                          tooltipPosition="top"
+                        ></i>
+                      </p>
+                    </ng-template>
+                  </p-selectbutton>
                 </div>
                 <div class="flex flex-col gap-1">
-                  <label class="text-sm">On Delete</label>
+                  <label class="text-sm">
+                    On Delete
+                    <p class="text-xs text-surface-500">When the parent record is removed...</p>
+                  </label>
                   <p-selectbutton
                     name="onDelete"
                     [options]="referentialActions"
@@ -309,7 +326,18 @@
                     optionLabel="name"
                     optionValue="value"
                     fluid
-                  />
+                  >
+                    <ng-template #item let-item>
+                      <p class="text-xs flex items-center gap-1">
+                        <span>{{ item.name }}</span>
+                        <i
+                          class="icon icon-info"
+                          [pTooltip]="item.tooltip"
+                          tooltipPosition="top"
+                        ></i>
+                      </p>
+                    </ng-template>
+                  </p-selectbutton>
                 </div>
               }
             }
