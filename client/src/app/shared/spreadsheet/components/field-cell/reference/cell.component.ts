@@ -6,6 +6,7 @@ import { ReferenceData } from '@app/shared/field-system/models/reference/field.i
 import { ReferenceField } from '@app/shared/field-system/models/reference/field.object';
 import { ReferencePickerDrawerComponent } from '@app/shared/field-system/editors/reference/picker/picker-drawer.component';
 import { FieldCellEditable } from '../field-cell-editable';
+import { CellTouchEvent } from '../field-cell-touchable';
 
 export interface ReferenceViewDetailEvent {
   field: ReferenceField;
@@ -24,4 +25,8 @@ export class ReferenceFieldCellComponent extends FieldCellEditable<ReferenceData
   protected visibleReferencePicker = false;
 
   viewDetail = output<ReferenceViewDetailEvent>();
+
+  protected override onTouch(e: CellTouchEvent): void {
+    this.visibleReferencePicker = true;
+  }
 }

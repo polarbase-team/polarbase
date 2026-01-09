@@ -64,7 +64,7 @@ export class ReferencePickerDrawerComponent extends DrawerComponent<string | num
     switch (action.type) {
       case TableRowActionType.Select:
         const rows = (action.payload as TableRow[]) || [];
-        const lastSelectedRow = rows.pop();
+        this.value.set(rows.pop()?.id || null);
         rows.forEach((row) => {
           row.selected = false;
         });
