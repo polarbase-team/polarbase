@@ -87,6 +87,7 @@ export type Layout = Partial<{
 const DEFAULT_CONFIG: TableConfig = {
   dataStream: false,
   sideSpacing: 0,
+  allowSelectAllRows: true,
   toolbar: {
     customize: true,
     group: true,

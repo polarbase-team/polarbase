@@ -246,15 +246,19 @@
       >
         <div class="header-cell cell index-cell">
           <div class="index-block">
-            @let rowLength = tableRowService.rows().length;
-            @let selectedRowLength = tableRowService.selectedRows.size;
-            <p-checkbox
-              [binary]="true"
-              [ngModel]="rowLength > 0 && selectedRowLength > 0 && rowLength === selectedRowLength"
-              (ngModelChange)="
-                $event ? tableRowService.selectAllRows() : tableRowService.deselectAllRows()
-              "
-            ></p-checkbox>
+            @if (tableService.config().allowSelectAllRows) {
+              @let rowLength = tableRowService.rows().length;
+              @let selectedRowLength = tableRowService.selectedRows.size;
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="
+                  rowLength > 0 && selectedRowLength > 0 && rowLength === selectedRowLength
+                "
+                (ngModelChange)="
+                  $event ? tableRowService.selectAllRows() : tableRowService.deselectAllRows()
+                "
+              />
+            }
           </div>
         </div>
         @for (

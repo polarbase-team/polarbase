@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { DrawerComponent, usingModules } from '@app/core/components/drawer.component';
 import { ReferenceField } from '@app/shared/field-system/models/reference/field.object';
+import { TableRowAction, TableRowActionType } from '@app/shared/spreadsheet/events/table-row';
 import { TableConfig } from '@app/shared/spreadsheet/models/table';
 import { TableColumn } from '@app/shared/spreadsheet/models/table-column';
 import { TableRow } from '@app/shared/spreadsheet/models/table-row';
@@ -14,11 +15,12 @@ import { SpreadsheetComponent } from '@app/shared/spreadsheet/spreadsheet.compon
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [...usingModules, SpreadsheetComponent],
 })
-export class ReferencePickerDrawerComponent extends DrawerComponent {
+export class ReferencePickerDrawerComponent extends DrawerComponent<string | number> {
   field = input.required<ReferenceField>();
 
   protected config = signal<TableConfig>({
     sideSpacing: 20,
+    allowSelectAllRows: false,
     toolbar: {
       customize: false,
       group: false,
@@ -56,6 +58,19 @@ export class ReferencePickerDrawerComponent extends DrawerComponent {
     super.onShow();
 
     this.loadTable();
+  }
+
+  protected onRowAction(action: TableRowAction) {
+    switch (action.type) {
+      case TableRowActionType.Select:
+        const rows = (action.payload as TableRow[]) || [];
+        const lastSelectedRow = rows.pop();
+        rows.forEach((row) => {
+          row.selected = false;
+        });
+        this.rows.update((arr) => [...arr]);
+        break;
+    }
   }
 
   private loadTable() {
@@ -103,6 +118,7 @@ export class ReferencePickerDrawerComponent extends DrawerComponent {
         const rows: TableRow[] = records.map((it: any) => ({
           id: it.id,
           data: it,
+          selected: it.id === this.value(),
         }));
         setTimeout(() => this.rows.set(rows));
       });

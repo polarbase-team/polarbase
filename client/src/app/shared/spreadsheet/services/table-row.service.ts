@@ -70,7 +70,11 @@ export class TableRowService extends TableBaseService {
         if (!this.rowById.has(row.id)) {
           row.id ??= _.uniqueId();
         }
-        if (row.selected) this.selectedRows.add(row);
+        if (row.selected) {
+          this.selectedRows.add(row);
+        } else {
+          this.selectedRows.delete(row);
+        }
         this.rowById.set(row.id, row);
       }
 
