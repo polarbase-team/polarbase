@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, output } from '@angular/core';
 
 import { TagModule } from 'primeng/tag';
 
 import { ReferenceData } from '@app/shared/field-system/models/reference/field.interface';
 import { ReferenceField } from '@app/shared/field-system/models/reference/field.object';
-import { FieldCellTouchable } from '../field-cell-touchable';
+import { ReferencePickerDrawerComponent } from '@app/shared/field-system/editors/reference/picker/picker-drawer.component';
+import { FieldCellEditable } from '../field-cell-editable';
 
 export interface ReferenceViewDetailEvent {
   field: ReferenceField;
@@ -17,9 +18,9 @@ export interface ReferenceViewDetailEvent {
   styleUrl: '../field-cell.scss',
   host: { class: 'reference-field-cell' },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TagModule],
+  imports: [TagModule, forwardRef(() => ReferencePickerDrawerComponent)],
 })
-export class ReferenceFieldCellComponent extends FieldCellTouchable<ReferenceData> {
+export class ReferenceFieldCellComponent extends FieldCellEditable<ReferenceData> {
   protected visibleReferencePicker = false;
 
   viewDetail = output<ReferenceViewDetailEvent>();

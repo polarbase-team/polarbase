@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, mergeAll } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -218,6 +218,11 @@ export class TableService {
         break;
       case DataType.Reference:
         (config as ReferenceFieldConfig).referenceTo = column.foreignKey.table;
+        (config as ReferenceFieldConfig).resources = {
+          loadSchema: this.getTableSchema.bind(this),
+          loadRecords: this.getRecords.bind(this),
+          buildField: this.buildField.bind(this),
+        };
         break;
     }
 

@@ -299,15 +299,17 @@ export class TableDetailComponent {
       .getTableSchema(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((columnDefs) => {
+        this.columns.set(null);
+
+        if (!columnDefs.length) return;
+
         const columns: TableColumn[] = columnDefs.map((c) => ({
           id: c.name,
           primary: c.primary,
           editable: !c.primary,
           field: this.tblService.buildField(c),
         }));
-        this.columns.set(null);
         setTimeout(() => this.columns.set(columns));
-        if (!columns.length) return;
 
         this.loadTableData(table);
       });
@@ -317,12 +319,16 @@ export class TableDetailComponent {
     this.tblService
       .getRecords(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((arr) => {
-        const rows: TableRow[] = arr.map((it: any) => ({
+      .subscribe((records) => {
+        this.rows.set(null);
+
+        if (!records) return;
+
+        const rows: TableRow[] = records.map((it: any) => ({
           id: it[table.tableColumnPk || 'id'],
           data: it,
         }));
-        this.rows.set(rows);
+        setTimeout(() => this.rows.set(rows));
       });
   }
 }

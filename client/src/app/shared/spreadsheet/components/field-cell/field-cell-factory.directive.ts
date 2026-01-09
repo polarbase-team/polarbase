@@ -19,42 +19,53 @@ import { Subscription } from 'rxjs';
 
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
-import { ReferenceData } from '@app/shared/field-system/models/reference/field.interface';
 import { FieldCell } from './field-cell';
 import { FieldCellEditable } from './field-cell-editable';
-import { TextFieldCellComponent } from './text/cell.component';
-import { LongTextFieldCellComponent } from './long-text/cell.component';
-import { IntegerFieldCellComponent } from './integer/cell.component';
-import { NumberFieldCellComponent } from './number/cell.component';
-import { DateFieldCellComponent } from './date/cell.component';
-import { CheckboxFieldCellComponent } from './checkbox/cell.component';
-import { SelectFieldCellComponent } from './select/cell.component';
-import { MultiSelectFieldCellComponent } from './multi-select/cell.component';
-import { EmailFieldCellComponent } from './email/cell.component';
-import { UrlFieldCellComponent } from './url/cell.component';
-import { JSONFieldCellComponent } from './json/cell.component';
-import { GeoPointFieldCellComponent } from './geo-point/cell.component';
-import { ReferenceFieldCellComponent, ReferenceViewDetailEvent } from './reference/cell.component';
+import type { ReferenceViewDetailEvent } from './reference/cell.component';
 import { FieldCellSelectingState, FieldCellService } from './field-cell.service';
 import { TableRow } from '../../models/table-row';
 import { TableColumn } from '../../models/table-column';
 import { TableCell } from '../../models/table-cell';
 
-const FIELD_CELL_CMP_MAP = new Map<DataType, Type<FieldCell>>([
-  [DataType.Text, TextFieldCellComponent],
-  [DataType.LongText, LongTextFieldCellComponent],
-  [DataType.Integer, IntegerFieldCellComponent],
-  [DataType.Number, NumberFieldCellComponent],
-  [DataType.Date, DateFieldCellComponent],
-  [DataType.Checkbox, CheckboxFieldCellComponent],
-  [DataType.Select, SelectFieldCellComponent],
-  [DataType.MultiSelect, MultiSelectFieldCellComponent],
-  [DataType.Email, EmailFieldCellComponent],
-  [DataType.Url, UrlFieldCellComponent],
-  [DataType.JSON, JSONFieldCellComponent],
-  [DataType.GeoPoint, GeoPointFieldCellComponent],
-  [DataType.Reference, ReferenceFieldCellComponent],
-]) as ReadonlyMap<DataType, Type<FieldCell>>;
+const FIELD_CELL_CMP_MAP = new Map<DataType, () => Promise<Type<FieldCell>>>([
+  [DataType.Text, () => import('./text/cell.component').then((m) => m.TextFieldCellComponent)],
+  [
+    DataType.LongText,
+    () => import('./long-text/cell.component').then((m) => m.LongTextFieldCellComponent),
+  ],
+  [
+    DataType.Integer,
+    () => import('./integer/cell.component').then((m) => m.IntegerFieldCellComponent),
+  ],
+  [
+    DataType.Number,
+    () => import('./number/cell.component').then((m) => m.NumberFieldCellComponent),
+  ],
+  [DataType.Date, () => import('./date/cell.component').then((m) => m.DateFieldCellComponent)],
+  [
+    DataType.Checkbox,
+    () => import('./checkbox/cell.component').then((m) => m.CheckboxFieldCellComponent),
+  ],
+  [
+    DataType.Select,
+    () => import('./select/cell.component').then((m) => m.SelectFieldCellComponent),
+  ],
+  [
+    DataType.MultiSelect,
+    () => import('./multi-select/cell.component').then((m) => m.MultiSelectFieldCellComponent),
+  ],
+  [DataType.Email, () => import('./email/cell.component').then((m) => m.EmailFieldCellComponent)],
+  [DataType.Url, () => import('./url/cell.component').then((m) => m.UrlFieldCellComponent)],
+  [DataType.JSON, () => import('./json/cell.component').then((m) => m.JSONFieldCellComponent)],
+  [
+    DataType.GeoPoint,
+    () => import('./geo-point/cell.component').then((m) => m.GeoPointFieldCellComponent),
+  ],
+  [
+    DataType.Reference,
+    () => import('./reference/cell.component').then((m) => m.ReferenceFieldCellComponent),
+  ],
+]);
 
 @Directive({
   selector: '[fieldCellFactory]',
@@ -141,16 +152,20 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
    * Creates a field component.
    * @param isRecreate Re-creates the component when the field type is changed.
    */
-  private createCmp(isRecreate = false) {
+  private async createCmp(isRecreate = false) {
     if (isRecreate) this.clean();
     // Store dataType to ensure the correct cmpRef is saved and retrieved
     this.dataType = this.field.dataType;
-    this.insertCmp();
+
+    // Wait for the component to be loaded and inserted
+    await this.insertCmp();
+
     this.isCreated = true;
 
     const { instance } = this.cmpRef;
-    if (instance instanceof ReferenceFieldCellComponent) {
-      instance.viewDetail = this.viewDetail;
+    // Use a string check or dynamic check to avoid direct class reference if possible
+    if (this.dataType === DataType.Reference) {
+      (instance as any).viewDetail = this.viewDetail;
     }
 
     if (this.selecting) {
@@ -165,10 +180,12 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
    * @param cmp A reference of created component or a component type.
    * @returns The ComponentRef<FieldCell> of the created component.
    */
-  private insertCmp() {
+  private async insertCmp() {
     if (!this.cmpRef) {
       const dataType = this.dataType;
-      if (!dataType || !FIELD_CELL_CMP_MAP.has(dataType)) {
+      const loader = FIELD_CELL_CMP_MAP.get(dataType);
+
+      if (!dataType || !loader) {
         throw new Error(`FieldCellFactoryDirective: Unsupported field data type: ${dataType}`);
       }
 
@@ -176,7 +193,9 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
       if (cmp) {
         this.vcRef.insert(cmp.hostView);
       } else {
-        cmp = this.vcRef.createComponent(FIELD_CELL_CMP_MAP.get(dataType));
+        // Dynamically load the component class
+        const componentClass = await loader();
+        cmp = this.vcRef.createComponent(componentClass);
       }
       this.cmpRef = cmp;
 

@@ -65,7 +65,7 @@ export class TableRowService extends TableBaseService {
     });
 
     effect(() => {
-      const rows = this.host.sourceRows();
+      const rows = this.host.sourceRows() || [];
       for (const row of rows) {
         if (!this.rowById.has(row.id)) {
           row.id ??= _.uniqueId();
