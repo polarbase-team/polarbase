@@ -35,6 +35,7 @@ import { EmailFieldEditorComponent } from '@app/shared/field-system/editors/emai
 import { UrlFieldEditorComponent } from '@app/shared/field-system/editors/url/editor.component';
 import { JSONFieldEditorComponent } from '@app/shared/field-system/editors/json/editor.component';
 import { GeoPointFieldEditorComponent } from '@app/shared/field-system/editors/geo-point/editor.component';
+import { ReferenceFieldEditorComponent } from '@app/shared/field-system/editors/reference/editor.component';
 import { TableDefinition, TableService } from '../../services/table.service';
 
 @Component({
@@ -59,6 +60,7 @@ import { TableDefinition, TableService } from '../../services/table.service';
     UrlFieldEditorComponent,
     JSONFieldEditorComponent,
     GeoPointFieldEditorComponent,
+    ReferenceFieldEditorComponent,
   ],
   providers: [MessageService],
 })

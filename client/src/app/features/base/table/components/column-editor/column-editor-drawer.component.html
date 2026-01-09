@@ -443,6 +443,9 @@
                   class="col-span-2"
                 />
               }
+              @case (DataType.Reference) {
+                Not support
+              }
               @default {
                 <i class="text-sm text-surface-500">Select a data type first.</i>
               }
