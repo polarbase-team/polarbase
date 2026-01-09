@@ -19,6 +19,12 @@ export class ReferencePickerDrawerComponent extends DrawerComponent {
 
   protected config = signal<TableConfig>({
     sideSpacing: 20,
+    toolbar: {
+      customize: false,
+      group: false,
+      sort: false,
+      rowSize: false,
+    },
     column: {
       reorderable: false,
       calculable: false,

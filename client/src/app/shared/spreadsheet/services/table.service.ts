@@ -87,6 +87,13 @@ export type Layout = Partial<{
 const DEFAULT_CONFIG: TableConfig = {
   dataStream: false,
   sideSpacing: 0,
+  toolbar: {
+    customize: true,
+    group: true,
+    sort: true,
+    rowSize: true,
+    search: true,
+  },
   column: {
     frozenCount: 0,
     maxFrozenRatio: 0.65,
