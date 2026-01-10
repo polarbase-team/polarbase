@@ -65,6 +65,7 @@ const DEFAULT_VALUE = {
     onUpdate: 'NO ACTION',
     onDelete: 'NO ACTION',
   },
+  options: [],
   validation: {},
 } as ColumnFormData;
 
@@ -126,7 +127,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
   // Select & MultiSelect types
   protected enumTypeMenuItems: MenuItem[] | undefined;
-  protected options = signal<string[]>([]);
 
   // Reference type
   protected tableOptions: { name: string; value: string }[] | undefined;
@@ -158,26 +158,12 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     effect(() => {
       const column = { ...DEFAULT_VALUE, ...this.column() };
       column.validation ??= {};
-      this.columnFormData = column;
       this.selectedDataType.set(column.dataType);
-      this.options.set(column.options || []);
+      this.columnFormData = column;
     });
 
     effect(() => {
       this.internalField = this.field();
-    });
-
-    effect(() => {
-      const options = this.options() || [];
-      this.columnFormData.options = [...options];
-
-      switch (this.internalField?.dataType) {
-        case DataType.Select:
-          (this.internalField as SelectField).options = [...options];
-          break;
-        case DataType.MultiSelect:
-          (this.internalField as MultiSelectField).options = [...options];
-      }
     });
 
     effect(() => {
@@ -217,9 +203,11 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       case DataType.Select:
       case DataType.MultiSelect:
         // For Select and MultiSelect, retain 'options' property as needed
+        delete formData.foreignKey;
         break;
       case DataType.Reference:
         // For Reference type, retain 'foreignKey' property as needed
+        delete formData.options;
         break;
       default:
         // For all other types, remove 'options' and 'foreignKey' to avoid sending unnecessary data
@@ -257,15 +245,18 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   }
 
   protected addOption() {
-    this.options.update((arr) => [...arr, '']);
+    this.columnFormData.options.push('');
+    this.onOptionsUpdate();
   }
 
   protected editOption(idx: number, option: string) {
-    this.options.update((arr) => arr.map((o, i) => (i === idx ? option : o)));
+    this.columnFormData.options[idx] = option;
+    this.onOptionsUpdate();
   }
 
   protected removeOption(idx: number) {
-    this.options.update((arr) => arr.filter((o, i) => i !== idx));
+    this.columnFormData.options.splice(idx, 1);
+    this.onOptionsUpdate();
   }
 
   protected onEnumTypesMenuOpen() {
@@ -281,7 +272,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
             label: enumType.enumName,
             options: enumType.enumValues.join(', '),
             command: () => {
-              this.options.set(enumType.enumValues);
+              this.columnFormData.options = [...enumType.enumValues];
             },
           });
         }
@@ -294,5 +285,16 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
     this.columnFormData.foreignKey.table = table.tableName;
     this.columnFormData.foreignKey.column = table.tablePrimaryKey;
+  }
+
+  private onOptionsUpdate() {
+    const options = this.columnFormData.options;
+    switch (this.internalField?.dataType) {
+      case DataType.Select:
+        (this.internalField as SelectField).options = [...options];
+        break;
+      case DataType.MultiSelect:
+        (this.internalField as MultiSelectField).options = [...options];
+    }
   }
 }
