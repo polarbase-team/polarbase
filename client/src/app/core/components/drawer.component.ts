@@ -5,15 +5,19 @@ import { DrawerModule } from 'primeng/drawer';
 export const usingModules = [DrawerModule, ButtonModule];
 
 @Directive()
-export class DrawerComponent<T = any, E = T> {
-  value = model<T | null>(null);
+export class DrawerComponent {
   visible = model(false);
-  viewOnly = input(false);
 
-  onSave = output<E | T | null>();
-  onCancel = output();
   onOpen = output();
   onClose = output();
+
+  protected open() {
+    this.visible.set(true);
+  }
+
+  protected close() {
+    this.visible.set(false);
+  }
 
   protected onShow() {
     this.onOpen.emit();
@@ -21,15 +25,5 @@ export class DrawerComponent<T = any, E = T> {
 
   protected onHide() {
     this.onClose.emit();
-  }
-
-  protected save(value: E | T = this.value()) {
-    this.visible.set(false);
-    this.onSave.emit(value);
-  }
-
-  protected cancel() {
-    this.visible.set(false);
-    this.onCancel.emit();
   }
 }

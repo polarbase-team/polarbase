@@ -1,7 +1,9 @@
 import { Component, output, model, input, ChangeDetectionStrategy, viewChild } from '@angular/core';
+
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 
+import { DrawerComponent } from '@app/core/components/drawer.component';
 import { MapPickerComponent, MapLocation } from './map-picker.component';
 
 @Component({
@@ -10,33 +12,22 @@ import { MapPickerComponent, MapLocation } from './map-picker.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DrawerModule, ButtonModule, MapPickerComponent],
 })
-export class MapPickerDrawerComponent {
+export class MapPickerDrawerComponent extends DrawerComponent {
   mapPicker = viewChild<MapPickerComponent>('mapPicker');
 
   loc = model<MapLocation>();
-  visible = model(false);
   viewOnly = input(false);
 
   onSave = output<MapLocation>();
   onCancel = output();
-  onOpen = output();
-  onClose = output();
-
-  protected onShow() {
-    this.onOpen.emit();
-  }
-
-  protected onHide() {
-    this.onClose.emit();
-  }
 
   protected save() {
-    this.visible.set(false);
     this.onSave.emit(this.loc());
+    this.close();
   }
 
   protected cancel() {
-    this.visible.set(false);
     this.onCancel.emit();
+    this.close();
   }
 }

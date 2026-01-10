@@ -31,6 +31,7 @@ import { MenuItem } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 
+import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyStrings } from '@app/core/utils';
 import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
@@ -103,8 +104,7 @@ const DEFAULT_VALUE = {
     GeoPointFieldEditorComponent,
   ],
 })
-export class ColumnEditorDrawerComponent {
-  visible = model(false);
+export class ColumnEditorDrawerComponent extends DrawerComponent {
   table = input<TableDefinition>();
   column = input<ColumnDefinition>();
   field = input<Field>();
@@ -153,6 +153,8 @@ export class ColumnEditorDrawerComponent {
     private schemaService: SchemaService,
     private tblService: TableService,
   ) {
+    super();
+
     effect(() => {
       const column = { ...DEFAULT_VALUE, ...this.column() };
       column.validation ??= {};
@@ -191,7 +193,7 @@ export class ColumnEditorDrawerComponent {
   }
 
   protected cancel() {
-    this.visible.set(false);
+    this.close();
   }
 
   protected reset() {
@@ -240,9 +242,9 @@ export class ColumnEditorDrawerComponent {
       finalize(() => this.isSaving.set(false)),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(({ data: column }) => {
-      this.visible.set(false);
       this.onSave.emit(column);
       this.reset();
+      this.close();
     });
   }
 

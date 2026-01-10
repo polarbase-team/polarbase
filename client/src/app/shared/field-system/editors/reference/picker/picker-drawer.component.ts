@@ -5,6 +5,7 @@ import {
   DestroyRef,
   signal,
   output,
+  model,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -33,13 +34,12 @@ export interface ReferencePickedEvent {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [...usingModules, SpreadsheetComponent],
 })
-export class ReferencePickerDrawerComponent extends DrawerComponent<
-  string | number,
-  ReferencePickedEvent
-> {
+export class ReferencePickerDrawerComponent extends DrawerComponent {
   field = input.required<ReferenceField>();
+  value = model<string | number>();
 
-  override onSave = output<ReferencePickedEvent>();
+  onSave = output<ReferencePickedEvent>();
+  onCancel = output();
 
   protected config = signal<TableConfig>({
     sideSpacing: 20,
@@ -85,8 +85,14 @@ export class ReferencePickerDrawerComponent extends DrawerComponent<
     this.loadTable();
   }
 
-  protected override save() {
-    super.save(this.pickedEvent);
+  protected save() {
+    this.onSave.emit(this.pickedEvent);
+    this.close();
+  }
+
+  protected cancel() {
+    this.onCancel.emit();
+    this.close();
   }
 
   protected onRowAction(action: TableRowAction) {
