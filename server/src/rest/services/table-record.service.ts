@@ -17,6 +17,7 @@ export class TableRecordService {
       where?: Record<string, any>;
       search?: string;
       fields?: string;
+      expandFields?: Record<string, string>;
       order?: string;
       page?: number;
       limit?: number;
@@ -26,6 +27,7 @@ export class TableRecordService {
       where,
       search,
       fields,
+      expandFields,
       order = 'id:asc',
       page = 1,
       limit = 10000,
@@ -34,10 +36,18 @@ export class TableRecordService {
     const cols = await getCachedTableSchema(pg, schemaName, tableName);
     const validColumnNames = cols.map((c) => c.name);
 
-    let qb = pg(tableName).withSchema(schemaName);
+    let qb = pg(tableName).withSchema(schemaName).as(tableName);
 
     // WHERE
-    if (where) qb = qb.where(where);
+    if (where) {
+      const prefixedWhere: Record<string, any> = {};
+      for (const [key, value] of Object.entries(where)) {
+        if (validColumnNames.includes(key)) {
+          prefixedWhere[`${tableName}.${key}`] = value;
+        }
+      }
+      qb = qb.where(prefixedWhere);
+    }
 
     // Global SEARCH across text columns
     if (search && search.trim()) {
@@ -47,10 +57,11 @@ export class TableRecordService {
       if (textColumns.length > 0) {
         qb = qb.where((builder) => {
           textColumns.forEach((col, index) => {
+            const fullColName = `${tableName}.${col.name}`;
             if (index === 0) {
-              builder.where(col.name, 'ilike', `%${safeSearch}%`);
+              builder.where(fullColName, 'ilike', `%${safeSearch}%`);
             } else {
-              builder.orWhere(col.name, 'ilike', `%${safeSearch}%`);
+              builder.orWhere(fullColName, 'ilike', `%${safeSearch}%`);
             }
           });
         });
@@ -59,15 +70,45 @@ export class TableRecordService {
 
     const countAllQb = qb.clone();
 
-    // SELECT (if specified)
+    // EXPAND FIELDS (JOIN)
+    if (expandFields) {
+      for (const [fkField, alias] of Object.entries(expandFields)) {
+        const columnInfo = cols.find((c) => c.name === fkField);
+
+        if (columnInfo?.foreignKey) {
+          const { table: refTable, column: refColObj } = columnInfo.foreignKey;
+          const refColumn = refColObj.name;
+          const safeAlias = alias.replace(/[^a-zA-Z0-9_]/g, '');
+
+          qb = qb.leftJoin(
+            `${refTable} as ${safeAlias}`,
+            `${tableName}.${fkField}`,
+            `${safeAlias}.${refColumn}`
+          );
+        }
+      }
+    }
+
+    // SELECT
     if (fields) {
       const fieldList = fields
         .split(',')
         .map((f) => f.trim())
-        .filter((f) => validColumnNames.includes(f));
+        .map((f) => (validColumnNames.includes(f) ? `${tableName}.${f}` : null))
+        .filter(Boolean) as string[];
 
       if (fieldList.length > 0) {
         qb = qb.select(fieldList);
+      }
+    } else {
+      qb = qb.select(`${tableName}.*`);
+    }
+
+    // Automatically select expanded objects as JSON
+    if (expandFields) {
+      for (const alias of Object.values(expandFields)) {
+        const safeAlias = alias.replace(/[^a-zA-Z0-9_]/g, '');
+        qb = qb.select(pg.raw(`to_jsonb(??.*) as ??`, [safeAlias, safeAlias]));
       }
     }
 
@@ -77,9 +118,9 @@ export class TableRecordService {
       const direction = dir?.toLowerCase() === 'desc' ? 'desc' : 'asc';
 
       if (validColumnNames.includes(col)) {
-        qb = qb.orderBy(col, direction);
+        qb = qb.orderBy(`${tableName}.${col}`, direction);
       } else {
-        qb = qb.orderBy('id', 'asc');
+        qb = qb.orderBy(`${tableName}.id`, 'asc');
       }
     }
 
@@ -91,7 +132,7 @@ export class TableRecordService {
         .clone()
         .limit(limitNum)
         .offset((pageNum - 1) * limitNum),
-      countAllQb.count('* as total').first(),
+      countAllQb.count(`${tableName}.id as total`).first(),
     ]);
 
     const totalNum = Number(totalRecord?.total || 0);

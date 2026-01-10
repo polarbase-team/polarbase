@@ -369,7 +369,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .get(
     '/:table',
     ({ params: { table }, query }) => {
-      const { filter, sort, ...remain } = query;
+      const { filter, sort, expand, ...remain } = query;
       let whereClause: WhereFilter;
       if (typeof filter === 'string') {
         try {
@@ -379,9 +379,25 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         }
       }
 
+      const expandFields: Record<string, string> = {};
+      if (expand) {
+        const expands = Array.isArray(expand) ? expand : [expand];
+        expands.forEach((item) => {
+          const [field, alias] = item.split(':');
+          if (field && alias) {
+            expandFields[field] = alias;
+          }
+        });
+      }
+
       return tableRecordService.select({
         tableName: table,
-        query: { ...remain, where: whereClause!, order: sort },
+        query: {
+          ...remain,
+          where: whereClause!,
+          order: sort,
+          expandFields,
+        },
       });
     },
     {
@@ -390,6 +406,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         search: t.Optional(t.String()),
         filter: t.Optional(t.String()),
         sort: t.Optional(t.String({ pattern: '^[^:]+:(asc|desc)$' })),
+        expand: t.Optional(t.Union([t.String(), t.Array(t.String())])),
         page: t.Optional(t.Numeric({ minimum: 1 })),
         limit: t.Optional(t.Numeric({ minimum: 1, maximum: 10000 })),
       }),
@@ -401,7 +418,20 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
    */
   .get(
     '/:table/:id',
-    async ({ params: { table, id }, set }) => {
+    async ({ params: { table, id }, query, set }) => {
+      const { expand } = query;
+
+      const expandFields: Record<string, string> = {};
+      if (expand) {
+        const expands = Array.isArray(expand) ? expand : [expand];
+        expands.forEach((item) => {
+          const [field, alias] = item.split(':');
+          if (field && alias) {
+            expandFields[field.trim()] = alias.trim();
+          }
+        });
+      }
+
       const result = await tableRecordService.select({
         tableName: table,
         query: { where: { id }, limit: 1 },
@@ -418,6 +448,9 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({
         table: t.String(),
         id: t.Union([t.String(), t.Numeric()]),
+      }),
+      query: t.Object({
+        expand: t.Optional(t.Union([t.String(), t.Array(t.String())])),
       }),
     }
   )
