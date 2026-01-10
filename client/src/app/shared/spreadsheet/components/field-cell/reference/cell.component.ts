@@ -17,8 +17,8 @@ import {
   ReferencePickedEvent,
   ReferencePickerDrawerComponent,
 } from '@app/shared/field-system/editors/reference/picker/picker-drawer.component';
-import { FieldCellEditable } from '../field-cell-editable';
-import { CellTouchEvent } from '../field-cell-touchable';
+import { FieldCellInputable } from '../field-cell-inputable';
+import { InputBoxComponent } from '../input-box.component';
 
 export interface ReferenceViewDetailEvent {
   field: ReferenceField;
@@ -28,12 +28,12 @@ export interface ReferenceViewDetailEvent {
 @Component({
   selector: 'reference-field-cell',
   templateUrl: './cell.component.html',
-  styleUrl: '../field-cell.scss',
+  styleUrls: ['../field-cell.scss', '../field-cell-inputable.scss'],
   host: { class: 'reference-field-cell' },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TagModule, forwardRef(() => ReferencePickerDrawerComponent)],
+  imports: [TagModule, InputBoxComponent, forwardRef(() => ReferencePickerDrawerComponent)],
 })
-export class ReferenceFieldCellComponent extends FieldCellEditable<ReferenceData> {
+export class ReferenceFieldCellComponent extends FieldCellInputable<ReferenceData> {
   protected value: string | number;
   protected displayLabel: string;
   protected visibleReferencePicker = false;
@@ -46,10 +46,6 @@ export class ReferenceFieldCellComponent extends FieldCellEditable<ReferenceData
       this.value = value;
       this.displayLabel = displayLabel;
     }
-  }
-
-  protected override onTouch(e: CellTouchEvent) {
-    this.visibleReferencePicker = true;
   }
 
   protected onPick(e: ReferencePickedEvent) {

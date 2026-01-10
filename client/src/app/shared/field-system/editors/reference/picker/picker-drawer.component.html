@@ -7,12 +7,14 @@
   (onHide)="onHide()"
 >
   <ng-template #content>
-    <spreadsheet
-      [config]="config()"
-      [columns]="columns()"
-      [rows]="rows()"
-      (rowAction)="onRowAction($event)"
-    />
+    @if (isReady()) {
+      <spreadsheet
+        [config]="config()"
+        [columns]="columns()"
+        [rows]="rows()"
+        (rowAction)="onRowAction($event)"
+      />
+    }
   </ng-template>
   <ng-template #footer>
     <div class="flex justify-end gap-2">

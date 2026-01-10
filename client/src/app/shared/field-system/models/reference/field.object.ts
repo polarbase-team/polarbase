@@ -77,4 +77,8 @@ export class ReferenceField extends Field<ReferenceData> {
     this.referenceTo = config.referenceTo;
     this.resources = config.resources;
   }
+
+  override toString(data: ReferenceData = this.data) {
+    return String(getReferenceValue(data));
+  }
 }

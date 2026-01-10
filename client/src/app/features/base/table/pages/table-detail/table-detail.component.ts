@@ -71,6 +71,7 @@ export class TableDetailComponent {
   });
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
+  protected isReady = signal(false);
   protected tblService = inject(TableService);
   protected updatedColumn: ColumnDefinition;
   protected updatedColumnField: Field;
@@ -318,7 +319,10 @@ export class TableDetailComponent {
             references.set(c.name, c.foreignKey.table);
           }
         }
-        setTimeout(() => this.columns.set(columns));
+        setTimeout(() => {
+          this.columns.set(columns);
+          this.isReady.set(true);
+        });
 
         this.loadTableData(table, references);
       });

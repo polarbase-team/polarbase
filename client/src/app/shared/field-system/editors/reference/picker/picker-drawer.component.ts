@@ -72,6 +72,7 @@ export class ReferencePickerDrawerComponent extends DrawerComponent<
   });
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
+  protected isReady = signal(false);
 
   private pickedEvent: ReferencePickedEvent | null;
 
@@ -141,7 +142,10 @@ export class ReferencePickerDrawerComponent extends DrawerComponent<
             references.set(c.name, c.foreignKey.table);
           }
         }
-        setTimeout(() => this.columns.set(columns));
+        setTimeout(() => {
+          this.columns.set(columns);
+          this.isReady.set(true);
+        });
 
         this.loadTableData(references);
       });

@@ -1,28 +1,40 @@
-<div class="flex items-start justify-between w-full">
-  <div class="field-cell__block-content">
-    @if (data !== undefined && data !== null) {
-      <p-tag
-        class="cursor-pointer"
-        severity="info"
-        [value]="displayLabel"
-        (click)="viewDetail.emit({ field, data })"
-      ></p-tag>
+@if (isInputting) {
+  <input-box
+    type="text"
+    [content]="value"
+    (edited)="onInputBoxEdited($event)"
+    (input)="onInputBoxInput($event)"
+    (focus)="onInputBoxFocus($event)"
+    (blur)="onInputBoxBlur($event)"
+    (contentChange)="onInputBoxChange($event)"
+  />
+} @else {
+  <div class="flex items-start justify-between w-full">
+    <div class="field-cell__block-content">
+      @if (data !== undefined && data !== null) {
+        <p-tag
+          class="cursor-pointer"
+          severity="info"
+          [value]="displayLabel"
+          (click)="viewDetail.emit({ field, data })"
+        ></p-tag>
+      }
+    </div>
+    @if (selecting) {
+      @if (!readonly) {
+        <reference-picker-drawer
+          [(visible)]="visibleReferencePicker"
+          [field]="field"
+          [value]="value"
+          (onSave)="onPick($event)"
+        />
+      }
+      <div
+        class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
+        (click)="visibleReferencePicker = true"
+      >
+        <i class="icon icon-chevron-down"></i>
+      </div>
     }
   </div>
-  @if (selecting) {
-    @if (!readonly) {
-      <reference-picker-drawer
-        [(visible)]="visibleReferencePicker"
-        [field]="field"
-        [value]="value"
-        (onSave)="onPick($event)"
-      />
-    }
-    <div
-      class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
-      (click)="visibleReferencePicker = true"
-    >
-      <i class="icon icon-chevron-down"></i>
-    </div>
-  }
-</div>
+}
