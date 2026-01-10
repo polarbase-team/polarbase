@@ -17,7 +17,9 @@ import { DividerModule } from 'primeng/divider';
 import { MenuItem } from 'primeng/api';
 import { SplitButtonModule } from 'primeng/splitbutton';
 
+import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
+import { getReferenceValue } from '@app/shared/field-system/models/reference/field.object';
 import { TableColumn } from '@app/shared/spreadsheet/models/table-column';
 import { TableRow } from '@app/shared/spreadsheet/models/table-row';
 import { TableConfig } from '@app/shared/spreadsheet/models/table';
@@ -153,7 +155,7 @@ export class TableDetailComponent {
           .subscribe((columnDefs) => {
             const fields = columnDefs.map((c) => this.tblService.buildField(c));
             this.tblService
-              .getRecord(tableName, data)
+              .getRecord(tableName, getReferenceValue(data))
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe((record) => {
                 this.updatedRecord = { table, fields, data: record };
@@ -303,19 +305,26 @@ export class TableDetailComponent {
 
         if (!columnDefs.length) return;
 
-        const columns: TableColumn[] = columnDefs.map((c) => ({
-          id: c.name,
-          primary: c.primary,
-          editable: !c.primary,
-          field: this.tblService.buildField(c),
-        }));
+        const columns: TableColumn[] = [];
+        const references = new Map<string, string>();
+        for (const c of columnDefs) {
+          columns.push({
+            id: c.name,
+            primary: c.primary,
+            editable: !c.primary,
+            field: this.tblService.buildField(c),
+          });
+          if (c.dataType === DataType.Reference) {
+            references.set(c.name, c.foreignKey.table);
+          }
+        }
         setTimeout(() => this.columns.set(columns));
 
-        this.loadTableData(table);
+        this.loadTableData(table, references);
       });
   }
 
-  private loadTableData(table: TableDefinition) {
+  private loadTableData(table: TableDefinition, references: Map<string, string>) {
     this.tblService
       .getRecords(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -324,10 +333,19 @@ export class TableDetailComponent {
 
         if (!records) return;
 
-        const rows: TableRow[] = records.map((it: any) => ({
-          id: it[table.tableColumnPk || 'id'],
-          data: it,
-        }));
+        const rows: TableRow[] = records.map((record: any) => {
+          return {
+            id: record.id,
+            data: {
+              ...record,
+              ...Object.fromEntries(
+                Array.from(references.entries())
+                  .filter(([key]) => key in record)
+                  .map(([key, refKey]) => [key, record[refKey]]),
+              ),
+            },
+          };
+        });
         setTimeout(() => this.rows.set(rows));
       });
   }

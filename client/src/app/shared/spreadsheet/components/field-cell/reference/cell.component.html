@@ -4,7 +4,7 @@
       <p-tag
         class="cursor-pointer"
         severity="info"
-        [value]="$any(data)"
+        [value]="displayLabel"
         (click)="viewDetail.emit({ field, data })"
       ></p-tag>
     }
@@ -14,8 +14,8 @@
       <reference-picker-drawer
         [(visible)]="visibleReferencePicker"
         [field]="field"
-        [value]="data"
-        (onSave)="save($event)"
+        [value]="value"
+        (onSave)="onPick($event)"
       />
     }
     <div

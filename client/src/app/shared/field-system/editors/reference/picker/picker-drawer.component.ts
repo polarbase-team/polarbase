@@ -1,13 +1,31 @@
-import { Component, ChangeDetectionStrategy, input, DestroyRef, signal } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  input,
+  DestroyRef,
+  signal,
+  output,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { DrawerComponent, usingModules } from '@app/core/components/drawer.component';
-import { ReferenceField } from '@app/shared/field-system/models/reference/field.object';
+import { DataType } from '@app/shared/field-system/models/field.interface';
+import { ReferenceData } from '@app/shared/field-system/models/reference/field.interface';
+import {
+  getReferenceDisplayLabel,
+  ReferenceField,
+} from '@app/shared/field-system/models/reference/field.object';
 import { TableRowAction, TableRowActionType } from '@app/shared/spreadsheet/events/table-row';
 import { TableConfig } from '@app/shared/spreadsheet/models/table';
 import { TableColumn } from '@app/shared/spreadsheet/models/table-column';
 import { TableRow } from '@app/shared/spreadsheet/models/table-row';
 import { SpreadsheetComponent } from '@app/shared/spreadsheet/spreadsheet.component';
+
+export interface ReferencePickedEvent {
+  value: string | number;
+  displayLabel: string;
+  data: ReferenceData;
+}
 
 @Component({
   selector: 'reference-picker-drawer',
@@ -15,8 +33,13 @@ import { SpreadsheetComponent } from '@app/shared/spreadsheet/spreadsheet.compon
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [...usingModules, SpreadsheetComponent],
 })
-export class ReferencePickerDrawerComponent extends DrawerComponent<string | number> {
+export class ReferencePickerDrawerComponent extends DrawerComponent<
+  string | number,
+  ReferencePickedEvent
+> {
   field = input.required<ReferenceField>();
+
+  override onSave = output<ReferencePickedEvent>();
 
   protected config = signal<TableConfig>({
     sideSpacing: 20,
@@ -50,21 +73,36 @@ export class ReferencePickerDrawerComponent extends DrawerComponent<string | num
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
 
+  private pickedEvent: ReferencePickedEvent | null;
+
   constructor(private destroyRef: DestroyRef) {
     super();
   }
 
-  override onShow() {
+  protected override onShow() {
     super.onShow();
-
     this.loadTable();
+  }
+
+  protected override save() {
+    super.save(this.pickedEvent);
   }
 
   protected onRowAction(action: TableRowAction) {
     switch (action.type) {
       case TableRowActionType.Select:
         const rows = (action.payload as TableRow[]) || [];
-        this.value.set(rows.pop()?.id || null);
+        const selectedRow = rows.pop();
+        if (selectedRow) {
+          const value = selectedRow.id;
+          const data = selectedRow.data as ReferenceData;
+          const displayLabel = getReferenceDisplayLabel(data);
+          this.value.set(value);
+          this.pickedEvent = { data, value, displayLabel };
+        } else {
+          this.value.set(null);
+          this.pickedEvent = null;
+        }
         rows.forEach((row) => {
           row.selected = false;
         });
@@ -90,19 +128,26 @@ export class ReferencePickerDrawerComponent extends DrawerComponent<string | num
 
         if (!columnDefs.length) return;
 
-        const columns: TableColumn[] = columnDefs.map((c: any) => ({
-          id: c.name,
-          primary: c.primary,
-          editable: !c.primary,
-          field: buildField(c),
-        }));
+        const columns: TableColumn[] = [];
+        const references = new Map<string, string>();
+        for (const c of columnDefs) {
+          columns.push({
+            id: c.name,
+            primary: c.primary,
+            editable: !c.primary,
+            field: buildField(c),
+          });
+          if (c.dataType === DataType.Reference) {
+            references.set(c.name, c.foreignKey.table);
+          }
+        }
         setTimeout(() => this.columns.set(columns));
 
-        this.loadTableData();
+        this.loadTableData(references);
       });
   }
 
-  private loadTableData() {
+  private loadTableData(references: Map<string, string>) {
     const field = this.field();
     if (!field.resources) return;
 
@@ -117,7 +162,14 @@ export class ReferencePickerDrawerComponent extends DrawerComponent<string | num
 
         const rows: TableRow[] = records.map((it: any) => ({
           id: it.id,
-          data: it,
+          data: {
+            ...it,
+            ...Object.fromEntries(
+              Array.from(references.entries())
+                .filter(([key]) => key in it)
+                .map(([key, refKey]) => [key, it[refKey]]),
+            ),
+          },
           selected: it.id === this.value(),
         }));
         setTimeout(() => this.rows.set(rows));

@@ -142,11 +142,15 @@ export class TableService {
   }
 
   getRecords(tableName: string): Observable<Record<string, any>[]> {
-    return this.http.get(`${this.apiUrl}/${tableName}`).pipe(map((res) => res['data']['rows']));
+    return this.http
+      .get(`${this.apiUrl}/${tableName}?expand=all`)
+      .pipe(map((res) => res['data']['rows']));
   }
 
   getRecord(tableName: string, recordId: number | string): Observable<Record<string, any>[]> {
-    return this.http.get(`${this.apiUrl}/${tableName}/${recordId}`).pipe(map((res) => res['data']));
+    return this.http
+      .get(`${this.apiUrl}/${tableName}/${recordId}?expand=all`)
+      .pipe(map((res) => res['data']));
   }
 
   createRecords(tableName: string, records: Record<string, any>[]) {

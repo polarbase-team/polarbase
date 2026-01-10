@@ -227,7 +227,7 @@ export const getTableSchema = async (
     const enumLabels = await pg('pg_enum')
       .select(
         'enumtypid',
-        pg.raw('array_agg(enumlabel ORDER BY enumsortorder) as labels')
+        pg.raw('json_agg(enumlabel ORDER BY enumsortorder) as labels')
       )
       .whereIn('enumtypid', typeOids)
       .groupBy('enumtypid');

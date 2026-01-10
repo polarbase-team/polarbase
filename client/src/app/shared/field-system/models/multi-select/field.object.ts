@@ -8,7 +8,7 @@ export class MultiSelectField extends Field<MultiSelectData> {
   readonly dataType: DataType = DataType.MultiSelect;
   readonly icon: string = FIELD_ICON_MAP[DataType.MultiSelect];
 
-  options?: MultiSelectOption[] | undefined;
+  options?: MultiSelectOption[];
 
   constructor(config: MultiSelectFieldConfig) {
     super(config);

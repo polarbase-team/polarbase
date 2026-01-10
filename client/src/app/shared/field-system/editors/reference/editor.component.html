@@ -20,7 +20,8 @@
     <reference-picker-drawer
       [(visible)]="visibleReferencePicker"
       [field]="field()"
-      [(value)]="data"
+      [value]="value"
+      (onSave)="onPick($event)"
     />
   }
   <p-iconfield>
@@ -33,8 +34,11 @@
       [placeholder]="placeholder() ?? 'Input here...'"
       [pAutoFocus]="autoFocus()"
       [readonly]="viewOnly()"
-      [(ngModel)]="data"
+      [ngModel]="isFocused ? value : displayLabel"
+      (ngModelChange)="onInputValue($event)"
       fluid
+      (focus)="isFocused = true"
+      (blur)="isFocused = false"
     />
     <p-inputicon class="icon icon-chevron-down" (click)="visibleReferencePicker = true" />
   </p-iconfield>

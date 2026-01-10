@@ -8,7 +8,7 @@ export type ReferenceResources<S = any, R = any> = {
   loadRecords: (...args) => Observable<R>;
   buildField: (...args) => Field;
 };
-export type ReferenceData = string | number;
+export type ReferenceData = string | number | { id: string | number };
 export interface ReferenceFieldConfig extends FieldConfig<ReferenceData> {
   referenceTo: string;
   resources: ReferenceResources;
