@@ -19,8 +19,7 @@ import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/
 export interface TableDefinition {
   tableName: string;
   tableComment: string;
-  tableColumnPk: string;
-  tableColumnPkType: string;
+  tablePrimaryKey: { name: string; type: string };
 }
 
 export interface TableFormData {

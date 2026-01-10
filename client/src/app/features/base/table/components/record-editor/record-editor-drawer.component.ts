@@ -124,14 +124,14 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
       return;
     }
 
-    const { tableName, tableColumnPk } = this.table();
-    const id = this.record()[tableColumnPk] ?? undefined;
+    const { tableName } = this.table();
+    const id = this.record()['id'] ?? undefined;
     const data = { ...this.updatedRecord };
 
     let fn: Observable<any>;
     switch (this.mode()) {
       case 'add':
-        if (_.isNil(data[tableColumnPk])) data[tableColumnPk] = id;
+        if (_.isNil(data['id'])) data['id'] = id;
         fn = this.tblService.createRecords(tableName, [data]);
         break;
       case 'edit':

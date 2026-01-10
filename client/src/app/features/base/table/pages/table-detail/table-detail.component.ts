@@ -190,7 +190,7 @@ export class TableDetailComponent {
   }
 
   protected onRowAction(action: TableRowAction) {
-    const { tableName, tableColumnPk } = this.tblService.selectedTable();
+    const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
       case TableRowActionType.Add:
         const rows = [];
@@ -205,7 +205,7 @@ export class TableDetailComponent {
           .subscribe(({ data }) => {
             for (let i = 0; i < rows.length; i++) {
               const row = rows[i];
-              row.id = data.returning[i][tableColumnPk || 'id'];
+              row.id = data.returning[i]['id'];
               row.data = data.returning[i];
             }
             this.rows.update((arr) => [...arr]);
@@ -258,8 +258,7 @@ export class TableDetailComponent {
   }
 
   protected onRecordSave(savedRecord: Record<string, any>) {
-    const { tableColumnPk } = this.tblService.selectedTable();
-    const recordId = savedRecord[tableColumnPk];
+    const recordId = savedRecord['id'];
 
     if (this.updatedRecordMode === 'add') {
       const newRow: TableRow = {

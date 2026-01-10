@@ -12,8 +12,7 @@ import {
 export interface Table {
   tableName: string;
   tableComment: string;
-  tableColumnPk: string;
-  tableColumnPkType: string;
+  tablePrimaryKey: { name: string; type: string };
 }
 
 /**
@@ -25,8 +24,12 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
     .select({
       tableName: 'c.relname',
       tableComment: 'descr.description',
-      tableColumnPk: pg.raw(`pk.attname`),
-      tableColumnPkType: pg.raw(`t.typname`),
+      tablePrimaryKey: pg.raw(`
+        json_build_object(
+          'name', pk.attname,
+          'type', t.typname
+        )
+      `),
     })
     .leftJoin('pg_namespace as ns', 'c.relnamespace', 'ns.oid')
     .leftJoin('pg_description as descr', function () {

@@ -293,9 +293,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     if (!table) return;
 
     this.columnFormData.foreignKey.table = table.tableName;
-    this.columnFormData.foreignKey.column = {
-      name: table.tableColumnPk,
-      type: table.tableColumnPkType,
-    };
+    this.columnFormData.foreignKey.column = table.tablePrimaryKey;
   }
 }
