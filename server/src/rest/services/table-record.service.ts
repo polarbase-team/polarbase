@@ -70,22 +70,39 @@ export class TableRecordService {
 
     const countAllQb = qb.clone();
 
-    // EXPAND FIELDS (JOIN)
+    // EXPAND FIELDS
     if (expandFields) {
-      for (const [fkField, alias] of Object.entries(expandFields)) {
-        const columnInfo = cols.find((c) => c.name === fkField);
+      const effectiveExpands: Record<string, string> = {};
+      const shouldExpandAll =
+        expandFields['*'] !== undefined || expandFields['all'] !== undefined;
 
-        if (columnInfo?.foreignKey) {
-          const { table: refTable, column: refColObj } = columnInfo.foreignKey;
-          const refColumn = refColObj.name;
-          const safeAlias = alias.replace(/[^a-zA-Z0-9_]/g, '');
-
-          qb = qb.leftJoin(
-            `${refTable} as ${safeAlias}`,
-            `${tableName}.${fkField}`,
-            `${safeAlias}.${refColumn}`
-          );
+      if (shouldExpandAll) {
+        cols.forEach((col) => {
+          if (col.foreignKey) {
+            effectiveExpands[col.name] = col.foreignKey.table;
+          }
+        });
+      } else {
+        for (const [fkField, alias] of Object.entries(expandFields)) {
+          const colInfo = cols.find((c) => c.name === fkField);
+          if (colInfo?.foreignKey) {
+            effectiveExpands[fkField] = alias || colInfo.foreignKey.table;
+          }
         }
+      }
+
+      for (const [fkField, alias] of Object.entries(effectiveExpands)) {
+        const colInfo = cols.find((c) => c.name === fkField)!;
+        const { table: refTable, column: refColObj } = colInfo.foreignKey;
+        const safeAlias = alias.replace(/[^a-zA-Z0-9_]/g, '');
+
+        qb = qb.leftJoin(
+          `${refTable} as ${safeAlias}`,
+          `${tableName}.${fkField}`,
+          `${safeAlias}.${refColObj.name}`
+        );
+
+        qb = qb.select(pg.raw(`to_jsonb(??.*) as ??`, [safeAlias, safeAlias]));
       }
     }
 
@@ -97,19 +114,9 @@ export class TableRecordService {
         .map((f) => (validColumnNames.includes(f) ? `${tableName}.${f}` : null))
         .filter(Boolean) as string[];
 
-      if (fieldList.length > 0) {
-        qb = qb.select(fieldList);
-      }
+      qb = qb.select(fieldList.length > 0 ? fieldList : `${tableName}.*`);
     } else {
       qb = qb.select(`${tableName}.*`);
-    }
-
-    // Automatically select expanded objects as JSON
-    if (expandFields) {
-      for (const alias of Object.values(expandFields)) {
-        const safeAlias = alias.replace(/[^a-zA-Z0-9_]/g, '');
-        qb = qb.select(pg.raw(`to_jsonb(??.*) as ??`, [safeAlias, safeAlias]));
-      }
     }
 
     // ORDER BY

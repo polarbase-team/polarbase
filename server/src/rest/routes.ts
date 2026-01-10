@@ -364,11 +364,11 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   )
 
   /**
-   * GET /rest/:table → paginated list with optional filters
+   * GET /rest/:table → paginated list
    */
   .get(
     '/:table',
-    ({ params: { table }, query }) => {
+    async ({ params: { table }, query }) => {
       const { filter, sort, expand, ...remain } = query;
       let whereClause: WhereFilter;
       if (typeof filter === 'string') {
@@ -384,8 +384,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         const expands = Array.isArray(expand) ? expand : [expand];
         expands.forEach((item) => {
           const [field, alias] = item.split(':');
-          if (field && alias) {
-            expandFields[field] = alias;
+          if (field) {
+            expandFields[field.trim()] = alias?.trim() || '';
           }
         });
       }
@@ -426,15 +426,15 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         const expands = Array.isArray(expand) ? expand : [expand];
         expands.forEach((item) => {
           const [field, alias] = item.split(':');
-          if (field && alias) {
-            expandFields[field.trim()] = alias.trim();
+          if (field) {
+            expandFields[field.trim()] = alias?.trim() || '';
           }
         });
       }
 
       const result = await tableRecordService.select({
         tableName: table,
-        query: { where: { id }, limit: 1 },
+        query: { where: { id }, limit: 1, expandFields },
       });
 
       if (result.rows.length === 0) {
