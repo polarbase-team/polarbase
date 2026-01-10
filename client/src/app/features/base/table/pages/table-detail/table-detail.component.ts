@@ -74,7 +74,6 @@ export class TableDetailComponent {
   protected isReady = signal(false);
   protected tblService = inject(TableService);
   protected updatedColumn: ColumnDefinition;
-  protected updatedColumnField: Field;
   protected updatedColumnMode: 'add' | 'edit' = 'add';
   protected visibleColumnEditor: boolean;
   protected updatedRecord: UpdatedRecord = {} as UpdatedRecord;
@@ -281,13 +280,16 @@ export class TableDetailComponent {
 
   protected editColumn(column: TableColumn) {
     this.updatedColumn = column.field.params;
-    this.updatedColumnField = column.field;
     this.updatedColumnMode = 'edit';
     this.visibleColumnEditor = true;
   }
 
   protected addNewRecord() {
-    this.updatedRecord = {} as UpdatedRecord;
+    this.updatedRecord = {
+      table: this.tblService.selectedTable(),
+      fields: this.columns().map((c) => c.field),
+      data: {},
+    };
     this.updatedRecordMode = 'add';
     this.visibleRecordEditor = true;
   }

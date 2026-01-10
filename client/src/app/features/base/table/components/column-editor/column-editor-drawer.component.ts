@@ -108,7 +108,6 @@ const DEFAULT_VALUE = {
 export class ColumnEditorDrawerComponent extends DrawerComponent {
   table = input<TableDefinition>();
   column = input<ColumnDefinition>();
-  field = input<Field>();
   mode = input<'add' | 'edit'>('add');
 
   onSave = output<ColumnFormData>();
@@ -163,7 +162,8 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     });
 
     effect(() => {
-      this.internalField = this.field();
+      this.selectedDataType();
+      this.internalField = this.tblService.buildField(this.columnFormData as ColumnDefinition);
     });
 
     effect(() => {
@@ -241,7 +241,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.columnFormData.defaultValue = null;
     this.columnFormData.validation = { ...DEFAULT_VALUE.validation };
     this.columnFormData.foreignKey = { ...DEFAULT_VALUE.foreignKey };
-    this.internalField = this.tblService.buildField(this.columnFormData as ColumnDefinition);
   }
 
   protected addOption() {
