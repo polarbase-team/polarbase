@@ -1,8 +1,8 @@
 import { Knex } from 'knex';
 
 import pg from '../../plugins/pg';
-import { getTableSchema } from '../utils/table';
-import { DataType } from '../utils/column';
+import { getCachedTableSchema, getTableSchema } from '../utils/table';
+import { Column, DataType } from '../utils/column';
 import { buildWhereClause, WhereFilter } from '../utils/record';
 
 export class TableRecordService {
@@ -31,6 +31,9 @@ export class TableRecordService {
       limit = 10000,
     } = query;
 
+    const cols = await getCachedTableSchema(pg, schemaName, tableName);
+    const validColumnNames = cols.map((c) => c.name);
+
     let qb = pg(tableName).withSchema(schemaName);
 
     // WHERE
@@ -38,16 +41,16 @@ export class TableRecordService {
 
     // Global SEARCH across text columns
     if (search && search.trim()) {
-      const cols = await getTableSchema(pg, schemaName, tableName);
+      const safeSearch = search.trim().replace(/[%_]/g, '\\$&');
       const textColumns = cols.filter((col) => col.dataType === DataType.Text);
 
       if (textColumns.length > 0) {
         qb = qb.where((builder) => {
           textColumns.forEach((col, index) => {
             if (index === 0) {
-              builder.where(col.name, 'ilike', `%${search.trim()}%`);
+              builder.where(col.name, 'ilike', `%${safeSearch}%`);
             } else {
-              builder.orWhere(col.name, 'ilike', `%${search.trim()}%`);
+              builder.orWhere(col.name, 'ilike', `%${safeSearch}%`);
             }
           });
         });
@@ -58,14 +61,26 @@ export class TableRecordService {
 
     // SELECT (if specified)
     if (fields) {
-      const fieldList = fields.split(',').map((f) => f.trim());
-      qb = qb.select(fieldList);
+      const fieldList = fields
+        .split(',')
+        .map((f) => f.trim())
+        .filter((f) => validColumnNames.includes(f));
+
+      if (fieldList.length > 0) {
+        qb = qb.select(fieldList);
+      }
     }
 
     // ORDER BY
     if (order) {
       const [col, dir] = order.split(':');
-      qb = qb.orderBy(col, dir.toLowerCase() === 'desc' ? 'desc' : 'asc');
+      const direction = dir?.toLowerCase() === 'desc' ? 'desc' : 'asc';
+
+      if (validColumnNames.includes(col)) {
+        qb = qb.orderBy(col, direction);
+      } else {
+        qb = qb.orderBy('id', 'asc');
+      }
     }
 
     // Pagination + total count
@@ -119,23 +134,45 @@ export class TableRecordService {
       limit = 10000,
     } = query;
 
+    const cols = await getCachedTableSchema(pg, schemaName, tableName);
+    const validColumnNames = cols.map((c) => c.name);
+
     let qb = pg(tableName).withSchema(schemaName);
 
     // SELECT
-    qb = qb.select(select.map((expr) => pg.raw(expr)));
+    // Only allow specific aggregate patterns or valid column names
+    const safeSelect = select.map((expr) => {
+      const isSimpleCol = validColumnNames.includes(expr);
+      const isAggregate = /^(count|sum|avg|min|max)\([a-z0-9_*]+\)$/i.test(
+        expr
+      );
+
+      if (isSimpleCol || isAggregate) {
+        return pg.raw(expr);
+      }
+      throw new Error(`Invalid select expression: ${expr}`);
+    });
+    qb = qb.select(safeSelect);
 
     // WHERE
     if (where) qb = qb.where(where);
 
     // GROUP BY
-    if (group) qb = qb.groupBy(group);
+    if (group) {
+      const safeGroup = group.filter((g) => validColumnNames.includes(g));
+      qb = qb.groupBy(safeGroup);
+    }
 
     // HAVING
     if (having) {
       Object.entries(having).forEach(([key, value]) => {
+        if (!validColumnNames.includes(key)) return;
+
         const isObj = typeof value === 'object' && value !== null;
         const op = isObj ? value.operator : '=';
         const val = isObj ? value.value : value;
+
+        // Use parameterized having to prevent injection in value
         qb.having(pg.raw(key), op, val);
       });
     }
@@ -143,7 +180,9 @@ export class TableRecordService {
     // ORDER BY
     if (order) {
       const [col, dir] = order.split(':');
-      qb = qb.orderBy(col, dir.toLowerCase() === 'desc' ? 'desc' : 'asc');
+      if (validColumnNames.includes(col)) {
+        qb = qb.orderBy(col, dir.toLowerCase() === 'desc' ? 'desc' : 'asc');
+      }
     }
 
     // Pagination + total

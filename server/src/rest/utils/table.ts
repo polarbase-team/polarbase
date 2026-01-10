@@ -336,7 +336,7 @@ export const getCachedTableSchema = async (
   const cacheKey = `schema:${schemaName}:${tableName}`;
 
   if (schemaCache.has(cacheKey)) {
-    return schemaCache.get(cacheKey);
+    return schemaCache.get(cacheKey) as Column[];
   }
 
   const schema = await getTableSchema(pg, schemaName, tableName);
