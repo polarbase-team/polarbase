@@ -28,6 +28,8 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { FluidModule } from 'primeng/fluid';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { sanitizeEmptyStrings } from '@app/core/utils';
 import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
@@ -56,6 +58,12 @@ import {
 
 const DEFAULT_VALUE = {
   nullable: true,
+  foreignKey: {
+    table: null,
+    column: null,
+    onUpdate: 'NO ACTION',
+    onDelete: 'NO ACTION',
+  },
   validation: {},
 } as ColumnFormData;
 
@@ -79,6 +87,8 @@ const DEFAULT_VALUE = {
     DatePickerModule,
     FluidModule,
     MenuModule,
+    SelectButtonModule,
+    TooltipModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -112,9 +122,31 @@ export class ColumnEditorDrawerComponent {
     icon: FIELD_ICON_MAP[DataType[t]],
   }));
   protected selectedDataType = signal<DataType>(null);
-  protected options = signal<string[]>([]);
-  protected enumTypeMenuItems: MenuItem[] | undefined;
   protected internalField: Field;
+
+  // Select & MultiSelect types
+  protected enumTypeMenuItems: MenuItem[] | undefined;
+  protected options = signal<string[]>([]);
+
+  // Reference type
+  protected tableOptions: { name: string; value: string }[] | undefined;
+  protected referentialActions: { name: string; value: string; help: string }[] = [
+    {
+      name: 'No Action',
+      value: 'NO ACTION',
+      help: 'Prevents changes if related data exists.',
+    },
+    {
+      name: 'Set Null',
+      value: 'SET NULL',
+      help: 'Keeps record but clears the connection.',
+    },
+    {
+      name: 'Cascade',
+      value: 'CASCADE',
+      help: 'Automatically syncs updates and deletions.',
+    },
+  ];
 
   constructor(
     private destroyRef: DestroyRef,
@@ -145,6 +177,13 @@ export class ColumnEditorDrawerComponent {
           (this.internalField as MultiSelectField).options = [...options];
       }
     });
+
+    effect(() => {
+      this.tableOptions = [];
+      for (const table of this.tblService.tables()) {
+        this.tableOptions.push({ name: table.tableName, value: table.tableName });
+      }
+    });
   }
 
   protected save() {
@@ -168,7 +207,29 @@ export class ColumnEditorDrawerComponent {
 
     let fn: Observable<any>;
 
+    // Sanitize the column form data by removing empty strings
     const formData = sanitizeEmptyStrings(this.columnFormData);
+
+    // Handle option and foreign key field removal depending on selected data type
+    switch (this.selectedDataType()) {
+      case DataType.Select:
+      case DataType.MultiSelect:
+        // For Select and MultiSelect, retain 'options' property as needed
+        break;
+      case DataType.Reference:
+        // For Reference type, retain 'foreignKey' property as needed
+        break;
+      default:
+        // For all other types, remove 'options' and 'foreignKey' to avoid sending unnecessary data
+        delete formData.options;
+        delete formData.foreignKey;
+    }
+
+    // Remove empty 'validation' object if no validation rules are present
+    if (!Object.keys(formData.validation).length) {
+      delete formData.validation;
+    }
+
     if (this.mode() === 'edit') {
       fn = this.tblService.updateColumn(this.table().tableName, this.column().name, formData);
     } else {
@@ -185,10 +246,11 @@ export class ColumnEditorDrawerComponent {
     });
   }
 
-  protected onSelectDataType(dataType: DataType) {
+  protected onDataTypeSelect(dataType: DataType) {
     this.columnFormData.dataType = dataType;
     this.columnFormData.defaultValue = null;
-    this.columnFormData.validation = {};
+    this.columnFormData.validation = { ...DEFAULT_VALUE.validation };
+    this.columnFormData.foreignKey = { ...DEFAULT_VALUE.foreignKey };
     this.internalField = this.tblService.buildField(this.columnFormData as ColumnDefinition);
   }
 
@@ -211,7 +273,6 @@ export class ColumnEditorDrawerComponent {
       .getEnumTypes()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((enumTypes) => {
-        console.log(enumTypes);
         this.enumTypeMenuItems = [];
         for (const enumType of enumTypes) {
           this.enumTypeMenuItems.push({
@@ -223,5 +284,16 @@ export class ColumnEditorDrawerComponent {
           });
         }
       });
+  }
+
+  protected onTableSelect(tableName: string) {
+    const table = this.tblService.tables().find((t) => t.tableName === tableName);
+    if (!table) return;
+
+    this.columnFormData.foreignKey.table = table.tableName;
+    this.columnFormData.foreignKey.column = {
+      name: table.tableColumnPk,
+      type: table.tableColumnPkType,
+    };
   }
 }

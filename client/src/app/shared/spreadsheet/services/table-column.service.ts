@@ -125,7 +125,7 @@ export class TableColumnService extends TableBaseService {
     super();
 
     effect(() => {
-      const columns = this.host.sourceColumns();
+      const columns = this.host.sourceColumns() || [];
       const calculatedColumns: TableColumn[] = [];
       const groupedColumns: TableColumn[] = [];
       const sortedColumns: TableColumn[] = [];

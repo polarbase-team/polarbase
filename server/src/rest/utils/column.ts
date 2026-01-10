@@ -13,8 +13,17 @@ export const DataType = {
   Url: 'url',
   JSON: 'json',
   GeoPoint: 'geo-point',
+  Reference: 'reference',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
+
+export const ReferentialAction = {
+  NoAction: 'NO ACTION',
+  SetNull: 'SET NULL',
+  Cascade: 'CASCADE',
+} as const;
+export type ReferentialAction =
+  (typeof ReferentialAction)[keyof typeof ReferentialAction];
 
 export interface Column {
   name: string;
@@ -25,7 +34,12 @@ export interface Column {
   defaultValue: string;
   comment: string;
   options: string[];
-  foreignKey: any;
+  foreignKey: {
+    table: string;
+    column: { name: string; type: string };
+    onUpdate: ReferentialAction;
+    onDelete: ReferentialAction;
+  };
   validation: {
     minLength?: number;
     maxLength?: number;
@@ -99,6 +113,11 @@ export const mapDataType = (column: Column) => {
     return pgDataType === 'ARRAY' ? DataType.MultiSelect : DataType.Select;
   }
 
+  // 3. Handle foreign keys
+  if (column.foreignKey) {
+    return DataType.Reference;
+  }
+
   const normalizedType = pgDataType
     .toLowerCase()
     .split('(')[0]
@@ -114,12 +133,19 @@ export const specificType = (
     tableName,
     name,
     dataType,
+    foreignKey,
     options,
   }: {
     tableName: string;
     name: string;
     dataType: DataType;
     options?: string[] | null;
+    foreignKey?: {
+      table: string;
+      column: { name: string; type: string };
+      onUpdate: ReferentialAction;
+      onDelete: ReferentialAction;
+    } | null;
   }
 ) => {
   switch (dataType) {
@@ -192,6 +218,18 @@ export const specificType = (
 
     case DataType.GeoPoint: {
       return tableBuilder.specificType(name, 'point');
+    }
+
+    case DataType.Reference: {
+      if (!foreignKey) {
+        throw new Error(`Foreign key metadata is required for column: ${name}`);
+      }
+      return tableBuilder
+        .specificType(name, foreignKey.column.type)
+        .references(foreignKey.column.name)
+        .inTable(foreignKey.table)
+        .onUpdate(foreignKey.onUpdate)
+        .onDelete(foreignKey.onDelete);
     }
 
     default:

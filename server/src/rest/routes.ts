@@ -8,7 +8,7 @@ import { apiKeyAuth } from '../api-keys/auth';
 import { SchemaService } from './services/schema.service';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
-import { DataType } from './utils/column';
+import { DataType, ReferentialAction } from './utils/column';
 import { WhereFilter } from './utils/record';
 
 const REST_RATE_LIMIT = Number(process.env.REST_RATE_LIMIT) || 100;
@@ -250,6 +250,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           defaultValue: body.defaultValue,
           comment: body.comment,
           options: body.options,
+          foreignKey: body.foreignKey,
           validation: body.validation,
         },
       });
@@ -258,14 +259,22 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({ table: t.String() }),
       body: t.Object({
         name: t.String({ minLength: 1 }),
-        dataType: t.String({
-          enum: Object.values(DataType) as [string, ...string[]],
-        }),
+        dataType: t.Enum(DataType),
         nullable: t.Optional(t.Nullable(t.Boolean())),
         unique: t.Optional(t.Nullable(t.Boolean())),
         defaultValue: t.Optional(t.Nullable(t.Any())),
         comment: t.Optional(t.Nullable(t.String())),
         options: t.Optional(t.Nullable(t.Array(t.String()))),
+        foreignKey: t.Optional(
+          t.Nullable(
+            t.Object({
+              table: t.String(),
+              column: t.Object({ name: t.String(), type: t.String() }),
+              onUpdate: t.Enum(ReferentialAction),
+              onDelete: t.Enum(ReferentialAction),
+            })
+          )
+        ),
         validation: t.Optional(
           t.Nullable(
             t.Object({
@@ -300,6 +309,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           defaultValue: body.defaultValue,
           comment: body.comment,
           options: body.options,
+          foreignKey: body.foreignKey,
           validation: body.validation,
         },
       });
@@ -308,14 +318,20 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({ table: t.String(), column: t.String() }),
       body: t.Object({
         name: t.String({ minLength: 1 }),
-        dataType: t.String({
-          enum: Object.values(DataType) as [string, ...string[]],
-        }),
+        dataType: t.Enum(DataType),
         nullable: t.Nullable(t.Boolean()),
         unique: t.Nullable(t.Boolean()),
         defaultValue: t.Nullable(t.Any()),
         comment: t.Nullable(t.String()),
         options: t.Nullable(t.Array(t.String())),
+        foreignKey: t.Nullable(
+          t.Object({
+            table: t.String(),
+            column: t.Object({ name: t.String(), type: t.String() }),
+            onUpdate: t.Enum(ReferentialAction),
+            onDelete: t.Enum(ReferentialAction),
+          })
+        ),
         validation: t.Nullable(
           t.Object({
             minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
@@ -348,12 +364,12 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   )
 
   /**
-   * GET /rest/:table → paginated list with optional filters
+   * GET /rest/:table → paginated list
    */
   .get(
     '/:table',
-    ({ params: { table }, query }) => {
-      const { filter, sort, ...remain } = query;
+    async ({ params: { table }, query }) => {
+      const { filter, sort, expand, ...remain } = query;
       let whereClause: WhereFilter;
       if (typeof filter === 'string') {
         try {
@@ -363,9 +379,25 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         }
       }
 
+      const expandFields: Record<string, string> = {};
+      if (expand) {
+        const expands = Array.isArray(expand) ? expand : [expand];
+        expands.forEach((item) => {
+          const [field, alias] = item.split(':');
+          if (field) {
+            expandFields[field.trim()] = alias?.trim() || '';
+          }
+        });
+      }
+
       return tableRecordService.select({
         tableName: table,
-        query: { ...remain, where: whereClause!, order: sort },
+        query: {
+          ...remain,
+          where: whereClause!,
+          order: sort,
+          expandFields,
+        },
       });
     },
     {
@@ -374,6 +406,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         search: t.Optional(t.String()),
         filter: t.Optional(t.String()),
         sort: t.Optional(t.String({ pattern: '^[^:]+:(asc|desc)$' })),
+        expand: t.Optional(t.Union([t.String(), t.Array(t.String())])),
         page: t.Optional(t.Numeric({ minimum: 1 })),
         limit: t.Optional(t.Numeric({ minimum: 1, maximum: 10000 })),
       }),
@@ -385,10 +418,23 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
    */
   .get(
     '/:table/:id',
-    async ({ params: { table, id }, set }) => {
+    async ({ params: { table, id }, query, set }) => {
+      const { expand } = query;
+
+      const expandFields: Record<string, string> = {};
+      if (expand) {
+        const expands = Array.isArray(expand) ? expand : [expand];
+        expands.forEach((item) => {
+          const [field, alias] = item.split(':');
+          if (field) {
+            expandFields[field.trim()] = alias?.trim() || '';
+          }
+        });
+      }
+
       const result = await tableRecordService.select({
         tableName: table,
-        query: { where: { id }, limit: 1 },
+        query: { where: { id }, limit: 1, expandFields },
       });
 
       if (result.rows.length === 0) {
@@ -402,6 +448,9 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({
         table: t.String(),
         id: t.Union([t.String(), t.Numeric()]),
+      }),
+      query: t.Object({
+        expand: t.Optional(t.Union([t.String(), t.Array(t.String())])),
       }),
     }
   )

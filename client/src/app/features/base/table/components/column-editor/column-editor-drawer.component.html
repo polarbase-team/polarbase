@@ -128,7 +128,7 @@
                 optionValue="value"
                 [options]="dataTypes"
                 [(ngModel)]="selectedDataType"
-                (ngModelChange)="onSelectDataType($event)"
+                (ngModelChange)="onDataTypeSelect($event)"
                 placeholder="Select here..."
                 required
               >
@@ -136,6 +136,12 @@
                   <div class="flex items-center gap-2">
                     <i [class]="item.icon"></i>
                     <span>{{ item.name }}</span>
+                  </div>
+                </ng-template>
+                <ng-template let-selectedItem pTemplate="selectedItem">
+                  <div class="flex items-center gap-2">
+                    <i [class]="selectedItem.icon"></i>
+                    <span>{{ selectedItem.name }}</span>
                   </div>
                 </ng-template>
               </p-select>
@@ -267,6 +273,68 @@
                   />
                 </div>
               }
+              @case (DataType.GeoPoint) {}
+              @case (DataType.Reference) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Reference to</label>
+                  <p-select
+                    name="table"
+                    [options]="tableOptions"
+                    [(ngModel)]="columnFormData.foreignKey.table"
+                    (ngModelChange)="onTableSelect($event)"
+                    optionLabel="name"
+                    optionValue="value"
+                    placeholder="Select here..."
+                    required
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">
+                    On Update
+                    <p class="text-xs text-surface-500">When the parent record is modified...</p>
+                  </label>
+                  <p-selectbutton
+                    name="onUpdate"
+                    [options]="referentialActions"
+                    [(ngModel)]="columnFormData.foreignKey.onUpdate"
+                    optionLabel="name"
+                    optionValue="value"
+                    fluid
+                  >
+                    <ng-template #item let-item>
+                      <p class="text-xs flex items-center gap-1">
+                        <span>{{ item.name }}</span>
+                        <i class="icon icon-info" [pTooltip]="item.help" tooltipPosition="top"></i>
+                      </p>
+                    </ng-template>
+                  </p-selectbutton>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">
+                    On Delete
+                    <p class="text-xs text-surface-500">When the parent record is removed...</p>
+                  </label>
+                  <p-selectbutton
+                    name="onDelete"
+                    [options]="referentialActions"
+                    [(ngModel)]="columnFormData.foreignKey.onDelete"
+                    optionLabel="name"
+                    optionValue="value"
+                    fluid
+                  >
+                    <ng-template #item let-item>
+                      <p class="text-xs flex items-center gap-1">
+                        <span>{{ item.name }}</span>
+                        <i
+                          class="icon icon-info"
+                          [pTooltip]="item.tooltip"
+                          tooltipPosition="top"
+                        ></i>
+                      </p>
+                    </ng-template>
+                  </p-selectbutton>
+                </div>
+              }
             }
           </div>
         </div>
@@ -374,6 +442,9 @@
                   [label]="false"
                   class="col-span-2"
                 />
+              }
+              @case (DataType.Reference) {
+                Not support
               }
               @default {
                 <i class="text-sm text-surface-500">Select a data type first.</i>

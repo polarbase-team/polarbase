@@ -11,6 +11,7 @@ export const DataType = {
   Url: 'url',
   JSON: 'json',
   GeoPoint: 'geo-point',
+  Reference: 'reference',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -27,6 +28,7 @@ export const FIELD_ICON_MAP: Record<DataType, string> = {
   [DataType.Url]: 'icon icon-link',
   [DataType.JSON]: 'icon icon-braces',
   [DataType.GeoPoint]: 'icon icon-map-pin',
+  [DataType.Reference]: 'icon icon-send-to-back',
 } as const;
 
 export interface FieldConfig<T = any> {

@@ -8,7 +8,7 @@ export class SelectField extends Field<SelectData> {
   readonly dataType: DataType = DataType.Select;
   readonly icon: string = FIELD_ICON_MAP[DataType.Select];
 
-  options?: SelectOption[] | undefined;
+  options?: SelectOption[];
 
   constructor(config: SelectFieldConfig) {
     super(config);

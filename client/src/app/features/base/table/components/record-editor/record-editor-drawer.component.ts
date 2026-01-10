@@ -35,6 +35,7 @@ import { EmailFieldEditorComponent } from '@app/shared/field-system/editors/emai
 import { UrlFieldEditorComponent } from '@app/shared/field-system/editors/url/editor.component';
 import { JSONFieldEditorComponent } from '@app/shared/field-system/editors/json/editor.component';
 import { GeoPointFieldEditorComponent } from '@app/shared/field-system/editors/geo-point/editor.component';
+import { ReferenceFieldEditorComponent } from '@app/shared/field-system/editors/reference/editor.component';
 import { TableDefinition, TableService } from '../../services/table.service';
 
 @Component({
@@ -59,6 +60,7 @@ import { TableDefinition, TableService } from '../../services/table.service';
     UrlFieldEditorComponent,
     JSONFieldEditorComponent,
     GeoPointFieldEditorComponent,
+    ReferenceFieldEditorComponent,
   ],
   providers: [MessageService],
 })
@@ -88,9 +90,12 @@ export class RecordEditorDrawerComponent {
     });
 
     effect(() => {
+      const fields = this.fields();
+      if (!fields) return;
+
       const requiredFields = [];
       const optionalFields = [];
-      for (const field of this.fields()) {
+      for (const field of fields) {
         if (field.required) {
           requiredFields.push(field);
         } else {
@@ -117,7 +122,7 @@ export class RecordEditorDrawerComponent {
       return;
     }
 
-    const { tableName, tableColumnPk } = this.tblService.selectedTable();
+    const { tableName, tableColumnPk } = this.table();
     const id = this.record()[tableColumnPk] ?? undefined;
     const data = { ...this.updatedRecord };
 

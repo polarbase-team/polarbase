@@ -12,83 +12,95 @@
   </ng-template>
 </p-overlay>
 
-<div
-  class="spreadsheet__toolbar"
-  [style.paddingLeft.px]="tableService.config().sideSpacing"
-  [style.paddingRight.px]="tableService.config().sideSpacing"
->
-  <div class="flex flex-wrap flex-1 gap-y-2">
-    <ng-container *ngTemplateOutlet="toolbarTemplate()"></ng-container>
-    <div class="flex flex-wrap flex-auto justify-between gap-2">
-      <div class="flex flex-wrap gap-2">
-        <column-view-options
-          [sourceColumns]="sourceColumns()"
-          [visibleColumns]="tableColumnService.columns()"
-          (onToggle)="
-            $event.hidden
-              ? tableColumnService.hideColumn($event.column)
-              : tableColumnService.showColumn($event.column)
-          "
-          (onMove)="tableColumnService.moveColumn($event.column, $event.newIndex)"
-        />
-        <data-view-options
-          type="group"
-          [sourceColumns]="sourceColumns()"
-          [currentColumns]="tableColumnService.groupedColumns()"
-          [limit]="3"
-          (onApply)="tableService.onApplyGroup($event)"
-        />
-        <data-view-options
-          type="sort"
-          [sourceColumns]="sourceColumns()"
-          [currentColumns]="tableColumnService.sortedColumns()"
-          (onApply)="tableService.onApplySort($event)"
-        />
-        <row-size-options
-          [rowSize]="$any(tableRowService.rowSize)"
-          (rowSizeChange)="tableRowService.setRowSize($event)"
-        />
-      </div>
-      <p-inputgroup class="w-3xs max-w-3xs">
-        <p-iconfield>
-          <p-inputicon class="icon icon-search !z-2" />
-          <input
-            type="text"
-            pInputText
-            placeholder="Search"
-            (input)="tableService.onSearch($any($event))"
-            (keydown.enter)="tableService.searchNext()"
-          />
-        </p-iconfield>
-        @if (tableService.searchResults?.length) {
-          <p-inputgroup-addon>
-            <div class="text-center">
-              <span class="text-sm font-medium">
-                {{ (tableService.layout.cell.search.currentMatchIndex || 0) + 1 }}/{{
-                  tableService.searchResults.length
-                }}
-              </span>
-            </div>
-          </p-inputgroup-addon>
-          <p-inputgroup-addon>
-            <div class="flex gap-2 justify-content-space-around px-2">
-              <i
-                class="icon icon-chevron-up cursor-pointer"
-                style="font-size: 16px"
-                (click)="tableService.searchPrevious()"
-              ></i>
-              <i
-                class="icon icon-chevron-down cursor-pointer"
-                style="font-size: 16px"
-                (click)="tableService.searchNext()"
-              ></i>
-            </div>
-          </p-inputgroup-addon>
+@if (tableService.config().toolbar !== false) {
+  <div
+    class="spreadsheet__toolbar"
+    [style.paddingLeft.px]="tableService.config().sideSpacing"
+    [style.paddingRight.px]="tableService.config().sideSpacing"
+  >
+    <div class="flex flex-wrap flex-1 gap-y-2">
+      <ng-container *ngTemplateOutlet="toolbarTemplate()"></ng-container>
+      <div class="flex flex-wrap flex-auto justify-between gap-2">
+        <div class="flex flex-wrap gap-2">
+          @if ($any(tableService.config().toolbar).customize) {
+            <column-view-options
+              [sourceColumns]="sourceColumns()"
+              [visibleColumns]="tableColumnService.columns()"
+              (onToggle)="
+                $event.hidden
+                  ? tableColumnService.hideColumn($event.column)
+                  : tableColumnService.showColumn($event.column)
+              "
+              (onMove)="tableColumnService.moveColumn($event.column, $event.newIndex)"
+            />
+          }
+          @if ($any(tableService.config().toolbar).group) {
+            <data-view-options
+              type="group"
+              [sourceColumns]="sourceColumns()"
+              [currentColumns]="tableColumnService.groupedColumns()"
+              [limit]="3"
+              (onApply)="tableService.onApplyGroup($event)"
+            />
+          }
+          @if ($any(tableService.config().toolbar).sort) {
+            <data-view-options
+              type="sort"
+              [sourceColumns]="sourceColumns()"
+              [currentColumns]="tableColumnService.sortedColumns()"
+              (onApply)="tableService.onApplySort($event)"
+            />
+          }
+          @if ($any(tableService.config().toolbar).rowSize) {
+            <row-size-options
+              [rowSize]="$any(tableRowService.rowSize)"
+              (rowSizeChange)="tableRowService.setRowSize($event)"
+            />
+          }
+        </div>
+        @if ($any(tableService.config().toolbar).search) {
+          <p-inputgroup class="w-3xs max-w-3xs">
+            <p-iconfield>
+              <p-inputicon class="icon icon-search !z-2" />
+              <input
+                type="text"
+                pInputText
+                placeholder="Search"
+                (input)="tableService.onSearch($any($event))"
+                (keydown.enter)="tableService.searchNext()"
+              />
+            </p-iconfield>
+            @if (tableService.searchResults?.length) {
+              <p-inputgroup-addon>
+                <div class="text-center">
+                  <span class="text-sm font-medium">
+                    {{ (tableService.layout.cell.search.currentMatchIndex || 0) + 1 }}/{{
+                      tableService.searchResults.length
+                    }}
+                  </span>
+                </div>
+              </p-inputgroup-addon>
+              <p-inputgroup-addon>
+                <div class="flex gap-2 justify-content-space-around px-2">
+                  <i
+                    class="icon icon-chevron-up cursor-pointer"
+                    style="font-size: 16px"
+                    (click)="tableService.searchPrevious()"
+                  ></i>
+                  <i
+                    class="icon icon-chevron-down cursor-pointer"
+                    style="font-size: 16px"
+                    (click)="tableService.searchNext()"
+                  ></i>
+                </div>
+              </p-inputgroup-addon>
+            }
+          </p-inputgroup>
         }
-      </p-inputgroup>
+      </div>
     </div>
   </div>
-</div>
+}
 
 <virtual-scroll
   [sideSpacing]="tableService.config().sideSpacing"
@@ -234,15 +246,19 @@
       >
         <div class="header-cell cell index-cell">
           <div class="index-block">
-            @let rowLength = tableRowService.rows().length;
-            @let selectedRowLength = tableRowService.selectedRows.size;
-            <p-checkbox
-              [binary]="true"
-              [ngModel]="rowLength > 0 && selectedRowLength > 0 && rowLength === selectedRowLength"
-              (ngModelChange)="
-                $event ? tableRowService.selectAllRows() : tableRowService.deselectAllRows()
-              "
-            ></p-checkbox>
+            @if (tableService.config().allowSelectAllRows) {
+              @let rowLength = tableRowService.rows().length;
+              @let selectedRowLength = tableRowService.selectedRows.size;
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="
+                  rowLength > 0 && selectedRowLength > 0 && rowLength === selectedRowLength
+                "
+                (ngModelChange)="
+                  $event ? tableRowService.selectAllRows() : tableRowService.deselectAllRows()
+                "
+              />
+            }
           </div>
         </div>
         @for (
@@ -426,8 +442,8 @@
               </div>
               @if (!group.children) {
                 <div class="group__body">
-                  @if (tableRowService.canAddRow()) {
-                    <div class="row blank-row">
+                  <div class="row blank-row">
+                    @if (tableRowService.canAddRow()) {
                       <div
                         class="row-cell cell index-cell"
                         [attr.disabled]="tableService.isStreaming"
@@ -435,8 +451,8 @@
                       >
                         <i class="icon icon-circle-plus" style="margin-left: 11px"></i>
                       </div>
-                    </div>
-                  }
+                    }
+                  </div>
                 </div>
               }
             </div>
@@ -637,17 +653,18 @@
                         tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
                         tableService.layout.cell.selection.anchor.columnIndex === columnIndex
                       "
+                      (viewDetail)="tableService.viewReferenceDetail($event)"
                     ></ng-template>
                   </div>
                 }
               </ng-container>
             </div>
           </ng-container>
-          @if (
-            tableRowService.canAddRow() &&
-            (!tableGroupService.isGrouped() || tableGroupService.hasNoGroups())
-          ) {
-            <div class="row blank-row">
+          <div class="row blank-row">
+            @if (
+              tableRowService.canAddRow() &&
+              (!tableGroupService.isGrouped() || tableGroupService.hasNoGroups())
+            ) {
               <div
                 class="row-cell cell index-cell"
                 [attr.disabled]="tableService.isStreaming"
@@ -655,8 +672,8 @@
               >
                 <i class="icon icon-circle-plus" style="margin-left: 11px"></i>
               </div>
-            </div>
-          }
+            }
+          </div>
         </div>
       </div>
     </div>
@@ -738,9 +755,7 @@
               </div>
               @if (!group.children) {
                 <div class="group__body">
-                  @if (tableRowService.canAddRow()) {
-                    <div class="row blank-row"></div>
-                  }
+                  <div class="row blank-row"></div>
                 </div>
               }
             </div>
@@ -864,18 +879,14 @@
                         tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
                         tableService.layout.cell.selection.anchor.columnIndex === columnIndex
                       "
+                      (viewDetail)="tableService.viewReferenceDetail($event)"
                     ></ng-template>
                   </div>
                 }
               </ng-container>
             </div>
           </ng-container>
-          @if (
-            tableRowService.canAddRow() &&
-            (!tableGroupService.isGrouped() || tableGroupService.hasNoGroups())
-          ) {
-            <div class="row blank-row"></div>
-          }
+          <div class="row blank-row"></div>
         </div>
       </div>
     </div>

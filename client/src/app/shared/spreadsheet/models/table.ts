@@ -9,6 +9,16 @@ export type TableRowSize = keyof typeof TableRowSize;
 export interface TableConfig {
   sideSpacing?: number;
   dataStream?: boolean;
+  allowSelectAllRows?: boolean;
+  toolbar?:
+    | {
+        customize?: boolean;
+        group?: boolean;
+        sort?: boolean;
+        rowSize?: boolean;
+        search?: boolean;
+      }
+    | boolean;
   column?: {
     frozenCount?: number | null;
     maxFrozenRatio?: number;

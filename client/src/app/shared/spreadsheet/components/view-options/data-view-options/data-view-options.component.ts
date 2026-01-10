@@ -62,7 +62,8 @@ export class DataViewOptionsComponent {
 
   protected menuItems = computed<MenuItem[]>(() => {
     const currentItems = this.rules().map((i) => i.column.id);
-    const columns = this.sourceColumns().filter((f) => !currentItems.includes(f.id));
+    const sourceColumns = this.sourceColumns() || [];
+    const columns = sourceColumns.filter((f) => !currentItems.includes(f.id));
 
     return columns.map((column) => ({
       label: column.field.name,
