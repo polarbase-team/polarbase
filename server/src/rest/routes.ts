@@ -106,11 +106,14 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     if (code === 'VALIDATION') {
       set.status = 400;
 
-      const firstError = error.all[0];
+      const allErrors = (error as any).all;
+      const firstError = allErrors?.[0];
       if (firstError) {
-        const { summary, message, path } = firstError as any;
-        const msg = summary || message || `Invalid value for ${path}`;
-        return err(msg);
+        const rawPath = firstError.path;
+        const path =
+          rawPath && rawPath.startsWith('/') ? rawPath.substring(1) : rawPath;
+        const msg = firstError.summary || firstError.message;
+        return err(path ? `${path}: ${msg}` : msg);
       }
 
       return err('Invalid request data');
@@ -119,12 +122,10 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     if (error instanceof Error) {
       const status = (error as any).cause ?? set.status ?? 500;
       set.status = status;
-
       const message =
         process.env.NODE_ENV === 'production' && status >= 500
           ? 'Internal server error'
           : error.message;
-
       return err(message, status);
     }
 
@@ -138,7 +139,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .derive(({ params, set }) => {
     if (params?.table && REST_BLACKLISTED_TABLES.includes(params.table)) {
       set.status = 403;
-      throw new Error(`Table "${params.table}" is not allowed`);
+      throw new Error(`Table "${params.table}" is forbidden`);
     }
   })
 
@@ -168,7 +169,6 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         set.status = 404;
         return err('Table not found');
       }
-
       return tableService.getSchema({ tableName: table });
     },
     {
@@ -191,7 +191,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           minLength: 1,
           maxLength: 63,
           error:
-            'Table name must start with a letter/underscore, contain only lowercase alphanumeric, and be under 64 chars',
+            'Invalid format. Use letters, numbers, or _ (start with letter/_).',
         }),
         tableComment: t.Optional(
           t.String({
@@ -223,13 +223,15 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     {
       body: t.Object(
         {
-          tableName: t.String({
-            pattern: '^[a-z_][a-z0-9_]*$',
-            minLength: 1,
-            maxLength: 63,
-            error:
-              'Table name must start with a letter/underscore, contain only lowercase alphanumeric, and be under 64 chars',
-          }),
+          tableName: t.Optional(
+            t.String({
+              pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
+              minLength: 1,
+              maxLength: 63,
+              error:
+                'Invalid format. Use letters, numbers, or _ (start with letter/_).',
+            })
+          ),
           tableComment: t.Optional(
             t.Nullable(
               t.String({
@@ -273,19 +275,23 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({ table: t.String() }),
       body: t.Object(
         {
-          name: t.String({ pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$', minLength: 1 }),
+          name: t.String({
+            pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
+            minLength: 1,
+            maxLength: 63,
+            error:
+              'Invalid format. Use letters, numbers, or _ (start with letter/_).',
+          }),
           dataType: t.Enum(DataType),
           nullable: t.Optional(t.Nullable(t.Boolean())),
           unique: t.Optional(t.Nullable(t.Boolean())),
           defaultValue: t.Optional(t.Nullable(t.Any())),
           comment: t.Optional(
             t.Nullable(
-              t.String(
-                t.String({
-                  maxLength: 500,
-                  error: 'Comment too long (max 500 chars)',
-                })
-              )
+              t.String({
+                maxLength: 500,
+                error: 'Comment too long (max 500 chars)',
+              })
             )
           ),
           options: t.Optional(t.Nullable(t.Array(t.String()))),
@@ -305,17 +311,15 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           error: (value) => {
             const { dataType, options, foreignKey } =
               value as unknown as Column;
-
             if (
               (dataType === DataType.Select ||
                 dataType === DataType.MultiSelect) &&
               (!options || options.length === 0)
             ) {
-              return 'Options are required and must not be empty for Select/MultiSelect types';
+              return 'options_required: Select types must have at least one option';
             }
-
             if (dataType === DataType.Reference && !foreignKey) {
-              return 'ForeignKey configuration is required for Reference type';
+              return 'foreignKey_required: Reference type must specify a target table and column';
             }
           },
         }
@@ -339,18 +343,22 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({ table: t.String(), column: t.String() }),
       body: t.Object(
         {
-          name: t.String({ pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$', minLength: 1 }),
+          name: t.String({
+            pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
+            minLength: 1,
+            maxLength: 63,
+            error:
+              'Invalid format. Use letters, numbers, or _ (start with letter/_).',
+          }),
           dataType: t.Enum(DataType),
           nullable: t.Nullable(t.Boolean()),
           unique: t.Nullable(t.Boolean()),
           defaultValue: t.Nullable(t.Any()),
           comment: t.Nullable(
-            t.String(
-              t.String({
-                maxLength: 500,
-                error: 'Comment too long (max 500 chars)',
-              })
-            )
+            t.String({
+              maxLength: 500,
+              error: 'Comment too long (max 500 chars)',
+            })
           ),
           validation: t.Nullable(t.Any()),
           options: t.Optional(t.Nullable(t.Array(t.String()))),
@@ -369,17 +377,15 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           error: (value) => {
             const { dataType, options, foreignKey } =
               value as unknown as Column;
-
             if (
               (dataType === DataType.Select ||
                 dataType === DataType.MultiSelect) &&
               (!options || options.length === 0)
             ) {
-              return 'Options are required for Select/MultiSelect types';
+              return 'options_required: Select types must have at least one option';
             }
-
             if (dataType === DataType.Reference && !foreignKey) {
-              return 'ForeignKey configuration is required for Reference type';
+              return 'foreignKey_required: Reference type must specify a target table and column';
             }
           },
         }
@@ -415,7 +421,9 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         try {
           whereClause = JSON.parse(filter);
         } catch (e) {
-          throw new Error('Invalid JSON in filter parameter');
+          throw new Error(
+            'Query parameter "filter" must be a valid JSON string'
+          );
         }
       }
 
@@ -460,7 +468,6 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     '/:table/:id',
     async ({ params: { table, id }, query, set }) => {
       const { expand } = query;
-
       const expandFields: Record<string, string> = {};
       if (expand) {
         const expands = Array.isArray(expand) ? expand : [expand];
@@ -481,7 +488,6 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         set.status = 404;
         return err('Record not found');
       }
-
       return result.rows[0];
     },
     {
@@ -513,7 +519,6 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     '/:table/:id',
     ({ params: { table, id }, body }) => {
       const { id: _, ...updateData } = body;
-
       return tableRecordService.update({
         tableName: table,
         updates: [{ where: { id }, data: updateData }],
@@ -569,16 +574,10 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .patch(
     '/:table/bulk-update',
     ({ params: { table }, body }) => {
-      const updates: {
-        where: WhereFilter;
-        data: Record<string, any>;
-      }[] = [];
-      for (const { id, data } of body) {
-        updates.push({
-          where: { id },
-          data,
-        });
-      }
+      const updates = body.map(({ id, data }) => ({
+        where: { id },
+        data,
+      }));
       return tableRecordService.update({ tableName: table, updates });
     },
     {
