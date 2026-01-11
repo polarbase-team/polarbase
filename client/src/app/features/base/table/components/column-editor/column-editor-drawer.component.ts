@@ -294,6 +294,8 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
   private onOptionsUpdate() {
     const options = this.columnFormData.options;
+    this.columnFormData.options = [...options];
+
     switch (this.internalField?.dataType) {
       case DataType.Select:
         (this.internalField as SelectField).options = [...options];
