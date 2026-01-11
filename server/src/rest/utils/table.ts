@@ -7,6 +7,7 @@ import {
   SIZE_CHECK_SUFFIX,
   RANGE_CHECK_SUFFIX,
   DATE_RANGE_CHECK_SUFFIX,
+  OPTIONS_CHECK_SUFFIX,
 } from './column';
 
 export interface Table {
@@ -221,30 +222,7 @@ export const getTableSchema = async (
   ]);
 
   /**
-   * 2. Optimized Enum Fetching
-   * Batch fetch all enum labels in a single query instead of a loop (solving N+1 problem).
-   */
-  const enumMap: Record<string, string[]> = {};
-  if (enumMetadata.rows.length > 0) {
-    const typeOids = enumMetadata.rows.map((r: any) => r.type_oid);
-    const enumLabels = await pg('pg_enum')
-      .select(
-        'enumtypid',
-        pg.raw('json_agg(enumlabel ORDER BY enumsortorder) as labels')
-      )
-      .whereIn('enumtypid', typeOids)
-      .groupBy('enumtypid');
-
-    const labelLookup = Object.fromEntries(
-      enumLabels.map((l) => [l.enumtypid, l.labels])
-    );
-    for (const col of enumMetadata.rows) {
-      enumMap[col.column_name] = labelLookup[col.type_oid] || [];
-    }
-  }
-
-  /**
-   * 3. Map Raw Data to Optimized Lookup Structures (O(1) access)
+   * 2. Map Raw Data to Optimized Lookup Structures (O(1) access)
    */
   const commentMap = Object.fromEntries(
     comments.map((c: any) => [c.column_name, c.description])
@@ -264,12 +242,13 @@ export const getTableSchema = async (
   );
 
   /**
-   * 4. Parse Check Constraints into Validation Rules
+   * 3. Parse Check Constraints into Validation Rules
    * Uses Naming Convention (Suffixes) to categorize constraints.
    */
   const validationMap: any = {};
+  const optionsMap: Record<string, string[]> = {};
   for (const cons of checkConstraints.rows) {
-    const def = cons.constraint_def.toLowerCase();
+    const def = cons.constraint_def;
     const colName = cons.involved_columns;
     validationMap[colName] = validationMap[colName] || { constraints: [] };
     validationMap[colName].constraints.push(cons);
@@ -288,6 +267,9 @@ export const getTableSchema = async (
       if (range?.[1]) validationMap[colName].maxDate = range[1].value;
     } else if (cons.constraint_name.endsWith(SIZE_CHECK_SUFFIX)) {
       validationMap[colName].maxSize = extractMaxSize(def);
+    } else if (cons.constraint_name.endsWith(OPTIONS_CHECK_SUFFIX)) {
+      const opts = extractOptions(def);
+      if (opts) optionsMap[colName] = opts;
     }
   }
 
@@ -310,7 +292,7 @@ export const getTableSchema = async (
       unique: uniqueSet.has(col.column_name),
       defaultValue: !hasSpecialDefault ? defaultValue : null,
       comment: commentMap[col.column_name] ?? null,
-      options: enumMap[col.column_name] ?? null,
+      options: optionsMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
       validation: Object.keys(validation).length ? validation : null,
       metadata: {
@@ -485,4 +467,23 @@ const extractMaxSize = (definition: string): number | null => {
   if (!match) return null;
 
   return parseInt(match[3], 10);
+};
+
+const extractOptions = (definition: string): string[] | null => {
+  const regex =
+    /(?:ANY\s*\(\s*ARRAY\s*\[\s*(.*?)\s*\]\s*\)|IN\s*\((.*?)\)|<@\s*ARRAY\[(.*?)\])/i;
+  const match = definition.match(regex);
+
+  if (!match) return null;
+
+  const rawContent = match[1] || match[2] || match[3];
+
+  return rawContent.split(',').map((item) => {
+    return item
+      .trim()
+      .split('::')[0]
+      .trim()
+      .replace(/^'|'$/g, '')
+      .replace(/''/g, "'");
+  });
 };

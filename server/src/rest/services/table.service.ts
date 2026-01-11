@@ -14,6 +14,8 @@ import {
   addDateRangeCheck,
   removeDateRangeCheck,
   ReferentialAction,
+  removeOptionsCheck,
+  addOptionsCheck,
 } from '../utils/column';
 
 export class TableService {
@@ -288,10 +290,8 @@ export class TableService {
     try {
       await schemaBuilder.alterTable(tableName, (tableBuilder) => {
         const columnBuilder = specificType(tableBuilder, {
-          tableName,
           name,
           dataType,
-          options,
           foreignKey,
         });
 
@@ -314,6 +314,13 @@ export class TableService {
         addRangeCheck(tableBuilder, tableName, name, minValue!, maxValue!);
         addDateRangeCheck(tableBuilder, tableName, name, minDate!, maxDate!);
         addSizeCheck(tableBuilder, tableName, name, maxSize!);
+        addOptionsCheck(
+          tableBuilder,
+          tableName,
+          name,
+          options!,
+          dataType === DataType.MultiSelect
+        );
       });
     } catch (error) {
       // Drop column
@@ -428,12 +435,10 @@ export class TableService {
       .withSchema(schemaName)
       .alterTable(tableName, (tableBuilder) => {
         const columnBuilder = specificType(tableBuilder, {
-          tableName,
           name: columnName,
           dataType: dataType || oldSchema.dataType,
-          options,
           foreignKey,
-        } as any).alter();
+        }).alter();
 
         if (newName !== oldSchema.name) {
           tableBuilder.renameColumn(columnName, newName);
@@ -560,6 +565,20 @@ export class TableService {
           }
 
           addSizeCheck(tableBuilder, tableName, newName, maxSize!);
+        }
+
+        if (
+          recreateConstraints ||
+          JSON.stringify(options) !== JSON.stringify(oldSchema.options)
+        ) {
+          removeOptionsCheck(tableBuilder, tableName, columnName);
+          addOptionsCheck(
+            tableBuilder,
+            tableName,
+            newName,
+            options!,
+            dataType === DataType.MultiSelect
+          );
         }
       })
       .then(() => {
