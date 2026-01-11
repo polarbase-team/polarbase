@@ -471,19 +471,22 @@ const extractMaxSize = (definition: string): number | null => {
 
 const extractOptions = (definition: string): string[] | null => {
   const regex =
-    /(?:ANY\s*\(\s*ARRAY\s*\[\s*(.*?)\s*\]\s*\)|IN\s*\((.*?)\)|<@\s*ARRAY\[(.*?)\])/i;
+    /(?:ANY\s*\(\s*ARRAY\s*\[\s*(.*?)\s*\]\s*\)|IN\s*\((.*?)\)|<@\s*ARRAY\[(.*?)\]|=\s*('(?:''|[^'])*'))/i;
   const match = definition.match(regex);
 
   if (!match) return null;
 
-  const rawContent = match[1] || match[2] || match[3];
+  const rawContent = match[1] || match[2] || match[3] || match[4];
 
-  return rawContent.split(',').map((item) => {
-    return item
-      .trim()
-      .split('::')[0]
-      .trim()
-      .replace(/^'|'$/g, '')
-      .replace(/''/g, "'");
-  });
+  return rawContent
+    .split(',')
+    .map((item) => {
+      return item
+        .trim()
+        .split('::')[0]
+        .trim()
+        .replace(/^'|'$/g, '')
+        .replace(/''/g, "'");
+    })
+    .filter((item) => item !== '');
 };
