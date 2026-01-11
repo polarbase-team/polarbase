@@ -81,7 +81,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
     if (!checkRateLimit(ip, REST_RATE_LIMIT, REST_PREFIX)) {
       set.status = 429;
-      return err('Too many requests', 429);
+      return err('Too many requests. Please try again later.', 429);
     }
   })
 
@@ -167,7 +167,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       const exists = await pg.schema.hasTable(table);
       if (!exists) {
         set.status = 404;
-        return err('Table not found');
+        return err(`Table "${table}" not found`);
       }
       return tableService.getSchema({ tableName: table });
     },
@@ -191,7 +191,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           minLength: 1,
           maxLength: 63,
           error:
-            'Invalid format. Use letters, numbers, or _ (start with letter/_).',
+            'Table name must start with a letter/_ and contain only alphanumeric characters (max 63).',
         }),
         tableComment: t.Optional(
           t.String({
@@ -200,12 +200,18 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
           })
         ),
         idType: t.Optional(
-          t.Union([
-            t.Literal('biginteger'),
-            t.Literal('integer'),
-            t.Literal('uuid'),
-            t.Literal('shortid'),
-          ])
+          t.Union(
+            [
+              t.Literal('biginteger'),
+              t.Literal('integer'),
+              t.Literal('uuid'),
+              t.Literal('shortid'),
+            ],
+            {
+              error:
+                'Invalid idType. Expected: biginteger, integer, uuid, or shortid.',
+            }
+          )
         ),
         timestamps: t.Optional(t.Boolean()),
       }),
@@ -229,7 +235,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
               minLength: 1,
               maxLength: 63,
               error:
-                'Invalid format. Use letters, numbers, or _ (start with letter/_).',
+                'Invalid format. Use letters, numbers, or _ (max 63 chars).',
             })
           ),
           tableComment: t.Optional(
@@ -241,7 +247,10 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
             )
           ),
         },
-        { minProperties: 1 }
+        {
+          minProperties: 1,
+          error: 'At least one field must be provided for update.',
+        }
       ),
     }
   )
@@ -280,9 +289,11 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
             minLength: 1,
             maxLength: 63,
             error:
-              'Invalid format. Use letters, numbers, or _ (start with letter/_).',
+              'Column name must be alphanumeric and start with a letter or underscore.',
           }),
-          dataType: t.Enum(DataType),
+          dataType: t.Enum(DataType, {
+            error: 'Unsupported dataType provided.',
+          }),
           nullable: t.Optional(t.Nullable(t.Boolean())),
           unique: t.Optional(t.Nullable(t.Boolean())),
           defaultValue: t.Optional(t.Nullable(t.Any())),
@@ -347,10 +358,9 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
             pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
             minLength: 1,
             maxLength: 63,
-            error:
-              'Invalid format. Use letters, numbers, or _ (start with letter/_).',
+            error: 'Invalid format. Use letters, numbers, or _ (max 63 chars).',
           }),
-          dataType: t.Enum(DataType),
+          dataType: t.Enum(DataType, { error: 'Invalid dataType.' }),
           nullable: t.Nullable(t.Boolean()),
           unique: t.Nullable(t.Boolean()),
           defaultValue: t.Nullable(t.Any()),
@@ -453,10 +463,23 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         fields: t.Optional(t.String()),
         search: t.Optional(t.String()),
         filter: t.Optional(t.String()),
-        sort: t.Optional(t.String({ pattern: '^[^:]+:(asc|desc)$' })),
+        sort: t.Optional(
+          t.String({
+            pattern: '^[^:]+:(asc|desc)$',
+            error: 'Sort format must be "field:asc" or "field:desc".',
+          })
+        ),
         expand: t.Optional(t.Union([t.String(), t.Array(t.String())])),
-        page: t.Optional(t.Numeric({ minimum: 1 })),
-        limit: t.Optional(t.Numeric({ minimum: 1, maximum: 10000 })),
+        page: t.Optional(
+          t.Numeric({ minimum: 1, error: 'Page must be a positive integer.' })
+        ),
+        limit: t.Optional(
+          t.Numeric({
+            minimum: 1,
+            maximum: 10000,
+            error: 'Limit must be between 1 and 10,000.',
+          })
+        ),
       }),
     }
   )
@@ -509,7 +532,11 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     ({ params: { table }, body }) => {
       return tableRecordService.insert({ tableName: table, records: [body] });
     },
-    { body: t.Record(t.String(), t.Any()) }
+    {
+      body: t.Record(t.String(), t.Any(), {
+        error: 'Payload must be a valid JSON object.',
+      }),
+    }
   )
 
   /**
@@ -529,7 +556,10 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         table: t.String(),
         id: t.Union([t.String(), t.Numeric()]),
       }),
-      body: t.Record(t.String(), t.Any(), { minProperties: 1 }),
+      body: t.Record(t.String(), t.Any(), {
+        minProperties: 1,
+        error: 'Update body cannot be empty.',
+      }),
     }
   )
 
@@ -564,6 +594,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       body: t.Array(t.Record(t.String(), t.Any()), {
         minItems: 1,
         maxItems: 10000,
+        error: 'Bulk create requires an array of 1 to 10,000 records.',
       }),
     }
   )
@@ -589,6 +620,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         {
           minItems: 1,
           maxItems: 10000,
+          error: 'Bulk update requires 1-10,000 items with valid ID and data.',
         }
       ),
     }
@@ -610,6 +642,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         ids: t.Array(t.Union([t.String(), t.Numeric()]), {
           minItems: 1,
           maxItems: 10000,
+          error:
+            'The "ids" array must contain between 1 and 10,000 identifiers.',
         }),
       }),
     }
