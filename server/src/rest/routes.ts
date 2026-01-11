@@ -187,7 +187,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     {
       body: t.Object({
         tableName: t.String({
-          pattern: '^[a-z_][a-z0-9_]*$',
+          pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
           minLength: 1,
           maxLength: 63,
           error:
@@ -273,7 +273,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({ table: t.String() }),
       body: t.Object(
         {
-          name: t.String({ pattern: '^[a-z0-9_]+$', minLength: 1 }),
+          name: t.String({ pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$', minLength: 1 }),
           dataType: t.Enum(DataType),
           nullable: t.Optional(t.Nullable(t.Boolean())),
           unique: t.Optional(t.Nullable(t.Boolean())),
@@ -339,7 +339,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({ table: t.String(), column: t.String() }),
       body: t.Object(
         {
-          name: t.String({ pattern: '^[a-z0-9_]+$', minLength: 1 }),
+          name: t.String({ pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$', minLength: 1 }),
           dataType: t.Enum(DataType),
           nullable: t.Nullable(t.Boolean()),
           unique: t.Nullable(t.Boolean()),
