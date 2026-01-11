@@ -1,0 +1,25 @@
+<p-drawer
+  [(visible)]="visible"
+  position="right"
+  header="Reference Picker"
+  styleClass="!w-300 custom-drawer"
+  (onShow)="onShow()"
+  (onHide)="onHide()"
+>
+  <ng-template #content>
+    @if (isReady()) {
+      <spreadsheet
+        [config]="config()"
+        [columns]="columns()"
+        [rows]="rows()"
+        (rowAction)="onRowAction($event)"
+      />
+    }
+  </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" (click)="cancel()" />
+      <p-button label="Save" (click)="save()" />
+    </div>
+  </ng-template>
+</p-drawer>

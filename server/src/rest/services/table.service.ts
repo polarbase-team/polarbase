@@ -13,6 +13,9 @@ import {
   getConstraintName,
   addDateRangeCheck,
   removeDateRangeCheck,
+  ReferentialAction,
+  removeOptionsCheck,
+  addOptionsCheck,
 } from '../utils/column';
 
 export class TableService {
@@ -208,12 +211,10 @@ export class TableService {
     tableName: string;
     column: {
       name: string;
-      dataType: DataType;
       nullable?: boolean | null;
       unique?: boolean | null;
       defaultValue?: any | null;
       comment?: string | null;
-      options?: string[] | null;
       validation?: {
         minLength?: number | null;
         maxLength?: number | null;
@@ -223,7 +224,33 @@ export class TableService {
         maxDate?: string | null;
         maxSize?: number | null;
       } | null;
-    };
+    } & (
+      | {
+          dataType: typeof DataType.Select | typeof DataType.MultiSelect;
+          options: string[];
+          foreignKey?: null;
+        }
+      | {
+          dataType: typeof DataType.Reference;
+          foreignKey: {
+            table: string;
+            column: { name: string; type: string };
+            onUpdate: ReferentialAction;
+            onDelete: ReferentialAction;
+          };
+          options?: null;
+        }
+      | {
+          dataType: Exclude<
+            DataType,
+            | typeof DataType.Select
+            | typeof DataType.MultiSelect
+            | typeof DataType.Reference
+          >;
+          options?: null;
+          foreignKey?: null;
+        }
+    );
   }) {
     const {
       name,
@@ -233,6 +260,7 @@ export class TableService {
       defaultValue,
       comment,
       options,
+      foreignKey,
       validation,
     } = column;
     const {
@@ -262,10 +290,9 @@ export class TableService {
     try {
       await schemaBuilder.alterTable(tableName, (tableBuilder) => {
         const columnBuilder = specificType(tableBuilder, {
-          tableName,
           name,
           dataType,
-          options,
+          foreignKey,
         });
 
         if (nullable) columnBuilder.nullable();
@@ -287,6 +314,13 @@ export class TableService {
         addRangeCheck(tableBuilder, tableName, name, minValue!, maxValue!);
         addDateRangeCheck(tableBuilder, tableName, name, minDate!, maxDate!);
         addSizeCheck(tableBuilder, tableName, name, maxSize!);
+        addOptionsCheck(
+          tableBuilder,
+          tableName,
+          name,
+          options!,
+          dataType === DataType.MultiSelect
+        );
       });
     } catch (error) {
       // Drop column
@@ -317,7 +351,6 @@ export class TableService {
       unique: boolean | null;
       defaultValue: any | null;
       comment: string | null;
-      options: string[] | null;
       validation: {
         minLength?: number | null;
         maxLength?: number | null;
@@ -327,7 +360,33 @@ export class TableService {
         maxDate?: string | null;
         maxSize?: number | null;
       } | null;
-    };
+    } & (
+      | {
+          dataType: typeof DataType.Select | typeof DataType.MultiSelect;
+          options: string[];
+          foreignKey?: null;
+        }
+      | {
+          dataType: typeof DataType.Reference;
+          foreignKey: {
+            table: string;
+            column: { name: string; type: string };
+            onUpdate: ReferentialAction;
+            onDelete: ReferentialAction;
+          };
+          options?: null;
+        }
+      | {
+          dataType: Exclude<
+            DataType,
+            | typeof DataType.Select
+            | typeof DataType.MultiSelect
+            | typeof DataType.Reference
+          >;
+          options?: null;
+          foreignKey?: null;
+        }
+    );
   }) {
     const {
       name: newName,
@@ -337,6 +396,7 @@ export class TableService {
       defaultValue,
       comment,
       options,
+      foreignKey,
       validation,
     } = column;
     const {
@@ -375,11 +435,10 @@ export class TableService {
       .withSchema(schemaName)
       .alterTable(tableName, (tableBuilder) => {
         const columnBuilder = specificType(tableBuilder, {
-          tableName,
           name: columnName,
           dataType: dataType || oldSchema.dataType,
-          options,
-        } as any).alter();
+          foreignKey,
+        }).alter();
 
         if (newName !== oldSchema.name) {
           tableBuilder.renameColumn(columnName, newName);
@@ -506,6 +565,20 @@ export class TableService {
           }
 
           addSizeCheck(tableBuilder, tableName, newName, maxSize!);
+        }
+
+        if (
+          recreateConstraints ||
+          JSON.stringify(options) !== JSON.stringify(oldSchema.options)
+        ) {
+          removeOptionsCheck(tableBuilder, tableName, columnName);
+          addOptionsCheck(
+            tableBuilder,
+            tableName,
+            newName,
+            options!,
+            dataType === DataType.MultiSelect
+          );
         }
       })
       .then(() => {

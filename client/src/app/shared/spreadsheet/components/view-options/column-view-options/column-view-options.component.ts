@@ -38,7 +38,7 @@ export class ColumnViewOptionsComponent {
 
   constructor() {
     effect(() => {
-      this.columns.set([...this.sourceColumns()]);
+      this.columns.set([...(this.sourceColumns() || [])]);
     });
   }
 

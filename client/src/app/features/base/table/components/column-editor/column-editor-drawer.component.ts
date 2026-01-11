@@ -26,9 +26,10 @@ import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FluidModule } from 'primeng/fluid';
-import { MenuModule } from 'primeng/menu';
-import { MenuItem } from 'primeng/api';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TooltipModule } from 'primeng/tooltip';
 
+import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyStrings } from '@app/core/utils';
 import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
@@ -46,7 +47,6 @@ import { EmailFieldEditorComponent } from '@app/shared/field-system/editors/emai
 import { UrlFieldEditorComponent } from '@app/shared/field-system/editors/url/editor.component';
 import { JSONFieldEditorComponent } from '@app/shared/field-system/editors/json/editor.component';
 import { GeoPointFieldEditorComponent } from '@app/shared/field-system/editors/geo-point/editor.component';
-import { SchemaService } from '../../services/schema.service';
 import {
   ColumnFormData,
   ColumnDefinition,
@@ -56,6 +56,16 @@ import {
 
 const DEFAULT_VALUE = {
   nullable: true,
+  unique: false,
+  defaultValue: null,
+  comment: null,
+  foreignKey: {
+    table: null,
+    column: null,
+    onUpdate: 'NO ACTION',
+    onDelete: 'NO ACTION',
+  },
+  options: [],
   validation: {},
 } as ColumnFormData;
 
@@ -78,7 +88,8 @@ const DEFAULT_VALUE = {
     InputNumberModule,
     DatePickerModule,
     FluidModule,
-    MenuModule,
+    SelectButtonModule,
+    TooltipModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -93,11 +104,9 @@ const DEFAULT_VALUE = {
     GeoPointFieldEditorComponent,
   ],
 })
-export class ColumnEditorDrawerComponent {
-  visible = model(false);
+export class ColumnEditorDrawerComponent extends DrawerComponent {
   table = input<TableDefinition>();
   column = input<ColumnDefinition>();
-  field = input<Field>();
   mode = input<'add' | 'edit'>('add');
 
   onSave = output<ColumnFormData>();
@@ -112,37 +121,53 @@ export class ColumnEditorDrawerComponent {
     icon: FIELD_ICON_MAP[DataType[t]],
   }));
   protected selectedDataType = signal<DataType>(null);
-  protected options = signal<string[]>([]);
-  protected enumTypeMenuItems: MenuItem[] | undefined;
   protected internalField: Field;
+
+  // Reference type
+  protected tableOptions: { name: string; value: string }[] | undefined;
+  protected referentialActions: { name: string; value: string; help: string }[] = [
+    {
+      name: 'No Action',
+      value: 'NO ACTION',
+      help: 'Prevents changes if related data exists.',
+    },
+    {
+      name: 'Set Null',
+      value: 'SET NULL',
+      help: 'Keeps record but clears the connection.',
+    },
+    {
+      name: 'Cascade',
+      value: 'CASCADE',
+      help: 'Automatically syncs updates and deletions.',
+    },
+  ];
 
   constructor(
     private destroyRef: DestroyRef,
-    private schemaService: SchemaService,
     private tblService: TableService,
   ) {
+    super();
+
     effect(() => {
       const column = { ...DEFAULT_VALUE, ...this.column() };
       column.validation ??= {};
-      this.columnFormData = column;
+
       this.selectedDataType.set(column.dataType);
-      this.options.set(column.options || []);
+
+      const { primary, metadata, ...remain } = column;
+      this.columnFormData = remain;
     });
 
     effect(() => {
-      this.internalField = this.field();
+      this.selectedDataType();
+      this.internalField = this.tblService.buildField(this.columnFormData as ColumnDefinition);
     });
 
     effect(() => {
-      const options = this.options() || [];
-      this.columnFormData.options = [...options];
-
-      switch (this.internalField?.dataType) {
-        case DataType.Select:
-          (this.internalField as SelectField).options = [...options];
-          break;
-        case DataType.MultiSelect:
-          (this.internalField as MultiSelectField).options = [...options];
+      this.tableOptions = [];
+      for (const table of this.tblService.tables()) {
+        this.tableOptions.push({ name: table.tableName, value: table.tableName });
       }
     });
   }
@@ -152,7 +177,7 @@ export class ColumnEditorDrawerComponent {
   }
 
   protected cancel() {
-    this.visible.set(false);
+    this.close();
   }
 
   protected reset() {
@@ -168,7 +193,31 @@ export class ColumnEditorDrawerComponent {
 
     let fn: Observable<any>;
 
+    // Sanitize the column form data by removing empty strings
     const formData = sanitizeEmptyStrings(this.columnFormData);
+
+    // Handle option and foreign key field removal depending on selected data type
+    switch (this.selectedDataType()) {
+      case DataType.Select:
+      case DataType.MultiSelect:
+        // For Select and MultiSelect, retain 'options' property as needed
+        delete formData.foreignKey;
+        break;
+      case DataType.Reference:
+        // For Reference type, retain 'foreignKey' property as needed
+        delete formData.options;
+        break;
+      default:
+        // For all other types, remove 'options' and 'foreignKey' to avoid sending unnecessary data
+        delete formData.options;
+        delete formData.foreignKey;
+    }
+
+    // Remove empty 'validation' object if no validation rules are present
+    if (!Object.keys(formData.validation).length) {
+      formData.validation = null;
+    }
+
     if (this.mode() === 'edit') {
       fn = this.tblService.updateColumn(this.table().tableName, this.column().name, formData);
     } else {
@@ -179,49 +228,52 @@ export class ColumnEditorDrawerComponent {
       finalize(() => this.isSaving.set(false)),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(({ data: column }) => {
-      this.visible.set(false);
       this.onSave.emit(column);
       this.reset();
+      this.close();
     });
   }
 
-  protected onSelectDataType(dataType: DataType) {
+  protected onDataTypeSelect(dataType: DataType) {
     this.columnFormData.dataType = dataType;
     this.columnFormData.defaultValue = null;
-    this.columnFormData.validation = {};
-    this.internalField = this.tblService.buildField(this.columnFormData as ColumnDefinition);
+    this.columnFormData.validation = { ...DEFAULT_VALUE.validation };
+    this.columnFormData.foreignKey = { ...DEFAULT_VALUE.foreignKey };
   }
 
   protected addOption() {
-    this.options.update((arr) => [...arr, '']);
+    this.columnFormData.options.push('');
+    this.onOptionsUpdate();
   }
 
   protected editOption(idx: number, option: string) {
-    this.options.update((arr) => arr.map((o, i) => (i === idx ? option : o)));
+    this.columnFormData.options[idx] = option;
+    this.onOptionsUpdate();
   }
 
   protected removeOption(idx: number) {
-    this.options.update((arr) => arr.filter((o, i) => i !== idx));
+    this.columnFormData.options.splice(idx, 1);
+    this.onOptionsUpdate();
   }
 
-  protected onEnumTypesMenuOpen() {
-    if (this.enumTypeMenuItems?.length) return;
+  protected onTableSelect(tableName: string) {
+    const table = this.tblService.tables().find((t) => t.tableName === tableName);
+    if (!table) return;
 
-    this.schemaService
-      .getEnumTypes()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((enumTypes) => {
-        console.log(enumTypes);
-        this.enumTypeMenuItems = [];
-        for (const enumType of enumTypes) {
-          this.enumTypeMenuItems.push({
-            label: enumType.enumName,
-            options: enumType.enumValues.join(', '),
-            command: () => {
-              this.options.set(enumType.enumValues);
-            },
-          });
-        }
-      });
+    this.columnFormData.foreignKey.table = table.tableName;
+    this.columnFormData.foreignKey.column = table.tablePrimaryKey;
+  }
+
+  private onOptionsUpdate() {
+    const options = this.columnFormData.options;
+    this.columnFormData.options = [...options];
+
+    switch (this.internalField?.dataType) {
+      case DataType.Select:
+        (this.internalField as SelectField).options = [...options];
+        break;
+      case DataType.MultiSelect:
+        (this.internalField as MultiSelectField).options = [...options];
+    }
   }
 }

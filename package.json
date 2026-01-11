@@ -1,6 +1,6 @@
 {
   "name": "polarbase",
-  "version": "0.2.1-beta",
+  "version": "0.3.0-beta",
   "author": "Qui Nguyen",
   "devDependencies": {
     "concurrently": "^8.0.0"
@@ -30,5 +30,8 @@
   "workspaces": [
     "client",
     "server"
-  ]
+  ],
+  "dependencies": {
+    "lru-cache": "^11.2.4"
+  }
 }

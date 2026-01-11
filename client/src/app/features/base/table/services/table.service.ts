@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, mergeAll } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -14,11 +14,12 @@ import { LongTextFieldConfig } from '@app/shared/field-system/models/long-text/f
 import { JSONFieldConfig } from '@app/shared/field-system/models/json/field.interface';
 import { DateFieldConfig } from '@app/shared/field-system/models/date/field.interface';
 import { buildField } from '@app/shared/field-system/models/utils';
+import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/field.interface';
 
 export interface TableDefinition {
   tableName: string;
   tableComment: string;
-  tableColumnPk: string;
+  tablePrimaryKey: { name: string; type: string };
 }
 
 export interface TableFormData {
@@ -37,7 +38,12 @@ export interface ColumnDefinition {
   defaultValue: any | null;
   comment: string | null;
   options: string[] | null;
-  foreignKey: { table: string; column: string } | null;
+  foreignKey: {
+    table: string;
+    column: { name: string; type: string };
+    onUpdate?: string;
+    onDelete?: string;
+  } | null;
   validation: {
     minLength?: number | null;
     maxLength?: number | null;
@@ -50,7 +56,7 @@ export interface ColumnDefinition {
   metadata: any;
 }
 
-export interface ColumnFormData extends Omit<ColumnDefinition, 'primary'> {}
+export interface ColumnFormData extends Omit<ColumnDefinition, 'primary' | 'metadata'> {}
 
 const DATA_TYPE_MAPPING = {
   integer: DataType.Integer,
@@ -65,12 +71,14 @@ const DATA_TYPE_MAPPING = {
   url: DataType.Url,
   json: DataType.JSON,
   'geo-point': DataType.GeoPoint,
+  reference: DataType.Reference,
 };
 
 @Injectable({
   providedIn: 'root',
 })
 export class TableService {
+  tables = signal<TableDefinition[]>([]);
   selectedTable = signal<TableDefinition>(null);
 
   private apiUrl = `${environment.apiUrl}/rest`;
@@ -84,9 +92,13 @@ export class TableService {
   }
 
   getTables() {
-    return this.http
-      .get<ApiResponse<TableDefinition[]>>(`${this.apiUrl}/tables`)
-      .pipe(map((res) => res.data));
+    return this.http.get<ApiResponse<TableDefinition[]>>(`${this.apiUrl}/tables`).pipe(
+      map((res) => {
+        const tables = res.data;
+        this.tables.set(tables);
+        return tables;
+      }),
+    );
   }
 
   getTableSchema(tableName: string) {
@@ -129,7 +141,15 @@ export class TableService {
   }
 
   getRecords(tableName: string): Observable<Record<string, any>[]> {
-    return this.http.get(`${this.apiUrl}/${tableName}`).pipe(map((res) => res['data']['rows']));
+    return this.http
+      .get(`${this.apiUrl}/${tableName}?expand=all`)
+      .pipe(map((res) => res['data']['rows']));
+  }
+
+  getRecord(tableName: string, recordId: number | string): Observable<Record<string, any>[]> {
+    return this.http
+      .get(`${this.apiUrl}/${tableName}/${recordId}?expand=all`)
+      .pipe(map((res) => res['data']));
   }
 
   createRecords(tableName: string, records: Record<string, any>[]) {
@@ -198,6 +218,14 @@ export class TableService {
         (config as JSONFieldConfig).maxSize = column.validation?.maxSize;
         break;
       case DataType.GeoPoint:
+        break;
+      case DataType.Reference:
+        (config as ReferenceFieldConfig).referenceTo = column.foreignKey.table;
+        (config as ReferenceFieldConfig).resources = {
+          loadSchema: this.getTableSchema.bind(this),
+          loadRecords: this.getRecords.bind(this),
+          buildField: this.buildField.bind(this),
+        };
         break;
     }
 

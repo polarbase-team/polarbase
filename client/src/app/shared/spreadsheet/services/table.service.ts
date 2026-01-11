@@ -19,6 +19,8 @@ import { TableRow } from '../models/table-row';
 import { TableColumn } from '../models/table-column';
 import { TableCell } from '../models/table-cell';
 import { TableActionType } from '../events/table';
+import { ReferenceData } from '@app/shared/field-system/models/reference/field.interface';
+import { ReferenceViewDetailEvent } from '../components/field-cell/reference/cell.component';
 
 export const Dimension = {
   HeaderHeight: 36,
@@ -85,6 +87,14 @@ export type Layout = Partial<{
 const DEFAULT_CONFIG: TableConfig = {
   dataStream: false,
   sideSpacing: 0,
+  allowSelectAllRows: true,
+  toolbar: {
+    customize: true,
+    group: true,
+    sort: true,
+    rowSize: true,
+    search: true,
+  },
   column: {
     frozenCount: 0,
     maxFrozenRatio: 0.65,
@@ -537,6 +547,10 @@ export class TableService extends TableBaseService {
       type: TableActionType.Freeze,
       payload: index,
     });
+  }
+
+  viewReferenceDetail(event: ReferenceViewDetailEvent) {
+    this.host.action.emit({ type: TableActionType.ViewReferenceDetail, payload: event });
   }
 
   positionFillHandle(index = this.layout.cell.selection?.end, retryIfNotRendered?: boolean) {

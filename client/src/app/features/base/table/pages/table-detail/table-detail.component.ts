@@ -17,11 +17,14 @@ import { DividerModule } from 'primeng/divider';
 import { MenuItem } from 'primeng/api';
 import { SplitButtonModule } from 'primeng/splitbutton';
 
+import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
+import { getReferenceValue } from '@app/shared/field-system/models/reference/field.object';
 import { TableColumn } from '@app/shared/spreadsheet/models/table-column';
 import { TableRow } from '@app/shared/spreadsheet/models/table-row';
 import { TableConfig } from '@app/shared/spreadsheet/models/table';
 import { SpreadsheetComponent } from '@app/shared/spreadsheet/spreadsheet.component';
+import { TableAction, TableActionType } from '@app/shared/spreadsheet/events/table';
 import {
   TableRowAction,
   TableRowActionType,
@@ -36,10 +39,17 @@ import {
   TableColumnAction,
   TableColumnActionType,
 } from '@app/shared/spreadsheet/events/table-column';
+import { ReferenceViewDetailEvent } from '@app/shared/spreadsheet/components/field-cell/reference/cell.component';
 import { ColumnEditorDrawerComponent } from '../../components/column-editor/column-editor-drawer.component';
 import { RecordEditorDrawerComponent } from '../../components/record-editor/record-editor-drawer.component';
 import { ColumnDefinition, TableDefinition, TableService } from '../../services/table.service';
 import { TableRealtimeService } from '../../services/table-realtime.service';
+
+interface UpdatedRecord {
+  table: TableDefinition;
+  fields: Field[];
+  data: Record<string, any>;
+}
 
 @Component({
   selector: 'table-detail',
@@ -61,15 +71,12 @@ export class TableDetailComponent {
   });
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
-  protected fields = computed(() => {
-    return this.columns().map((c) => c.field);
-  });
+  protected isReady = signal(false);
   protected tblService = inject(TableService);
   protected updatedColumn: ColumnDefinition;
-  protected updatedColumnField: Field;
   protected updatedColumnMode: 'add' | 'edit' = 'add';
   protected visibleColumnEditor: boolean;
-  protected updatedRecord: Record<string, any>;
+  protected updatedRecord: UpdatedRecord = {} as UpdatedRecord;
   protected updatedRecordMode: 'add' | 'edit' | 'view' = 'add';
   protected visibleRecordEditor: boolean;
   protected insertMenuItems: MenuItem[] = [
@@ -134,6 +141,33 @@ export class TableDetailComponent {
       });
   }
 
+  protected onTableAction(action: TableAction) {
+    switch (action.type) {
+      case TableActionType.ViewReferenceDetail: {
+        const { field, data } = action.payload as ReferenceViewDetailEvent;
+        const tableName = field.referenceTo;
+        const table = this.tblService.tables().find((t) => t.tableName === tableName);
+        if (!table) return;
+
+        this.tblService
+          .getTableSchema(tableName)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((columnDefs) => {
+            const fields = columnDefs.map((c) => this.tblService.buildField(c));
+            this.tblService
+              .getRecord(tableName, getReferenceValue(data))
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe((record) => {
+                this.updatedRecord = { table, fields, data: record };
+                this.updatedRecordMode = 'edit';
+                this.visibleRecordEditor = true;
+              });
+          });
+        break;
+      }
+    }
+  }
+
   protected onColumnAction(action: TableColumnAction) {
     const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
@@ -155,7 +189,7 @@ export class TableDetailComponent {
   }
 
   protected onRowAction(action: TableRowAction) {
-    const { tableName, tableColumnPk } = this.tblService.selectedTable();
+    const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
       case TableRowActionType.Add:
         const rows = [];
@@ -170,7 +204,7 @@ export class TableDetailComponent {
           .subscribe(({ data }) => {
             for (let i = 0; i < rows.length; i++) {
               const row = rows[i];
-              row.id = data.returning[i][tableColumnPk || 'id'];
+              row.id = data.returning[i]['id'];
               row.data = data.returning[i];
             }
             this.rows.update((arr) => [...arr]);
@@ -184,7 +218,11 @@ export class TableDetailComponent {
           .subscribe();
         break;
       case TableRowActionType.Expand:
-        this.updatedRecord = action.payload['data'];
+        this.updatedRecord = {
+          table: this.tblService.selectedTable(),
+          fields: this.columns().map((c) => c.field),
+          data: action.payload['data'],
+        };
         this.updatedRecordMode = 'edit';
         this.visibleRecordEditor = true;
         break;
@@ -219,8 +257,7 @@ export class TableDetailComponent {
   }
 
   protected onRecordSave(savedRecord: Record<string, any>) {
-    const { tableColumnPk } = this.tblService.selectedTable();
-    const recordId = savedRecord[tableColumnPk];
+    const recordId = savedRecord['id'];
 
     if (this.updatedRecordMode === 'add') {
       const newRow: TableRow = {
@@ -243,13 +280,16 @@ export class TableDetailComponent {
 
   protected editColumn(column: TableColumn) {
     this.updatedColumn = column.field.params;
-    this.updatedColumnField = column.field;
     this.updatedColumnMode = 'edit';
     this.visibleColumnEditor = true;
   }
 
   protected addNewRecord() {
-    this.updatedRecord = {} as TableRow;
+    this.updatedRecord = {
+      table: this.tblService.selectedTable(),
+      fields: this.columns().map((c) => c.field),
+      data: {},
+    };
     this.updatedRecordMode = 'add';
     this.visibleRecordEditor = true;
   }
@@ -263,30 +303,55 @@ export class TableDetailComponent {
       .getTableSchema(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((columnDefs) => {
-        const columns: TableColumn[] = columnDefs.map((c) => ({
-          id: c.name,
-          primary: c.primary,
-          editable: !c.primary,
-          field: this.tblService.buildField(c),
-        }));
         this.columns.set(null);
-        setTimeout(() => this.columns.set(columns));
-        if (!columns.length) return;
 
-        this.loadTableData(table);
+        if (!columnDefs.length) return;
+
+        const columns: TableColumn[] = [];
+        const references = new Map<string, string>();
+        for (const c of columnDefs) {
+          columns.push({
+            id: c.name,
+            primary: c.primary,
+            editable: !c.primary,
+            field: this.tblService.buildField(c),
+          });
+          if (c.dataType === DataType.Reference) {
+            references.set(c.name, c.foreignKey.table);
+          }
+        }
+        setTimeout(() => {
+          this.columns.set(columns);
+          this.isReady.set(true);
+        });
+
+        this.loadTableData(table, references);
       });
   }
 
-  private loadTableData(table: TableDefinition) {
+  private loadTableData(table: TableDefinition, references: Map<string, string>) {
     this.tblService
       .getRecords(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((arr) => {
-        const rows: TableRow[] = arr.map((it: any) => ({
-          id: it[table.tableColumnPk || 'id'],
-          data: it,
-        }));
-        this.rows.set(rows);
+      .subscribe((records) => {
+        this.rows.set(null);
+
+        if (!records) return;
+
+        const rows: TableRow[] = records.map((record: any) => {
+          return {
+            id: record.id,
+            data: {
+              ...record,
+              ...Object.fromEntries(
+                Array.from(references.entries())
+                  .filter(([key]) => key in record)
+                  .map(([key, refKey]) => [key, record[refKey]]),
+              ),
+            },
+          };
+        });
+        setTimeout(() => this.rows.set(rows));
       });
   }
 }
