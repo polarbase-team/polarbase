@@ -56,7 +56,7 @@ export interface ColumnDefinition {
   metadata: any;
 }
 
-export interface ColumnFormData extends Omit<ColumnDefinition, 'primary'> {}
+export interface ColumnFormData extends Omit<ColumnDefinition, 'primary' | 'metadata'> {}
 
 const DATA_TYPE_MAPPING = {
   integer: DataType.Integer,

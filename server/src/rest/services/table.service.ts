@@ -209,18 +209,10 @@ export class TableService {
     tableName: string;
     column: {
       name: string;
-      dataType: DataType;
       nullable?: boolean | null;
       unique?: boolean | null;
       defaultValue?: any | null;
       comment?: string | null;
-      options?: string[] | null;
-      foreignKey?: {
-        table: string;
-        column: { name: string; type: string };
-        onUpdate: ReferentialAction;
-        onDelete: ReferentialAction;
-      } | null;
       validation?: {
         minLength?: number | null;
         maxLength?: number | null;
@@ -230,7 +222,33 @@ export class TableService {
         maxDate?: string | null;
         maxSize?: number | null;
       } | null;
-    };
+    } & (
+      | {
+          dataType: typeof DataType.Select | typeof DataType.MultiSelect;
+          options: string[];
+          foreignKey?: null;
+        }
+      | {
+          dataType: typeof DataType.Reference;
+          foreignKey: {
+            table: string;
+            column: { name: string; type: string };
+            onUpdate: ReferentialAction;
+            onDelete: ReferentialAction;
+          };
+          options?: null;
+        }
+      | {
+          dataType: Exclude<
+            DataType,
+            | typeof DataType.Select
+            | typeof DataType.MultiSelect
+            | typeof DataType.Reference
+          >;
+          options?: null;
+          foreignKey?: null;
+        }
+    );
   }) {
     const {
       name,
@@ -326,13 +344,6 @@ export class TableService {
       unique: boolean | null;
       defaultValue: any | null;
       comment: string | null;
-      options: string[] | null;
-      foreignKey: {
-        table: string;
-        column: { name: string; type: string };
-        onUpdate: ReferentialAction;
-        onDelete: ReferentialAction;
-      } | null;
       validation: {
         minLength?: number | null;
         maxLength?: number | null;
@@ -342,7 +353,33 @@ export class TableService {
         maxDate?: string | null;
         maxSize?: number | null;
       } | null;
-    };
+    } & (
+      | {
+          dataType: typeof DataType.Select | typeof DataType.MultiSelect;
+          options: string[];
+          foreignKey?: null;
+        }
+      | {
+          dataType: typeof DataType.Reference;
+          foreignKey: {
+            table: string;
+            column: { name: string; type: string };
+            onUpdate: ReferentialAction;
+            onDelete: ReferentialAction;
+          };
+          options?: null;
+        }
+      | {
+          dataType: Exclude<
+            DataType,
+            | typeof DataType.Select
+            | typeof DataType.MultiSelect
+            | typeof DataType.Reference
+          >;
+          options?: null;
+          foreignKey?: null;
+        }
+    );
   }) {
     const {
       name: newName,
@@ -352,6 +389,7 @@ export class TableService {
       defaultValue,
       comment,
       options,
+      foreignKey,
       validation,
     } = column;
     const {
@@ -394,6 +432,7 @@ export class TableService {
           name: columnName,
           dataType: dataType || oldSchema.dataType,
           options,
+          foreignKey,
         } as any).alter();
 
         if (newName !== oldSchema.name) {

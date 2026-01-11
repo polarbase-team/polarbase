@@ -8,7 +8,7 @@ import { apiKeyAuth } from '../api-keys/auth';
 import { SchemaService } from './services/schema.service';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
-import { DataType, ReferentialAction } from './utils/column';
+import { Column, DataType, ReferentialAction } from './utils/column';
 import { WhereFilter } from './utils/record';
 
 const REST_RATE_LIMIT = Number(process.env.REST_RATE_LIMIT) || 100;
@@ -235,60 +235,58 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   )
 
   /**
-   * POST /rest/tables/:table → create new column
+   * POST /rest/tables/:table/columns → create new column
    */
   .post(
     '/tables/:table/columns',
     ({ params: { table }, body }) => {
       return tableService.createColumn({
         tableName: table,
-        column: {
-          name: body.name,
-          dataType: body.dataType as DataType,
-          nullable: body.nullable,
-          unique: body.unique,
-          defaultValue: body.defaultValue,
-          comment: body.comment,
-          options: body.options,
-          foreignKey: body.foreignKey,
-          validation: body.validation,
-        },
+        column: body as any,
       });
     },
     {
       params: t.Object({ table: t.String() }),
-      body: t.Object({
-        name: t.String({ minLength: 1 }),
-        dataType: t.Enum(DataType),
-        nullable: t.Optional(t.Nullable(t.Boolean())),
-        unique: t.Optional(t.Nullable(t.Boolean())),
-        defaultValue: t.Optional(t.Nullable(t.Any())),
-        comment: t.Optional(t.Nullable(t.String())),
-        options: t.Optional(t.Nullable(t.Array(t.String()))),
-        foreignKey: t.Optional(
-          t.Nullable(
-            t.Object({
-              table: t.String(),
-              column: t.Object({ name: t.String(), type: t.String() }),
-              onUpdate: t.Enum(ReferentialAction),
-              onDelete: t.Enum(ReferentialAction),
-            })
-          )
-        ),
-        validation: t.Optional(
-          t.Nullable(
-            t.Object({
-              minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
-              maxLength: t.Optional(t.Nullable(t.Numeric({ minimum: 1 }))),
-              minValue: t.Optional(t.Nullable(t.Numeric())),
-              maxValue: t.Optional(t.Nullable(t.Numeric())),
-              minDate: t.Optional(t.Nullable(t.String())),
-              maxDate: t.Optional(t.Nullable(t.String())),
-              maxSize: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
-            })
-          )
-        ),
-      }),
+      body: t.Object(
+        {
+          name: t.String({ minLength: 1 }),
+          dataType: t.Enum(DataType),
+          nullable: t.Optional(t.Nullable(t.Boolean())),
+          unique: t.Optional(t.Nullable(t.Boolean())),
+          defaultValue: t.Optional(t.Nullable(t.Any())),
+          comment: t.Optional(t.Nullable(t.String())),
+          options: t.Optional(t.Nullable(t.Array(t.String()))),
+          foreignKey: t.Optional(
+            t.Nullable(
+              t.Object({
+                table: t.String(),
+                column: t.Object({ name: t.String(), type: t.String() }),
+                onUpdate: t.Enum(ReferentialAction),
+                onDelete: t.Enum(ReferentialAction),
+              })
+            )
+          ),
+          validation: t.Optional(t.Nullable(t.Any())),
+        },
+        {
+          error: (value) => {
+            const { dataType, options, foreignKey } =
+              value as unknown as Column;
+
+            if (
+              (dataType === DataType.Select ||
+                dataType === DataType.MultiSelect) &&
+              (!options || options.length === 0)
+            ) {
+              return 'Options are required and must not be empty for Select/MultiSelect types';
+            }
+
+            if (dataType === DataType.Reference && !foreignKey) {
+              return 'ForeignKey configuration is required for Reference type';
+            }
+          },
+        }
+      ),
     }
   )
 
@@ -301,49 +299,51 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       return tableService.updateColumn({
         tableName: table,
         columnName: column,
-        column: {
-          name: body.name,
-          dataType: body.dataType as DataType,
-          nullable: body.nullable,
-          unique: body.unique,
-          defaultValue: body.defaultValue,
-          comment: body.comment,
-          options: body.options,
-          foreignKey: body.foreignKey,
-          validation: body.validation,
-        },
+        column: body as any,
       });
     },
     {
       params: t.Object({ table: t.String(), column: t.String() }),
-      body: t.Object({
-        name: t.String({ minLength: 1 }),
-        dataType: t.Enum(DataType),
-        nullable: t.Nullable(t.Boolean()),
-        unique: t.Nullable(t.Boolean()),
-        defaultValue: t.Nullable(t.Any()),
-        comment: t.Nullable(t.String()),
-        options: t.Nullable(t.Array(t.String())),
-        foreignKey: t.Nullable(
-          t.Object({
-            table: t.String(),
-            column: t.Object({ name: t.String(), type: t.String() }),
-            onUpdate: t.Enum(ReferentialAction),
-            onDelete: t.Enum(ReferentialAction),
-          })
-        ),
-        validation: t.Nullable(
-          t.Object({
-            minLength: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
-            maxLength: t.Optional(t.Nullable(t.Numeric({ minimum: 1 }))),
-            minValue: t.Optional(t.Nullable(t.Numeric())),
-            maxValue: t.Optional(t.Nullable(t.Numeric())),
-            minDate: t.Optional(t.Nullable(t.String())),
-            maxDate: t.Optional(t.Nullable(t.String())),
-            maxSize: t.Optional(t.Nullable(t.Numeric({ minimum: 0 }))),
-          })
-        ),
-      }),
+      body: t.Object(
+        {
+          name: t.String({ minLength: 1 }),
+          dataType: t.Enum(DataType),
+          nullable: t.Nullable(t.Boolean()),
+          unique: t.Nullable(t.Boolean()),
+          defaultValue: t.Nullable(t.Any()),
+          comment: t.Nullable(t.String()),
+          validation: t.Nullable(t.Any()),
+          options: t.Optional(t.Nullable(t.Array(t.String()))),
+          foreignKey: t.Optional(
+            t.Nullable(
+              t.Object({
+                table: t.String(),
+                column: t.Object({ name: t.String(), type: t.String() }),
+                onUpdate: t.Enum(ReferentialAction),
+                onDelete: t.Enum(ReferentialAction),
+              })
+            )
+          ),
+        },
+        {
+          error: (value) => {
+            const { dataType, options, foreignKey } =
+              value as unknown as Column;
+
+            if (
+              (dataType === DataType.Select ||
+                dataType === DataType.MultiSelect) &&
+              (!options || options.length === 0)
+            ) {
+              return 'Options are required for Select/MultiSelect types';
+            }
+
+            if (dataType === DataType.Reference && !foreignKey) {
+              return 'ForeignKey configuration is required for Reference type';
+            }
+          },
+        }
+      ),
     }
   )
 

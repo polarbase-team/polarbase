@@ -59,6 +59,9 @@ import {
 
 const DEFAULT_VALUE = {
   nullable: true,
+  unique: false,
+  defaultValue: null,
+  comment: null,
   foreignKey: {
     table: null,
     column: null,
@@ -157,8 +160,11 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     effect(() => {
       const column = { ...DEFAULT_VALUE, ...this.column() };
       column.validation ??= {};
+
       this.selectedDataType.set(column.dataType);
-      this.columnFormData = column;
+
+      const { primary, metadata, ...remain } = column;
+      this.columnFormData = remain;
     });
 
     effect(() => {
@@ -217,7 +223,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
     // Remove empty 'validation' object if no validation rules are present
     if (!Object.keys(formData.validation).length) {
-      delete formData.validation;
+      formData.validation = null;
     }
 
     if (this.mode() === 'edit') {
