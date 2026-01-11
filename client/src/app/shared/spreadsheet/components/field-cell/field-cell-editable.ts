@@ -31,11 +31,15 @@ export class FieldCellEditable<T = any> extends FieldCellTouchable<T> {
     this.onDataChange();
   }
 
-  save(data: T = this.data) {
-    this.data = data ?? null;
-    this.cdRef.markForCheck();
+  save(data?: T) {
+    if (data !== undefined) {
+      this.data = data;
+      this.cdRef.markForCheck();
+    } else {
+      data = this.data;
+    }
     this.onSave();
-    this.onSaveCallback?.(this.data);
+    this.onSaveCallback?.(data ?? null);
   }
 
   protected override onDeselect() {

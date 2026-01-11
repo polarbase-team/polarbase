@@ -23,6 +23,7 @@ const logService = (name: string, status: boolean, extra?: string) => {
 };
 
 const APP_NAME = process.env.NAME || 'PolarBase';
+const APP_VERSION = process.env.VERSION || 'v0.0.0-development';
 const APP_HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
 const APP_PORT = Number(process.env.PORT || '3000');
 const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
@@ -121,6 +122,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
   // Health check
   app.get('/health', () => ({
     status: 'ok',
+    version: APP_VERSION,
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     services: {

@@ -1,8 +1,11 @@
 import { Component, output, model, input, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { EditorModule } from 'primeng/editor';
+
+import { DrawerComponent } from '@app/core/components/drawer.component';
 
 @Component({
   selector: 'rich-text-editor-drawer',
@@ -11,31 +14,20 @@ import { EditorModule } from 'primeng/editor';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, DrawerModule, ButtonModule, EditorModule],
 })
-export class RichTextEditorDrawerComponent {
+export class RichTextEditorDrawerComponent extends DrawerComponent {
   value = model('');
-  visible = model(false);
   viewOnly = input(false);
 
   onSave = output<string>();
   onCancel = output();
-  onOpen = output();
-  onClose = output();
-
-  protected onShow() {
-    this.onOpen.emit();
-  }
-
-  protected onHide() {
-    this.onClose.emit();
-  }
 
   protected save() {
-    this.visible.set(false);
     this.onSave.emit(this.value());
+    this.close();
   }
 
   protected cancel() {
-    this.visible.set(false);
     this.onCancel.emit();
+    this.close();
   }
 }

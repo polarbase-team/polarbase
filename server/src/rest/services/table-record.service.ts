@@ -1,8 +1,8 @@
 import { Knex } from 'knex';
 
 import pg from '../../plugins/pg';
-import { getTableSchema } from '../utils/table';
-import { DataType } from '../utils/column';
+import { getCachedTableSchema, getTableSchema } from '../utils/table';
+import { Column, DataType } from '../utils/column';
 import { buildWhereClause, WhereFilter } from '../utils/record';
 
 export class TableRecordService {
@@ -17,6 +17,7 @@ export class TableRecordService {
       where?: Record<string, any>;
       search?: string;
       fields?: string;
+      expandFields?: Record<string, string>;
       order?: string;
       page?: number;
       limit?: number;
@@ -26,28 +27,41 @@ export class TableRecordService {
       where,
       search,
       fields,
+      expandFields,
       order = 'id:asc',
       page = 1,
       limit = 10000,
     } = query;
 
-    let qb = pg(tableName).withSchema(schemaName);
+    const cols = await getCachedTableSchema(pg, schemaName, tableName);
+    const validColumnNames = cols.map((c) => c.name);
+
+    let qb = pg(tableName).withSchema(schemaName).as(tableName);
 
     // WHERE
-    if (where) qb = qb.where(where);
+    if (where) {
+      const prefixedWhere: Record<string, any> = {};
+      for (const [key, value] of Object.entries(where)) {
+        if (validColumnNames.includes(key)) {
+          prefixedWhere[`${tableName}.${key}`] = value;
+        }
+      }
+      qb = qb.where(prefixedWhere);
+    }
 
     // Global SEARCH across text columns
     if (search && search.trim()) {
-      const cols = await getTableSchema(pg, schemaName, tableName);
+      const safeSearch = search.trim().replace(/[%_]/g, '\\$&');
       const textColumns = cols.filter((col) => col.dataType === DataType.Text);
 
       if (textColumns.length > 0) {
         qb = qb.where((builder) => {
           textColumns.forEach((col, index) => {
+            const fullColName = `${tableName}.${col.name}`;
             if (index === 0) {
-              builder.where(col.name, 'ilike', `%${search.trim()}%`);
+              builder.where(fullColName, 'ilike', `%${safeSearch}%`);
             } else {
-              builder.orWhere(col.name, 'ilike', `%${search.trim()}%`);
+              builder.orWhere(fullColName, 'ilike', `%${safeSearch}%`);
             }
           });
         });
@@ -56,16 +70,65 @@ export class TableRecordService {
 
     const countAllQb = qb.clone();
 
-    // SELECT (if specified)
+    // EXPAND FIELDS
+    if (expandFields) {
+      const effectiveExpands: Record<string, string> = {};
+      const shouldExpandAll =
+        expandFields['*'] !== undefined || expandFields['all'] !== undefined;
+
+      if (shouldExpandAll) {
+        cols.forEach((col) => {
+          if (col.foreignKey) {
+            effectiveExpands[col.name] = col.foreignKey.table;
+          }
+        });
+      } else {
+        for (const [fkField, alias] of Object.entries(expandFields)) {
+          const colInfo = cols.find((c) => c.name === fkField);
+          if (colInfo?.foreignKey) {
+            effectiveExpands[fkField] = alias || colInfo.foreignKey.table;
+          }
+        }
+      }
+
+      for (const [fkField, alias] of Object.entries(effectiveExpands)) {
+        const colInfo = cols.find((c) => c.name === fkField)!;
+        const { table: refTable, column: refColObj } = colInfo.foreignKey;
+        const safeAlias = alias.replace(/[^a-zA-Z0-9_]/g, '');
+
+        qb = qb.leftJoin(
+          `${refTable} as ${safeAlias}`,
+          `${tableName}.${fkField}`,
+          `${safeAlias}.${refColObj.name}`
+        );
+
+        qb = qb.select(pg.raw(`to_jsonb(??.*) as ??`, [safeAlias, safeAlias]));
+      }
+    }
+
+    // SELECT
     if (fields) {
-      const fieldList = fields.split(',').map((f) => f.trim());
-      qb = qb.select(fieldList);
+      const fieldList = fields
+        .split(',')
+        .map((f) => f.trim())
+        .map((f) => (validColumnNames.includes(f) ? `${tableName}.${f}` : null))
+        .filter(Boolean) as string[];
+
+      qb = qb.select(fieldList.length > 0 ? fieldList : `${tableName}.*`);
+    } else {
+      qb = qb.select(`${tableName}.*`);
     }
 
     // ORDER BY
     if (order) {
       const [col, dir] = order.split(':');
-      qb = qb.orderBy(col, dir.toLowerCase() === 'desc' ? 'desc' : 'asc');
+      const direction = dir?.toLowerCase() === 'desc' ? 'desc' : 'asc';
+
+      if (validColumnNames.includes(col)) {
+        qb = qb.orderBy(`${tableName}.${col}`, direction);
+      } else {
+        qb = qb.orderBy(`${tableName}.id`, 'asc');
+      }
     }
 
     // Pagination + total count
@@ -76,7 +139,7 @@ export class TableRecordService {
         .clone()
         .limit(limitNum)
         .offset((pageNum - 1) * limitNum),
-      countAllQb.count('* as total').first(),
+      countAllQb.count(`${tableName}.id as total`).first(),
     ]);
 
     const totalNum = Number(totalRecord?.total || 0);
@@ -119,23 +182,45 @@ export class TableRecordService {
       limit = 10000,
     } = query;
 
+    const cols = await getCachedTableSchema(pg, schemaName, tableName);
+    const validColumnNames = cols.map((c) => c.name);
+
     let qb = pg(tableName).withSchema(schemaName);
 
     // SELECT
-    qb = qb.select(select.map((expr) => pg.raw(expr)));
+    // Only allow specific aggregate patterns or valid column names
+    const safeSelect = select.map((expr) => {
+      const isSimpleCol = validColumnNames.includes(expr);
+      const isAggregate = /^(count|sum|avg|min|max)\([a-z0-9_*]+\)$/i.test(
+        expr
+      );
+
+      if (isSimpleCol || isAggregate) {
+        return pg.raw(expr);
+      }
+      throw new Error(`Invalid select expression: ${expr}`);
+    });
+    qb = qb.select(safeSelect);
 
     // WHERE
     if (where) qb = qb.where(where);
 
     // GROUP BY
-    if (group) qb = qb.groupBy(group);
+    if (group) {
+      const safeGroup = group.filter((g) => validColumnNames.includes(g));
+      qb = qb.groupBy(safeGroup);
+    }
 
     // HAVING
     if (having) {
       Object.entries(having).forEach(([key, value]) => {
+        if (!validColumnNames.includes(key)) return;
+
         const isObj = typeof value === 'object' && value !== null;
         const op = isObj ? value.operator : '=';
         const val = isObj ? value.value : value;
+
+        // Use parameterized having to prevent injection in value
         qb.having(pg.raw(key), op, val);
       });
     }
@@ -143,7 +228,9 @@ export class TableRecordService {
     // ORDER BY
     if (order) {
       const [col, dir] = order.split(':');
-      qb = qb.orderBy(col, dir.toLowerCase() === 'desc' ? 'desc' : 'asc');
+      if (validColumnNames.includes(col)) {
+        qb = qb.orderBy(col, dir.toLowerCase() === 'desc' ? 'desc' : 'asc');
+      }
     }
 
     // Pagination + total

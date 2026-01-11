@@ -136,6 +136,15 @@
             class="col-span-2"
           />
         }
+        @case (DataType.Reference) {
+          <reference-field-editor
+            [field]="field"
+            [(data)]="updatedRecord[field.name]"
+            [viewOnly]="viewOnly() || field.params.primary"
+            [label]="false"
+            class="col-span-2"
+          />
+        }
       }
     }
   </div>

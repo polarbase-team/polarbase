@@ -11,6 +11,8 @@ import {
 } from '@angular/core';
 import * as L from 'leaflet';
 
+import { environment } from '@environments/environment';
+
 export interface MapLocation {
   lat: number;
   lng: number;
@@ -72,7 +74,11 @@ export class MapPickerComponent implements AfterViewInit, OnDestroy {
   }
 
   private initMap() {
-    this.map = L.map(this.mapEl().nativeElement);
+    const mapEl = this.mapEl().nativeElement;
+    this.map = L.map(mapEl).setView(
+      environment ? [environment.defaultLoc[0], environment.defaultLoc[1]] : [0, 0],
+      13,
+    );
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
     }).addTo(this.map);

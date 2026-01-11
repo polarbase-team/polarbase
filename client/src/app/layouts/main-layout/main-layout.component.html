@@ -28,14 +28,14 @@
         <p-button
           icon="icon icon-book-open-text"
           severity="secondary"
-          [pTooltip]="'API Docs'"
+          pTooltip="API Docs"
           tooltipPosition="bottom"
           (click)="openAPIDocs()"
         />
         <p-button
           icon="icon icon-sparkles"
           severity="info"
-          [pTooltip]="'AI Chatbot'"
+          pTooltip="AI Chatbot"
           tooltipPosition="bottom"
           [outlined]="true"
           (click)="toggleChatbot()"
@@ -48,7 +48,7 @@
       <ul class="p-2 flex flex-col gap-2">
         <li
           class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
-          [pTooltip]="'Base'"
+          pTooltip="Base"
           routerLink="/base"
           routerLinkActive="bg-gray-100 text-surface-700"
         >
@@ -56,7 +56,7 @@
         </li>
         <li
           class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
-          [pTooltip]="'API Keys'"
+          pTooltip="API Keys"
           routerLink="/api-keys"
           routerLinkActive="bg-gray-100 text-surface-700"
         >
@@ -66,14 +66,14 @@
       <ul class="p-2 flex flex-col gap-2 mb-4">
         <li
           class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
-          [pTooltip]="'Github'"
+          pTooltip="Github"
           (click)="openGitHub()"
         >
           <i class="icon icon-github" style="font-size: 16px"></i>
         </li>
         <li
           class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
-          [pTooltip]="'Logout'"
+          pTooltip="Logout"
           (click)="logout()"
         >
           <i class="icon icon-log-out" style="font-size: 16px"></i>

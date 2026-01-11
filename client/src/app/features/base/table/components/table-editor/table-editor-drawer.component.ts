@@ -23,6 +23,7 @@ import { AutoFocusModule } from 'primeng/autofocus';
 import { DividerModule } from 'primeng/divider';
 import { RadioButtonModule } from 'primeng/radiobutton';
 
+import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyStrings } from '@app/core/utils';
 import { TableFormData, TableDefinition, TableService } from '../../services/table.service';
 
@@ -45,8 +46,7 @@ const DEFAULT_VALUE = { idType: 'integer', timestamps: true } as TableFormData;
     RadioButtonModule,
   ],
 })
-export class TableEditorDrawerComponent {
-  visible = model(false);
+export class TableEditorDrawerComponent extends DrawerComponent {
   table = input<TableDefinition>();
   mode = input<'add' | 'edit'>('add');
 
@@ -60,6 +60,8 @@ export class TableEditorDrawerComponent {
     private destroyRef: DestroyRef,
     private tblService: TableService,
   ) {
+    super();
+
     effect(() => {
       this.tableFormData = { ...DEFAULT_VALUE, ...this.table() };
     });
@@ -83,9 +85,9 @@ export class TableEditorDrawerComponent {
       finalize(() => this.isSaving.set(false)),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(() => {
-      this.visible.set(false);
       this.onSave.emit(this.tableFormData);
       this.reset();
+      this.close();
     });
   }
 
@@ -94,7 +96,7 @@ export class TableEditorDrawerComponent {
   }
 
   protected cancel() {
-    this.visible.set(false);
+    this.close();
   }
 
   protected reset() {

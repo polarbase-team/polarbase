@@ -1,16 +1,4 @@
 -- ==============================
--- Custom Types (ENUM)
--- ==============================
-
-CREATE TYPE opportunity_stage AS ENUM (
-    'lead', 'qualified', 'proposal', 'negotiation', 'closed_won', 'closed_lost'
-);
-
-CREATE TYPE interaction_type AS ENUM (
-    'call', 'email', 'meeting', 'note', 'task'
-);
-
--- ==============================
 -- Table Creation
 -- ==============================
 
@@ -56,13 +44,16 @@ CREATE TABLE IF NOT EXISTS opportunities (
     company_id VARCHAR(16) REFERENCES companies(id) ON DELETE CASCADE,
     contact_id VARCHAR(16) REFERENCES contacts(id) ON DELETE SET NULL,
     amount DECIMAL(15,2) DEFAULT 0.00 CHECK (amount >= 0),
-    stage opportunity_stage DEFAULT 'lead',
+    stage TEXT DEFAULT 'lead',
     probability INTEGER DEFAULT 10 CHECK (probability BETWEEN 0 AND 100),
     expected_close_date DATE,
     notes TEXT,
-    is_high_priority BOOLEAN DEFAULT FALSE,  -- Added boolean field
+    is_high_priority BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "opportunities_stage_options_check" 
+    CHECK ("stage" IN ('lead', 'qualified', 'proposal', 'negotiation', 'closed_won', 'closed_lost'))
 );
 
 COMMENT ON TABLE opportunities IS 'Manages sales opportunities/deals.';
@@ -72,7 +63,7 @@ COMMENT ON COLUMN opportunities.is_high_priority IS 'Marks high-priority opportu
 
 CREATE TABLE IF NOT EXISTS interactions (
     id VARCHAR(16) PRIMARY KEY,
-    type interaction_type NOT NULL,
+    type TEXT NOT NULL,
     subject VARCHAR(255) NOT NULL,
     description TEXT,
     company_id VARCHAR(16) REFERENCES companies(id) ON DELETE CASCADE,
@@ -80,8 +71,11 @@ CREATE TABLE IF NOT EXISTS interactions (
     opportunity_id VARCHAR(16) REFERENCES opportunities(id) ON DELETE SET NULL,
     interaction_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
-    is_completed BOOLEAN DEFAULT FALSE,  -- Added boolean field (useful for tasks/meetings)
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    is_completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "interactions_type_options_check" 
+    CHECK ("type" IN ('call', 'email', 'meeting', 'note', 'task'))
 );
 
 COMMENT ON TABLE interactions IS 'Records history of interactions with customers.';
