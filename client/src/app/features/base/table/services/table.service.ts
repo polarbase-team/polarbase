@@ -19,8 +19,7 @@ import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/
 export interface TableDefinition {
   tableName: string;
   tableComment: string;
-  tableColumnPk: string;
-  tableColumnPkType: string;
+  tablePrimaryKey: { name: string; type: string };
 }
 
 export interface TableFormData {
@@ -57,7 +56,7 @@ export interface ColumnDefinition {
   metadata: any;
 }
 
-export interface ColumnFormData extends Omit<ColumnDefinition, 'primary'> {}
+export interface ColumnFormData extends Omit<ColumnDefinition, 'primary' | 'metadata'> {}
 
 const DATA_TYPE_MAPPING = {
   integer: DataType.Integer,

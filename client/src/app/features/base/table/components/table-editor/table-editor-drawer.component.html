@@ -29,7 +29,8 @@
                   #tableName="ngModel"
                   placeholder="Input here..."
                   required
-                  pattern="[a-zA-Z_][a-zA-Z0-9_$ ]*"
+                  pattern="^[a-zA-Z_][a-zA-Z0-9_]*$"
+                  maxlength="63"
                 />
                 @if (tableName.invalid && (tableName.touched || tableForm.submitted)) {
                   <p-message severity="error" size="small" variant="simple">
@@ -41,7 +42,7 @@
                   </p-message>
                 }
                 <p class="text-surface-500 text-xs">
-                  Only letters, numbers, space, _, $ allowed and must start with a letter or _.
+                  Only letters, numbers, and _ allowed. Must start with a letter or _.
                 </p>
               </div>
               <div class="flex flex-col gap-1">
@@ -54,6 +55,7 @@
                   rows="5"
                   class="col-span-2"
                   placeholder="Input here..."
+                  maxlength="500"
                 ></textarea>
               </div>
             </div>

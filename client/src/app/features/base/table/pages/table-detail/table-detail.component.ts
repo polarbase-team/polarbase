@@ -74,7 +74,6 @@ export class TableDetailComponent {
   protected isReady = signal(false);
   protected tblService = inject(TableService);
   protected updatedColumn: ColumnDefinition;
-  protected updatedColumnField: Field;
   protected updatedColumnMode: 'add' | 'edit' = 'add';
   protected visibleColumnEditor: boolean;
   protected updatedRecord: UpdatedRecord = {} as UpdatedRecord;
@@ -190,7 +189,7 @@ export class TableDetailComponent {
   }
 
   protected onRowAction(action: TableRowAction) {
-    const { tableName, tableColumnPk } = this.tblService.selectedTable();
+    const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
       case TableRowActionType.Add:
         const rows = [];
@@ -205,7 +204,7 @@ export class TableDetailComponent {
           .subscribe(({ data }) => {
             for (let i = 0; i < rows.length; i++) {
               const row = rows[i];
-              row.id = data.returning[i][tableColumnPk || 'id'];
+              row.id = data.returning[i]['id'];
               row.data = data.returning[i];
             }
             this.rows.update((arr) => [...arr]);
@@ -258,8 +257,7 @@ export class TableDetailComponent {
   }
 
   protected onRecordSave(savedRecord: Record<string, any>) {
-    const { tableColumnPk } = this.tblService.selectedTable();
-    const recordId = savedRecord[tableColumnPk];
+    const recordId = savedRecord['id'];
 
     if (this.updatedRecordMode === 'add') {
       const newRow: TableRow = {
@@ -282,13 +280,16 @@ export class TableDetailComponent {
 
   protected editColumn(column: TableColumn) {
     this.updatedColumn = column.field.params;
-    this.updatedColumnField = column.field;
     this.updatedColumnMode = 'edit';
     this.visibleColumnEditor = true;
   }
 
   protected addNewRecord() {
-    this.updatedRecord = {} as UpdatedRecord;
+    this.updatedRecord = {
+      table: this.tblService.selectedTable(),
+      fields: this.columns().map((c) => c.field),
+      data: {},
+    };
     this.updatedRecordMode = 'add';
     this.visibleRecordEditor = true;
   }

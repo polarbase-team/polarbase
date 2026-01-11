@@ -99,7 +99,7 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
 };
 
 export const mapDataType = (column: Column) => {
-  const { pgDataType, pgDomainName } = column.metadata || {};
+  const { pgDataType, pgRawType, pgDomainName } = column.metadata || {};
 
   // 1. Check for custom domains first
   if (pgDomainName === 'email_address') {
@@ -110,7 +110,10 @@ export const mapDataType = (column: Column) => {
 
   // 2. Handle Enums/Selects
   if (column.options) {
-    return pgDataType === 'ARRAY' ? DataType.MultiSelect : DataType.Select;
+    if (pgDataType === 'ARRAY' || pgRawType?.startsWith('_')) {
+      return DataType.MultiSelect;
+    }
+    return DataType.Select;
   }
 
   // 3. Handle foreign keys
@@ -130,16 +133,12 @@ export const mapDataType = (column: Column) => {
 export const specificType = (
   tableBuilder: Knex.TableBuilder,
   {
-    tableName,
     name,
     dataType,
     foreignKey,
-    options,
   }: {
-    tableName: string;
     name: string;
     dataType: DataType;
-    options?: string[] | null;
     foreignKey?: {
       table: string;
       column: { name: string; type: string };
@@ -174,34 +173,11 @@ export const specificType = (
     }
 
     case DataType.Select: {
-      if (!options?.length) {
-        throw new Error(`options is required for Select column "${name}"`);
-      }
-      const timestamp = +new Date();
-      const enumName = `${tableName}_${name}_enum_${timestamp}`;
-      return tableBuilder.enum(name, options, {
-        useNative: true,
-        enumName,
-        existingType: false,
-      });
+      return tableBuilder.text(name);
     }
 
     case DataType.MultiSelect: {
-      if (!options?.length) {
-        throw new Error(
-          `options is required for Multi-Select column "${name}"`
-        );
-      }
-      const timestamp = +new Date();
-      const enumName = `${tableName}_${name}_enum_${timestamp}`;
-      const temp = `${tableName}_${name}_temp_${timestamp}`;
-      tableBuilder.enum(temp, options, {
-        useNative: true,
-        enumName,
-        existingType: false,
-      });
-      tableBuilder.dropColumn(temp);
-      return tableBuilder.specificType(name, `${enumName}[]`);
+      return tableBuilder.specificType(name, 'text[]');
     }
 
     case DataType.Email: {
@@ -241,11 +217,12 @@ export const LENGTH_CHECK_SUFFIX = '_length_check';
 export const RANGE_CHECK_SUFFIX = '_range_check';
 export const DATE_RANGE_CHECK_SUFFIX = '_date_range_check';
 export const SIZE_CHECK_SUFFIX = '_size_check';
+export const OPTIONS_CHECK_SUFFIX = '_options_check';
 
 export const getConstraintName = (
   tableName: string,
   columnName: string,
-  type: 'length' | 'range' | 'date-range' | 'size'
+  type: 'length' | 'range' | 'date-range' | 'size' | 'options'
 ): string => {
   const prefix = `${tableName}_${columnName}`;
   switch (type) {
@@ -257,6 +234,8 @@ export const getConstraintName = (
       return prefix + DATE_RANGE_CHECK_SUFFIX;
     case 'size':
       return prefix + SIZE_CHECK_SUFFIX;
+    case 'options':
+      return prefix + OPTIONS_CHECK_SUFFIX;
   }
 };
 
@@ -386,5 +365,37 @@ export const removeSizeCheck = (
   columnName: string
 ) => {
   const constraintName = getConstraintName(tableName, columnName, 'size');
+  tableBuilder.dropChecks(`"${constraintName}"`);
+};
+
+export const addOptionsCheck = (
+  tableBuilder: Knex.TableBuilder,
+  tableName: string,
+  columnName: string,
+  options: string[],
+  isMulti: boolean
+) => {
+  const constraintName = getConstraintName(tableName, columnName, 'options');
+  const quotedColumn = `"${columnName}"`;
+  const escapedOptions = options
+    .map((opt) => `'${opt.replace(/'/g, "''")}'`)
+    .join(', ');
+
+  let sql = '';
+  if (isMulti) {
+    sql = `${quotedColumn} <@ ARRAY[${escapedOptions}]::text[]`;
+  } else {
+    sql = `${quotedColumn} IN (${escapedOptions})`;
+  }
+
+  tableBuilder.check(sql, [], `"${constraintName}"`);
+};
+
+export const removeOptionsCheck = (
+  tableBuilder: Knex.TableBuilder,
+  tableName: string,
+  columnName: string
+) => {
+  const constraintName = getConstraintName(tableName, columnName, 'options');
   tableBuilder.dropChecks(`"${constraintName}"`);
 };

@@ -21,6 +21,7 @@ import { DividerModule } from 'primeng/divider';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
+import { DrawerComponent } from '@app/core/components/drawer.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
 import { TextFieldEditorComponent } from '@app/shared/field-system/editors/text/editor.component';
@@ -64,12 +65,11 @@ import { TableDefinition, TableService } from '../../services/table.service';
   ],
   providers: [MessageService],
 })
-export class RecordEditorDrawerComponent {
+export class RecordEditorDrawerComponent extends DrawerComponent {
   table = input<TableDefinition>();
   fields = input<Field[]>([]);
   record = input({});
   mode = input<'add' | 'edit' | 'view'>('add');
-  visible = model(false);
 
   onSave = output<Record<string, any>>();
 
@@ -85,6 +85,8 @@ export class RecordEditorDrawerComponent {
     private messageService: MessageService,
     private tblService: TableService,
   ) {
+    super();
+
     effect(() => {
       this.updatedRecord = { ...(this.record() || {}) };
     });
@@ -122,14 +124,14 @@ export class RecordEditorDrawerComponent {
       return;
     }
 
-    const { tableName, tableColumnPk } = this.table();
-    const id = this.record()[tableColumnPk] ?? undefined;
+    const { tableName } = this.table();
+    const id = this.record()['id'] ?? undefined;
     const data = { ...this.updatedRecord };
 
     let fn: Observable<any>;
     switch (this.mode()) {
       case 'add':
-        if (_.isNil(data[tableColumnPk])) data[tableColumnPk] = id;
+        if (_.isNil(data['id'])) data['id'] = id;
         fn = this.tblService.createRecords(tableName, [data]);
         break;
       case 'edit':
@@ -150,11 +152,11 @@ export class RecordEditorDrawerComponent {
   }
 
   protected cancel() {
-    this.visible.set(false);
+    this.close();
   }
 
   protected reset() {
     this.updatedRecord = {};
-    this.isSaving.set(false);
+    this.close();
   }
 }
