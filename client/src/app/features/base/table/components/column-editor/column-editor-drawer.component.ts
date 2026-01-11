@@ -26,8 +26,6 @@ import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FluidModule } from 'primeng/fluid';
-import { MenuModule } from 'primeng/menu';
-import { MenuItem } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 
@@ -49,7 +47,6 @@ import { EmailFieldEditorComponent } from '@app/shared/field-system/editors/emai
 import { UrlFieldEditorComponent } from '@app/shared/field-system/editors/url/editor.component';
 import { JSONFieldEditorComponent } from '@app/shared/field-system/editors/json/editor.component';
 import { GeoPointFieldEditorComponent } from '@app/shared/field-system/editors/geo-point/editor.component';
-import { SchemaService } from '../../services/schema.service';
 import {
   ColumnFormData,
   ColumnDefinition,
@@ -91,7 +88,6 @@ const DEFAULT_VALUE = {
     InputNumberModule,
     DatePickerModule,
     FluidModule,
-    MenuModule,
     SelectButtonModule,
     TooltipModule,
     TextFieldEditorComponent,
@@ -127,9 +123,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   protected selectedDataType = signal<DataType>(null);
   protected internalField: Field;
 
-  // Select & MultiSelect types
-  protected enumTypeMenuItems: MenuItem[] | undefined;
-
   // Reference type
   protected tableOptions: { name: string; value: string }[] | undefined;
   protected referentialActions: { name: string; value: string; help: string }[] = [
@@ -152,7 +145,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
   constructor(
     private destroyRef: DestroyRef,
-    private schemaService: SchemaService,
     private tblService: TableService,
   ) {
     super();
@@ -262,26 +254,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   protected removeOption(idx: number) {
     this.columnFormData.options.splice(idx, 1);
     this.onOptionsUpdate();
-  }
-
-  protected onEnumTypesMenuOpen() {
-    if (this.enumTypeMenuItems?.length) return;
-
-    this.schemaService
-      .getEnumTypes()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((enumTypes) => {
-        this.enumTypeMenuItems = [];
-        for (const enumType of enumTypes) {
-          this.enumTypeMenuItems.push({
-            label: enumType.enumName,
-            options: enumType.enumValues.join(', '),
-            command: () => {
-              this.columnFormData.options = [...enumType.enumValues];
-            },
-          });
-        }
-      });
   }
 
   protected onTableSelect(tableName: string) {

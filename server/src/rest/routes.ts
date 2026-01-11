@@ -5,7 +5,6 @@ import pg from '../plugins/pg';
 import { checkRateLimit } from '../utils/rate-limit';
 import { err, json } from '../utils/api-response';
 import { apiKeyAuth } from '../api-keys/auth';
-import { SchemaService } from './services/schema.service';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
 import { Column, DataType, ReferentialAction } from './utils/column';
@@ -22,7 +21,6 @@ const REST_BLACKLISTED_TABLES = (
   process.env.REST_BLACKLISTED_TABLES || ''
 ).split(',');
 
-const schemaService = new SchemaService();
 const tableService = new TableService();
 const tableRecordService = new TableRecordService();
 
@@ -141,13 +139,6 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       set.status = 403;
       throw new Error(`Table "${params.table}" is forbidden`);
     }
-  })
-
-  /**
-   * GET /rest/enum-types → list of enum types
-   */
-  .get('/enum-types', async () => {
-    return schemaService.getEnumTypes();
   })
 
   /**
