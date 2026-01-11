@@ -1,15 +1,25 @@
-@if (data !== undefined && data !== null) {
-  <div class="field-cell__block-content">
-    <p-tag severity="secondary" [value]="data"></p-tag>
-  </div>
-}
-@if (selecting && !readonly) {
-  <p-menu
-    #menu
-    [model]="items"
-    appendTo="body"
-    [popup]="true"
-    (onShow)="onMenuOpen()"
-    (onHide)="onMenuClose()"
-  />
-}
+<div class="flex items-start justify-between w-full">
+  @if (data !== undefined && data !== null) {
+    <div class="field-cell__block-content">
+      <p-tag severity="secondary" [value]="data"></p-tag>
+    </div>
+  }
+  @if (selecting) {
+    @if (!readonly) {
+      <p-menu
+        #menu
+        [model]="items"
+        appendTo="body"
+        [popup]="true"
+        (onShow)="onMenuOpen()"
+        (onHide)="onMenuClose()"
+      />
+    }
+    <div
+      class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
+      (click)="openMenu($event)"
+    >
+      <i class="icon icon-chevron-down"></i>
+    </div>
+  }
+</div>

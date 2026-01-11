@@ -55,7 +55,7 @@ export class MultiSelectFieldCellComponent extends FieldCellEditable<MultiSelect
 
   protected override onTouch(e: CellTouchEvent) {
     if (this.readonly) return;
-    this.menu().show(e);
+    this.openMenu(e);
   }
 
   protected onMenuOpen() {
@@ -73,6 +73,16 @@ export class MultiSelectFieldCellComponent extends FieldCellEditable<MultiSelect
 
   protected onMenuClose() {
     this.markAsEditEnded();
+  }
+
+  protected openMenu(event: Event) {
+    const fakeEvent = {
+      ...event,
+      currentTarget: this.eleRef.nativeElement,
+      target: this.eleRef.nativeElement,
+    };
+
+    this.menu().show(fakeEvent);
   }
 
   protected addOption(option: MultiSelectOption) {

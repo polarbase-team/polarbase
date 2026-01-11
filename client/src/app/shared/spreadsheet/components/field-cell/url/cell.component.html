@@ -1,4 +1,12 @@
-@if (isInputting) {
+@if (!isInputting) {
+  @if (data !== undefined && data !== null) {
+    <div class="field-cell__text-content">
+      <a [attr.href]="data || '#'" class="text-blue-600 hover:underline">
+        {{ data }}
+      </a>
+    </div>
+  }
+} @else {
   <input-box
     type="text"
     [content]="data"
@@ -8,10 +16,4 @@
     (blur)="onInputBoxBlur($event)"
     (contentChange)="onInputBoxChange($event)"
   />
-} @else {
-  <div class="field-cell__text-content">
-    <a [attr.href]="data || '#'" class="text-blue-600 hover:underline">
-      {{ data }}
-    </a>
-  </div>
 }
