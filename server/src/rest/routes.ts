@@ -186,8 +186,19 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     },
     {
       body: t.Object({
-        tableName: t.String(),
-        tableComment: t.Optional(t.String()),
+        tableName: t.String({
+          pattern: '^[a-z_][a-z0-9_]*$',
+          minLength: 1,
+          maxLength: 63,
+          error:
+            'Table name must start with a letter/underscore, contain only lowercase alphanumeric, and be under 64 chars',
+        }),
+        tableComment: t.Optional(
+          t.String({
+            maxLength: 500,
+            error: 'Comment too long (max 500 chars)',
+          })
+        ),
         idType: t.Optional(
           t.Union([
             t.Literal('biginteger'),
@@ -212,8 +223,21 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     {
       body: t.Object(
         {
-          tableName: t.Optional(t.String()),
-          tableComment: t.Optional(t.Nullable(t.String())),
+          tableName: t.String({
+            pattern: '^[a-z_][a-z0-9_]*$',
+            minLength: 1,
+            maxLength: 63,
+            error:
+              'Table name must start with a letter/underscore, contain only lowercase alphanumeric, and be under 64 chars',
+          }),
+          tableComment: t.Optional(
+            t.Nullable(
+              t.String({
+                maxLength: 500,
+                error: 'Comment too long (max 500 chars)',
+              })
+            )
+          ),
         },
         { minProperties: 1 }
       ),
@@ -249,12 +273,21 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({ table: t.String() }),
       body: t.Object(
         {
-          name: t.String({ minLength: 1 }),
+          name: t.String({ pattern: '^[a-z0-9_]+$', minLength: 1 }),
           dataType: t.Enum(DataType),
           nullable: t.Optional(t.Nullable(t.Boolean())),
           unique: t.Optional(t.Nullable(t.Boolean())),
           defaultValue: t.Optional(t.Nullable(t.Any())),
-          comment: t.Optional(t.Nullable(t.String())),
+          comment: t.Optional(
+            t.Nullable(
+              t.String(
+                t.String({
+                  maxLength: 500,
+                  error: 'Comment too long (max 500 chars)',
+                })
+              )
+            )
+          ),
           options: t.Optional(t.Nullable(t.Array(t.String()))),
           foreignKey: t.Optional(
             t.Nullable(
@@ -306,12 +339,19 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       params: t.Object({ table: t.String(), column: t.String() }),
       body: t.Object(
         {
-          name: t.String({ minLength: 1 }),
+          name: t.String({ pattern: '^[a-z0-9_]+$', minLength: 1 }),
           dataType: t.Enum(DataType),
           nullable: t.Nullable(t.Boolean()),
           unique: t.Nullable(t.Boolean()),
           defaultValue: t.Nullable(t.Any()),
-          comment: t.Nullable(t.String()),
+          comment: t.Nullable(
+            t.String(
+              t.String({
+                maxLength: 500,
+                error: 'Comment too long (max 500 chars)',
+              })
+            )
+          ),
           validation: t.Nullable(t.Any()),
           options: t.Optional(t.Nullable(t.Array(t.String()))),
           foreignKey: t.Optional(
@@ -472,9 +512,11 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
   .patch(
     '/:table/:id',
     ({ params: { table, id }, body }) => {
+      const { id: _, ...updateData } = body;
+
       return tableRecordService.update({
         tableName: table,
-        updates: [{ where: { id }, data: body }],
+        updates: [{ where: { id }, data: updateData }],
       });
     },
     {
