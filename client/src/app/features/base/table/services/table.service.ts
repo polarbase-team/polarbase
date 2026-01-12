@@ -81,7 +81,7 @@ export class TableService {
   tables = signal<TableDefinition[]>([]);
   selectedTable = signal<TableDefinition>(null);
 
-  private apiUrl = `${environment.apiUrl}/rest`;
+  private apiUrl = `${environment.apiUrl}/rest/db`;
 
   constructor(private http: HttpClient) {}
 

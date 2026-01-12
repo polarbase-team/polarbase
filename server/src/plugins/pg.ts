@@ -30,7 +30,7 @@ const pg = knex({
 
 /**
  * Initialize Custom DB Types
- * This runs a PL/pgSQL block to create the domains if it doesn't exist.
+ * Includes Email, URL domains, and the Attachment composite type.
  */
 export const initDatabaseTypes = async () => {
   try {
@@ -46,7 +46,22 @@ export const initDatabaseTypes = async () => {
           -- 2. URL Domain
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'url_address') THEN
               CREATE DOMAIN url_address AS TEXT
-              CHECK (VALUE ~* '^https\\?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)\\?$');
+              CHECK (VALUE ~* '^https\\?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$');
+          END IF;
+
+          -- 3. Attachment Composite Type
+          -- We check pg_type for the 'attachment' name
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'attachment') THEN
+              CREATE TYPE attachment AS (
+                  id           UUID,
+                  name         TEXT,
+                  key          TEXT,
+                  size         BIGINT,
+                  mime_type    TEXT,
+                  provider     TEXT,
+                  url          TEXT,
+                  created_at   TIMESTAMPTZ
+              );
           END IF;
       END
       $$;

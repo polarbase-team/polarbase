@@ -14,6 +14,7 @@ export const DataType = {
   JSON: 'json',
   GeoPoint: 'geo-point',
   Reference: 'reference',
+  Attachment: 'attachment',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -96,6 +97,9 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
 
   // GeoPoint
   point: DataType.GeoPoint,
+
+  // Attachment
+  attachment: DataType.Attachment,
 };
 
 export const mapDataType = (column: Column) => {
@@ -206,6 +210,10 @@ export const specificType = (
         .inTable(foreignKey.table)
         .onUpdate(foreignKey.onUpdate)
         .onDelete(foreignKey.onDelete);
+    }
+
+    case DataType.Attachment: {
+      return tableBuilder.specificType(name, 'attachment[]');
     }
 
     default:
