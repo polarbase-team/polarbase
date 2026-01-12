@@ -52,6 +52,7 @@ export interface ColumnDefinition {
     minDate?: string | null;
     maxDate?: string | null;
     maxSize?: number | null;
+    maxFile?: number | null;
   } | null;
   metadata: any;
 }
@@ -226,6 +227,8 @@ export class TableService {
           loadRecords: this.getRecords.bind(this),
           buildField: this.buildField.bind(this),
         };
+        break;
+      case DataType.Attachment:
         break;
     }
 

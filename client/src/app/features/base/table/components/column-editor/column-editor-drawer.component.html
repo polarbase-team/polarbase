@@ -312,6 +312,17 @@
                   </p-selectbutton>
                 </div>
               }
+              @case (DataType.Attachment) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max files</label>
+                  <p-inputnumber
+                    name="maxFile"
+                    [(ngModel)]="columnFormData.validation.maxFile"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
             }
           </div>
         </div>
@@ -423,6 +434,7 @@
               @case (DataType.Reference) {
                 Not support
               }
+              @case (DataType.Attachment) {}
               @default {
                 <i class="text-sm text-surface-500">Select a data type first.</i>
               }

@@ -98,9 +98,6 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
 
   // GeoPoint
   point: DataType.GeoPoint,
-
-  // Attachment
-  attachment: DataType.Attachment,
 };
 
 export const mapDataType = (column: Column) => {
@@ -115,7 +112,7 @@ export const mapDataType = (column: Column) => {
 
   // 2. Handle Enums/Selects
   if (column.options) {
-    if (pgDataType === 'ARRAY' || pgRawType?.startsWith('_')) {
+    if (pgDataType === 'ARRAY') {
       return DataType.MultiSelect;
     }
     return DataType.Select;
@@ -124,6 +121,11 @@ export const mapDataType = (column: Column) => {
   // 3. Handle foreign keys
   if (column.foreignKey) {
     return DataType.Reference;
+  }
+
+  // 4. Handle Attachment
+  if (pgRawType === '_attachment') {
+    return DataType.Attachment;
   }
 
   const normalizedType = pgDataType
