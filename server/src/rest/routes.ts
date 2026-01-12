@@ -303,6 +303,24 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                   })
                 )
               ),
+              validation: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    minLength: t.Optional(t.Nullable(t.Number())),
+                    maxLength: t.Optional(t.Nullable(t.Number())),
+                    minValue: t.Optional(t.Nullable(t.Number())),
+                    maxValue: t.Optional(t.Nullable(t.Number())),
+                    minDate: t.Optional(
+                      t.Nullable(t.String({ format: 'date-time' }))
+                    ),
+                    maxDate: t.Optional(
+                      t.Nullable(t.String({ format: 'date-time' }))
+                    ),
+                    maxSize: t.Optional(t.Nullable(t.Number())),
+                    maxFile: t.Optional(t.Nullable(t.Number())),
+                  })
+                )
+              ),
               options: t.Optional(t.Nullable(t.Array(t.String()))),
               foreignKey: t.Optional(
                 t.Nullable(
@@ -314,7 +332,6 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                   })
                 )
               ),
-              validation: t.Optional(t.Nullable(t.Any())),
             },
             {
               error: (value) => {
@@ -369,7 +386,22 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                   error: 'Comment too long (max 500 chars)',
                 })
               ),
-              validation: t.Nullable(t.Any()),
+              validation: t.Nullable(
+                t.Object({
+                  minLength: t.Optional(t.Nullable(t.Number())),
+                  maxLength: t.Optional(t.Nullable(t.Number())),
+                  minValue: t.Optional(t.Nullable(t.Number())),
+                  maxValue: t.Optional(t.Nullable(t.Number())),
+                  minDate: t.Optional(
+                    t.Nullable(t.String({ format: 'date-time' }))
+                  ),
+                  maxDate: t.Optional(
+                    t.Nullable(t.String({ format: 'date-time' }))
+                  ),
+                  maxSize: t.Optional(t.Nullable(t.Number())),
+                  maxFile: t.Optional(t.Nullable(t.Number())),
+                })
+              ),
               options: t.Optional(t.Nullable(t.Array(t.String()))),
               foreignKey: t.Optional(
                 t.Nullable(
