@@ -24,8 +24,7 @@
     [placeholder]="placeholder() ?? 'Select here...'"
     [pAutoFocus]="autoFocus()"
     [readonly]="viewOnly()"
-    [(ngModel)]="parsedData"
-    (ngModelChange)="onDataChanges($event)"
+    [(ngModel)]="data"
     [options]="field().options"
     appendTo="body"
     fluid

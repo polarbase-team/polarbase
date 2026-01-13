@@ -19,26 +19,4 @@ import { FieldEditorComponent } from '../editor.component';
 export class MultiSelectFieldEditorComponent extends FieldEditorComponent<
   MultiSelectField,
   MultiSelectData
-> {
-  protected parsedData: MultiSelectData = [];
-
-  constructor() {
-    super();
-
-    effect(() => {
-      const data = this.data();
-      if (data?.length > 0) {
-        if (typeof data === 'string') {
-          const str = (data as string).replace(/\{|\}/g, '').trim();
-          if (str.length > 0) this.parsedData = str.split(',');
-        } else {
-          this.parsedData = [...data];
-        }
-      }
-    });
-  }
-
-  protected onDataChanges(data: MultiSelectData) {
-    this.data.set([...data]);
-  }
-}
+> {}

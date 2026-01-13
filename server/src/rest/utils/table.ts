@@ -333,11 +333,13 @@ const parsePgDefault = (
     return { ...parsed, value: null };
   }
 
+  // 1. Remove type casting (e.g., 'val'::text -> 'val')
   let expr = rawDefault
     .trim()
     .replace(/::[\w\s"'\[\]]+$/, '')
     .trim();
 
+  // 2. Check for special expressions/functions
   const specialExpressionPatterns = [
     /^nextval\(/i,
     /^currval\(/i,
@@ -353,13 +355,28 @@ const parsePgDefault = (
     /^date_bin\(/i,
   ];
 
-  const isSpecial = specialExpressionPatterns.some((pattern) =>
-    pattern.test(expr)
-  );
-  if (isSpecial) {
+  if (specialExpressionPatterns.some((pattern) => pattern.test(expr))) {
     return { ...parsed, value: expr, isSpecialExpression: true };
   }
 
+  // 3. Handle Postgres Array Literals: '{val1,val2}'
+  if (/^'\{.*\}'$/.test(expr)) {
+    const arrayContent = expr.slice(2, -2); // Remove '{ and }'
+    if (arrayContent === '') return { ...parsed, value: [] };
+
+    const items = arrayContent.split(',').map((item) => {
+      let trimmed = item.trim();
+      // Remove surrounding quotes if elements are quoted
+      if (/^".*"$/.test(trimmed)) {
+        return trimmed.slice(1, -1).replace(/\\"/g, '"');
+      }
+      return trimmed;
+    });
+
+    return { ...parsed, value: items };
+  }
+
+  // 4. Handle Strings: 'text'
   if (/^'.*'$/.test(expr)) {
     const str = expr
       .slice(1, -1)
@@ -374,6 +391,7 @@ const parsePgDefault = (
     return { ...parsed, value: str };
   }
 
+  // 5. Handle Numbers
   if (/^-?\d+(\.\d+)?$/.test(expr)) {
     const num = Number(expr);
     return {
@@ -382,11 +400,12 @@ const parsePgDefault = (
     };
   }
 
-  if (expr === 'true') return { ...parsed, value: true };
-  if (expr === 'false') return { ...parsed, value: false };
+  // 6. Booleans and Nulls
+  if (expr.toLowerCase() === 'true') return { ...parsed, value: true };
+  if (expr.toLowerCase() === 'false') return { ...parsed, value: false };
+  if (expr.toUpperCase() === 'NULL') return { ...parsed, value: null };
 
-  if (expr === 'NULL') return { ...parsed, value: null };
-
+  // Default fallback for unhandled expressions
   return { ...parsed, value: expr, isSpecialExpression: true };
 };
 

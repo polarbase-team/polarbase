@@ -25,30 +25,15 @@ export class MultiSelectFieldCellComponent extends FieldCellEditable<MultiSelect
   declare field: MultiSelectField;
 
   menu = viewChild<Menu>('menu');
-  items: MenuItem[] | undefined;
 
-  protected parsedData: string[] = [];
-
-  override ngOnChanges(changes: SimpleChanges) {
-    if ('data' in changes) {
-      const data = this.data;
-      if (data?.length > 0) {
-        if (typeof data === 'string') {
-          const str = (data as string).replace(/\{|\}/g, '').trim();
-          if (str.length > 0) this.parsedData = str.split(',');
-        } else {
-          this.parsedData = [...data];
-        }
-      }
-    }
-  }
+  protected items: MenuItem[] | undefined;
 
   ngOnInit() {
     this.items = _.map(this.field.options, (option) => ({
       label: option,
       command: ({ item }) => {
-        this.parsedData.push(item.label);
-        this.save(this.parsedData);
+        this.data.push(item.label);
+        this.save(this.data);
       },
     }));
   }
@@ -60,7 +45,7 @@ export class MultiSelectFieldCellComponent extends FieldCellEditable<MultiSelect
 
   protected onMenuOpen() {
     this.items = _.chain(this.field.options)
-      .difference(this.parsedData)
+      .difference(this.data)
       .map((option) => ({ label: option }))
       .value();
 
@@ -86,12 +71,12 @@ export class MultiSelectFieldCellComponent extends FieldCellEditable<MultiSelect
   }
 
   protected addOption(option: MultiSelectOption) {
-    this.parsedData.push(option);
-    this.save(this.parsedData);
+    this.data.push(option);
+    this.save(this.data);
   }
 
   protected removeSelectedOption(option: MultiSelectOption) {
-    this.parsedData = this.parsedData.filter((o) => o !== option);
-    this.save(this.parsedData);
+    this.data = this.data.filter((o) => o !== option);
+    this.save(this.data);
   }
 }
