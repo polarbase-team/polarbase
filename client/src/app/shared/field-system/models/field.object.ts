@@ -10,6 +10,7 @@ export const FieldValidationKey = {
   Min: 'min',
   Max: 'max',
   MaxSize: 'max-size',
+  MaxFiles: 'max-files',
   Other: 'other',
 } as const;
 export type FieldValidationKey = (typeof FieldValidationKey)[keyof typeof FieldValidationKey];

@@ -2,4 +2,6 @@ import { FileMetadata } from '@app/shared/file/file-uploader/file-uploader.compo
 import { FieldConfig } from '../field.interface';
 
 export type AttachmentData = FileMetadata[];
-export interface AttachmentFieldConfig extends FieldConfig<AttachmentData> {}
+export interface AttachmentFieldConfig extends FieldConfig<AttachmentData> {
+  maxFiles?: number;
+}

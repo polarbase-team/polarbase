@@ -1161,6 +1161,9 @@ export class TableCellService extends TableBaseService {
       case FieldValidationKey.MaxSize:
         message = `Maximum size: ${payload.maxSize}.`;
         break;
+      case FieldValidationKey.MaxFiles:
+        message = `Maximum files: ${payload.maxFiles}.`;
+        break;
       default:
         message = 'Invalid value.';
     }

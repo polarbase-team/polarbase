@@ -15,6 +15,7 @@ import { JSONFieldConfig } from '@app/shared/field-system/models/json/field.inte
 import { DateFieldConfig } from '@app/shared/field-system/models/date/field.interface';
 import { buildField } from '@app/shared/field-system/models/utils';
 import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/field.interface';
+import { AttachmentFieldConfig } from '@app/shared/field-system/models/attachment/field.interface';
 
 export interface TableDefinition {
   tableName: string;
@@ -52,7 +53,7 @@ export interface ColumnDefinition {
     minDate?: string | null;
     maxDate?: string | null;
     maxSize?: number | null;
-    maxFile?: number | null;
+    maxFiles?: number | null;
   } | null;
   metadata: any;
 }
@@ -230,6 +231,7 @@ export class TableService {
         };
         break;
       case DataType.Attachment:
+        (config as AttachmentFieldConfig).maxFiles = column.validation?.maxFiles;
         break;
     }
 

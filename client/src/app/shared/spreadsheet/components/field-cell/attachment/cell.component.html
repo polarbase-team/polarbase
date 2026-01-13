@@ -11,7 +11,13 @@
         (onShow)="onPopoverOpen()"
         (onHide)="onPopoverClose()"
       >
-        <file-uploader (onUpload)="onUpload($event)" />
+        @if (data.length < field.maxFiles) {
+          <file-uploader (onUpload)="onUpload($event)" />
+        } @else {
+          <p class="text-sm text-surface-500">
+            You have reached the maximum number of files ({{ field.maxFiles }}).
+          </p>
+        }
       </p-popover>
     }
     <div
