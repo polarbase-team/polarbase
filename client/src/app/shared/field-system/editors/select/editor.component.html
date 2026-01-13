@@ -28,6 +28,8 @@
     [options]="field().options"
     appendTo="body"
     fluid
+    [checkmark]="true"
+    [showClear]="true"
   />
   @if (input.invalid && input.touched) {
     <p-message severity="error" size="small" variant="simple">

@@ -108,6 +108,8 @@
                 (ngModelChange)="onDataTypeSelect($event)"
                 placeholder="Select here..."
                 required
+                [checkmark]="true"
+                [showClear]="true"
               >
                 <ng-template let-item #item>
                   <div class="flex items-center gap-2">
@@ -263,6 +265,8 @@
                     optionValue="value"
                     placeholder="Select here..."
                     required
+                    [checkmark]="true"
+                    [showClear]="true"
                   />
                 </div>
                 <div class="flex flex-col gap-1">
