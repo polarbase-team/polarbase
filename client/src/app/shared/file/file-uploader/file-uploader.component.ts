@@ -26,7 +26,6 @@ const UPLOAD_URL = `${environment.apiUrl}/rest${environment.uploadUrl}`;
 @Component({
   selector: 'file-uploader',
   templateUrl: './file-uploader.component.html',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FileUploadModule, ButtonModule, BadgeModule],
 })

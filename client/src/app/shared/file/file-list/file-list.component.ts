@@ -14,7 +14,6 @@ import { formatSize, getFileIcon, getPublicUrl, isImage } from '../utils';
 @Component({
   selector: 'file-list',
   templateUrl: './file-list.component.html',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
