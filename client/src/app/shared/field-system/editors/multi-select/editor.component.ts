@@ -1,4 +1,4 @@
-import { Component, computed, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutoFocusModule } from 'primeng/autofocus';
@@ -13,6 +13,7 @@ import { FieldEditorComponent } from '../editor.component';
 @Component({
   selector: 'multi-select-field-editor',
   templateUrl: './editor.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, AutoFocusModule, MultiSelectModule, FluidModule, MessageModule],
 })
 export class MultiSelectFieldEditorComponent extends FieldEditorComponent<

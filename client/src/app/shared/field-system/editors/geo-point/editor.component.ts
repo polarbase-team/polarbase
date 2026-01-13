@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutoFocusModule } from 'primeng/autofocus';
@@ -19,6 +19,7 @@ import { convertToHtmlPattern } from '@app/core/utils';
 @Component({
   selector: 'geo-point-field-editor',
   templateUrl: './editor.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     AutoFocusModule,

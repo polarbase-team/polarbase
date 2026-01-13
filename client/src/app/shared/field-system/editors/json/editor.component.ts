@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import { Component, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
@@ -17,6 +17,7 @@ import { FieldEditorComponent } from '../editor.component';
 @Component({
   selector: 'json-field-editor',
   templateUrl: './editor.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     AutoFocusModule,

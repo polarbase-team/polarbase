@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +15,7 @@ import { FieldEditorComponent } from '../editor.component';
 @Component({
   selector: 'long-text-field-editor',
   templateUrl: './editor.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     AutoFocusModule,

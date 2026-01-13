@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { FileListComponent } from '@app/shared/file/file-list/file-list.component';
 import {
@@ -12,6 +12,7 @@ import { FieldEditorComponent } from '../editor.component';
 @Component({
   selector: 'attachment-field-editor',
   templateUrl: './editor.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FileListComponent, FileUploaderComponent],
 })
 export class AttachmentFieldEditorComponent extends FieldEditorComponent<
