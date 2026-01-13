@@ -21,13 +21,14 @@
     [required]="field().required"
     [invalid]="input.invalid && input.touched"
     [inputId]="fieldName"
-    [placeholder]="placeholder() ?? 'Select here...'"
+    [placeholder]="placeholder() ?? 'Select options'"
     [pAutoFocus]="autoFocus()"
     [readonly]="viewOnly()"
     [(ngModel)]="data"
     [options]="field().options"
     appendTo="body"
     fluid
+    [showClear]="true"
   />
   @if (input.invalid && input.touched) {
     <p-message severity="error" size="small" variant="simple">
