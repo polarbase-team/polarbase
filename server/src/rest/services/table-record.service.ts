@@ -1,8 +1,8 @@
 import { Knex } from 'knex';
 
 import pg from '../../plugins/pg';
-import { getCachedTableSchema, getTableSchema } from '../utils/table';
-import { Column, DataType } from '../utils/column';
+import { getCachedTableSchema } from '../utils/table';
+import { DataType } from '../utils/column';
 import { buildWhereClause, WhereFilter } from '../utils/record';
 
 export class TableRecordService {

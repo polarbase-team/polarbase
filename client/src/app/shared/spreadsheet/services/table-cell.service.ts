@@ -1152,17 +1152,26 @@ export class TableCellService extends TableBaseService {
       case FieldValidationKey.MaxLength:
         message = `Maximum ${payload.maxLength} characters.`;
         break;
-      case FieldValidationKey.Min:
-        message = `Must be at least ${payload.min}.`;
+      case FieldValidationKey.MinValue:
+        message = `Must be at least ${payload.minValue}.`;
         break;
-      case FieldValidationKey.Max:
-        message = `Must be at most ${payload.max}.`;
+      case FieldValidationKey.MaxValue:
+        message = `Must be at most ${payload.maxValue}.`;
+        break;
+      case FieldValidationKey.MinDate:
+        message = `Date should be after ${dayjs(payload.minDate).format('YYYY-MM-DD')}.`;
+        break;
+      case FieldValidationKey.MaxDate:
+        message = `Date should be before ${dayjs(payload.maxDate).format('YYYY-MM-DD')}.`;
         break;
       case FieldValidationKey.MaxSize:
         message = `Maximum size: ${payload.maxSize}.`;
         break;
       case FieldValidationKey.MaxFiles:
         message = `Maximum files: ${payload.maxFiles}.`;
+        break;
+      case FieldValidationKey.AllowedDomains:
+        message = `Domain not allowed.`;
         break;
       default:
         message = 'Invalid value.';

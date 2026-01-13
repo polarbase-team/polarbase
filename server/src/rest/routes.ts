@@ -317,7 +317,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                       t.Nullable(t.String({ format: 'date-time' }))
                     ),
                     maxSize: t.Optional(t.Nullable(t.Number())),
-                    maxFile: t.Optional(t.Nullable(t.Number())),
+                    maxFiles: t.Optional(t.Nullable(t.Number())),
+                    allowedDomains: t.Optional(t.Nullable(t.String())),
                   })
                 )
               ),
@@ -399,7 +400,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                     t.Nullable(t.String({ format: 'date-time' }))
                   ),
                   maxSize: t.Optional(t.Nullable(t.Number())),
-                  maxFile: t.Optional(t.Nullable(t.Number())),
+                  maxFiles: t.Optional(t.Nullable(t.Number())),
+                  allowedDomains: t.Optional(t.Nullable(t.String())),
                 })
               ),
               options: t.Optional(t.Nullable(t.Array(t.String()))),

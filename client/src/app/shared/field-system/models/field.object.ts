@@ -7,10 +7,13 @@ export const FieldValidationKey = {
   Pattern: 'pattern',
   MinLength: 'min-length',
   MaxLength: 'max-length',
-  Min: 'min',
-  Max: 'max',
+  MinValue: 'min-value',
+  MaxValue: 'max-value',
+  MinDate: 'min-date',
+  MaxDate: 'max-date',
   MaxSize: 'max-size',
   MaxFiles: 'max-files',
+  AllowedDomains: 'allowed-domains',
   Other: 'other',
 } as const;
 export type FieldValidationKey = (typeof FieldValidationKey)[keyof typeof FieldValidationKey];

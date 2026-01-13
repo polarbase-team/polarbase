@@ -18,6 +18,8 @@ import {
   addOptionsCheck,
   addFileCountCheck,
   removeFileCountCheck,
+  addEmailDomainCheck,
+  removeEmailDomainCheck,
 } from '../utils/column';
 
 export class TableService {
@@ -225,7 +227,8 @@ export class TableService {
         minDate?: string | null;
         maxDate?: string | null;
         maxSize?: number | null;
-        maxFile?: number | null;
+        maxFiles?: number | null;
+        allowedDomains?: string | null;
       } | null;
     } & (
       | {
@@ -274,7 +277,8 @@ export class TableService {
       minDate,
       maxDate,
       maxSize,
-      maxFile,
+      maxFiles,
+      allowedDomains,
     } = validation || {};
 
     const fullTableName = `"${schemaName}"."${tableName}"`;
@@ -341,11 +345,16 @@ export class TableService {
         }
 
         // 5. File Count Check: Only if a maximum file limit is set
-        if (maxFile !== undefined) {
-          addFileCountCheck(tableBuilder, tableName, name, maxFile);
+        if (maxFiles !== undefined) {
+          addFileCountCheck(tableBuilder, tableName, name, maxFiles);
         }
 
-        // 6. Options Check: Only if the options array is not empty
+        // 6. Email Domain Check
+        if (allowedDomains !== undefined) {
+          addEmailDomainCheck(tableBuilder, tableName, name, allowedDomains!);
+        }
+
+        // 7. Options Check: Only if the options array is not empty
         if (options?.length) {
           addOptionsCheck(
             tableBuilder,
@@ -393,7 +402,8 @@ export class TableService {
         minDate?: string | null;
         maxDate?: string | null;
         maxSize?: number | null;
-        maxFile?: number | null;
+        maxFiles?: number | null;
+        allowedDomains?: string | null;
       } | null;
     } & (
       | {
@@ -442,7 +452,8 @@ export class TableService {
       minDate,
       maxDate,
       maxSize,
-      maxFile,
+      maxFiles,
+      allowedDomains,
     } = validation || {};
 
     const fullTableName = `"${schemaName}"."${tableName}"`;
@@ -609,7 +620,10 @@ export class TableService {
           addSizeCheck(tableBuilder, tableName, newName, maxSize!);
         }
 
-        if (recreateConstraints || maxFile !== oldSchema.validation?.maxFile) {
+        if (
+          recreateConstraints ||
+          maxFiles !== oldSchema.validation?.maxFiles
+        ) {
           if (!recreateConstraints) {
             const constraintName = getConstraintName(
               tableName,
@@ -625,7 +639,34 @@ export class TableService {
             }
           }
 
-          addFileCountCheck(tableBuilder, tableName, newName, maxFile!);
+          addFileCountCheck(tableBuilder, tableName, newName, maxFiles!);
+        }
+
+        if (
+          recreateConstraints ||
+          allowedDomains !== oldSchema.validation?.allowedDomains
+        ) {
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'email-domain'
+            );
+            if (
+              oldSchema.metadata.constraints?.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeEmailDomainCheck(tableBuilder, tableName, columnName);
+            }
+          }
+
+          addEmailDomainCheck(
+            tableBuilder,
+            tableName,
+            newName,
+            allowedDomains!
+          );
         }
 
         if (
@@ -666,7 +707,22 @@ export class TableService {
               tableName,
               columnName,
               'size'
-            )}"
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'file-count'
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'email-domain'
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'options'
+            )}";
           `
           );
         }

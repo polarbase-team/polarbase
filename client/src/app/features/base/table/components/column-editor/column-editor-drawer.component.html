@@ -240,7 +240,20 @@
                 <ng-container [ngTemplateOutlet]="optionsBuilder" />
               }
               @case (DataType.Checkbox) {}
-              @case (DataType.Email) {}
+              @case (DataType.Email) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Allowed domains</label>
+                  <input
+                    pInputText
+                    name="allowedDomains"
+                    [(ngModel)]="columnFormData.validation.allowedDomains"
+                    placeholder="Input here..."
+                  />
+                  <p class="text-surface-500 text-xs">
+                    Comma separated. Leave blank to allow all domains.
+                  </p>
+                </div>
+              }
               @case (DataType.JSON) {
                 <div class="flex flex-col gap-1">
                   <label class="text-sm">Max size (bytes)</label>
@@ -320,8 +333,8 @@
                 <div class="flex flex-col gap-1">
                   <label class="text-sm">Max files</label>
                   <p-inputnumber
-                    name="maxFile"
-                    [(ngModel)]="columnFormData.validation.maxFile"
+                    name="maxFiles"
+                    [(ngModel)]="columnFormData.validation.maxFiles"
                     [useGrouping]="false"
                     placeholder="Input here..."
                   />

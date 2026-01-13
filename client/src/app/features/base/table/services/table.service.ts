@@ -8,6 +8,7 @@ import { ApiResponse } from '@app/core/models/api-response';
 import { DataType, FieldConfig } from '@app/shared/field-system/models/field.interface';
 import { IntegerFieldConfig } from '@app/shared/field-system/models/integer/field.interface';
 import { SelectFieldConfig } from '@app/shared/field-system/models/select/field.interface';
+import { EmailFieldConfig } from '@app/shared/field-system/models/email/field.interface';
 import { NumberFieldConfig } from '@app/shared/field-system/models/number/field.interface';
 import { TextFieldConfig } from '@app/shared/field-system/models/text/field.interface';
 import { LongTextFieldConfig } from '@app/shared/field-system/models/long-text/field.interface';
@@ -54,6 +55,7 @@ export interface ColumnDefinition {
     maxDate?: string | null;
     maxSize?: number | null;
     maxFiles?: number | null;
+    allowedDomains?: string | null;
   } | null;
   metadata: any;
 }
@@ -198,12 +200,12 @@ export class TableService {
         (config as LongTextFieldConfig).maxSize = column.validation?.maxSize;
         break;
       case DataType.Integer:
-        (config as IntegerFieldConfig).min = column.validation?.minValue;
-        (config as IntegerFieldConfig).max = column.validation?.maxValue;
+        (config as IntegerFieldConfig).minValue = column.validation?.minValue;
+        (config as IntegerFieldConfig).maxValue = column.validation?.maxValue;
         break;
       case DataType.Number:
-        (config as NumberFieldConfig).min = column.validation?.minValue;
-        (config as NumberFieldConfig).max = column.validation?.maxValue;
+        (config as NumberFieldConfig).minValue = column.validation?.minValue;
+        (config as NumberFieldConfig).maxValue = column.validation?.maxValue;
         break;
       case DataType.Date:
         (config as DateFieldConfig).minDate = column.validation?.minDate;
@@ -214,6 +216,7 @@ export class TableService {
         (config as SelectFieldConfig).options = column.options;
         break;
       case DataType.Email:
+        (config as EmailFieldConfig).allowedDomains = column.validation?.allowedDomains;
         break;
       case DataType.Url:
         break;

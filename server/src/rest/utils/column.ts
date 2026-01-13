@@ -49,7 +49,8 @@ export interface Column {
     minDate?: string;
     maxDate?: string;
     maxSize?: number;
-    maxFile?: number;
+    maxFiles?: number;
+    allowedDomains?: string;
   };
   metadata: any;
 }
@@ -200,13 +201,21 @@ export const LENGTH_CHECK_SUFFIX = '_length_check';
 export const RANGE_CHECK_SUFFIX = '_range_check';
 export const DATE_RANGE_CHECK_SUFFIX = '_date_range_check';
 export const SIZE_CHECK_SUFFIX = '_size_check';
+export const EMAIL_DOMAIN_CHECK_SUFFIX = '_email_domain_check';
 export const FILE_COUNT_CHECK_SUFFIX = '_file_count_check';
 export const OPTIONS_CHECK_SUFFIX = '_options_check';
 
 export const getConstraintName = (
   tableName: string,
   columnName: string,
-  type: 'length' | 'range' | 'date-range' | 'size' | 'file-count' | 'options'
+  type:
+    | 'length'
+    | 'range'
+    | 'date-range'
+    | 'size'
+    | 'file-count'
+    | 'email-domain'
+    | 'options'
 ): string => {
   const prefix = `${tableName}_${columnName}`;
   switch (type) {
@@ -220,6 +229,8 @@ export const getConstraintName = (
       return prefix + SIZE_CHECK_SUFFIX;
     case 'file-count':
       return prefix + FILE_COUNT_CHECK_SUFFIX;
+    case 'email-domain':
+      return prefix + EMAIL_DOMAIN_CHECK_SUFFIX;
     case 'options':
       return prefix + OPTIONS_CHECK_SUFFIX;
   }
@@ -378,6 +389,39 @@ export const removeFileCountCheck = (
   columnName: string
 ) => {
   const constraintName = `${tableName}_${columnName}${FILE_COUNT_CHECK_SUFFIX}`;
+  tableBuilder.dropChecks(`"${constraintName}"`);
+};
+
+export const addEmailDomainCheck = (
+  tableBuilder: Knex.TableBuilder,
+  tableName: string,
+  columnName: string,
+  allowedDomains: string
+) => {
+  const quotedColumn = `"${columnName}"`;
+  const constraintName = getConstraintName(
+    tableName,
+    columnName,
+    'email-domain'
+  );
+  const escapedDomains = allowedDomains
+    .split(',')
+    .map((dom) => `'${dom.trim().replace(/'/g, "''")}'`)
+    .join(', ');
+  const sql = `split_part(${quotedColumn}, '@', 2) IN (${escapedDomains})`;
+  tableBuilder.check(sql, [], `"${constraintName}"`);
+};
+
+export const removeEmailDomainCheck = (
+  tableBuilder: Knex.TableBuilder,
+  tableName: string,
+  columnName: string
+) => {
+  const constraintName = getConstraintName(
+    tableName,
+    columnName,
+    'email-domain'
+  );
   tableBuilder.dropChecks(`"${constraintName}"`);
 };
 
