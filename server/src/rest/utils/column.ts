@@ -155,55 +155,31 @@ export const specificType = (
   }
 ) => {
   switch (dataType) {
-    case DataType.Text: {
+    case DataType.Text:
       return tableBuilder.string(name);
-    }
-
-    case DataType.LongText: {
+    case DataType.LongText:
       return tableBuilder.text(name);
-    }
-
-    case DataType.Integer: {
+    case DataType.Integer:
       return tableBuilder.integer(name);
-    }
-
-    case DataType.Number: {
+    case DataType.Number:
       return tableBuilder.decimal(name);
-    }
-
-    case DataType.Checkbox: {
+    case DataType.Checkbox:
       return tableBuilder.boolean(name);
-    }
-
-    case DataType.Date: {
+    case DataType.Date:
       return tableBuilder.timestamp(name);
-    }
-
-    case DataType.Select: {
+    case DataType.Select:
       return tableBuilder.text(name);
-    }
-
-    case DataType.MultiSelect: {
+    case DataType.MultiSelect:
       return tableBuilder.specificType(name, 'text[]');
-    }
-
-    case DataType.Email: {
+    case DataType.Email:
       return tableBuilder.specificType(name, 'email_address');
-    }
-
-    case DataType.Url: {
+    case DataType.Url:
       return tableBuilder.specificType(name, 'url_address');
-    }
-
-    case DataType.JSON: {
+    case DataType.JSON:
       return tableBuilder.jsonb(name);
-    }
-
-    case DataType.GeoPoint: {
-      return tableBuilder.specificType(name, 'point');
-    }
-
-    case DataType.Reference: {
+    case DataType.GeoPoint:
+      return tableBuilder.point(name);
+    case DataType.Reference:
       if (!foreignKey) {
         throw new Error(`Foreign key metadata is required for column: ${name}`);
       }
@@ -213,12 +189,8 @@ export const specificType = (
         .inTable(foreignKey.table)
         .onUpdate(foreignKey.onUpdate)
         .onDelete(foreignKey.onDelete);
-    }
-
-    case DataType.Attachment: {
+    case DataType.Attachment:
       return tableBuilder.specificType(name, 'attachment[]');
-    }
-
     default:
       throw new Error(`Unsupported column type: ${dataType}`);
   }
