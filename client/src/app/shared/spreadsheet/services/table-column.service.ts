@@ -521,7 +521,7 @@ export class TableColumnService extends TableBaseService {
           icon: 'icon icon-trash',
           command: () => {
             this.host.deleteConfirmation(
-              'Do you want to delete the selected columns?',
+              'Are you sure you want to delete the selected columns?',
               'Delete columns',
               () => this.deleteSelectedColumns(),
               void 0,
@@ -620,7 +620,7 @@ export class TableColumnService extends TableBaseService {
             icon: 'icon icon-trash',
             command: () => {
               this.host.deleteConfirmation(
-                'Do you want to delete this column?',
+                'Are you sure you want to delete this column?',
                 'Delete column',
                 () => this.deleteColumn(column),
                 void 0,
