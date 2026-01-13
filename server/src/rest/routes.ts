@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { openapi, fromTypes } from '@elysiajs/openapi';
 
 import pg from '../plugins/pg';
+import { LocalStorageProvider } from '../plugins/storage/local-storage';
 import { checkRateLimit } from '../utils/rate-limit';
 import { err, json } from '../utils/api-response';
 import { apiKeyAuth } from '../api-keys/auth';
@@ -23,6 +24,7 @@ const REST_BLACKLISTED_TABLES = (
 
 const tableService = new TableService();
 const tableRecordService = new TableRecordService();
+const storage = new LocalStorageProvider();
 
 /**
  * Main REST router exposing CRUD + bulk operations for all public tables.
@@ -141,501 +143,574 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     }
   })
 
-  /**
-   * GET /rest/tables → list of allowed tables + comments
-   */
-  .get('/tables', async () => {
-    const tables = await tableService.getAll();
-    return tables.filter((t) => !REST_BLACKLISTED_TABLES.includes(t.tableName));
-  })
+  .group('/db', (app) =>
+    app
 
-  /**
-   * GET /rest/tables/:table/schema → detailed column schema
-   */
-  .get(
-    '/tables/:table/schema',
-    async ({ params: { table }, set }) => {
-      const exists = await pg.schema.hasTable(table);
-      if (!exists) {
-        set.status = 404;
-        return err(`Table "${table}" not found`);
-      }
-      return tableService.getSchema({ tableName: table });
-    },
-    {
-      params: t.Object({ table: t.String() }),
-    }
-  )
+      /**
+       * GET /rest/db/tables → list of allowed tables + comments
+       */
+      .get('/tables', async () => {
+        const tables = await tableService.getAll();
+        return tables.filter(
+          (t) => !REST_BLACKLISTED_TABLES.includes(t.tableName)
+        );
+      })
 
-  /**
-   * POST /rest/tables → create new table
-   */
-  .post(
-    '/tables',
-    ({ body }) => {
-      return tableService.createTable(body);
-    },
-    {
-      body: t.Object({
-        tableName: t.String({
-          pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
-          minLength: 1,
-          maxLength: 63,
-          error:
-            'Table name must start with a letter/_ and contain only alphanumeric characters (max 63).',
-        }),
-        tableComment: t.Optional(
-          t.String({
-            maxLength: 500,
-            error: 'Comment too long (max 500 chars)',
-          })
-        ),
-        idType: t.Optional(
-          t.Union(
-            [
-              t.Literal('biginteger'),
-              t.Literal('integer'),
-              t.Literal('uuid'),
-              t.Literal('shortid'),
-            ],
-            {
-              error:
-                'Invalid idType. Expected: biginteger, integer, uuid, or shortid.',
-            }
-          )
-        ),
-        timestamps: t.Optional(t.Boolean()),
-      }),
-    }
-  )
-
-  /**
-   * PATCH /rest/tables/:table → partial update of table (rename, update comment)
-   */
-  .patch(
-    '/tables/:table',
-    ({ params: { table }, body }) => {
-      return tableService.updateTable({ tableName: table, data: body });
-    },
-    {
-      body: t.Object(
+      /**
+       * GET /rest/db/tables/:table/schema → detailed column schema
+       */
+      .get(
+        '/tables/:table/schema',
+        async ({ params: { table }, set }) => {
+          const exists = await pg.schema.hasTable(table);
+          if (!exists) {
+            set.status = 404;
+            return err(`Table "${table}" not found`);
+          }
+          return tableService.getSchema({ tableName: table });
+        },
         {
-          tableName: t.Optional(
-            t.String({
+          params: t.Object({ table: t.String() }),
+        }
+      )
+
+      /**
+       * POST /rest/db/tables → create new table
+       */
+      .post(
+        '/tables',
+        ({ body }) => {
+          return tableService.createTable(body);
+        },
+        {
+          body: t.Object({
+            tableName: t.String({
               pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
               minLength: 1,
               maxLength: 63,
               error:
-                'Invalid format. Use letters, numbers, or _ (max 63 chars).',
-            })
-          ),
-          tableComment: t.Optional(
-            t.Nullable(
+                'Table name must start with a letter/_ and contain only alphanumeric characters (max 63).',
+            }),
+            tableComment: t.Optional(
               t.String({
                 maxLength: 500,
                 error: 'Comment too long (max 500 chars)',
               })
-            )
-          ),
+            ),
+            idType: t.Optional(
+              t.Union(
+                [
+                  t.Literal('biginteger'),
+                  t.Literal('integer'),
+                  t.Literal('uuid'),
+                  t.Literal('shortid'),
+                ],
+                {
+                  error:
+                    'Invalid idType. Expected: biginteger, integer, uuid, or shortid.',
+                }
+              )
+            ),
+            timestamps: t.Optional(t.Boolean()),
+          }),
+        }
+      )
+
+      /**
+       * PATCH /rest/db/tables/:table → partial update of table (rename, update comment)
+       */
+      .patch(
+        '/tables/:table',
+        ({ params: { table }, body }) => {
+          return tableService.updateTable({ tableName: table, data: body });
         },
         {
-          minProperties: 1,
-          error: 'At least one field must be provided for update.',
+          body: t.Object(
+            {
+              tableName: t.Optional(
+                t.String({
+                  pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
+                  minLength: 1,
+                  maxLength: 63,
+                  error:
+                    'Invalid format. Use letters, numbers, or _ (max 63 chars).',
+                })
+              ),
+              tableComment: t.Optional(
+                t.Nullable(
+                  t.String({
+                    maxLength: 500,
+                    error: 'Comment too long (max 500 chars)',
+                  })
+                )
+              ),
+            },
+            {
+              minProperties: 1,
+              error: 'At least one field must be provided for update.',
+            }
+          ),
         }
-      ),
-    }
-  )
+      )
 
-  /**
-   * DELETE /rest/tables/:table → delete table
-   */
-  .delete(
-    '/tables/:table',
-    ({ params: { table }, query: { cascade } }) => {
-      return tableService.deleteTable({ tableName: table, cascade });
-    },
-    {
-      params: t.Object({ table: t.String() }),
-      query: t.Object({ cascade: t.Optional(t.Boolean()) }),
-    }
-  )
-
-  /**
-   * POST /rest/tables/:table/columns → create new column
-   */
-  .post(
-    '/tables/:table/columns',
-    ({ params: { table }, body }) => {
-      return tableService.createColumn({
-        tableName: table,
-        column: body as any,
-      });
-    },
-    {
-      params: t.Object({ table: t.String() }),
-      body: t.Object(
+      /**
+       * DELETE /rest/db/tables/:table → delete table
+       */
+      .delete(
+        '/tables/:table',
+        ({ params: { table }, query: { cascade } }) => {
+          return tableService.deleteTable({ tableName: table, cascade });
+        },
         {
-          name: t.String({
-            pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
-            minLength: 1,
-            maxLength: 63,
-            error:
-              'Column name must be alphanumeric and start with a letter or underscore.',
-          }),
-          dataType: t.Enum(DataType, {
-            error: 'Unsupported dataType provided.',
-          }),
-          nullable: t.Optional(t.Nullable(t.Boolean())),
-          unique: t.Optional(t.Nullable(t.Boolean())),
-          defaultValue: t.Optional(t.Nullable(t.Any())),
-          comment: t.Optional(
-            t.Nullable(
+          params: t.Object({ table: t.String() }),
+          query: t.Object({ cascade: t.Optional(t.Boolean()) }),
+        }
+      )
+
+      /**
+       * POST /rest/db/tables/:table/columns → create new column
+       */
+      .post(
+        '/tables/:table/columns',
+        ({ params: { table }, body }) => {
+          return tableService.createColumn({
+            tableName: table,
+            column: body as any,
+          });
+        },
+        {
+          params: t.Object({ table: t.String() }),
+          body: t.Object(
+            {
+              name: t.String({
+                pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
+                minLength: 1,
+                maxLength: 63,
+                error:
+                  'Column name must be alphanumeric and start with a letter or underscore.',
+              }),
+              dataType: t.Enum(DataType, {
+                error: 'Unsupported dataType provided.',
+              }),
+              nullable: t.Optional(t.Nullable(t.Boolean())),
+              unique: t.Optional(t.Nullable(t.Boolean())),
+              defaultValue: t.Optional(t.Nullable(t.Any())),
+              comment: t.Optional(
+                t.Nullable(
+                  t.String({
+                    maxLength: 500,
+                    error: 'Comment too long (max 500 chars)',
+                  })
+                )
+              ),
+              validation: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    minLength: t.Optional(t.Nullable(t.Number())),
+                    maxLength: t.Optional(t.Nullable(t.Number())),
+                    minValue: t.Optional(t.Nullable(t.Number())),
+                    maxValue: t.Optional(t.Nullable(t.Number())),
+                    minDate: t.Optional(
+                      t.Nullable(t.String({ format: 'date-time' }))
+                    ),
+                    maxDate: t.Optional(
+                      t.Nullable(t.String({ format: 'date-time' }))
+                    ),
+                    maxSize: t.Optional(t.Nullable(t.Number())),
+                    maxFile: t.Optional(t.Nullable(t.Number())),
+                  })
+                )
+              ),
+              options: t.Optional(t.Nullable(t.Array(t.String()))),
+              foreignKey: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    table: t.String(),
+                    column: t.Object({ name: t.String(), type: t.String() }),
+                    onUpdate: t.Enum(ReferentialAction),
+                    onDelete: t.Enum(ReferentialAction),
+                  })
+                )
+              ),
+            },
+            {
+              error: (value) => {
+                const { dataType, options, foreignKey } =
+                  value as unknown as Column;
+                if (
+                  (dataType === DataType.Select ||
+                    dataType === DataType.MultiSelect) &&
+                  (!options || options.length === 0)
+                ) {
+                  return 'options_required: Select types must have at least one option';
+                }
+                if (dataType === DataType.Reference && !foreignKey) {
+                  return 'foreignKey_required: Reference type must specify a target table and column';
+                }
+              },
+            }
+          ),
+        }
+      )
+
+      /**
+       * PUT /rest/db/tables/:table/columns/:column → update column
+       */
+      .put(
+        '/tables/:table/columns/:column',
+        ({ params: { table, column }, body }) => {
+          return tableService.updateColumn({
+            tableName: table,
+            columnName: column,
+            column: body as any,
+          });
+        },
+        {
+          params: t.Object({ table: t.String(), column: t.String() }),
+          body: t.Object(
+            {
+              name: t.String({
+                pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
+                minLength: 1,
+                maxLength: 63,
+                error:
+                  'Invalid format. Use letters, numbers, or _ (max 63 chars).',
+              }),
+              dataType: t.Enum(DataType, { error: 'Invalid dataType.' }),
+              nullable: t.Nullable(t.Boolean()),
+              unique: t.Nullable(t.Boolean()),
+              defaultValue: t.Nullable(t.Any()),
+              comment: t.Nullable(
+                t.String({
+                  maxLength: 500,
+                  error: 'Comment too long (max 500 chars)',
+                })
+              ),
+              validation: t.Nullable(
+                t.Object({
+                  minLength: t.Optional(t.Nullable(t.Number())),
+                  maxLength: t.Optional(t.Nullable(t.Number())),
+                  minValue: t.Optional(t.Nullable(t.Number())),
+                  maxValue: t.Optional(t.Nullable(t.Number())),
+                  minDate: t.Optional(
+                    t.Nullable(t.String({ format: 'date-time' }))
+                  ),
+                  maxDate: t.Optional(
+                    t.Nullable(t.String({ format: 'date-time' }))
+                  ),
+                  maxSize: t.Optional(t.Nullable(t.Number())),
+                  maxFile: t.Optional(t.Nullable(t.Number())),
+                })
+              ),
+              options: t.Optional(t.Nullable(t.Array(t.String()))),
+              foreignKey: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    table: t.String(),
+                    column: t.Object({ name: t.String(), type: t.String() }),
+                    onUpdate: t.Enum(ReferentialAction),
+                    onDelete: t.Enum(ReferentialAction),
+                  })
+                )
+              ),
+            },
+            {
+              error: (value) => {
+                const { dataType, options, foreignKey } =
+                  value as unknown as Column;
+                if (
+                  (dataType === DataType.Select ||
+                    dataType === DataType.MultiSelect) &&
+                  (!options || options.length === 0)
+                ) {
+                  return 'options_required: Select types must have at least one option';
+                }
+                if (dataType === DataType.Reference && !foreignKey) {
+                  return 'foreignKey_required: Reference type must specify a target table and column';
+                }
+              },
+            }
+          ),
+        }
+      )
+
+      /**
+       * DELETE /rest/db/tables/:table/columns/:column → delete column
+       */
+      .delete(
+        '/tables/:table/columns/:column',
+        ({ params: { table, column } }) => {
+          return tableService.deleteColumn({
+            tableName: table,
+            columnName: column,
+          });
+        },
+        {
+          params: t.Object({ table: t.String(), column: t.String() }),
+        }
+      )
+
+      /**
+       * GET /rest/db/:table → paginated list
+       */
+      .get(
+        '/:table',
+        async ({ params: { table }, query }) => {
+          const { filter, sort, expand, ...remain } = query;
+          let whereClause: WhereFilter;
+          if (typeof filter === 'string') {
+            try {
+              whereClause = JSON.parse(filter);
+            } catch (e) {
+              throw new Error(
+                'Query parameter "filter" must be a valid JSON string'
+              );
+            }
+          }
+
+          const expandFields: Record<string, string> = {};
+          if (expand) {
+            const expands = Array.isArray(expand) ? expand : [expand];
+            expands.forEach((item) => {
+              const [field, alias] = item.split(':');
+              if (field) {
+                expandFields[field.trim()] = alias?.trim() || '';
+              }
+            });
+          }
+
+          return tableRecordService.select({
+            tableName: table,
+            query: {
+              ...remain,
+              where: whereClause!,
+              order: sort,
+              expandFields,
+            },
+          });
+        },
+        {
+          query: t.Object({
+            fields: t.Optional(t.String()),
+            search: t.Optional(t.String()),
+            filter: t.Optional(t.String()),
+            sort: t.Optional(
               t.String({
-                maxLength: 500,
-                error: 'Comment too long (max 500 chars)',
+                pattern: '^[^:]+:(asc|desc)$',
+                error: 'Sort format must be "field:asc" or "field:desc".',
               })
-            )
-          ),
-          options: t.Optional(t.Nullable(t.Array(t.String()))),
-          foreignKey: t.Optional(
-            t.Nullable(
-              t.Object({
-                table: t.String(),
-                column: t.Object({ name: t.String(), type: t.String() }),
-                onUpdate: t.Enum(ReferentialAction),
-                onDelete: t.Enum(ReferentialAction),
+            ),
+            expand: t.Optional(t.Union([t.String(), t.Array(t.String())])),
+            page: t.Optional(
+              t.Numeric({
+                minimum: 1,
+                error: 'Page must be a positive integer.',
               })
-            )
-          ),
-          validation: t.Optional(t.Nullable(t.Any())),
-        },
-        {
-          error: (value) => {
-            const { dataType, options, foreignKey } =
-              value as unknown as Column;
-            if (
-              (dataType === DataType.Select ||
-                dataType === DataType.MultiSelect) &&
-              (!options || options.length === 0)
-            ) {
-              return 'options_required: Select types must have at least one option';
-            }
-            if (dataType === DataType.Reference && !foreignKey) {
-              return 'foreignKey_required: Reference type must specify a target table and column';
-            }
-          },
-        }
-      ),
-    }
-  )
-
-  /**
-   * PUT /rest/tables/:table/columns/:column → update column
-   */
-  .put(
-    '/tables/:table/columns/:column',
-    ({ params: { table, column }, body }) => {
-      return tableService.updateColumn({
-        tableName: table,
-        columnName: column,
-        column: body as any,
-      });
-    },
-    {
-      params: t.Object({ table: t.String(), column: t.String() }),
-      body: t.Object(
-        {
-          name: t.String({
-            pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
-            minLength: 1,
-            maxLength: 63,
-            error: 'Invalid format. Use letters, numbers, or _ (max 63 chars).',
+            ),
+            limit: t.Optional(
+              t.Numeric({
+                minimum: 1,
+                maximum: 10000,
+                error: 'Limit must be between 1 and 10,000.',
+              })
+            ),
           }),
-          dataType: t.Enum(DataType, { error: 'Invalid dataType.' }),
-          nullable: t.Nullable(t.Boolean()),
-          unique: t.Nullable(t.Boolean()),
-          defaultValue: t.Nullable(t.Any()),
-          comment: t.Nullable(
-            t.String({
-              maxLength: 500,
-              error: 'Comment too long (max 500 chars)',
-            })
-          ),
-          validation: t.Nullable(t.Any()),
-          options: t.Optional(t.Nullable(t.Array(t.String()))),
-          foreignKey: t.Optional(
-            t.Nullable(
-              t.Object({
-                table: t.String(),
-                column: t.Object({ name: t.String(), type: t.String() }),
-                onUpdate: t.Enum(ReferentialAction),
-                onDelete: t.Enum(ReferentialAction),
-              })
-            )
-          ),
+        }
+      )
+
+      /**
+       * GET /rest/db/:table/:id → single record
+       */
+      .get(
+        '/:table/:id',
+        async ({ params: { table, id }, query, set }) => {
+          const { expand } = query;
+          const expandFields: Record<string, string> = {};
+          if (expand) {
+            const expands = Array.isArray(expand) ? expand : [expand];
+            expands.forEach((item) => {
+              const [field, alias] = item.split(':');
+              if (field) {
+                expandFields[field.trim()] = alias?.trim() || '';
+              }
+            });
+          }
+
+          const result = await tableRecordService.select({
+            tableName: table,
+            query: { where: { id }, limit: 1, expandFields },
+          });
+
+          if (result.rows.length === 0) {
+            set.status = 404;
+            return err('Record not found');
+          }
+          return result.rows[0];
         },
         {
-          error: (value) => {
-            const { dataType, options, foreignKey } =
-              value as unknown as Column;
-            if (
-              (dataType === DataType.Select ||
-                dataType === DataType.MultiSelect) &&
-              (!options || options.length === 0)
-            ) {
-              return 'options_required: Select types must have at least one option';
-            }
-            if (dataType === DataType.Reference && !foreignKey) {
-              return 'foreignKey_required: Reference type must specify a target table and column';
-            }
-          },
+          params: t.Object({
+            table: t.String(),
+            id: t.Union([t.String(), t.Numeric()]),
+          }),
+          query: t.Object({
+            expand: t.Optional(t.Union([t.String(), t.Array(t.String())])),
+          }),
         }
-      ),
-    }
-  )
+      )
 
-  /**
-   * DELETE /rest/tables/:table/columns/:column → delete column
-   */
-  .delete(
-    '/tables/:table/columns/:column',
-    ({ params: { table, column } }) => {
-      return tableService.deleteColumn({
-        tableName: table,
-        columnName: column,
-      });
-    },
-    {
-      params: t.Object({ table: t.String(), column: t.String() }),
-    }
-  )
-
-  /**
-   * GET /rest/:table → paginated list
-   */
-  .get(
-    '/:table',
-    async ({ params: { table }, query }) => {
-      const { filter, sort, expand, ...remain } = query;
-      let whereClause: WhereFilter;
-      if (typeof filter === 'string') {
-        try {
-          whereClause = JSON.parse(filter);
-        } catch (e) {
-          throw new Error(
-            'Query parameter "filter" must be a valid JSON string'
-          );
-        }
-      }
-
-      const expandFields: Record<string, string> = {};
-      if (expand) {
-        const expands = Array.isArray(expand) ? expand : [expand];
-        expands.forEach((item) => {
-          const [field, alias] = item.split(':');
-          if (field) {
-            expandFields[field.trim()] = alias?.trim() || '';
-          }
-        });
-      }
-
-      return tableRecordService.select({
-        tableName: table,
-        query: {
-          ...remain,
-          where: whereClause!,
-          order: sort,
-          expandFields,
+      /**
+       * POST /rest/db/:table → create new record
+       */
+      .post(
+        '/:table',
+        ({ params: { table }, body }) => {
+          return tableRecordService.insert({
+            tableName: table,
+            records: [body],
+          });
         },
-      });
-    },
-    {
-      query: t.Object({
-        fields: t.Optional(t.String()),
-        search: t.Optional(t.String()),
-        filter: t.Optional(t.String()),
-        sort: t.Optional(
-          t.String({
-            pattern: '^[^:]+:(asc|desc)$',
-            error: 'Sort format must be "field:asc" or "field:desc".',
-          })
-        ),
-        expand: t.Optional(t.Union([t.String(), t.Array(t.String())])),
-        page: t.Optional(
-          t.Numeric({ minimum: 1, error: 'Page must be a positive integer.' })
-        ),
-        limit: t.Optional(
-          t.Numeric({
-            minimum: 1,
-            maximum: 10000,
-            error: 'Limit must be between 1 and 10,000.',
-          })
-        ),
-      }),
-    }
-  )
-
-  /**
-   * GET /rest/:table/:id → single record
-   */
-  .get(
-    '/:table/:id',
-    async ({ params: { table, id }, query, set }) => {
-      const { expand } = query;
-      const expandFields: Record<string, string> = {};
-      if (expand) {
-        const expands = Array.isArray(expand) ? expand : [expand];
-        expands.forEach((item) => {
-          const [field, alias] = item.split(':');
-          if (field) {
-            expandFields[field.trim()] = alias?.trim() || '';
-          }
-        });
-      }
-
-      const result = await tableRecordService.select({
-        tableName: table,
-        query: { where: { id }, limit: 1, expandFields },
-      });
-
-      if (result.rows.length === 0) {
-        set.status = 404;
-        return err('Record not found');
-      }
-      return result.rows[0];
-    },
-    {
-      params: t.Object({
-        table: t.String(),
-        id: t.Union([t.String(), t.Numeric()]),
-      }),
-      query: t.Object({
-        expand: t.Optional(t.Union([t.String(), t.Array(t.String())])),
-      }),
-    }
-  )
-
-  /**
-   * POST /rest/:table → create new record
-   */
-  .post(
-    '/:table',
-    ({ params: { table }, body }) => {
-      return tableRecordService.insert({ tableName: table, records: [body] });
-    },
-    {
-      body: t.Record(t.String(), t.Any(), {
-        error: 'Payload must be a valid JSON object.',
-      }),
-    }
-  )
-
-  /**
-   * PATCH /rest/:table/:id → partial update single record
-   */
-  .patch(
-    '/:table/:id',
-    ({ params: { table, id }, body }) => {
-      const { id: _, ...updateData } = body;
-      return tableRecordService.update({
-        tableName: table,
-        updates: [{ where: { id }, data: updateData }],
-      });
-    },
-    {
-      params: t.Object({
-        table: t.String(),
-        id: t.Union([t.String(), t.Numeric()]),
-      }),
-      body: t.Record(t.String(), t.Any(), {
-        minProperties: 1,
-        error: 'Update body cannot be empty.',
-      }),
-    }
-  )
-
-  /**
-   * DELETE /rest/:table/:id → delete single record
-   */
-  .delete(
-    '/:table/:id',
-    ({ params: { table, id } }) => {
-      return tableRecordService.delete({
-        tableName: table,
-        condition: { where: { id } },
-      });
-    },
-    {
-      params: t.Object({
-        table: t.String(),
-        id: t.Union([t.String(), t.Numeric()]),
-      }),
-    }
-  )
-
-  /**
-   * POST /rest/:table/bulk-create → insert many records (max 10,000)
-   */
-  .post(
-    '/:table/bulk-create',
-    ({ params: { table }, body }) => {
-      return tableRecordService.insert({ tableName: table, records: body });
-    },
-    {
-      body: t.Array(t.Record(t.String(), t.Any()), {
-        minItems: 1,
-        maxItems: 10000,
-        error: 'Bulk create requires an array of 1 to 10,000 records.',
-      }),
-    }
-  )
-
-  /**
-   * PATCH /rest/:table/bulk-update → update many records by ids (max 10,000)
-   */
-  .patch(
-    '/:table/bulk-update',
-    ({ params: { table }, body }) => {
-      const updates = body.map(({ id, data }) => ({
-        where: { id },
-        data,
-      }));
-      return tableRecordService.update({ tableName: table, updates });
-    },
-    {
-      body: t.Array(
-        t.Object({
-          id: t.Union([t.String(), t.Numeric()]),
-          data: t.Record(t.String(), t.Any(), { minProperties: 1 }),
-        }),
         {
-          minItems: 1,
-          maxItems: 10000,
-          error: 'Bulk update requires 1-10,000 items with valid ID and data.',
+          body: t.Record(t.String(), t.Any(), {
+            error: 'Payload must be a valid JSON object.',
+          }),
         }
-      ),
-    }
+      )
+
+      /**
+       * PATCH /rest/db/:table/:id → partial update single record
+       */
+      .patch(
+        '/:table/:id',
+        ({ params: { table, id }, body }) => {
+          const { id: _, ...updateData } = body;
+          return tableRecordService.update({
+            tableName: table,
+            updates: [{ where: { id }, data: updateData }],
+          });
+        },
+        {
+          params: t.Object({
+            table: t.String(),
+            id: t.Union([t.String(), t.Numeric()]),
+          }),
+          body: t.Record(t.String(), t.Any(), {
+            minProperties: 1,
+            error: 'Update body cannot be empty.',
+          }),
+        }
+      )
+
+      /**
+       * DELETE /rest/db/:table/:id → delete single record
+       */
+      .delete(
+        '/:table/:id',
+        ({ params: { table, id } }) => {
+          return tableRecordService.delete({
+            tableName: table,
+            condition: { where: { id } },
+          });
+        },
+        {
+          params: t.Object({
+            table: t.String(),
+            id: t.Union([t.String(), t.Numeric()]),
+          }),
+        }
+      )
+
+      /**
+       * POST /rest/db/:table/bulk-create → insert many records (max 10,000)
+       */
+      .post(
+        '/:table/bulk-create',
+        ({ params: { table }, body }) => {
+          return tableRecordService.insert({ tableName: table, records: body });
+        },
+        {
+          body: t.Array(t.Record(t.String(), t.Any()), {
+            minItems: 1,
+            maxItems: 10000,
+            error: 'Bulk create requires an array of 1 to 10,000 records.',
+          }),
+        }
+      )
+
+      /**
+       * PATCH /rest/db/:table/bulk-update → update many records by ids (max 10,000)
+       */
+      .patch(
+        '/:table/bulk-update',
+        ({ params: { table }, body }) => {
+          const updates = body.map(({ id, data }) => ({
+            where: { id },
+            data,
+          }));
+          return tableRecordService.update({ tableName: table, updates });
+        },
+        {
+          body: t.Array(
+            t.Object({
+              id: t.Union([t.String(), t.Numeric()]),
+              data: t.Record(t.String(), t.Any(), { minProperties: 1 }),
+            }),
+            {
+              minItems: 1,
+              maxItems: 10000,
+              error:
+                'Bulk update requires 1-10,000 items with valid ID and data.',
+            }
+          ),
+        }
+      )
+
+      /**
+       * POST /rest/db/:table/bulk-delete → delete many records by ids (max 10,000)
+       */
+      .post(
+        '/:table/bulk-delete',
+        ({ params: { table }, body }) => {
+          return tableRecordService.delete({
+            tableName: table,
+            condition: { where: { id: { in: body.ids } } },
+          });
+        },
+        {
+          body: t.Object({
+            ids: t.Array(t.Union([t.String(), t.Numeric()]), {
+              minItems: 1,
+              maxItems: 10000,
+              error:
+                'The "ids" array must contain between 1 and 10,000 identifiers.',
+            }),
+          }),
+        }
+      )
   )
 
-  /**
-   * POST /rest/:table/bulk-delete → delete many records by ids (max 10,000)
-   */
-  .post(
-    '/:table/bulk-delete',
-    ({ params: { table }, body }) => {
-      return tableRecordService.delete({
-        tableName: table,
-        condition: { where: { id: { in: body.ids } } },
-      });
-    },
-    {
-      body: t.Object({
-        ids: t.Array(t.Union([t.String(), t.Numeric()]), {
-          minItems: 1,
-          maxItems: 10000,
-          error:
-            'The "ids" array must contain between 1 and 10,000 identifiers.',
-        }),
-      }),
-    }
+  .group('/files', (app) =>
+    app
+
+      /**
+       * POST /rest/files/upload → upload file to storage
+       */
+      .post(
+        '/upload',
+        async ({ body: { files } }) => {
+          const uploadedMetadata = [];
+          for (const file of files) {
+            const meta = await storage.upload(file, 'user-uploads');
+            uploadedMetadata.push(meta);
+          }
+          return uploadedMetadata;
+        },
+        {
+          body: t.Object({
+            files: t.Files({
+              maxItems: 10,
+              maxSize: '5m',
+            }),
+          }),
+        }
+      )
   );

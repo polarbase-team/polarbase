@@ -16,6 +16,8 @@ import {
   ReferentialAction,
   removeOptionsCheck,
   addOptionsCheck,
+  addFileCountCheck,
+  removeFileCountCheck,
 } from '../utils/column';
 
 export class TableService {
@@ -223,6 +225,7 @@ export class TableService {
         minDate?: string | null;
         maxDate?: string | null;
         maxSize?: number | null;
+        maxFile?: number | null;
       } | null;
     } & (
       | {
@@ -271,6 +274,7 @@ export class TableService {
       minDate,
       maxDate,
       maxSize,
+      maxFile,
     } = validation || {};
 
     const fullTableName = `"${schemaName}"."${tableName}"`;
@@ -301,10 +305,16 @@ export class TableService {
         if (unique) columnBuilder.unique();
 
         if (defaultValue !== undefined && defaultValue !== null) {
-          if (dataType === DataType.MultiSelect) {
-            columnBuilder.defaultTo(toPgArray(defaultValue));
-          } else {
-            columnBuilder.defaultTo(defaultValue);
+          switch (dataType) {
+            case DataType.MultiSelect:
+              columnBuilder.defaultTo(toPgArray(defaultValue));
+              break;
+            case DataType.Attachment:
+            case DataType.Reference:
+              // Not support default value
+              break;
+            default:
+              columnBuilder.defaultTo(defaultValue);
           }
         }
 
@@ -330,7 +340,12 @@ export class TableService {
           addSizeCheck(tableBuilder, tableName, name, maxSize);
         }
 
-        // 5. Options Check: Only if the options array is not empty
+        // 5. File Count Check: Only if a maximum file limit is set
+        if (maxFile !== undefined) {
+          addFileCountCheck(tableBuilder, tableName, name, maxFile);
+        }
+
+        // 6. Options Check: Only if the options array is not empty
         if (options?.length) {
           addOptionsCheck(
             tableBuilder,
@@ -378,6 +393,7 @@ export class TableService {
         minDate?: string | null;
         maxDate?: string | null;
         maxSize?: number | null;
+        maxFile?: number | null;
       } | null;
     } & (
       | {
@@ -426,6 +442,7 @@ export class TableService {
       minDate,
       maxDate,
       maxSize,
+      maxFile,
     } = validation || {};
 
     const fullTableName = `"${schemaName}"."${tableName}"`;
@@ -475,10 +492,16 @@ export class TableService {
         }
 
         if (defaultValue !== oldSchema.defaultValue) {
-          if (dataType === DataType.MultiSelect) {
-            columnBuilder.defaultTo(toPgArray(defaultValue));
-          } else {
-            columnBuilder.defaultTo(defaultValue);
+          switch (dataType) {
+            case DataType.MultiSelect:
+              columnBuilder.defaultTo(toPgArray(defaultValue));
+              break;
+            case DataType.Attachment:
+            case DataType.Reference:
+              // Not support default value
+              break;
+            default:
+              columnBuilder.defaultTo(defaultValue);
           }
         }
 
@@ -584,6 +607,25 @@ export class TableService {
           }
 
           addSizeCheck(tableBuilder, tableName, newName, maxSize!);
+        }
+
+        if (recreateConstraints || maxFile !== oldSchema.validation?.maxFile) {
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'file-count'
+            );
+            if (
+              oldSchema.metadata.constraints?.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeFileCountCheck(tableBuilder, tableName, columnName);
+            }
+          }
+
+          addFileCountCheck(tableBuilder, tableName, newName, maxFile!);
         }
 
         if (

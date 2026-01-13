@@ -52,6 +52,7 @@ export interface ColumnDefinition {
     minDate?: string | null;
     maxDate?: string | null;
     maxSize?: number | null;
+    maxFile?: number | null;
   } | null;
   metadata: any;
 }
@@ -72,6 +73,7 @@ const DATA_TYPE_MAPPING = {
   json: DataType.JSON,
   'geo-point': DataType.GeoPoint,
   reference: DataType.Reference,
+  attachment: DataType.Attachment,
 };
 
 @Injectable({
@@ -81,7 +83,7 @@ export class TableService {
   tables = signal<TableDefinition[]>([]);
   selectedTable = signal<TableDefinition>(null);
 
-  private apiUrl = `${environment.apiUrl}/rest`;
+  private apiUrl = `${environment.apiUrl}/rest/db`;
 
   constructor(private http: HttpClient) {}
 
@@ -226,6 +228,8 @@ export class TableService {
           loadRecords: this.getRecords.bind(this),
           buildField: this.buildField.bind(this),
         };
+        break;
+      case DataType.Attachment:
         break;
     }
 

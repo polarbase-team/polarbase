@@ -7,6 +7,7 @@ import {
   SIZE_CHECK_SUFFIX,
   RANGE_CHECK_SUFFIX,
   DATE_RANGE_CHECK_SUFFIX,
+  FILE_COUNT_CHECK_SUFFIX,
   OPTIONS_CHECK_SUFFIX,
 } from './column';
 
@@ -61,8 +62,7 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
 /**
  * Retrieves and constructs a comprehensive schema for a specific table,
  * including column metadata, primary key identification, column comments,
- * associated enum values for enum-typed columns, and additional validation
- * and foreign key details.
+ * and additional validation and foreign key details.
  */
 export const getTableSchema = async (
   pg: Knex,
@@ -78,7 +78,6 @@ export const getTableSchema = async (
     columns,
     comments,
     primaryKeys,
-    enumMetadata,
     foreignKeys,
     uniqueConstraints,
     checkConstraints,
@@ -162,17 +161,6 @@ export const getTableSchema = async (
         ...(columnName ? { 'key_column_usage.column_name': columnName } : {}),
         'table_constraints.constraint_type': 'PRIMARY KEY',
       }),
-
-    // Identify columns using ENUM types and get their type OIDs
-    pg.raw(
-      `
-      SELECT c.column_name, t.oid as type_oid
-      FROM information_schema.columns c
-      JOIN pg_type t ON t.typname = CASE WHEN c.udt_name ~ '^_' THEN substring(c.udt_name FROM 2) ELSE c.udt_name END
-      WHERE c.table_schema = ? AND c.table_name = ? ${columnName ? 'AND c.column_name = ?' : ''} AND t.typtype = 'e'
-    `,
-      [schemaName, tableName, ...(columnName ? [columnName] : [])]
-    ),
 
     // Fetch Foreign Key relationships and referential actions (ON UPDATE/DELETE)
     pg.raw(
@@ -267,6 +255,8 @@ export const getTableSchema = async (
       if (range?.[1]) validationMap[colName].maxDate = range[1].value;
     } else if (cons.constraint_name.endsWith(SIZE_CHECK_SUFFIX)) {
       validationMap[colName].maxSize = extractMaxSize(def);
+    } else if (cons.constraint_name.endsWith(FILE_COUNT_CHECK_SUFFIX)) {
+      validationMap[colName].maxFiles = extractFileCount(def);
     } else if (cons.constraint_name.endsWith(OPTIONS_CHECK_SUFFIX)) {
       const opts = extractOptions(def);
       if (opts) optionsMap[colName] = opts;
@@ -414,7 +404,6 @@ const extractLengthRange = (definition: string) => {
   const matches = Array.from(definition.matchAll(regex));
 
   if (matches.length === 0) return null;
-
   return matches.map((match) => ({
     operator: match[2],
     value: parseInt(match[3], 10),
@@ -425,38 +414,22 @@ const extractValueRange = (definition: string) => {
   const regex =
     /\(\s*["']?([\w ]+)["']?\s*(>=|<=|>|<)\s*\(?\s*(-?\d+(?:\.\d+)?|'[^']*')\s*(::[\w\s]+)?\)/gi;
   const matches = Array.from(definition.matchAll(regex));
-
-  const bounds: {
-    operator: string;
-    value: number | null;
-  }[] = [];
-
-  for (const match of matches) {
+  return matches.map((match) => {
     const operator = match[2];
     const value = match[3].match(/('[^']*'|\-?\d+(?:\.\d+)?)/)?.[1] || '';
-    bounds.push({ operator, value: parseFloat(value) });
-  }
-
-  return bounds;
+    return { operator, value: parseFloat(value) };
+  });
 };
 
 const extractDateRange = (definition: string) => {
   const regex =
     /\(\s*["']?([\w ]+)["']?\s*(>=|<=|>|<)\s*to_timestamp\s*\(\s*'([^']+)'\s*::text\s*,\s*'YYYY-MM-DD HH24:MI'::text\s*\)\s*(::[\w\s]+)?\s*\)/gi;
   const matches = Array.from(definition.matchAll(regex));
-
-  const bounds: {
-    operator: string;
-    value: string | null;
-  }[] = [];
-
-  for (const match of matches) {
+  return matches.map((match) => {
     const operator = match[2];
     const value = match[3] || '';
-    bounds.push({ operator, value });
-  }
-
-  return bounds;
+    return { operator, value };
+  });
 };
 
 const extractMaxSize = (definition: string): number | null => {
@@ -465,7 +438,14 @@ const extractMaxSize = (definition: string): number | null => {
   const match = definition.match(regex);
 
   if (!match) return null;
+  return parseInt(match[3], 10);
+};
 
+const extractFileCount = (definition: string) => {
+  const regex = /cardinality\s*\(\s*"?([\w ]+)"?\s*\)\s*(<=|<)\s*(\d+)/i;
+  const match = definition.match(regex);
+
+  if (!match) return null;
   return parseInt(match[3], 10);
 };
 

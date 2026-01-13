@@ -32,17 +32,17 @@ export class TableBaseService {
     return this.host.tableGroupService;
   }
 
-  onChanges(changes: SimpleChanges): void {}
+  onChanges(changes: SimpleChanges) {}
 
-  onInit(): void {}
+  onInit() {}
 
-  afterContentInit(): void {}
+  afterContentInit() {}
 
-  afterContentChecked(): void {}
+  afterContentChecked() {}
 
-  afterViewInit(): void {}
+  afterViewInit() {}
 
-  afterViewChecked(): void {}
+  afterViewChecked() {}
 
-  onDestroy(): void {}
+  onDestroy() {}
 }

@@ -13,6 +13,7 @@ import { UrlField } from './url/field.object';
 import { JSONField } from './json/field.object';
 import { GeoPointField } from './geo-point/field.object';
 import { ReferenceField } from './reference/field.object';
+import { AttachmentField } from './attachment/field.object';
 
 export const FIELD_MAP = new Map([
   [DataType.Text, TextField as any],
@@ -28,6 +29,7 @@ export const FIELD_MAP = new Map([
   [DataType.JSON, JSONField],
   [DataType.GeoPoint, GeoPointField],
   [DataType.Reference, ReferenceField],
+  [DataType.Attachment, AttachmentField],
 ]);
 
 export function buildField<T = Field>(dataType: DataType, config: FieldConfig<T>) {

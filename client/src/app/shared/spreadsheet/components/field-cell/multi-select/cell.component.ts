@@ -29,7 +29,7 @@ export class MultiSelectFieldCellComponent extends FieldCellEditable<MultiSelect
 
   protected parsedData: string[] = [];
 
-  override ngOnChanges(changes: SimpleChanges): void {
+  override ngOnChanges(changes: SimpleChanges) {
     if ('data' in changes) {
       const data = this.data;
       if (data?.length > 0) {
