@@ -11,6 +11,7 @@ import {
   FileMetadata,
 } from '@app/shared/file/file-uploader/file-uploader.component';
 import { FieldCellEditable } from '../field-cell-editable';
+import { CellTouchEvent } from '../field-cell-touchable';
 
 @Component({
   selector: 'attachment-field-cell',
@@ -25,15 +26,17 @@ export class AttachmentFieldCellComponent extends FieldCellEditable<AttachmentDa
 
   popover = viewChild<Popover>('popover');
 
-  protected onUpload(files: FileMetadata[]) {
-    this.data = [...(this.data || []), ...files];
-    this.save();
+  protected override onTouch(e: CellTouchEvent) {
+    if (this.readonly) return;
+    this.openPopover(e);
   }
 
-  protected onDelete(file: FileMetadata) {
-    const data = this.data.filter((f) => f.id !== file.id);
-    this.data = data.length ? data : null;
-    this.save();
+  protected onPopoverOpen() {
+    this.markAsEditStarted();
+  }
+
+  protected onPopoverClose() {
+    this.markAsEditEnded();
   }
 
   protected openPopover(event: Event) {
@@ -44,5 +47,16 @@ export class AttachmentFieldCellComponent extends FieldCellEditable<AttachmentDa
     };
 
     this.popover().show(fakeEvent);
+  }
+
+  protected onUpload(files: FileMetadata[]) {
+    this.data = [...(this.data || []), ...files];
+    this.save();
+  }
+
+  protected onDelete(file: FileMetadata) {
+    const data = this.data.filter((f) => f.id !== file.id);
+    this.data = data.length ? data : null;
+    this.save();
   }
 }

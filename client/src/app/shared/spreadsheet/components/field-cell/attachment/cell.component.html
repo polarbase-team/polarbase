@@ -4,7 +4,13 @@
   }
   @if (selecting) {
     @if (!readonly) {
-      <p-popover #popover styleClass="file-uploader-popover">
+      <p-popover
+        #popover
+        styleClass="file-uploader-popover"
+        appendTo="body"
+        (onShow)="onPopoverOpen()"
+        (onHide)="onPopoverClose()"
+      >
         <file-uploader (onUpload)="onUpload($event)" />
       </p-popover>
     }
