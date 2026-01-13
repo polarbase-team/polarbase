@@ -62,8 +62,7 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
 /**
  * Retrieves and constructs a comprehensive schema for a specific table,
  * including column metadata, primary key identification, column comments,
- * associated enum values for enum-typed columns, and additional validation
- * and foreign key details.
+ * and additional validation and foreign key details.
  */
 export const getTableSchema = async (
   pg: Knex,
@@ -79,7 +78,6 @@ export const getTableSchema = async (
     columns,
     comments,
     primaryKeys,
-    enumMetadata,
     foreignKeys,
     uniqueConstraints,
     checkConstraints,
@@ -163,17 +161,6 @@ export const getTableSchema = async (
         ...(columnName ? { 'key_column_usage.column_name': columnName } : {}),
         'table_constraints.constraint_type': 'PRIMARY KEY',
       }),
-
-    // Identify columns using ENUM types and get their type OIDs
-    pg.raw(
-      `
-      SELECT c.column_name, t.oid as type_oid
-      FROM information_schema.columns c
-      JOIN pg_type t ON t.typname = CASE WHEN c.udt_name ~ '^_' THEN substring(c.udt_name FROM 2) ELSE c.udt_name END
-      WHERE c.table_schema = ? AND c.table_name = ? ${columnName ? 'AND c.column_name = ?' : ''} AND t.typtype = 'e'
-    `,
-      [schemaName, tableName, ...(columnName ? [columnName] : [])]
-    ),
 
     // Fetch Foreign Key relationships and referential actions (ON UPDATE/DELETE)
     pg.raw(

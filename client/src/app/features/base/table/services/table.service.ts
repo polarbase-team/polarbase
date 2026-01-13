@@ -73,6 +73,7 @@ const DATA_TYPE_MAPPING = {
   json: DataType.JSON,
   'geo-point': DataType.GeoPoint,
   reference: DataType.Reference,
+  attachment: DataType.Attachment,
 };
 
 @Injectable({

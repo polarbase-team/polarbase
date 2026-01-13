@@ -1,4 +1,5 @@
 import knex from 'knex';
+import { types } from 'pg';
 
 import { log } from '../utils/logger';
 
@@ -28,9 +29,24 @@ const pg = knex({
   debug: process.env.DEBUG === 'true',
 });
 
+const parsePgArray = (val: any) => {
+  if (!val) return [];
+  return val
+    .replace(/^{|}$/g, '')
+    .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+    .map((item: string) => {
+      let cleaned = item.replace(/^"|"$/g, '').replace(/\\"/g, '"');
+      try {
+        return JSON.parse(cleaned);
+      } catch (e) {
+        return cleaned;
+      }
+    });
+};
+
 /**
  * Initialize Custom DB Types
- * Includes Email, URL domains, and the Attachment composite type.
+ * Includes Email, URL, and Attachment domains.
  */
 export const initDatabaseTypes = async () => {
   try {
@@ -49,23 +65,33 @@ export const initDatabaseTypes = async () => {
               CHECK (VALUE ~* '^https\\?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$');
           END IF;
 
-          -- 3. Attachment Composite Type
-          -- We check pg_type for the 'attachment' name
+          -- 3. Attachment Domain
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'attachment') THEN
-              CREATE TYPE attachment AS (
-                  id           UUID,
-                  name         TEXT,
-                  key          TEXT,
-                  size         BIGINT,
-                  mime_type    TEXT,
-                  provider     TEXT,
-                  url          TEXT,
-                  created_at   TIMESTAMPTZ
+              CREATE DOMAIN attachment AS JSONB
+              CHECK (
+                  jsonb_typeof(VALUE) = 'object' AND
+                  jsonb_exists(VALUE, 'id') AND
+                  jsonb_exists(VALUE, 'key') AND
+                  jsonb_exists(VALUE, 'size') AND
+                  jsonb_exists(VALUE, 'name') AND
+                  jsonb_exists(VALUE, 'mimeType') AND
+                  jsonb_exists(VALUE, 'provider') AND
+                  jsonb_exists(VALUE, 'uploadedAt')
               );
           END IF;
       END
       $$;
     `);
+
+    const result = await pg.raw(`
+      SELECT oid FROM pg_type WHERE typname = '_attachment'
+    `);
+
+    if (result.rows.length > 0) {
+      const arrayOid = result.rows[0].oid;
+      types.setTypeParser(arrayOid, parsePgArray);
+    }
+
     log.info('✅ Custom database types initialized');
   } catch (error) {
     log.error('❌ Failed to initialize database types:', error);

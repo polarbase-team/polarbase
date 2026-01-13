@@ -305,10 +305,16 @@ export class TableService {
         if (unique) columnBuilder.unique();
 
         if (defaultValue !== undefined && defaultValue !== null) {
-          if (dataType === DataType.MultiSelect) {
-            columnBuilder.defaultTo(toPgArray(defaultValue));
-          } else {
-            columnBuilder.defaultTo(defaultValue);
+          switch (dataType) {
+            case DataType.MultiSelect:
+              columnBuilder.defaultTo(toPgArray(defaultValue));
+              break;
+            case DataType.Attachment:
+            case DataType.Reference:
+              // Not support default value
+              break;
+            default:
+              columnBuilder.defaultTo(defaultValue);
           }
         }
 
@@ -486,10 +492,16 @@ export class TableService {
         }
 
         if (defaultValue !== oldSchema.defaultValue) {
-          if (dataType === DataType.MultiSelect) {
-            columnBuilder.defaultTo(toPgArray(defaultValue));
-          } else {
-            columnBuilder.defaultTo(defaultValue);
+          switch (dataType) {
+            case DataType.MultiSelect:
+              columnBuilder.defaultTo(toPgArray(defaultValue));
+              break;
+            case DataType.Attachment:
+            case DataType.Reference:
+              // Not support default value
+              break;
+            default:
+              columnBuilder.defaultTo(defaultValue);
           }
         }
 

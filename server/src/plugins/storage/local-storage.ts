@@ -1,22 +1,26 @@
-import { FileMetadata, StorageProvider } from './storage';
+import { FileMetadata, getSafeFileName, StorageProvider } from './storage';
 import { join } from 'node:path';
 import { unlink } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 
 export class LocalStorageProvider implements StorageProvider {
   private uploadDir = 'uploads';
 
   async upload(file: File, path: string = ''): Promise<Partial<FileMetadata>> {
-    const key = join(path, `${Date.now()}-${file.name}`);
+    const safeFileName = getSafeFileName(file.name);
+    const key = join(path, safeFileName);
     const fullPath = join(this.uploadDir, key);
 
     await Bun.write(fullPath, file);
 
     return {
-      key,
+      id: randomUUID(),
+      key: key.replace(/\\/g, '/'),
       size: file.size,
       mimeType: file.type,
       provider: 'local',
       name: file.name,
+      uploadedAt: new Date(),
     };
   }
 

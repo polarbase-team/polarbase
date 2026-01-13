@@ -6,7 +6,7 @@ export interface FileMetadata {
   mimeType: string; // e.g., "image/jpeg"
   provider: 'local' | 's3' | 'gcs'; // Tracking the source
   url?: string; // Publicly accessible URL (optional)
-  createdAt: Date;
+  uploadedAt: Date;
 }
 
 export interface StorageProvider {
@@ -30,3 +30,19 @@ export interface StorageProvider {
    */
   getSignedUrl(key: string, expiresIn: number): Promise<string>;
 }
+
+export const getSafeFileName = (originalName: string): string => {
+  const timestamp = Date.now();
+  const lastDotIndex = originalName.lastIndexOf('.');
+  const extension = lastDotIndex !== -1 ? originalName.slice(lastDotIndex) : '';
+  const nameWithoutExt =
+    lastDotIndex !== -1 ? originalName.slice(0, lastDotIndex) : originalName;
+  const safeName = nameWithoutExt
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-zA-Z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .toLowerCase();
+  return `${timestamp}-${safeName}${extension}`;
+};

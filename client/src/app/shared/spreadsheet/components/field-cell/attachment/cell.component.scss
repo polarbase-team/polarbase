@@ -1,0 +1,10 @@
+::ng-deep {
+  .file-uploader-popover {
+    margin-top: 4px;
+
+    &:before,
+    &:after {
+      display: none;
+    }
+  }
+}

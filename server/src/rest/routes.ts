@@ -696,12 +696,21 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
        */
       .post(
         '/upload',
-        async ({ body: { file } }) => {
-          const metadata = await storage.upload(file);
-          return metadata;
+        async ({ body: { files } }) => {
+          const uploadedMetadata = [];
+          for (const file of files) {
+            const meta = await storage.upload(file, 'user-uploads');
+            uploadedMetadata.push(meta);
+          }
+          return uploadedMetadata;
         },
         {
-          body: t.Object({ file: t.File() }),
+          body: t.Object({
+            files: t.Files({
+              maxItems: 10,
+              maxSize: '5m',
+            }),
+          }),
         }
       )
   );

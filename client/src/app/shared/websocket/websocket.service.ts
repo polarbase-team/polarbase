@@ -97,7 +97,7 @@ export class WebsocketService {
    *
    * @param message Message that matches WebSocketMessage<T> interface
    */
-  public sendMessage(message: WebSocketMessage): void {
+  public sendMessage(message: WebSocketMessage) {
     if (!this.socket$ || this.socket$.closed) {
       console.error('Cannot send message: WebSocket is not connected');
       return;
@@ -110,7 +110,7 @@ export class WebsocketService {
    * Gracefully closes the WebSocket connection.
    * Safe to call multiple times.
    */
-  public close(): void {
+  public close() {
     if (this.socket$ && !this.socket$.closed) {
       this.socket$.complete();
       this.socket$ = null;

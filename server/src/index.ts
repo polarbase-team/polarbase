@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
+import { staticPlugin } from '@elysiajs/static';
 import chalk from 'chalk';
 
 import { initDatabaseTypes } from './plugins/pg';
@@ -48,6 +49,12 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
   app
     .use(compression)
     .use(cors({ origin: CORS_ORIGINS }))
+    .use(
+      staticPlugin({
+        assets: 'uploads',
+        prefix: '/static',
+      })
+    )
     .use(authRoutes)
     .use(apiKeyRoutes);
 

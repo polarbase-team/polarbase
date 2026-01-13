@@ -1,0 +1,53 @@
+<p-fileupload
+  name="files"
+  [url]="uploadUrl()"
+  (onUpload)="onUpload($event)"
+  [multiple]="true"
+  [maxFileSize]="5242880"
+  [fileLimit]="10"
+  [showCancelButton]="false"
+  mode="advanced"
+  [style]="{ '--p-fileupload-filelist-gap': 'calc(var(--spacing) * 4)' }"
+>
+  <ng-template #file let-file>
+    <div class="flex flex-col gap-2 w-full">
+      <div class="flex gap-2">
+        @if (isImage(file.type)) {
+          <img
+            [src]="file.objectURL"
+            style="width: 50px; height: 50px"
+            class="object-contain rounded"
+          />
+        } @else {
+          @let icon = getFileIcon(file.type);
+          <i
+            [class]="'icon icon-' + icon.name + ' ' + icon.color"
+            style="font-size: 3.5rem"
+            class="flex items-center justify-center w-[50px] h-[50px]"
+          ></i>
+        }
+
+        <div class="flex-1">
+          <p class="font-bold text-900">{{ file.name }}</p>
+          <p class="text-sm text-600">{{ formatSize(file.size) }}</p>
+          @if (file.status === 'completed') {
+            <p-badge value="Completed" severity="success" />
+          } @else {
+            <p-badge value="Pending" severity="warn" />
+          }
+        </div>
+
+        <p-button
+          icon="icon icon-x"
+          [rounded]="true"
+          [text]="true"
+          severity="danger"
+          (onClick)="onRemoveFile(file)"
+        />
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #empty>
+    <div>Drag and drop files to here to upload.</div>
+  </ng-template>
+</p-fileupload>
