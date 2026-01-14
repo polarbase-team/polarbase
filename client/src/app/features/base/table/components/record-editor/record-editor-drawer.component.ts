@@ -122,8 +122,13 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
   }
 
   protected save() {
-    const isInvalid = this.requiredFields().find(
-      (field: Field) => !field.params.primary && _.isNil(this.updatedRecord[field.name]),
+    const isInvalid = !!this.requiredFields().find(
+      (field) =>
+        !field.params.primary &&
+        field.dataType !== DataType.AutoNumber &&
+        field.dataType !== DataType.AutoDate &&
+        field.params.defaultValue === undefined &&
+        _.isNil(this.updatedRecord[field.name]),
     );
 
     if (isInvalid) {
@@ -143,7 +148,6 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     let fn: Observable<any>;
     switch (this.mode()) {
       case 'add':
-        if (_.isNil(data['id'])) data['id'] = id;
         fn = this.tblService.createRecords(tableName, [data]);
         break;
       case 'edit':

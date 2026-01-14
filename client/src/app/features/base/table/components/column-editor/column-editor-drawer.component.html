@@ -341,6 +341,7 @@
                 </div>
               }
               @case (DataType.AutoNumber) {}
+              @case (DataType.AutoDate) {}
             }
           </div>
         </div>
@@ -450,13 +451,16 @@
                 />
               }
               @case (DataType.Reference) {
-                Not support
+                <p class="text-sm">Not support</p>
               }
               @case (DataType.Attachment) {
-                Not support
+                <p class="text-sm">Not support</p>
               }
               @case (DataType.AutoNumber) {
-                Not support
+                <p class="text-sm">Not support</p>
+              }
+              @case (DataType.AutoDate) {
+                <p class="text-sm">Not support</p>
               }
               @default {
                 <i class="text-sm text-surface-500">Select a data type first.</i>

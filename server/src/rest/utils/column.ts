@@ -16,6 +16,7 @@ export const DataType = {
   Reference: 'reference',
   Attachment: 'attachment',
   AutoNumber: 'auto-number',
+  AutoDate: 'auto-date',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -115,6 +116,14 @@ export const mapDataType = (column: Column) => {
     return DataType.AutoNumber;
   }
 
+  // Detect AutoDateTime
+  if (
+    pgDataType === 'timestamp with time zone' &&
+    pgDefaultValue === 'CURRENT_TIMESTAMP'
+  ) {
+    return DataType.AutoDate;
+  }
+
   // Detect Email and Url domains
   if (pgDomainName === 'email_address') {
     return DataType.Email;
@@ -150,6 +159,7 @@ export const mapDataType = (column: Column) => {
 };
 
 export const specificType = (
+  pg: Knex,
   tableBuilder: Knex.TableBuilder,
   {
     name,
@@ -205,6 +215,8 @@ export const specificType = (
       return tableBuilder.specificType(name, 'attachment[]');
     case DataType.AutoNumber:
       return tableBuilder.bigIncrements(name, { primaryKey: false });
+    case DataType.AutoDate:
+      return tableBuilder.timestamp(name).defaultTo(pg.fn.now());
     default:
       throw new Error(`Unsupported column type: ${dataType}`);
   }

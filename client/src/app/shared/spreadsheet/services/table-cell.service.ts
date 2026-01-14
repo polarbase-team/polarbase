@@ -486,7 +486,10 @@ export class TableCellService extends TableBaseService {
       matrix = this.getCellMatrix(
         { rowIndex: 0, columnIndex: startIdx },
         { rowIndex: this.tableRowService.findLastRowIndex(), columnIndex: endIdx },
-        { dataTypes: [DataType.AutoNumber], states: [ExcludeCellState.NonEditable] },
+        {
+          dataTypes: [DataType.AutoNumber, DataType.AutoDate],
+          states: [ExcludeCellState.NonEditable],
+        },
       );
     } else {
       const cellSelection = this.tableService.layout.cell.selection;
@@ -505,12 +508,12 @@ export class TableCellService extends TableBaseService {
         };
 
         matrix = this.filterExcludeCells(this.selectCells(startIdx, endIdx), {
-          dataTypes: [DataType.AutoNumber],
+          dataTypes: [DataType.AutoNumber, DataType.AutoDate],
           states: [ExcludeCellState.NonEditable],
         });
       } else {
         matrix = this.getCellMatrix(cellSelection.start, cellSelection.end, {
-          dataTypes: [DataType.AutoNumber],
+          dataTypes: [DataType.AutoNumber, DataType.AutoDate],
           states: [ExcludeCellState.NonEditable],
         });
       }
@@ -581,7 +584,7 @@ export class TableCellService extends TableBaseService {
 
   fillCells(source: [CellIndex, CellIndex], target: [CellIndex, CellIndex], isReverse: boolean) {
     const targetMatrixCell = this.filterExcludeCells(this.getCellMatrix(target[0], target[1]), {
-      dataTypes: [DataType.AutoNumber],
+      dataTypes: [DataType.AutoNumber, DataType.AutoDate],
       states: [ExcludeCellState.NonEditable],
     });
     const sourceMatrixCell = this.getCellMatrix(source[0], source[1]);
@@ -987,7 +990,7 @@ export class TableCellService extends TableBaseService {
 
   private clearMatrixCell(matrixCell: MatrixCell) {
     matrixCell = this.filterExcludeCells(matrixCell, {
-      dataTypes: [DataType.AutoNumber],
+      dataTypes: [DataType.AutoNumber, DataType.AutoDate],
       states: [ExcludeCellState.Required, ExcludeCellState.Empty, ExcludeCellState.NonEditable],
     });
 

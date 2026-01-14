@@ -73,6 +73,10 @@ const FIELD_CELL_CMP_MAP = new Map<DataType, () => Promise<Type<FieldCell>>>([
     DataType.AutoNumber,
     () => import('./auto-number/cell.component').then((m) => m.AutoNumberFieldCellComponent),
   ],
+  [
+    DataType.AutoDate,
+    () => import('./auto-date/cell.component').then((m) => m.AutoDateFieldCellComponent),
+  ],
 ]);
 
 @Directive({
