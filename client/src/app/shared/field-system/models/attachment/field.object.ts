@@ -36,4 +36,20 @@ export class AttachmentField extends Field<AttachmentData> {
 
     return errors;
   }
+
+  override convertTextToData(text: string): AttachmentData | null {
+    try {
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  override toString(data?: AttachmentData) {
+    return data ? JSON.stringify(data) : '';
+  }
 }

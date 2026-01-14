@@ -11,7 +11,7 @@
         (onShow)="onPopoverOpen()"
         (onHide)="onPopoverClose()"
       >
-        @if (data.length < field.maxFiles) {
+        @if (data === undefined || data === null || data.length < field.maxFiles) {
           <file-uploader (onUpload)="onUpload($event)" />
         } @else {
           <p class="text-sm text-surface-500">
