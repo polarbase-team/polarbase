@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { finalize, Observable, map } from 'rxjs';
 
 import { DrawerModule } from 'primeng/drawer';
@@ -20,6 +21,9 @@ import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { FluidModule } from 'primeng/fluid';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
@@ -39,6 +43,7 @@ import { GeoPointFieldEditorComponent } from '@app/shared/field-system/editors/g
 import { ReferenceFieldEditorComponent } from '@app/shared/field-system/editors/reference/editor.component';
 import { AttachmentFieldEditorComponent } from '@app/shared/field-system/editors/attachment/editor.component';
 import { TableDefinition, TableService } from '../../services/table.service';
+import { InputText } from 'primeng/inputtext';
 
 @Component({
   selector: 'record-editor-drawer',
@@ -46,10 +51,14 @@ import { TableDefinition, TableService } from '../../services/table.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    FormsModule,
     DrawerModule,
     ButtonModule,
     DividerModule,
     ToastModule,
+    InputTextModule,
+    InputNumberModule,
+    FluidModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -64,6 +73,7 @@ import { TableDefinition, TableService } from '../../services/table.service';
     GeoPointFieldEditorComponent,
     ReferenceFieldEditorComponent,
     AttachmentFieldEditorComponent,
+    InputText,
   ],
   providers: [MessageService],
 })

@@ -15,6 +15,7 @@ export const DataType = {
   GeoPoint: 'geo-point',
   Reference: 'reference',
   Attachment: 'attachment',
+  AutoNumber: 'auto-number',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -102,16 +103,26 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
 };
 
 export const mapDataType = (column: Column) => {
-  const { pgDataType, pgRawType, pgDomainName } = column.metadata || {};
+  const { pgDataType, pgRawType, pgDomainName, pgDefaultValue } =
+    column.metadata || {};
 
-  // 1. Check for custom domains first
+  // Detect AutoNumber
+  if (
+    pgDefaultValue &&
+    typeof pgDefaultValue === 'string' &&
+    pgDefaultValue.includes('nextval')
+  ) {
+    return DataType.AutoNumber;
+  }
+
+  // Detect Email and Url domains
   if (pgDomainName === 'email_address') {
     return DataType.Email;
   } else if (pgDomainName === 'url_address') {
     return DataType.Url;
   }
 
-  // 2. Handle Enums/Selects
+  // Detect Selects and Multi-Selects
   if (column.options) {
     if (pgDataType === 'ARRAY') {
       return DataType.MultiSelect;
@@ -119,12 +130,12 @@ export const mapDataType = (column: Column) => {
     return DataType.Select;
   }
 
-  // 3. Handle foreign keys
+  // Detect References
   if (column.foreignKey) {
     return DataType.Reference;
   }
 
-  // 4. Handle Attachment
+  // Detect Attachment
   if (pgRawType === '_attachment') {
     return DataType.Attachment;
   }
@@ -192,6 +203,8 @@ export const specificType = (
         .onDelete(foreignKey.onDelete);
     case DataType.Attachment:
       return tableBuilder.specificType(name, 'attachment[]');
+    case DataType.AutoNumber:
+      return tableBuilder.bigIncrements(name, { primaryKey: false });
     default:
       throw new Error(`Unsupported column type: ${dataType}`);
   }
