@@ -335,13 +335,13 @@ const parsePgDefault = (
     return { ...parsed, value: null };
   }
 
-  // 1. Remove type casting (e.g., 'val'::text -> 'val')
+  // Remove type casting (e.g., 'val'::text -> 'val')
   let expr = rawDefault
     .trim()
     .replace(/::[\w\s"'\[\]]+$/, '')
     .trim();
 
-  // 2. Check for special expressions/functions
+  // Check for special expressions/functions
   const specialExpressionPatterns = [
     /^nextval\(/i,
     /^currval\(/i,
@@ -361,7 +361,7 @@ const parsePgDefault = (
     return { ...parsed, value: expr, isSpecialExpression: true };
   }
 
-  // 3. Handle Postgres Array Literals: '{val1,val2}'
+  // Handle Postgres Array Literals: '{val1,val2}'
   if (/^'\{.*\}'$/.test(expr)) {
     const arrayContent = expr.slice(2, -2); // Remove '{ and }'
     if (arrayContent === '') return { ...parsed, value: [] };
@@ -378,7 +378,7 @@ const parsePgDefault = (
     return { ...parsed, value: items };
   }
 
-  // 4. Handle Strings: 'text'
+  // Handle Strings: 'text'
   if (/^'.*'$/.test(expr)) {
     const str = expr
       .slice(1, -1)
@@ -393,7 +393,7 @@ const parsePgDefault = (
     return { ...parsed, value: str };
   }
 
-  // 5. Handle Numbers
+  // Handle Numbers
   if (/^-?\d+(\.\d+)?$/.test(expr)) {
     const num = Number(expr);
     return {
@@ -402,7 +402,7 @@ const parsePgDefault = (
     };
   }
 
-  // 6. Booleans and Nulls
+  // Booleans and Nulls
   if (expr.toLowerCase() === 'true') return { ...parsed, value: true };
   if (expr.toLowerCase() === 'false') return { ...parsed, value: false };
   if (expr.toUpperCase() === 'NULL') return { ...parsed, value: null };

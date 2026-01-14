@@ -10,7 +10,7 @@ export const getReferenceDisplayLabel = (data: ReferenceData) => {
   // Return placeholder if input is invalid
   if (!data || typeof data !== 'object') return data;
 
-  // 1. High-priority keys (standard naming conventions for display labels)
+  // High-priority keys (standard naming conventions for display labels)
   const priorityKeys = ['name', 'display_name', 'title', 'label', 'full_name', 'username'];
 
   // Look for the first key that exists and contains a string
@@ -20,7 +20,6 @@ export const getReferenceDisplayLabel = (data: ReferenceData) => {
     }
   }
 
-  // 2. Intelligent filtering for fallback keys
   // Exclude technical, boolean, and sensitive fields
   const blacklist = [
     'id',
@@ -50,7 +49,6 @@ export const getReferenceDisplayLabel = (data: ReferenceData) => {
     return isString && !isTechnical && isShortEnough;
   });
 
-  // 3. Final Fallback Strategy:
   // Use found fallback -> then specific contact info -> then raw ID -> finally "Unknown"
   return data[fallbackKey] || data['email'] || data['id'] || 'Unknown';
 };

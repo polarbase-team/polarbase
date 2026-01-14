@@ -324,37 +324,37 @@ export class TableService {
 
         if (comment) columnBuilder.comment(comment);
 
-        // 1. Length Check: Only if at least one boundary (min or max) is defined
+        // Length Check: Only if at least one boundary (min or max) is defined
         if (minLength !== undefined || maxLength !== undefined) {
           addLengthCheck(tableBuilder, tableName, name, minLength!, maxLength!);
         }
 
-        // 2. Range Check: Only if a minimum or maximum value is specified
+        // Range Check: Only if a minimum or maximum value is specified
         if (minValue !== undefined || maxValue !== undefined) {
           addRangeCheck(tableBuilder, tableName, name, minValue!, maxValue!);
         }
 
-        // 3. Date Range Check: Only if start or end dates are provided
+        // Date Range Check: Only if start or end dates are provided
         if (minDate || maxDate) {
           addDateRangeCheck(tableBuilder, tableName, name, minDate!, maxDate!);
         }
 
-        // 4. Size Check: Only if a maximum size limit is set
+        // Size Check: Only if a maximum size limit is set
         if (maxSize !== undefined) {
           addSizeCheck(tableBuilder, tableName, name, maxSize);
         }
 
-        // 5. File Count Check: Only if a maximum file limit is set
+        // File Count Check: Only if a maximum file limit is set
         if (maxFiles !== undefined) {
           addFileCountCheck(tableBuilder, tableName, name, maxFiles);
         }
 
-        // 6. Email Domain Check
+        // Email Domain Check
         if (allowedDomains !== undefined) {
           addEmailDomainCheck(tableBuilder, tableName, name, allowedDomains!);
         }
 
-        // 7. Options Check: Only if the options array is not empty
+        // Options Check: Only if the options array is not empty
         if (options?.length) {
           addOptionsCheck(
             tableBuilder,

@@ -77,6 +77,7 @@ const DATA_TYPE_MAPPING = {
   'geo-point': DataType.GeoPoint,
   reference: DataType.Reference,
   attachment: DataType.Attachment,
+  'auto-number': DataType.AutoNumber,
 };
 
 @Injectable({
@@ -235,6 +236,8 @@ export class TableService {
         break;
       case DataType.Attachment:
         (config as AttachmentFieldConfig).maxFiles = column.validation?.maxFiles;
+        break;
+      case DataType.AutoNumber:
         break;
     }
 

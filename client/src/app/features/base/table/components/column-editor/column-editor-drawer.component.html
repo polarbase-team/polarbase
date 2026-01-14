@@ -340,6 +340,7 @@
                   />
                 </div>
               }
+              @case (DataType.AutoNumber) {}
             }
           </div>
         </div>
@@ -452,6 +453,9 @@
                 Not support
               }
               @case (DataType.Attachment) {
+                Not support
+              }
+              @case (DataType.AutoNumber) {
                 Not support
               }
               @default {

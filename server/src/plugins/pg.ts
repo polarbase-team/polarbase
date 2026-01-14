@@ -53,19 +53,19 @@ export const initDatabaseTypes = async () => {
     await pg.raw(`
       DO $$
       BEGIN
-          -- 1. Email Domain
+          -- Email Domain
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'email_address') THEN
               CREATE DOMAIN email_address AS TEXT
               CHECK (VALUE ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\\.[A-Za-z]+$');
           END IF;
 
-          -- 2. URL Domain
+          -- URL Domain
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'url_address') THEN
               CREATE DOMAIN url_address AS TEXT
               CHECK (VALUE ~* '^https\\?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$');
           END IF;
 
-          -- 3. Attachment Domain
+          -- Attachment Domain
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'attachment') THEN
               CREATE DOMAIN attachment AS JSONB
               CHECK (

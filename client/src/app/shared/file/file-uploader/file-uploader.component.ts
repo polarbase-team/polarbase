@@ -51,13 +51,13 @@ export class FileUploaderComponent {
   protected onRemoveFile(file: any) {
     const fileUpload = this.fileUpload();
 
-    // 1. Remove from the pending queue (files not yet uploaded)
+    // Remove from the pending queue (files not yet uploaded)
     const pendingIndex = fileUpload.files.indexOf(file);
     if (pendingIndex > -1) {
       fileUpload.remove(null, pendingIndex);
     }
 
-    // 2. Remove from the uploaded history (files already sent)
+    // Remove from the uploaded history (files already sent)
     const uploadedIndex = fileUpload.uploadedFiles.indexOf(file);
     if (uploadedIndex > -1) {
       fileUpload.uploadedFiles.splice(uploadedIndex, 1);
