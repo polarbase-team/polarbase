@@ -34,7 +34,7 @@ export const FIELD_ICON_MAP: Record<DataType, string> = {
   [DataType.Reference]: 'icon icon-send-to-back',
   [DataType.Attachment]: 'icon icon-paperclip',
   [DataType.AutoNumber]: 'icon icon-list-ordered',
-  [DataType.AutoDate]: 'icon icon-calendar-clock',
+  [DataType.AutoDate]: 'icon icon-calendar-cog',
 } as const;
 
 export interface FieldConfig<T = any> {
