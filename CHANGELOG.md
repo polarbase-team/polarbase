@@ -5,6 +5,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0-beta] - 2026-01-14
+
+### Added
+
+- **Attachment Field Type**: Support for direct file uploads within records with centralized storage integration.
+- **AutoNumber Field Type**: Automatic generation of unique, sequential integers for new records.
+- **AutoDate Field Type**: Automatic timestamping (creation date/time) for new records.
+- **Read-Only Integrity**: System-managed fields (AutoNumber/AutoDate) are automatically set to read-only in the UI.
+
+### Changed
+
+- **Schema Evolution**: Updated table designer to support system-managed field types.
+- **Payload Handling**: Optimized backend to handle `multipart/form-data` for attachments.
+
+### Fixed
+
+- Fixed metadata sync issues occurring after table schema changes.
+- Corrected CSS alignment for specialized icons in field selection dropdowns.
+
+## [0.3.1-beta] - 2026-01-11
+
+### Fixed
+
+- General stability fixes and environment configuration updates.
+
+## [0.3.0-beta] - 2026-01-11
+
+### Added
+
+- **Relational Data Support**: Implementation of **Reference** field types (Foreign Keys) to link records across tables.
+- **Referential Actions**: Configurable `onUpdate` and `onDelete` actions (Cascade, Set Null) in the column editor.
+- **Enhanced Column Editor**: Added validation patterns and character limits for table/column names.
+
+### Changed
+
+- **Breaking Change**: Migrated `Select` and `Multi-Select` fields from legacy `Enum` types to `Text`/`Text[]` with **Check Constraints** for better flexibility and backend compatibility.
+- **Refactored Architecture**: Unified drawer components into a base `DrawerComponent` for better maintainability.
+
+### Fixed
+
+- Improved API error messaging and validation feedback for REST routes.
+
+## [0.2.1-beta] - 2026-01-07
+
+### Fixed
+
+- UI performance improvements and minor bug fixes in the spreadsheet view.
+
+## [0.2.0-beta] - 2026-01-07
+
+### Added
+
+- **Advanced Field Types**: Added support for **GeoPoint**, **Multi-Select**, **Email**, and **URL** fields with validation.
+- **Smart Table Editor**: Added field descriptions and "Required" indicators.
+
+### Changed
+
+- **Standardized API**: Replaced legacy interfaces with a unified `ApiResponse` model.
+- **Responsive Layout**: Migrated spreadsheet and table details to a more fluid, responsive UI.
+
+### Fixed
+
+- Resolved REST communication layer bugs.
+- Fixed Enum column retrieval and default value handling in schemas.
+
 ## [0.1.0-beta] - 2025-12-26
 
 ### Added
