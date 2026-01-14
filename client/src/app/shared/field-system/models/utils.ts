@@ -15,6 +15,7 @@ import { GeoPointField } from './geo-point/field.object';
 import { ReferenceField } from './reference/field.object';
 import { AttachmentField } from './attachment/field.object';
 import { AutoNumberField } from './auto-number/field.object';
+import { AutoDateField } from './auto-date/field.object';
 
 export const FIELD_MAP = new Map([
   [DataType.Text, TextField as any],
@@ -32,6 +33,7 @@ export const FIELD_MAP = new Map([
   [DataType.Reference, ReferenceField],
   [DataType.Attachment, AttachmentField],
   [DataType.AutoNumber, AutoNumberField],
+  [DataType.AutoDate, AutoDateField],
 ]);
 
 export function buildField<T = Field>(dataType: DataType, config: FieldConfig<T>) {

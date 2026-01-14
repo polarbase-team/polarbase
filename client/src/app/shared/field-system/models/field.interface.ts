@@ -14,6 +14,7 @@ export const DataType = {
   Reference: 'reference',
   Attachment: 'attachment',
   AutoNumber: 'auto-number',
+  AutoDate: 'auto-date',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -33,6 +34,7 @@ export const FIELD_ICON_MAP: Record<DataType, string> = {
   [DataType.Reference]: 'icon icon-send-to-back',
   [DataType.Attachment]: 'icon icon-paperclip',
   [DataType.AutoNumber]: 'icon icon-list-ordered',
+  [DataType.AutoDate]: 'icon icon-calendar-clock',
 } as const;
 
 export interface FieldConfig<T = any> {

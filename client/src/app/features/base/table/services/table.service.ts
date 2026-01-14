@@ -78,6 +78,7 @@ const DATA_TYPE_MAPPING = {
   reference: DataType.Reference,
   attachment: DataType.Attachment,
   'auto-number': DataType.AutoNumber,
+  'auto-date': DataType.AutoDate,
 };
 
 @Injectable({
@@ -238,6 +239,8 @@ export class TableService {
         (config as AttachmentFieldConfig).maxFiles = column.validation?.maxFiles;
         break;
       case DataType.AutoNumber:
+        break;
+      case DataType.AutoDate:
         break;
     }
 

@@ -297,7 +297,7 @@ export class TableService {
 
     try {
       await schemaBuilder.alterTable(tableName, (tableBuilder) => {
-        const columnBuilder = specificType(tableBuilder, {
+        const columnBuilder = specificType(pg, tableBuilder, {
           name,
           dataType,
           foreignKey,
@@ -481,7 +481,7 @@ export class TableService {
     await pg.schema
       .withSchema(schemaName)
       .alterTable(tableName, (tableBuilder) => {
-        const columnBuilder = specificType(tableBuilder, {
+        const columnBuilder = specificType(pg, tableBuilder, {
           name: columnName,
           dataType: dataType || oldSchema.dataType,
           foreignKey,
