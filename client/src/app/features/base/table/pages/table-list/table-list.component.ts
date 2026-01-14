@@ -136,7 +136,7 @@ export class TableListComponent {
   protected deleteTable(table: TableDefinition) {
     this.confirmationService.confirm({
       target: null,
-      message: 'Do you want to delete this table?',
+      message: `Are you sure you want to delete "${table.tableName}"?`,
       header: 'Delete table',
       rejectLabel: 'Cancel',
       rejectButtonProps: {

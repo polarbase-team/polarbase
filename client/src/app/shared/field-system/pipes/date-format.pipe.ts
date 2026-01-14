@@ -5,10 +5,7 @@ import { environment } from '@environments/environment';
 
 import { DateData } from '../../field-system/models/date/field.interface';
 
-@Pipe({
-  name: 'dateFormat',
-  standalone: true,
-})
+@Pipe({ name: 'dateFormat' })
 export class DateFormatPipe implements PipeTransform {
   transform(value: DateData) {
     return dayjs(value).format(environment.dateTimeFormat ?? 'YYYY-MM-DD HH:mm');

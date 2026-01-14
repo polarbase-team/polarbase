@@ -1,4 +1,4 @@
-import { Component, effect, forwardRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, forwardRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutoFocusModule } from 'primeng/autofocus';
@@ -22,6 +22,7 @@ import {
 @Component({
   selector: 'reference-field-editor',
   templateUrl: './editor.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     AutoFocusModule,

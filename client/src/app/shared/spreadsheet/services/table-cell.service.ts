@@ -316,7 +316,7 @@ export class TableCellService extends TableBaseService {
   getCellMatrix(
     startCellIndex: CellIndex,
     endCellIndex: CellIndex,
-    excludeStates?: ExcludeCellState[],
+    exclude: { dataTypes?: DataType[]; states?: ExcludeCellState[] } = {},
   ): MatrixCell {
     const { rowIndex: startRowIdx, columnIndex: startColumnIdx } = startCellIndex;
     const { rowIndex: endRowIdx, columnIndex: endColumnIdx } = endCellIndex;
@@ -334,7 +334,9 @@ export class TableCellService extends TableBaseService {
       }
     }
 
-    return excludeStates?.length ? this.filterExcludeCells(matrix, excludeStates) : matrix;
+    return exclude.dataTypes?.length || exclude.states?.length
+      ? this.filterExcludeCells(matrix, { dataTypes: exclude.dataTypes, states: exclude.states })
+      : matrix;
   }
 
   selectCells(
@@ -484,7 +486,10 @@ export class TableCellService extends TableBaseService {
       matrix = this.getCellMatrix(
         { rowIndex: 0, columnIndex: startIdx },
         { rowIndex: this.tableRowService.findLastRowIndex(), columnIndex: endIdx },
-        [ExcludeCellState.NonEditable],
+        {
+          dataTypes: [DataType.AutoNumber, DataType.AutoDate],
+          states: [ExcludeCellState.NonEditable],
+        },
       );
     } else {
       const cellSelection = this.tableService.layout.cell.selection;
@@ -502,13 +507,15 @@ export class TableCellService extends TableBaseService {
           columnIndex: startIdx.columnIndex + columnCount - 1,
         };
 
-        matrix = this.filterExcludeCells(this.selectCells(startIdx, endIdx), [
-          ExcludeCellState.NonEditable,
-        ]);
+        matrix = this.filterExcludeCells(this.selectCells(startIdx, endIdx), {
+          dataTypes: [DataType.AutoNumber, DataType.AutoDate],
+          states: [ExcludeCellState.NonEditable],
+        });
       } else {
-        matrix = this.getCellMatrix(cellSelection.start, cellSelection.end, [
-          ExcludeCellState.NonEditable,
-        ]);
+        matrix = this.getCellMatrix(cellSelection.start, cellSelection.end, {
+          dataTypes: [DataType.AutoNumber, DataType.AutoDate],
+          states: [ExcludeCellState.NonEditable],
+        });
       }
     }
 
@@ -576,9 +583,10 @@ export class TableCellService extends TableBaseService {
   }
 
   fillCells(source: [CellIndex, CellIndex], target: [CellIndex, CellIndex], isReverse: boolean) {
-    const targetMatrixCell = this.filterExcludeCells(this.getCellMatrix(target[0], target[1]), [
-      ExcludeCellState.NonEditable,
-    ]);
+    const targetMatrixCell = this.filterExcludeCells(this.getCellMatrix(target[0], target[1]), {
+      dataTypes: [DataType.AutoNumber, DataType.AutoDate],
+      states: [ExcludeCellState.NonEditable],
+    });
     const sourceMatrixCell = this.getCellMatrix(source[0], source[1]);
     const sourceValues = sourceMatrixCell.values();
     const targetValues = targetMatrixCell.values();
@@ -888,7 +896,7 @@ export class TableCellService extends TableBaseService {
     return 0;
   }
 
-  getInteractiveCells(excludeStates?: ExcludeCellState[]) {
+  getInteractiveCells(exclude: { dataTypes?: DataType[]; states?: ExcludeCellState[] } = {}) {
     let matrix: MatrixCell;
 
     if (this.tableRowService.selectedRows.size) {
@@ -921,7 +929,9 @@ export class TableCellService extends TableBaseService {
 
     if (!matrix) return null;
 
-    return excludeStates?.length ? this.filterExcludeCells(matrix, excludeStates) : matrix;
+    return exclude.dataTypes?.length || exclude.states?.length
+      ? this.filterExcludeCells(matrix, { dataTypes: exclude.dataTypes, states: exclude.states })
+      : matrix;
   }
 
   copyInteractiveCells(clipboard: Clipboard) {
@@ -979,11 +989,10 @@ export class TableCellService extends TableBaseService {
   }
 
   private clearMatrixCell(matrixCell: MatrixCell) {
-    matrixCell = this.filterExcludeCells(matrixCell, [
-      ExcludeCellState.Required,
-      ExcludeCellState.Empty,
-      ExcludeCellState.NonEditable,
-    ]);
+    matrixCell = this.filterExcludeCells(matrixCell, {
+      dataTypes: [DataType.AutoNumber, DataType.AutoDate],
+      states: [ExcludeCellState.Required, ExcludeCellState.Empty, ExcludeCellState.NonEditable],
+    });
 
     let count = 0;
 
@@ -1106,16 +1115,21 @@ export class TableCellService extends TableBaseService {
     });
   }, 200);
 
-  private filterExcludeCells(matrix: MatrixCell, excludeStates: ExcludeCellState[]) {
-    const excludeRequired = _.includes(excludeStates, ExcludeCellState.Required);
-    const excludeEmpty = _.includes(excludeStates, ExcludeCellState.Empty);
-    const excludeNonEditable = _.includes(excludeStates, ExcludeCellState.NonEditable);
+  private filterExcludeCells(
+    matrix: MatrixCell,
+    exclude: { dataTypes?: DataType[]; states?: ExcludeCellState[] },
+  ) {
+    const excludeDataTypeSet = new Set<DataType>(exclude.dataTypes || []);
+    const excludeRequired = _.includes(exclude.states, ExcludeCellState.Required);
+    const excludeEmpty = _.includes(exclude.states, ExcludeCellState.Empty);
+    const excludeNonEditable = _.includes(exclude.states, ExcludeCellState.NonEditable);
 
     for (const cells of matrix.values()) {
       for (let i = 0; i < cells.length; i++) {
         const { row, column } = cells[i];
 
         if (
+          (!excludeDataTypeSet.size || !excludeDataTypeSet.has(column.field.dataType)) &&
           (!excludeRequired || !column.field.required) &&
           (!excludeEmpty ||
             (column.field.dataType === DataType.Checkbox
@@ -1152,14 +1166,26 @@ export class TableCellService extends TableBaseService {
       case FieldValidationKey.MaxLength:
         message = `Maximum ${payload.maxLength} characters.`;
         break;
-      case FieldValidationKey.Min:
-        message = `Must be at least ${payload.min}.`;
+      case FieldValidationKey.MinValue:
+        message = `Must be at least ${payload.minValue}.`;
         break;
-      case FieldValidationKey.Max:
-        message = `Must be at most ${payload.max}.`;
+      case FieldValidationKey.MaxValue:
+        message = `Must be at most ${payload.maxValue}.`;
+        break;
+      case FieldValidationKey.MinDate:
+        message = `Date should be after ${dayjs(payload.minDate).format('YYYY-MM-DD')}.`;
+        break;
+      case FieldValidationKey.MaxDate:
+        message = `Date should be before ${dayjs(payload.maxDate).format('YYYY-MM-DD')}.`;
         break;
       case FieldValidationKey.MaxSize:
         message = `Maximum size: ${payload.maxSize}.`;
+        break;
+      case FieldValidationKey.MaxFiles:
+        message = `Maximum files: ${payload.maxFiles}.`;
+        break;
+      case FieldValidationKey.AllowedDomains:
+        message = `Domain not allowed.`;
         break;
       default:
         message = 'Invalid value.';

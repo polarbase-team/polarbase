@@ -13,6 +13,10 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Realtime for DB:** Dynamic data handling with real-time updates via WebSocket.
 - **Clean Architecture:** Metadata stored in SQLite to ensure **Zero Vendor Lock-in** for your main PostgreSQL database.
 - **Performance-First Runtime:** Built with **Bun**, **ElysiaJS**, and **PostgreSQL**.
+- **Relational Engine**: Support for Reference fields and Foreign Keys.
+- **Advanced Field Types**: GeoPoint, Email, URL, Multi-Select.
+- **System Fields**: AutoNumber, AutoDate.
+- **File Management**: Attachment field type with storage integration.
 
 ### 🖥️ Interface & Experience
 
@@ -35,9 +39,6 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Multi-View Foundation:** Building the core architecture to support switching between different data lenses (Spreadsheet, Calendar, Kanban,...).
 - **Layout Configuration Storage:** Support storing UI layout configurations (column widths, filters, view states) directly in **SQLite** to maintain a clean main database.
 - **Advanced Filtering:** Support for single and group conditions for complex datasets.
-- **Reference Field:** Native support for table relations (Foreign Keys) within the UI.
-- **New Field Types:** Multi-Select, Email, URL, Auto-number, and GeoPoint (Lat/Long).
-- **Attachment Field:** Support for Local and S3 storage using custom PostgreSQL types.
 
 ### 🗄️ Multi-Schema Management
 
@@ -69,6 +70,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Form Builder:** Specialized views for data entry.
 - **Dashboard Builder:** Custom widgets and charts for real-time insights.
 - **Dark Mode:** System-wide dark theme support.
+- **S3 Storage:** Integrate S3 storage.
 
 ### 🔗 Extensibility & Integration
 

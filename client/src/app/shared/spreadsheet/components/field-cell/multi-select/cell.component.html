@@ -1,7 +1,7 @@
-<div class="flex items-start justify-between w-full">
+<div class="flex items-start justify-between w-full gap-1">
   @if (data !== undefined && data !== null) {
     <div class="field-cell__block-content">
-      @for (option of parsedData; track option) {
+      @for (option of data; track option) {
         <p-tag severity="secondary">
           {{ option }}
           @if (selecting && !readonly) {

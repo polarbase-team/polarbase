@@ -780,7 +780,7 @@ export class SpreadsheetComponent
 
   private checkOverlapedByOverlay(target?: EventTarget) {
     return !!(target as HTMLElement)?.closest(
-      '.ng-trigger-overlayAnimation, .p-dialog-mask, .p-drawer',
+      '.ng-trigger-overlayAnimation, .p-dialog-mask, .p-drawer, .p-popover',
     );
   }
 

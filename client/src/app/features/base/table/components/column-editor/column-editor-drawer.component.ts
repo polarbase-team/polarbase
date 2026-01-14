@@ -4,7 +4,6 @@ import {
   DestroyRef,
   effect,
   input,
-  model,
   output,
   signal,
   viewChild,

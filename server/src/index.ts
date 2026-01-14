@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
+import { staticPlugin } from '@elysiajs/static';
 import chalk from 'chalk';
 
 import { initDatabaseTypes } from './plugins/pg';
@@ -48,12 +49,18 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
   app
     .use(compression)
     .use(cors({ origin: CORS_ORIGINS }))
+    .use(
+      staticPlugin({
+        assets: 'uploads',
+        prefix: '/static',
+      })
+    )
     .use(authRoutes)
     .use(apiKeyRoutes);
 
   let allGood = true;
 
-  // 1. REST API
+  // REST API
   const REST_ENABLED = process.env.REST_ENABLED === 'true';
   const REST_PREFIX = process.env.REST_PREFIX || '/rest';
   if (REST_ENABLED) {
@@ -67,7 +74,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
     logService('REST API', false);
   }
 
-  // 2. AGENT API
+  // AGENT API
   const AGENT_ENABLED = process.env.AGENT_ENABLED === 'true';
   const AGENT_PREFIX = process.env.AGENT_PREFIX || '/agent';
   if (AGENT_ENABLED) {
@@ -81,7 +88,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
     logService('AGENT API', false);
   }
 
-  // 3. MCP Server
+  // MCP Server
   const MCP_ENABLED = process.env.MCP_ENABLED === 'true';
   const MCP_PATH = process.env.MCP_PATH || '/mcp';
   const MCP_PORT = Number(process.env.MCP_PORT || '8080');
@@ -105,7 +112,7 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
     logService('MCP Server', false);
   }
 
-  // 4. Realtime
+  // Realtime
   const REALTIME_ENABLED = process.env.REALTIME_ENABLED === 'true';
   const REALTIME_PATH = process.env.REALTIME_PATH || '/realtime';
   if (REALTIME_ENABLED) {

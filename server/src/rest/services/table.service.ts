@@ -16,6 +16,10 @@ import {
   ReferentialAction,
   removeOptionsCheck,
   addOptionsCheck,
+  addFileCountCheck,
+  removeFileCountCheck,
+  addEmailDomainCheck,
+  removeEmailDomainCheck,
 } from '../utils/column';
 
 export class TableService {
@@ -223,6 +227,8 @@ export class TableService {
         minDate?: string | null;
         maxDate?: string | null;
         maxSize?: number | null;
+        maxFiles?: number | null;
+        allowedDomains?: string | null;
       } | null;
     } & (
       | {
@@ -271,6 +277,8 @@ export class TableService {
       minDate,
       maxDate,
       maxSize,
+      maxFiles,
+      allowedDomains,
     } = validation || {};
 
     const fullTableName = `"${schemaName}"."${tableName}"`;
@@ -289,7 +297,7 @@ export class TableService {
 
     try {
       await schemaBuilder.alterTable(tableName, (tableBuilder) => {
-        const columnBuilder = specificType(tableBuilder, {
+        const columnBuilder = specificType(pg, tableBuilder, {
           name,
           dataType,
           foreignKey,
@@ -301,36 +309,52 @@ export class TableService {
         if (unique) columnBuilder.unique();
 
         if (defaultValue !== undefined && defaultValue !== null) {
-          if (dataType === DataType.MultiSelect) {
-            columnBuilder.defaultTo(toPgArray(defaultValue));
-          } else {
-            columnBuilder.defaultTo(defaultValue);
+          switch (dataType) {
+            case DataType.MultiSelect:
+              columnBuilder.defaultTo(toPgArray(defaultValue));
+              break;
+            case DataType.Attachment:
+            case DataType.Reference:
+              // Not support default value
+              break;
+            default:
+              columnBuilder.defaultTo(defaultValue);
           }
         }
 
         if (comment) columnBuilder.comment(comment);
 
-        // 1. Length Check: Only if at least one boundary (min or max) is defined
+        // Length Check: Only if at least one boundary (min or max) is defined
         if (minLength !== undefined || maxLength !== undefined) {
           addLengthCheck(tableBuilder, tableName, name, minLength!, maxLength!);
         }
 
-        // 2. Range Check: Only if a minimum or maximum value is specified
+        // Range Check: Only if a minimum or maximum value is specified
         if (minValue !== undefined || maxValue !== undefined) {
           addRangeCheck(tableBuilder, tableName, name, minValue!, maxValue!);
         }
 
-        // 3. Date Range Check: Only if start or end dates are provided
+        // Date Range Check: Only if start or end dates are provided
         if (minDate || maxDate) {
           addDateRangeCheck(tableBuilder, tableName, name, minDate!, maxDate!);
         }
 
-        // 4. Size Check: Only if a maximum size limit is set
+        // Size Check: Only if a maximum size limit is set
         if (maxSize !== undefined) {
           addSizeCheck(tableBuilder, tableName, name, maxSize);
         }
 
-        // 5. Options Check: Only if the options array is not empty
+        // File Count Check: Only if a maximum file limit is set
+        if (maxFiles !== undefined) {
+          addFileCountCheck(tableBuilder, tableName, name, maxFiles);
+        }
+
+        // Email Domain Check
+        if (allowedDomains !== undefined) {
+          addEmailDomainCheck(tableBuilder, tableName, name, allowedDomains!);
+        }
+
+        // Options Check: Only if the options array is not empty
         if (options?.length) {
           addOptionsCheck(
             tableBuilder,
@@ -378,6 +402,8 @@ export class TableService {
         minDate?: string | null;
         maxDate?: string | null;
         maxSize?: number | null;
+        maxFiles?: number | null;
+        allowedDomains?: string | null;
       } | null;
     } & (
       | {
@@ -426,6 +452,8 @@ export class TableService {
       minDate,
       maxDate,
       maxSize,
+      maxFiles,
+      allowedDomains,
     } = validation || {};
 
     const fullTableName = `"${schemaName}"."${tableName}"`;
@@ -453,7 +481,7 @@ export class TableService {
     await pg.schema
       .withSchema(schemaName)
       .alterTable(tableName, (tableBuilder) => {
-        const columnBuilder = specificType(tableBuilder, {
+        const columnBuilder = specificType(pg, tableBuilder, {
           name: columnName,
           dataType: dataType || oldSchema.dataType,
           foreignKey,
@@ -475,10 +503,16 @@ export class TableService {
         }
 
         if (defaultValue !== oldSchema.defaultValue) {
-          if (dataType === DataType.MultiSelect) {
-            columnBuilder.defaultTo(toPgArray(defaultValue));
-          } else {
-            columnBuilder.defaultTo(defaultValue);
+          switch (dataType) {
+            case DataType.MultiSelect:
+              columnBuilder.defaultTo(toPgArray(defaultValue));
+              break;
+            case DataType.Attachment:
+            case DataType.Reference:
+              // Not support default value
+              break;
+            default:
+              columnBuilder.defaultTo(defaultValue);
           }
         }
 
@@ -588,6 +622,55 @@ export class TableService {
 
         if (
           recreateConstraints ||
+          maxFiles !== oldSchema.validation?.maxFiles
+        ) {
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'file-count'
+            );
+            if (
+              oldSchema.metadata.constraints?.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeFileCountCheck(tableBuilder, tableName, columnName);
+            }
+          }
+
+          addFileCountCheck(tableBuilder, tableName, newName, maxFiles!);
+        }
+
+        if (
+          recreateConstraints ||
+          allowedDomains !== oldSchema.validation?.allowedDomains
+        ) {
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'email-domain'
+            );
+            if (
+              oldSchema.metadata.constraints?.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeEmailDomainCheck(tableBuilder, tableName, columnName);
+            }
+          }
+
+          addEmailDomainCheck(
+            tableBuilder,
+            tableName,
+            newName,
+            allowedDomains!
+          );
+        }
+
+        if (
+          recreateConstraints ||
           JSON.stringify(options) !== JSON.stringify(oldSchema.options)
         ) {
           removeOptionsCheck(tableBuilder, tableName, columnName);
@@ -624,7 +707,22 @@ export class TableService {
               tableName,
               columnName,
               'size'
-            )}"
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'file-count'
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'email-domain'
+            )}",
+            DROP CONSTRAINT IF EXISTS "${getConstraintName(
+              tableName,
+              columnName,
+              'options'
+            )}";
           `
           );
         }

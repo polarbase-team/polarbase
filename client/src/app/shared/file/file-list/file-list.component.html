@@ -1,0 +1,104 @@
+<div class="flex flex-wrap gap-2 items-center">
+  @for (file of filesWithMetadata(); track file.id; let i = $index) {
+    <div class="cursor-pointer" (click)="openGalleria(i)">
+      @if (file.isImage) {
+        <p-image
+          [src]="file.url"
+          alt="Image"
+          loading="lazy"
+          imageClass="w-8 min-w-8 h-8 min-h-8 object-contain rounded"
+          class="w-8 min-w-8 h-8 min-h-8"
+        />
+      } @else {
+        <i
+          [class]="'icon icon-' + file.icon.name + ' ' + file.icon.color"
+          style="font-size: 2rem"
+          class="w-8 min-w-8 h-8 min-h-8 flex items-center justify-center"
+        ></i>
+      }
+    </div>
+  } @empty {
+    <div class="flex items-center text-surface-500 text-sm italic h-8">No uploaded files</div>
+  }
+</div>
+
+<p-confirmdialog styleClass="max-w-100" appendTo="body" />
+
+<p-dialog
+  [(visible)]="visibleGalleriaDialog"
+  [modal]="true"
+  [dismissableMask]="true"
+  [showHeader]="false"
+  appendTo="body"
+  contentStyleClass="!p-0"
+>
+  <p-galleria
+    #galleria
+    [value]="filesWithMetadata()"
+    [(activeIndex)]="activeIndex"
+    [containerStyle]="{ width: '480px', maxWidth: '480px', borderWidth: '0' }"
+    [numVisible]="5"
+  >
+    <ng-template #item let-item>
+      <div class="p-40">
+        @if (item.isImage) {
+          <img
+            [src]="item.url"
+            alt="Image"
+            imageClass="object-contain rounded"
+            style="min-width: 36px; min-height: 36px"
+          />
+        } @else {
+          <i
+            [class]="'icon icon-' + item.icon.name + ' ' + item.icon.color"
+            style="font-size: 3.5rem"
+            class="flex items-center justify-center w-[50px] h-[50px]"
+          ></i>
+        }
+      </div>
+    </ng-template>
+
+    <ng-template #caption let-item>
+      <div class="flex justify-between gap-2">
+        <div>
+          <h4>{{ item.name }}</h4>
+          <p>
+            <span>Size: {{ item.size }}</span> |
+            <span>Format: {{ item.mimeType }}</span>
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <p-button
+            icon="icon icon-download"
+            (click)="downloadFile(item)"
+            title="Download"
+            severity="secondary"
+          />
+          <p-button
+            icon="icon icon-trash"
+            (click)="confirmDelete($event, item)"
+            title="Delete"
+            severity="secondary"
+          />
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template #thumbnail let-item>
+      @if (item.isImage) {
+        <img
+          [src]="item.url"
+          alt="Image"
+          imageClass="object-contain rounded"
+          style="width: 36px; height: 36px"
+        />
+      } @else {
+        <i
+          [class]="'icon icon-' + item.icon.name + ' ' + item.icon.color"
+          style="font-size: 2.5rem"
+          class="flex items-center justify-center w-[36px] h-[36px]"
+        ></i>
+      }
+    </ng-template>
+  </p-galleria>
+</p-dialog>

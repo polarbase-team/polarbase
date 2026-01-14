@@ -108,6 +108,8 @@
                 (ngModelChange)="onDataTypeSelect($event)"
                 placeholder="Select here..."
                 required
+                [checkmark]="true"
+                [showClear]="true"
               >
                 <ng-template let-item #item>
                   <div class="flex items-center gap-2">
@@ -238,7 +240,20 @@
                 <ng-container [ngTemplateOutlet]="optionsBuilder" />
               }
               @case (DataType.Checkbox) {}
-              @case (DataType.Email) {}
+              @case (DataType.Email) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Allowed domains</label>
+                  <input
+                    pInputText
+                    name="allowedDomains"
+                    [(ngModel)]="columnFormData.validation.allowedDomains"
+                    placeholder="Input here..."
+                  />
+                  <p class="text-surface-500 text-xs">
+                    Comma separated. Leave blank to allow all domains. E.g. example.com, test.com
+                  </p>
+                </div>
+              }
               @case (DataType.JSON) {
                 <div class="flex flex-col gap-1">
                   <label class="text-sm">Max size (bytes)</label>
@@ -263,6 +278,8 @@
                     optionValue="value"
                     placeholder="Select here..."
                     required
+                    [checkmark]="true"
+                    [showClear]="true"
                   />
                 </div>
                 <div class="flex flex-col gap-1">
@@ -312,6 +329,19 @@
                   </p-selectbutton>
                 </div>
               }
+              @case (DataType.Attachment) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm">Max files</label>
+                  <p-inputnumber
+                    name="maxFiles"
+                    [(ngModel)]="columnFormData.validation.maxFiles"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.AutoNumber) {}
+              @case (DataType.AutoDate) {}
             }
           </div>
         </div>
@@ -421,7 +451,16 @@
                 />
               }
               @case (DataType.Reference) {
-                Not support
+                <p class="text-sm">Not support</p>
+              }
+              @case (DataType.Attachment) {
+                <p class="text-sm">Not support</p>
+              }
+              @case (DataType.AutoNumber) {
+                <p class="text-sm">Not support</p>
+              }
+              @case (DataType.AutoDate) {
+                <p class="text-sm">Not support</p>
               }
               @default {
                 <i class="text-sm text-surface-500">Select a data type first.</i>

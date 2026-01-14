@@ -9,7 +9,7 @@
     },
     "client": {
       "name": "polarbase-client",
-      "version": "0.3.1-beta",
+      "version": "0.4.0-beta",
       "dependencies": {
         "@angular/common": "^20.3.0",
         "@angular/compiler": "^20.3.0",
@@ -53,7 +53,7 @@
     },
     "server": {
       "name": "polarbase-server",
-      "version": "0.3.1-beta",
+      "version": "0.4.0-beta",
       "dependencies": {
         "@ai-sdk/anthropic": "^2.0.53",
         "@ai-sdk/google": "^2.0.44",
@@ -62,6 +62,7 @@
         "@ai-sdk/xai": "^2.0.39",
         "@elysiajs/cors": "^1.4.0",
         "@elysiajs/openapi": "^1.4.11",
+        "@elysiajs/static": "^1.4.7",
         "@types/pg": "^8.15.6",
         "ai": "^5.0.108",
         "chalk": "^5.6.2",
@@ -887,6 +888,13 @@
       "",
       { "peerDependencies": { "elysia": ">= 1.4.0" } },
       "sha512-d75bMxYJpN6qSDi/z9L1S7SLk1S/8Px+cTb3W2lrYzU8uQ5E0kXdy1oOMJEfTyVsz3OA19NP9KNxE7ztSbLBLg==",
+    ],
+
+    "@elysiajs/static": [
+      "@elysiajs/static@1.4.7",
+      "",
+      { "peerDependencies": { "elysia": ">= 1.4.0" } },
+      "sha512-Go4kIXZ0G3iWfkAld07HmLglqIDMVXdyRKBQK/sVEjtpDdjHNb+rUIje73aDTWpZYg4PEVHUpi9v4AlNEwrQug==",
     ],
 
     "@esbuild/aix-ppc64": [

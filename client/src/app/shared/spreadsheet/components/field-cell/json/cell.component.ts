@@ -19,7 +19,7 @@ export class JSONFieldCellComponent extends FieldCellInputable<JSONData> {
   protected visibleJSONEditor = false;
   protected jsonText = '';
 
-  override ngOnChanges(changes: SimpleChanges): void {
+  override ngOnChanges(changes: SimpleChanges) {
     if ('data' in changes) {
       this.jsonText = this.field.toString(this.data);
     }

@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { finalize, Observable, map } from 'rxjs';
 
 import { DrawerModule } from 'primeng/drawer';
@@ -20,6 +21,9 @@ import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { FluidModule } from 'primeng/fluid';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
@@ -37,7 +41,9 @@ import { UrlFieldEditorComponent } from '@app/shared/field-system/editors/url/ed
 import { JSONFieldEditorComponent } from '@app/shared/field-system/editors/json/editor.component';
 import { GeoPointFieldEditorComponent } from '@app/shared/field-system/editors/geo-point/editor.component';
 import { ReferenceFieldEditorComponent } from '@app/shared/field-system/editors/reference/editor.component';
+import { AttachmentFieldEditorComponent } from '@app/shared/field-system/editors/attachment/editor.component';
 import { TableDefinition, TableService } from '../../services/table.service';
+import { InputText } from 'primeng/inputtext';
 
 @Component({
   selector: 'record-editor-drawer',
@@ -45,10 +51,14 @@ import { TableDefinition, TableService } from '../../services/table.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    FormsModule,
     DrawerModule,
     ButtonModule,
     DividerModule,
     ToastModule,
+    InputTextModule,
+    InputNumberModule,
+    FluidModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -62,6 +72,8 @@ import { TableDefinition, TableService } from '../../services/table.service';
     JSONFieldEditorComponent,
     GeoPointFieldEditorComponent,
     ReferenceFieldEditorComponent,
+    AttachmentFieldEditorComponent,
+    InputText,
   ],
   providers: [MessageService],
 })
@@ -110,8 +122,13 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
   }
 
   protected save() {
-    const isInvalid = this.requiredFields().find(
-      (field: Field) => !field.params.primary && _.isNil(this.updatedRecord[field.name]),
+    const isInvalid = !!this.requiredFields().find(
+      (field) =>
+        !field.params.primary &&
+        field.dataType !== DataType.AutoNumber &&
+        field.dataType !== DataType.AutoDate &&
+        field.params.defaultValue === undefined &&
+        _.isNil(this.updatedRecord[field.name]),
     );
 
     if (isInvalid) {
@@ -131,7 +148,6 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     let fn: Observable<any>;
     switch (this.mode()) {
       case 'add':
-        if (_.isNil(data['id'])) data['id'] = id;
         fn = this.tblService.createRecords(tableName, [data]);
         break;
       case 'edit':

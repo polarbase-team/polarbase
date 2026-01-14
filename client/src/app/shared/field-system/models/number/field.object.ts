@@ -10,38 +10,38 @@ export class NumberField extends Field<NumberData> {
   readonly dataType: DataType = DataType.Number;
   readonly icon: string = FIELD_ICON_MAP[DataType.Number];
 
-  min?: number;
-  max?: number;
+  minValue?: number;
+  maxValue?: number;
 
   constructor(config: NumberFieldConfig) {
     super(config);
 
-    this.min = config.min;
-    this.max = config.max;
+    this.minValue = config.minValue;
+    this.maxValue = config.maxValue;
   }
 
   override validate(data = this.data) {
     let errors = super.validate(data);
 
     if (!_.isNil(data)) {
-      if (data < this.min) {
+      if (data < this.minValue) {
         errors = {
           ...errors,
-          [FieldValidationKey.Min]: {
+          [FieldValidationKey.MinValue]: {
             field: this,
             data,
-            min: this.min,
+            minValue: this.minValue,
           },
         };
       }
 
-      if (data > this.max) {
+      if (data > this.maxValue) {
         errors = {
           ...errors,
-          [FieldValidationKey.Max]: {
+          [FieldValidationKey.MaxValue]: {
             field: this,
             data,
-            max: this.max,
+            maxValue: this.maxValue,
           },
         };
       }
@@ -63,12 +63,12 @@ export class NumberField extends Field<NumberData> {
   override toJson() {
     return {
       ...super.toJson(),
-      min: this.min,
-      max: this.max,
+      minValue: this.minValue,
+      maxValue: this.maxValue,
       params: JSON.parse(
         JSON.stringify({
-          min: this.min,
-          max: this.max,
+          minValue: this.minValue,
+          maxValue: this.maxValue,
         }),
       ),
     };

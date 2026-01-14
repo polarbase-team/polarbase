@@ -434,7 +434,7 @@ export class TableRowService extends TableBaseService {
         icon: 'icon icon-trash',
         command: () => {
           this.host.deleteConfirmation(
-            'Do you want to delete the selected rows?',
+            'Are you sure you want to delete the selected rows?',
             'Delete rows',
             () => this.deleteSelectedRows(),
             void 0,
@@ -504,7 +504,7 @@ export class TableRowService extends TableBaseService {
           icon: 'icon icon-trash',
           command: () => {
             this.host.deleteConfirmation(
-              'Do you want to delete this row?',
+              'Are you sure you want to delete this row?',
               'Delete row',
               () => this.deleteRow(row),
               void 0,
