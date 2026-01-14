@@ -7,7 +7,9 @@ import {
   SIZE_CHECK_SUFFIX,
   RANGE_CHECK_SUFFIX,
   DATE_RANGE_CHECK_SUFFIX,
+  FILE_COUNT_CHECK_SUFFIX,
   OPTIONS_CHECK_SUFFIX,
+  EMAIL_DOMAIN_CHECK_SUFFIX,
 } from './column';
 
 export interface Table {
@@ -61,8 +63,7 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
 /**
  * Retrieves and constructs a comprehensive schema for a specific table,
  * including column metadata, primary key identification, column comments,
- * associated enum values for enum-typed columns, and additional validation
- * and foreign key details.
+ * and additional validation and foreign key details.
  */
 export const getTableSchema = async (
   pg: Knex,
@@ -78,7 +79,6 @@ export const getTableSchema = async (
     columns,
     comments,
     primaryKeys,
-    enumMetadata,
     foreignKeys,
     uniqueConstraints,
     checkConstraints,
@@ -163,17 +163,6 @@ export const getTableSchema = async (
         'table_constraints.constraint_type': 'PRIMARY KEY',
       }),
 
-    // Identify columns using ENUM types and get their type OIDs
-    pg.raw(
-      `
-      SELECT c.column_name, t.oid as type_oid
-      FROM information_schema.columns c
-      JOIN pg_type t ON t.typname = CASE WHEN c.udt_name ~ '^_' THEN substring(c.udt_name FROM 2) ELSE c.udt_name END
-      WHERE c.table_schema = ? AND c.table_name = ? ${columnName ? 'AND c.column_name = ?' : ''} AND t.typtype = 'e'
-    `,
-      [schemaName, tableName, ...(columnName ? [columnName] : [])]
-    ),
-
     // Fetch Foreign Key relationships and referential actions (ON UPDATE/DELETE)
     pg.raw(
       `
@@ -245,8 +234,8 @@ export const getTableSchema = async (
    * 3. Parse Check Constraints into Validation Rules
    * Uses Naming Convention (Suffixes) to categorize constraints.
    */
-  const validationMap: any = {};
-  const optionsMap: Record<string, string[]> = {};
+  const validationMap: Record<string, any> = {};
+  const optionsMap: Record<string, string[] | null> = {};
   for (const cons of checkConstraints.rows) {
     const def = cons.constraint_def;
     const colName = cons.involved_columns;
@@ -267,9 +256,12 @@ export const getTableSchema = async (
       if (range?.[1]) validationMap[colName].maxDate = range[1].value;
     } else if (cons.constraint_name.endsWith(SIZE_CHECK_SUFFIX)) {
       validationMap[colName].maxSize = extractMaxSize(def);
+    } else if (cons.constraint_name.endsWith(FILE_COUNT_CHECK_SUFFIX)) {
+      validationMap[colName].maxFiles = extractFileCount(def);
+    } else if (cons.constraint_name.endsWith(EMAIL_DOMAIN_CHECK_SUFFIX)) {
+      validationMap[colName].allowedDomains = extractEmailDomains(def);
     } else if (cons.constraint_name.endsWith(OPTIONS_CHECK_SUFFIX)) {
-      const opts = extractOptions(def);
-      if (opts) optionsMap[colName] = opts;
+      optionsMap[colName] = extractOptions(def);
     }
   }
 
@@ -343,11 +335,13 @@ const parsePgDefault = (
     return { ...parsed, value: null };
   }
 
+  // Remove type casting (e.g., 'val'::text -> 'val')
   let expr = rawDefault
     .trim()
     .replace(/::[\w\s"'\[\]]+$/, '')
     .trim();
 
+  // Check for special expressions/functions
   const specialExpressionPatterns = [
     /^nextval\(/i,
     /^currval\(/i,
@@ -363,13 +357,28 @@ const parsePgDefault = (
     /^date_bin\(/i,
   ];
 
-  const isSpecial = specialExpressionPatterns.some((pattern) =>
-    pattern.test(expr)
-  );
-  if (isSpecial) {
+  if (specialExpressionPatterns.some((pattern) => pattern.test(expr))) {
     return { ...parsed, value: expr, isSpecialExpression: true };
   }
 
+  // Handle Postgres Array Literals: '{val1,val2}'
+  if (/^'\{.*\}'$/.test(expr)) {
+    const arrayContent = expr.slice(2, -2); // Remove '{ and }'
+    if (arrayContent === '') return { ...parsed, value: [] };
+
+    const items = arrayContent.split(',').map((item) => {
+      let trimmed = item.trim();
+      // Remove surrounding quotes if elements are quoted
+      if (/^".*"$/.test(trimmed)) {
+        return trimmed.slice(1, -1).replace(/\\"/g, '"');
+      }
+      return trimmed;
+    });
+
+    return { ...parsed, value: items };
+  }
+
+  // Handle Strings: 'text'
   if (/^'.*'$/.test(expr)) {
     const str = expr
       .slice(1, -1)
@@ -384,6 +393,7 @@ const parsePgDefault = (
     return { ...parsed, value: str };
   }
 
+  // Handle Numbers
   if (/^-?\d+(\.\d+)?$/.test(expr)) {
     const num = Number(expr);
     return {
@@ -392,11 +402,12 @@ const parsePgDefault = (
     };
   }
 
-  if (expr === 'true') return { ...parsed, value: true };
-  if (expr === 'false') return { ...parsed, value: false };
+  // Booleans and Nulls
+  if (expr.toLowerCase() === 'true') return { ...parsed, value: true };
+  if (expr.toLowerCase() === 'false') return { ...parsed, value: false };
+  if (expr.toUpperCase() === 'NULL') return { ...parsed, value: null };
 
-  if (expr === 'NULL') return { ...parsed, value: null };
-
+  // Default fallback for unhandled expressions
   return { ...parsed, value: expr, isSpecialExpression: true };
 };
 
@@ -411,8 +422,8 @@ const extractLengthRange = (definition: string) => {
   const regex = new RegExp(
     /(?:char_length|length)\s*\(\s*\(\s*["']?([\w ]+)["']?\s*\)?(?:::\w+)?\s*\)\s*(>=|<=|>|<)\s*(\d+)/gi
   );
-  const matches = Array.from(definition.matchAll(regex));
 
+  const matches = Array.from(definition.matchAll(regex));
   if (matches.length === 0) return null;
 
   return matches.map((match) => ({
@@ -424,66 +435,95 @@ const extractLengthRange = (definition: string) => {
 const extractValueRange = (definition: string) => {
   const regex =
     /\(\s*["']?([\w ]+)["']?\s*(>=|<=|>|<)\s*\(?\s*(-?\d+(?:\.\d+)?|'[^']*')\s*(::[\w\s]+)?\)/gi;
+
   const matches = Array.from(definition.matchAll(regex));
+  if (matches.length === 0) return null;
 
-  const bounds: {
-    operator: string;
-    value: number | null;
-  }[] = [];
-
-  for (const match of matches) {
+  return matches.map((match) => {
     const operator = match[2];
     const value = match[3].match(/('[^']*'|\-?\d+(?:\.\d+)?)/)?.[1] || '';
-    bounds.push({ operator, value: parseFloat(value) });
-  }
-
-  return bounds;
+    return { operator, value: parseFloat(value) };
+  });
 };
 
 const extractDateRange = (definition: string) => {
   const regex =
     /\(\s*["']?([\w ]+)["']?\s*(>=|<=|>|<)\s*to_timestamp\s*\(\s*'([^']+)'\s*::text\s*,\s*'YYYY-MM-DD HH24:MI'::text\s*\)\s*(::[\w\s]+)?\s*\)/gi;
+
   const matches = Array.from(definition.matchAll(regex));
+  if (matches.length === 0) return null;
 
-  const bounds: {
-    operator: string;
-    value: string | null;
-  }[] = [];
-
-  for (const match of matches) {
+  return matches.map((match) => {
     const operator = match[2];
     const value = match[3] || '';
-    bounds.push({ operator, value });
-  }
-
-  return bounds;
+    return { operator, value };
+  });
 };
 
 const extractMaxSize = (definition: string): number | null => {
   const regex =
     /pg_column_size\s*\(\s*["']?([\w ]+)["']?\s*\)\s*(<=|<)\s*(\d+)/i;
-  const match = definition.match(regex);
 
+  const match = definition.match(regex);
   if (!match) return null;
 
   return parseInt(match[3], 10);
 };
 
-const extractOptions = (definition: string): string[] | null => {
-  const regex =
-    /(?:ANY\s*\(\s*ARRAY\s*\[\s*(.*?)\s*\]\s*\)|IN\s*\((.*?)\)|<@\s*ARRAY\[(.*?)\])/i;
+const extractFileCount = (definition: string) => {
+  const regex = /cardinality\s*\(\s*"?([\w ]+)"?\s*\)\s*(<=|<)\s*(\d+)/i;
   const match = definition.match(regex);
-
   if (!match) return null;
 
-  const rawContent = match[1] || match[2] || match[3];
+  return parseInt(match[3], 10);
+};
 
-  return rawContent.split(',').map((item) => {
-    return item
-      .trim()
-      .split('::')[0]
-      .trim()
-      .replace(/^'|'$/g, '')
-      .replace(/''/g, "'");
-  });
+const extractEmailDomains = (definition: string): string | null => {
+  const regex =
+    /split_part\s*\(\s*\(.*?\)::text\s*,\s*'@'::text\s*,\s*2\s*\)\s*(?:=\s*ANY\s*\(ARRAY\[(.*?)\]\)|IN\s*\((.*?)\)|=\s*('(.*?)'::text))/i;
+
+  const match = definition.match(regex);
+  if (!match) return null;
+
+  const rawList = match[1] || match[2];
+  if (rawList) {
+    return rawList
+      .split(',')
+      .map((item) => {
+        return item
+          .trim()
+          .split('::')[0]
+          .replace(/^'|'$/g, '')
+          .replace(/''/g, "'");
+      })
+      .filter((item) => item !== '')
+      .join(', ');
+  }
+
+  if (match[4]) {
+    return match[4].replace(/''/g, "'");
+  }
+
+  return null;
+};
+
+const extractOptions = (definition: string): string[] | null => {
+  const regex =
+    /(?:ANY\s*\(\s*ARRAY\s*\[\s*(.*?)\s*\]\s*\)|IN\s*\((.*?)\)|<@\s*ARRAY\[(.*?)\]|=\s*('(?:''|[^'])*'))/i;
+
+  const match = definition.match(regex);
+  if (!match) return null;
+
+  const rawContent = match[1] || match[2] || match[3] || match[4];
+  return rawContent
+    .split(',')
+    .map((item) => {
+      return item
+        .trim()
+        .split('::')[0]
+        .trim()
+        .replace(/^'|'$/g, '')
+        .replace(/''/g, "'");
+    })
+    .filter((item) => item !== '');
 };

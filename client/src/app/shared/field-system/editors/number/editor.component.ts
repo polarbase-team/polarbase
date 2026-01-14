@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutoFocusModule } from 'primeng/autofocus';
@@ -13,6 +13,7 @@ import { FieldEditorComponent } from '../editor.component';
 @Component({
   selector: 'number-field-editor',
   templateUrl: './editor.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, AutoFocusModule, InputNumberModule, FluidModule, MessageModule],
 })
 export class NumberFieldEditorComponent extends FieldEditorComponent<NumberField, NumberData> {}

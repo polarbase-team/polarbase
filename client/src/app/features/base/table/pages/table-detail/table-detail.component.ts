@@ -127,7 +127,9 @@ export class TableDetailComponent {
             case 'update': {
               const recordPk = record.new[tableKeyColumn];
               this.rows.update((rows) =>
-                rows.map((row) => (row.id === recordPk ? { ...row, data: record.new } : row)),
+                rows.map((row) =>
+                  row.id === recordPk ? { ...row, data: { ...row.data, ...record.new } } : row,
+                ),
               );
               break;
             }

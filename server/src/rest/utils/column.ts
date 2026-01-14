@@ -14,6 +14,9 @@ export const DataType = {
   JSON: 'json',
   GeoPoint: 'geo-point',
   Reference: 'reference',
+  Attachment: 'attachment',
+  AutoNumber: 'auto-number',
+  AutoDate: 'auto-date',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -48,6 +51,8 @@ export interface Column {
     minDate?: string;
     maxDate?: string;
     maxSize?: number;
+    maxFiles?: number;
+    allowedDomains?: string;
   };
   metadata: any;
 }
@@ -99,26 +104,49 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
 };
 
 export const mapDataType = (column: Column) => {
-  const { pgDataType, pgRawType, pgDomainName } = column.metadata || {};
+  const { pgDataType, pgRawType, pgDomainName, pgDefaultValue } =
+    column.metadata || {};
 
-  // 1. Check for custom domains first
+  // Detect AutoNumber
+  if (
+    pgDefaultValue &&
+    typeof pgDefaultValue === 'string' &&
+    pgDefaultValue.includes('nextval')
+  ) {
+    return DataType.AutoNumber;
+  }
+
+  // Detect AutoDateTime
+  if (
+    pgDataType === 'timestamp with time zone' &&
+    pgDefaultValue === 'CURRENT_TIMESTAMP'
+  ) {
+    return DataType.AutoDate;
+  }
+
+  // Detect Email and Url domains
   if (pgDomainName === 'email_address') {
     return DataType.Email;
   } else if (pgDomainName === 'url_address') {
     return DataType.Url;
   }
 
-  // 2. Handle Enums/Selects
+  // Detect Selects and Multi-Selects
   if (column.options) {
-    if (pgDataType === 'ARRAY' || pgRawType?.startsWith('_')) {
+    if (pgDataType === 'ARRAY') {
       return DataType.MultiSelect;
     }
     return DataType.Select;
   }
 
-  // 3. Handle foreign keys
+  // Detect References
   if (column.foreignKey) {
     return DataType.Reference;
+  }
+
+  // Detect Attachment
+  if (pgRawType === '_attachment') {
+    return DataType.Attachment;
   }
 
   const normalizedType = pgDataType
@@ -131,6 +159,7 @@ export const mapDataType = (column: Column) => {
 };
 
 export const specificType = (
+  pg: Knex,
   tableBuilder: Knex.TableBuilder,
   {
     name,
@@ -148,55 +177,31 @@ export const specificType = (
   }
 ) => {
   switch (dataType) {
-    case DataType.Text: {
+    case DataType.Text:
       return tableBuilder.string(name);
-    }
-
-    case DataType.LongText: {
+    case DataType.LongText:
       return tableBuilder.text(name);
-    }
-
-    case DataType.Integer: {
+    case DataType.Integer:
       return tableBuilder.integer(name);
-    }
-
-    case DataType.Number: {
+    case DataType.Number:
       return tableBuilder.decimal(name);
-    }
-
-    case DataType.Checkbox: {
+    case DataType.Checkbox:
       return tableBuilder.boolean(name);
-    }
-
-    case DataType.Date: {
+    case DataType.Date:
       return tableBuilder.timestamp(name);
-    }
-
-    case DataType.Select: {
+    case DataType.Select:
       return tableBuilder.text(name);
-    }
-
-    case DataType.MultiSelect: {
+    case DataType.MultiSelect:
       return tableBuilder.specificType(name, 'text[]');
-    }
-
-    case DataType.Email: {
+    case DataType.Email:
       return tableBuilder.specificType(name, 'email_address');
-    }
-
-    case DataType.Url: {
+    case DataType.Url:
       return tableBuilder.specificType(name, 'url_address');
-    }
-
-    case DataType.JSON: {
+    case DataType.JSON:
       return tableBuilder.jsonb(name);
-    }
-
-    case DataType.GeoPoint: {
-      return tableBuilder.specificType(name, 'point');
-    }
-
-    case DataType.Reference: {
+    case DataType.GeoPoint:
+      return tableBuilder.point(name);
+    case DataType.Reference:
       if (!foreignKey) {
         throw new Error(`Foreign key metadata is required for column: ${name}`);
       }
@@ -206,8 +211,12 @@ export const specificType = (
         .inTable(foreignKey.table)
         .onUpdate(foreignKey.onUpdate)
         .onDelete(foreignKey.onDelete);
-    }
-
+    case DataType.Attachment:
+      return tableBuilder.specificType(name, 'attachment[]');
+    case DataType.AutoNumber:
+      return tableBuilder.bigIncrements(name, { primaryKey: false });
+    case DataType.AutoDate:
+      return tableBuilder.timestamp(name).defaultTo(pg.fn.now());
     default:
       throw new Error(`Unsupported column type: ${dataType}`);
   }
@@ -217,12 +226,21 @@ export const LENGTH_CHECK_SUFFIX = '_length_check';
 export const RANGE_CHECK_SUFFIX = '_range_check';
 export const DATE_RANGE_CHECK_SUFFIX = '_date_range_check';
 export const SIZE_CHECK_SUFFIX = '_size_check';
+export const EMAIL_DOMAIN_CHECK_SUFFIX = '_email_domain_check';
+export const FILE_COUNT_CHECK_SUFFIX = '_file_count_check';
 export const OPTIONS_CHECK_SUFFIX = '_options_check';
 
 export const getConstraintName = (
   tableName: string,
   columnName: string,
-  type: 'length' | 'range' | 'date-range' | 'size' | 'options'
+  type:
+    | 'length'
+    | 'range'
+    | 'date-range'
+    | 'size'
+    | 'file-count'
+    | 'email-domain'
+    | 'options'
 ): string => {
   const prefix = `${tableName}_${columnName}`;
   switch (type) {
@@ -234,6 +252,10 @@ export const getConstraintName = (
       return prefix + DATE_RANGE_CHECK_SUFFIX;
     case 'size':
       return prefix + SIZE_CHECK_SUFFIX;
+    case 'file-count':
+      return prefix + FILE_COUNT_CHECK_SUFFIX;
+    case 'email-domain':
+      return prefix + EMAIL_DOMAIN_CHECK_SUFFIX;
     case 'options':
       return prefix + OPTIONS_CHECK_SUFFIX;
   }
@@ -365,6 +387,66 @@ export const removeSizeCheck = (
   columnName: string
 ) => {
   const constraintName = getConstraintName(tableName, columnName, 'size');
+  tableBuilder.dropChecks(`"${constraintName}"`);
+};
+
+export const addFileCountCheck = (
+  tableBuilder: Knex.TableBuilder,
+  tableName: string,
+  columnName: string,
+  maxFiles: number | null
+) => {
+  if (typeof maxFiles === 'number' && maxFiles > 0) {
+    const quotedColumn = `"${columnName}"`;
+    const constraintName = `${tableName}_${columnName}${FILE_COUNT_CHECK_SUFFIX}`;
+
+    tableBuilder.check(
+      `cardinality(${quotedColumn}) <= ${maxFiles}`,
+      [],
+      `"${constraintName}"`
+    );
+  }
+};
+
+export const removeFileCountCheck = (
+  tableBuilder: Knex.TableBuilder,
+  tableName: string,
+  columnName: string
+) => {
+  const constraintName = `${tableName}_${columnName}${FILE_COUNT_CHECK_SUFFIX}`;
+  tableBuilder.dropChecks(`"${constraintName}"`);
+};
+
+export const addEmailDomainCheck = (
+  tableBuilder: Knex.TableBuilder,
+  tableName: string,
+  columnName: string,
+  allowedDomains: string
+) => {
+  const quotedColumn = `"${columnName}"`;
+  const constraintName = getConstraintName(
+    tableName,
+    columnName,
+    'email-domain'
+  );
+  const escapedDomains = allowedDomains
+    .split(',')
+    .map((dom) => `'${dom.trim().replace(/'/g, "''")}'`)
+    .join(', ');
+  const sql = `split_part(${quotedColumn}, '@', 2) IN (${escapedDomains})`;
+  tableBuilder.check(sql, [], `"${constraintName}"`);
+};
+
+export const removeEmailDomainCheck = (
+  tableBuilder: Knex.TableBuilder,
+  tableName: string,
+  columnName: string
+) => {
+  const constraintName = getConstraintName(
+    tableName,
+    columnName,
+    'email-domain'
+  );
   tableBuilder.dropChecks(`"${constraintName}"`);
 };
 

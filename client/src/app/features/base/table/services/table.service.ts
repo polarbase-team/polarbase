@@ -8,6 +8,7 @@ import { ApiResponse } from '@app/core/models/api-response';
 import { DataType, FieldConfig } from '@app/shared/field-system/models/field.interface';
 import { IntegerFieldConfig } from '@app/shared/field-system/models/integer/field.interface';
 import { SelectFieldConfig } from '@app/shared/field-system/models/select/field.interface';
+import { EmailFieldConfig } from '@app/shared/field-system/models/email/field.interface';
 import { NumberFieldConfig } from '@app/shared/field-system/models/number/field.interface';
 import { TextFieldConfig } from '@app/shared/field-system/models/text/field.interface';
 import { LongTextFieldConfig } from '@app/shared/field-system/models/long-text/field.interface';
@@ -15,6 +16,7 @@ import { JSONFieldConfig } from '@app/shared/field-system/models/json/field.inte
 import { DateFieldConfig } from '@app/shared/field-system/models/date/field.interface';
 import { buildField } from '@app/shared/field-system/models/utils';
 import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/field.interface';
+import { AttachmentFieldConfig } from '@app/shared/field-system/models/attachment/field.interface';
 
 export interface TableDefinition {
   tableName: string;
@@ -52,6 +54,8 @@ export interface ColumnDefinition {
     minDate?: string | null;
     maxDate?: string | null;
     maxSize?: number | null;
+    maxFiles?: number | null;
+    allowedDomains?: string | null;
   } | null;
   metadata: any;
 }
@@ -72,6 +76,9 @@ const DATA_TYPE_MAPPING = {
   json: DataType.JSON,
   'geo-point': DataType.GeoPoint,
   reference: DataType.Reference,
+  attachment: DataType.Attachment,
+  'auto-number': DataType.AutoNumber,
+  'auto-date': DataType.AutoDate,
 };
 
 @Injectable({
@@ -81,7 +88,7 @@ export class TableService {
   tables = signal<TableDefinition[]>([]);
   selectedTable = signal<TableDefinition>(null);
 
-  private apiUrl = `${environment.apiUrl}/rest`;
+  private apiUrl = `${environment.apiUrl}/rest/db`;
 
   constructor(private http: HttpClient) {}
 
@@ -195,12 +202,12 @@ export class TableService {
         (config as LongTextFieldConfig).maxSize = column.validation?.maxSize;
         break;
       case DataType.Integer:
-        (config as IntegerFieldConfig).min = column.validation?.minValue;
-        (config as IntegerFieldConfig).max = column.validation?.maxValue;
+        (config as IntegerFieldConfig).minValue = column.validation?.minValue;
+        (config as IntegerFieldConfig).maxValue = column.validation?.maxValue;
         break;
       case DataType.Number:
-        (config as NumberFieldConfig).min = column.validation?.minValue;
-        (config as NumberFieldConfig).max = column.validation?.maxValue;
+        (config as NumberFieldConfig).minValue = column.validation?.minValue;
+        (config as NumberFieldConfig).maxValue = column.validation?.maxValue;
         break;
       case DataType.Date:
         (config as DateFieldConfig).minDate = column.validation?.minDate;
@@ -211,6 +218,7 @@ export class TableService {
         (config as SelectFieldConfig).options = column.options;
         break;
       case DataType.Email:
+        (config as EmailFieldConfig).allowedDomains = column.validation?.allowedDomains;
         break;
       case DataType.Url:
         break;
@@ -226,6 +234,13 @@ export class TableService {
           loadRecords: this.getRecords.bind(this),
           buildField: this.buildField.bind(this),
         };
+        break;
+      case DataType.Attachment:
+        (config as AttachmentFieldConfig).maxFiles = column.validation?.maxFiles;
+        break;
+      case DataType.AutoNumber:
+        break;
+      case DataType.AutoDate:
         break;
     }
 

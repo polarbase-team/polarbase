@@ -26,7 +26,7 @@ export class SelectFieldCellComponent extends FieldCellEditable<SelectData> {
 
   protected override onTouch(e: CellTouchEvent) {
     if (this.readonly) return;
-    this.menu().show(e);
+    this.openMenu(e);
   }
 
   protected onMenuOpen() {
@@ -47,5 +47,15 @@ export class SelectFieldCellComponent extends FieldCellEditable<SelectData> {
 
   protected onMenuClose() {
     this.markAsEditEnded();
+  }
+
+  protected openMenu(event: Event) {
+    const fakeEvent = {
+      ...event,
+      currentTarget: this.eleRef.nativeElement,
+      target: this.eleRef.nativeElement,
+    };
+
+    this.menu().show(fakeEvent);
   }
 }

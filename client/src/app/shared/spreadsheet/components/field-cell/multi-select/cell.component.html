@@ -1,35 +1,45 @@
-@if (data !== undefined && data !== null) {
-  <div class="field-cell__block-content">
-    @for (option of parsedData; track option) {
-      <p-tag severity="secondary">
-        {{ option }}
-        @if (selecting && !readonly) {
-          <i
-            class="icon icon-x cursor-pointer text-surface-500"
-            (click)="removeSelectedOption(option)"
-          ></i>
-        }
-      </p-tag>
-    }
-  </div>
-}
-@if (selecting && !readonly) {
-  <p-menu
-    #menu
-    [model]="items"
-    appendTo="body"
-    [popup]="true"
-    (onShow)="onMenuOpen()"
-    (onHide)="onMenuClose()"
-  >
-    <ng-template #item let-item>
-      <a
-        pRipple
-        class="flex p-menu-item-link"
-        (click)="$event.stopPropagation(); addOption(item.label)"
+<div class="flex items-start justify-between w-full gap-1">
+  @if (data !== undefined && data !== null) {
+    <div class="field-cell__block-content">
+      @for (option of data; track option) {
+        <p-tag severity="secondary">
+          {{ option }}
+          @if (selecting && !readonly) {
+            <i
+              class="icon icon-x cursor-pointer text-surface-500"
+              (click)="removeSelectedOption(option)"
+            ></i>
+          }
+        </p-tag>
+      }
+    </div>
+  }
+  @if (selecting) {
+    @if (!readonly) {
+      <p-menu
+        #menu
+        [model]="items"
+        appendTo="body"
+        [popup]="true"
+        (onShow)="onMenuOpen()"
+        (onHide)="onMenuClose()"
       >
-        {{ item.label }}
-      </a>
-    </ng-template>
-  </p-menu>
-}
+        <ng-template #item let-item>
+          <a
+            pRipple
+            class="flex p-menu-item-link"
+            (click)="$event.stopPropagation(); addOption(item.label)"
+          >
+            {{ item.label }}
+          </a>
+        </ng-template>
+      </p-menu>
+    }
+    <div
+      class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
+      (click)="openMenu($event)"
+    >
+      <i class="icon icon-chevron-down"></i>
+    </div>
+  }
+</div>

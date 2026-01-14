@@ -4,10 +4,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { environment } from '@environments/environment';
 import { CalculateType } from '../utils/calculate';
 
-@Pipe({
-  name: 'parseCalculatedResult',
-  standalone: true,
-})
+@Pipe({ name: 'parseCalculatedResult' })
 export class ParseCalculatedResultPipe implements PipeTransform {
   transform(data: any, type: CalculateType) {
     if (data === Infinity) return '∞';

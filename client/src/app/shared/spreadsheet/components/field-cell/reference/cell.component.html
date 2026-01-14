@@ -1,25 +1,21 @@
-@if (isInputting) {
-  <input-box
-    type="text"
-    [content]="value"
-    (edited)="onInputBoxEdited($event)"
-    (input)="onInputBoxInput($event)"
-    (focus)="onInputBoxFocus($event)"
-    (blur)="onInputBoxBlur($event)"
-    (contentChange)="onInputBoxChange($event)"
-  />
-} @else {
-  <div class="flex items-start justify-between w-full">
-    <div class="field-cell__block-content">
-      @if (data !== undefined && data !== null) {
-        <p-tag
-          class="cursor-pointer"
-          severity="info"
-          [value]="displayLabel"
-          (click)="viewDetail.emit({ field, data })"
-        ></p-tag>
+@if (!isInputting) {
+  <div class="flex items-start justify-between w-full gap-1">
+    @if (data !== undefined && data !== null) {
+      @if (displayLabel !== data) {
+        <div class="field-cell__block-content">
+          <p-tag
+            class="cursor-pointer"
+            severity="info"
+            [value]="displayLabel"
+            (click)="viewDetail.emit({ field, data })"
+          ></p-tag>
+        </div>
+      } @else {
+        <div class="field-cell__text-content">
+          {{ data }}
+        </div>
       }
-    </div>
+    }
     @if (selecting) {
       @if (!readonly) {
         <reference-picker-drawer
@@ -37,4 +33,14 @@
       </div>
     }
   </div>
+} @else {
+  <input-box
+    type="text"
+    [content]="value"
+    (edited)="onInputBoxEdited($event)"
+    (input)="onInputBoxInput($event)"
+    (focus)="onInputBoxFocus($event)"
+    (blur)="onInputBoxBlur($event)"
+    (contentChange)="onInputBoxChange($event)"
+  />
 }

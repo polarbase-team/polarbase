@@ -1,4 +1,12 @@
 {
+  "/static/": {
+    "target": "http://localhost:3000/static",
+    "secure": false,
+    "pathRewrite": {
+      "^/static/": ""
+    },
+    "logLevel": "debug"
+  },
   "/api/": {
     "target": "http://localhost:3000",
     "secure": false,

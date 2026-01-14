@@ -1,4 +1,10 @@
-@if (isInputting) {
+@if (!isInputting) {
+  @if (data !== undefined && data !== null) {
+    <div class="field-cell__text-content">
+      {{ data }}
+    </div>
+  }
+} @else {
   <input-box
     type="text"
     [content]="data"
@@ -8,8 +14,4 @@
     (blur)="onInputBoxBlur($event)"
     (contentChange)="onInputBoxChange($event)"
   />
-} @else {
-  <div class="field-cell__text-content">
-    {{ data }}
-  </div>
 }

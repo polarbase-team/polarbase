@@ -24,15 +24,6 @@ export class MultiSelectField extends Field<MultiSelectData> {
   }
 
   override toString(data?: MultiSelectData) {
-    if (data?.length > 0) {
-      if (typeof data === 'string') {
-        const str = (data as string).replace(/\{|\}/g, '').trim();
-        if (str.length > 0) return str.split(',').join(', ');
-      } else {
-        return data.join(', ');
-      }
-    }
-
-    return '';
+    return data?.join(', ') || '';
   }
 }

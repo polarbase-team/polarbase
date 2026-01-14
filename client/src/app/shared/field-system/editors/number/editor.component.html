@@ -19,8 +19,8 @@
   <p-inputnumber
     #input="ngModel"
     [required]="field().required"
-    [min]="field().min"
-    [max]="field().max"
+    [min]="field().minValue"
+    [max]="field().maxValue"
     [inputId]="fieldName"
     [placeholder]="placeholder() ?? 'Input here...'"
     [pAutoFocus]="autoFocus()"

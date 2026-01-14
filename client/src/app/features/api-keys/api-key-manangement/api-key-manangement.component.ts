@@ -127,7 +127,7 @@ export class ApiKeyManagementComponent implements OnInit {
     this.confirmationService.confirm({
       target: null,
       header: 'Revoke key',
-      message: `Are you sure you want to revoke the key "${apiKey.name}"?`,
+      message: `Are you sure you want to revoke "${apiKey.name}"?`,
       acceptLabel: 'Revoke',
       rejectLabel: 'Cancel',
       rejectButtonProps: {

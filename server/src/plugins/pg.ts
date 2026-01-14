@@ -1,4 +1,5 @@
 import knex from 'knex';
+import { types } from 'pg';
 
 import { log } from '../utils/logger';
 
@@ -28,29 +29,69 @@ const pg = knex({
   debug: process.env.DEBUG === 'true',
 });
 
+const parsePgArray = (val: any) => {
+  if (!val) return [];
+  return val
+    .replace(/^{|}$/g, '')
+    .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+    .map((item: string) => {
+      let cleaned = item.replace(/^"|"$/g, '').replace(/\\"/g, '"');
+      try {
+        return JSON.parse(cleaned);
+      } catch (e) {
+        return cleaned;
+      }
+    });
+};
+
 /**
  * Initialize Custom DB Types
- * This runs a PL/pgSQL block to create the domains if it doesn't exist.
+ * Includes Email, URL, and Attachment domains.
  */
 export const initDatabaseTypes = async () => {
   try {
     await pg.raw(`
       DO $$
       BEGIN
-          -- 1. Email Domain
+          -- Email Domain
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'email_address') THEN
               CREATE DOMAIN email_address AS TEXT
               CHECK (VALUE ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\\.[A-Za-z]+$');
           END IF;
 
-          -- 2. URL Domain
+          -- URL Domain
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'url_address') THEN
               CREATE DOMAIN url_address AS TEXT
-              CHECK (VALUE ~* '^https\\?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)\\?$');
+              CHECK (VALUE ~* '^https\\?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$');
+          END IF;
+
+          -- Attachment Domain
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'attachment') THEN
+              CREATE DOMAIN attachment AS JSONB
+              CHECK (
+                  jsonb_typeof(VALUE) = 'object' AND
+                  jsonb_exists(VALUE, 'id') AND
+                  jsonb_exists(VALUE, 'key') AND
+                  jsonb_exists(VALUE, 'size') AND
+                  jsonb_exists(VALUE, 'name') AND
+                  jsonb_exists(VALUE, 'mimeType') AND
+                  jsonb_exists(VALUE, 'provider') AND
+                  jsonb_exists(VALUE, 'uploadedAt')
+              );
           END IF;
       END
       $$;
     `);
+
+    const result = await pg.raw(`
+      SELECT oid FROM pg_type WHERE typname = '_attachment'
+    `);
+
+    if (result.rows.length > 0) {
+      const arrayOid = result.rows[0].oid;
+      types.setTypeParser(arrayOid, parsePgArray);
+    }
+
     log.info('✅ Custom database types initialized');
   } catch (error) {
     log.error('❌ Failed to initialize database types:', error);

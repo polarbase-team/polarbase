@@ -34,10 +34,10 @@ export class DateField extends Field<DateData> {
         if (date.isBefore(minDate)) {
           errors = {
             ...errors,
-            [FieldValidationKey.Min]: {
+            [FieldValidationKey.MinDate]: {
               field: this,
               data,
-              min: minDate,
+              minDate: minDate,
             },
           };
         }
@@ -48,10 +48,10 @@ export class DateField extends Field<DateData> {
         if (date.isAfter(maxDate)) {
           errors = {
             ...errors,
-            [FieldValidationKey.Max]: {
+            [FieldValidationKey.MaxDate]: {
               field: this,
               data,
-              max: maxDate,
+              maxDate: maxDate,
             },
           };
         }
