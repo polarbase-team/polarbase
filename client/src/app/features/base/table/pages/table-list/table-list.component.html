@@ -1,4 +1,6 @@
-<p-confirmdialog appendTo="body">
+<p-toast appendTo="body" />
+
+<p-confirmdialog appendTo="body" styleClass="max-w-100">
   <ng-template #message let-message>
     <div class="flex flex-col gap-4">
       <div>{{ message.message }}</div>
@@ -16,10 +18,18 @@
         </label>
       </div>
       @if (isCascadeDeleteEnabled) {
-        <p-message severity="warn" class="w-xs">
-          <p>This will also delete all dependent objects such as views, foreign keys, etc.</p>
+        <p-message severity="warn" class="w-full">
+          <p class="text-xs">
+            This will also delete all dependent objects such as views, foreign keys, etc.
+          </p>
         </p-message>
       }
+      <div class="flex flex-col gap-1">
+        <label for="confirmation" class="text-sm font-medium">
+          Enter the table name to confirm:
+        </label>
+        <input pInputText [(ngModel)]="tableToDelete" id="confirmation" />
+      </div>
     </div>
   </ng-template>
 </p-confirmdialog>

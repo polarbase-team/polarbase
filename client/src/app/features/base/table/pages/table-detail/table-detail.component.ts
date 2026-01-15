@@ -3,19 +3,18 @@ import _ from 'lodash';
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   DestroyRef,
   effect,
   inject,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { delay, forkJoin } from 'rxjs';
+import { delay, finalize, forkJoin } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
-import { DividerModule } from 'primeng/divider';
 import { MenuItem } from 'primeng/api';
 import { SplitButtonModule } from 'primeng/splitbutton';
+import { SkeletonModule } from 'primeng/skeleton';
 
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
@@ -57,8 +56,8 @@ interface UpdatedRecord {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ButtonModule,
-    DividerModule,
     SplitButtonModule,
+    SkeletonModule,
     SpreadsheetComponent,
     RecordEditorDrawerComponent,
     ColumnEditorDrawerComponent,
@@ -71,7 +70,7 @@ export class TableDetailComponent {
   });
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
-  protected isReady = signal(false);
+  protected isLoading = signal(false);
   protected tblService = inject(TableService);
   protected updatedColumn: ColumnDefinition;
   protected updatedColumnMode: 'add' | 'edit' = 'add';
@@ -256,6 +255,20 @@ export class TableDetailComponent {
       field: this.tblService.buildField(savedColumn),
     };
     this.columns.update((arr) => [...arr, column]);
+
+    if (savedColumn.defaultValue !== undefined) {
+      this.rows.update((rows) =>
+        rows.map((row) => {
+          if (row.data[savedColumn.name] === undefined) {
+            return {
+              ...row,
+              data: { ...row.data, [savedColumn.name]: savedColumn.defaultValue },
+            };
+          }
+          return row;
+        }),
+      );
+    }
   }
 
   protected onRecordSave(savedRecord: Record<string, any>) {
@@ -301,9 +314,13 @@ export class TableDetailComponent {
   }
 
   private loadTableSchema(table: TableDefinition) {
+    this.isLoading.set(true);
     this.tblService
       .getTableSchema(table.tableName)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.isLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((columnDefs) => {
         this.columns.set(null);
 
@@ -324,7 +341,6 @@ export class TableDetailComponent {
         }
         setTimeout(() => {
           this.columns.set(columns);
-          this.isReady.set(true);
         });
 
         this.loadTableData(table, references);
@@ -353,7 +369,9 @@ export class TableDetailComponent {
             },
           };
         });
-        setTimeout(() => this.rows.set(rows));
+        setTimeout(() => {
+          this.rows.set(rows);
+        });
       });
   }
 }

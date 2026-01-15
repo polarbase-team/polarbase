@@ -973,7 +973,15 @@ export class TableCellService extends TableBaseService {
   clearInteractiveCells() {
     const matrix = this.getInteractiveCells();
     if (!matrix?.count) return;
-    this.clearCells(matrix);
+
+    this.host.deleteConfirmation(
+      'Are you sure you want to clear the selected cells?',
+      'Clear cells',
+      () => this.clearCells(matrix),
+      void 0,
+      'Clear',
+      'clear-cells-confirmation',
+    );
   }
 
   updateCellsData(rows: TableRow[], newData: TableRowCellData) {

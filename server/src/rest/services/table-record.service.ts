@@ -269,17 +269,12 @@ export class TableRecordService {
     tableName: string;
     records: Record<string, any>[];
   }) {
-    const returning = [] as any[];
-    const chunk = 500;
-
-    await pg.transaction(async (trx: Knex.Transaction) => {
-      for (let i = 0; i < records.length; i += chunk) {
-        const inserted = await trx(tableName)
-          .withSchema(schemaName)
-          .insert(records.slice(i, i + chunk))
-          .returning('*');
-        returning.push(...inserted);
-      }
+    const chunkSize = 50;
+    const returning = await pg.transaction(async (trx) => {
+      return pg
+        .batchInsert(`${schemaName}.${tableName}`, records, chunkSize)
+        .transacting(trx)
+        .returning('*');
     });
 
     return { insertedCount: returning.length, returning };
