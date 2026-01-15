@@ -14,7 +14,33 @@
     [mode]="updatedRecordMode"
     (onSave)="onRecordSave($event)"
   />
-  @if (isReady()) {
+  @if (isLoading()) {
+    <div class="flex px-[20px] py-[16px]">
+      <div class="flex">
+        <p-skeleton width="100px" height="33px" />
+        <p-divider layout="vertical" class="before:h-7! before:mt-1" />
+      </div>
+      <div class="flex flex-grow justify-between gap-2">
+        <div class="flex gap-2">
+          <p-skeleton width="90px" height="33px" />
+          <p-skeleton width="90px" height="33px" />
+          <p-skeleton width="90px" height="33px" />
+          <p-skeleton width="90px" height="33px" />
+        </div>
+        <p-skeleton width="224px" height="33px" />
+      </div>
+    </div>
+    <div class="flex flex-col gap-3.5 px-[20px]">
+      <p-skeleton width="100%" height="36px" />
+      <div class="flex flex-col gap-1">
+        <p-skeleton width="100%" height="32px" />
+        <p-skeleton width="100%" height="32px" />
+        <p-skeleton width="100%" height="32px" />
+        <p-skeleton width="100%" height="32px" />
+        <p-skeleton width="100%" height="32px" />
+      </div>
+    </div>
+  } @else {
     <spreadsheet
       [config]="config()"
       [columns]="columns()"

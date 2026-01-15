@@ -3,7 +3,6 @@ import _ from 'lodash';
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   DestroyRef,
   effect,
   inject,
@@ -16,6 +15,7 @@ import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { MenuItem } from 'primeng/api';
 import { SplitButtonModule } from 'primeng/splitbutton';
+import { SkeletonModule } from 'primeng/skeleton';
 
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
@@ -59,6 +59,7 @@ interface UpdatedRecord {
     ButtonModule,
     DividerModule,
     SplitButtonModule,
+    SkeletonModule,
     SpreadsheetComponent,
     RecordEditorDrawerComponent,
     ColumnEditorDrawerComponent,
@@ -71,7 +72,7 @@ export class TableDetailComponent {
   });
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
-  protected isReady = signal(false);
+  protected isLoading = signal(false);
   protected tblService = inject(TableService);
   protected updatedColumn: ColumnDefinition;
   protected updatedColumnMode: 'add' | 'edit' = 'add';
@@ -324,7 +325,6 @@ export class TableDetailComponent {
         }
         setTimeout(() => {
           this.columns.set(columns);
-          this.isReady.set(true);
         });
 
         this.loadTableData(table, references);
@@ -332,6 +332,7 @@ export class TableDetailComponent {
   }
 
   private loadTableData(table: TableDefinition, references: Map<string, string>) {
+    this.isLoading.set(true);
     this.tblService
       .getRecords(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -353,7 +354,10 @@ export class TableDetailComponent {
             },
           };
         });
-        setTimeout(() => this.rows.set(rows));
+        setTimeout(() => {
+          this.rows.set(rows);
+          this.isLoading.set(false);
+        });
       });
   }
 }
