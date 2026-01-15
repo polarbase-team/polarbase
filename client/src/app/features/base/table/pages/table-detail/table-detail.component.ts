@@ -9,7 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { delay, forkJoin } from 'rxjs';
+import { delay, finalize, forkJoin } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -302,9 +302,13 @@ export class TableDetailComponent {
   }
 
   private loadTableSchema(table: TableDefinition) {
+    this.isLoading.set(true);
     this.tblService
       .getTableSchema(table.tableName)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.isLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((columnDefs) => {
         this.columns.set(null);
 
@@ -332,7 +336,6 @@ export class TableDetailComponent {
   }
 
   private loadTableData(table: TableDefinition, references: Map<string, string>) {
-    this.isLoading.set(true);
     this.tblService
       .getRecords(table.tableName)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -356,7 +359,6 @@ export class TableDetailComponent {
         });
         setTimeout(() => {
           this.rows.set(rows);
-          this.isLoading.set(false);
         });
       });
   }
