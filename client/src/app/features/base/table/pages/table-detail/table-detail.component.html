@@ -15,18 +15,17 @@
     (onSave)="onRecordSave($event)"
   />
   @if (isLoading()) {
-    <div class="flex px-[20px] py-[16px]">
-      <div class="flex">
+    <div class="flex gap-2 px-[20px] py-[16px]">
+      <div
+        class="relative flex items-center pr-4 mr-2 after:content-[''] after:absolute after:right-0 after:top-2/3 after:-translate-y-2/3 after:h-2/3 after:w-[1px] after:bg-surface-200"
+      >
         <p-skeleton width="100px" height="33px" />
-        <p-divider layout="vertical" class="before:h-7! before:mt-1" />
       </div>
-      <div class="flex flex-grow justify-between gap-2">
-        <div class="flex gap-2">
-          <p-skeleton width="90px" height="33px" />
-          <p-skeleton width="90px" height="33px" />
-          <p-skeleton width="90px" height="33px" />
-          <p-skeleton width="90px" height="33px" />
-        </div>
+      <p-skeleton width="90px" height="33px" />
+      <p-skeleton width="90px" height="33px" />
+      <p-skeleton width="90px" height="33px" />
+      <p-skeleton width="90px" height="33px" />
+      <div class="ml-auto">
         <p-skeleton width="224px" height="33px" />
       </div>
     </div>
@@ -51,15 +50,16 @@
       (cellAction)="onCellAction($event)"
     >
       <ng-template #toolbar>
-        <div class="flex">
+        <div
+          class="relative flex items-center pr-4 mr-2 after:content-[''] after:absolute after:right-0 after:top-2/3 after:-translate-y-2/3 after:h-2/3 after:w-[1px] after:bg-surface-200"
+        >
           <p-splitbutton
             label="Insert"
             icon="icon icon-plus"
-            class="w-30 h-9.3"
+            class="w-30 h-fit"
             [model]="insertMenuItems"
             (onClick)="addNewRecord()"
           />
-          <p-divider layout="vertical" class="before:h-7! before:mt-1" />
         </div>
       </ng-template>
     </spreadsheet>

@@ -12,7 +12,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, finalize, forkJoin } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
-import { DividerModule } from 'primeng/divider';
 import { MenuItem } from 'primeng/api';
 import { SplitButtonModule } from 'primeng/splitbutton';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -57,7 +56,6 @@ interface UpdatedRecord {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ButtonModule,
-    DividerModule,
     SplitButtonModule,
     SkeletonModule,
     SpreadsheetComponent,
