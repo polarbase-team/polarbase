@@ -1,7 +1,27 @@
 <p-toast appendTo="body" />
-<p-confirmdialog styleClass="max-w-100" appendTo="body" />
+
+<p-confirmdialog styleClass="max-w-100" appendTo="body">
+  <ng-template #message let-message>
+    <div class="flex flex-col gap-4">
+      <div>{{ message.message }}</div>
+      <div class="flex items-center gap-2">
+        <p-checkbox
+          [(ngModel)]="doNotAskAgain[currentConfirmationKey]"
+          inputId="doNotAskAgain"
+          name="size"
+          value="true"
+          [binary]="true"
+        />
+        <label for="doNotAskAgain" class="text-sm">Don't ask again</label>
+      </div>
+    </div>
+  </ng-template>
+</p-confirmdialog>
+
 <p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
+
 <p-contextmenu #contextMenu [model]="menuItems" appendTo="body" />
+
 <p-overlay
   [visible]="!!tableCellService.activeCellError"
   [target]="$any(tableCellService.activeCellError?.target)"
