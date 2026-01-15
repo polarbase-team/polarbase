@@ -257,6 +257,20 @@ export class TableDetailComponent {
       field: this.tblService.buildField(savedColumn),
     };
     this.columns.update((arr) => [...arr, column]);
+
+    if (savedColumn.defaultValue !== undefined) {
+      this.rows.update((rows) =>
+        rows.map((row) => {
+          if (row.data[savedColumn.name] === undefined) {
+            return {
+              ...row,
+              data: { ...row.data, [savedColumn.name]: savedColumn.defaultValue },
+            };
+          }
+          return row;
+        }),
+      );
+    }
   }
 
   protected onRecordSave(savedRecord: Record<string, any>) {
