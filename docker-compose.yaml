@@ -10,7 +10,7 @@ services:
       # Core
       - NODE_ENV=production
       - NAME=PolarBase
-      - VERSION=v0.4.0-beta
+      - VERSION=v0.4.1-beta
       - HOSTNAME=0.0.0.0
       - PORT=3000
       - VERBOSE=false
@@ -46,7 +46,7 @@ services:
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=P@ssw0rd2025
+      - POSTGRES_PASSWORD=P@ssw0rd2026
       - POSTGRES_DB=polarbase
       - POSTGRES_SSL=false
       - POSTGRES_MAX_CONNECTIONS=20
@@ -76,7 +76,7 @@ services:
     container_name: polarbase-db
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=P@ssw0rd2025
+      - POSTGRES_PASSWORD=P@ssw0rd2026
       - POSTGRES_DB=polarbase
     volumes:
       - postgres_data:/var/lib/postgresql/data

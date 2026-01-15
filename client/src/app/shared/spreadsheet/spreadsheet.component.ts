@@ -191,6 +191,8 @@ export class SpreadsheetComponent
 
   protected Dimension = Dimension;
   protected isHideSummaryLabel = false;
+  protected doNotAskAgain: Record<string, boolean> = {};
+  protected currentConfirmationKey: string;
 
   private cdRef = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
@@ -330,7 +332,20 @@ export class SpreadsheetComponent
     this.cdRef.markForCheck();
   }
 
-  deleteConfirmation(message: string, header: string, onAccept: () => void, onReject: () => void) {
+  deleteConfirmation(
+    message: string,
+    header: string,
+    onAccept: () => void,
+    onReject: () => void,
+    acceptButton: string = 'Delete',
+    key?: string,
+  ) {
+    if (this.doNotAskAgain[key]) {
+      onAccept();
+      return;
+    }
+
+    this.currentConfirmationKey = key;
     this.confirmationService.confirm({
       target: null,
       message,
@@ -342,7 +357,7 @@ export class SpreadsheetComponent
         outlined: true,
       },
       acceptButtonProps: {
-        label: 'Delete',
+        label: acceptButton,
         severity: 'danger',
       },
       accept: onAccept,

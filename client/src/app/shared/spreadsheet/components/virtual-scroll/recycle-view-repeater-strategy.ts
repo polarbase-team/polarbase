@@ -113,7 +113,8 @@ export class RecycleViewRepeaterStrategy<R, C extends ViewContext<R>> {
       cachedView.context.$implicit = context.$implicit;
       cachedView.context.index = context.index;
       cachedView.context.rect = context.rect;
-      return void 0;
+      cachedView.detectChanges();
+      return cachedView;
     }
 
     return this.vcRef.createEmbeddedView(this.tmplRef, context, currentIndex);

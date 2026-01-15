@@ -11,12 +11,13 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { Menu, MenuModule } from 'primeng/menu';
-import { ConfirmationService, MenuItem } from 'primeng/api';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+import { ToastModule } from 'primeng/toast';
 
 import { TableService, TableDefinition, TableFormData } from '../../services/table.service';
 import { TableEditorDrawerComponent } from '../../components/table-editor/table-editor-drawer.component';
@@ -38,9 +39,10 @@ import { TableEditorDrawerComponent } from '../../components/table-editor/table-
     MessageModule,
     TooltipModule,
     SkeletonModule,
+    ToastModule,
     TableEditorDrawerComponent,
   ],
-  providers: [ConfirmationService],
+  providers: [ConfirmationService, MessageService],
 })
 export class TableListComponent {
   protected tblService = inject(TableService);
@@ -53,6 +55,7 @@ export class TableListComponent {
   protected visibleTableEditorDrawer = false;
   protected updatedTable: TableDefinition;
   protected updatedTableMode: 'add' | 'edit' = 'add';
+  protected tableToDelete = '';
   protected isCascadeDeleteEnabled = false;
   protected refreshTables = _.debounce(() => this.getTables(), 1000, { leading: true });
 
@@ -61,6 +64,7 @@ export class TableListComponent {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private confirmationService: ConfirmationService,
+    private messageService: MessageService,
   ) {
     let tableFromQueryParam: string;
 
@@ -134,6 +138,8 @@ export class TableListComponent {
   }
 
   protected deleteTable(table: TableDefinition) {
+    this.tableToDelete = '';
+    this.isCascadeDeleteEnabled = false;
     this.confirmationService.confirm({
       target: null,
       message: `Are you sure you want to delete "${table.tableName}"?`,
@@ -149,6 +155,15 @@ export class TableListComponent {
         severity: 'danger',
       },
       accept: () => {
+        if (this.tableToDelete !== table.tableName) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Table name confirmation does not match.',
+            life: 3000,
+          });
+          return;
+        }
         this.isLoading.set(true);
         this.tblService
           .deleteTable(table.tableName, this.isCascadeDeleteEnabled)

@@ -122,6 +122,9 @@ $blank-row-height: 32px;
 
     .spreadsheet__toolbar {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
       padding: {
         top: 16px;
         bottom: 16px;

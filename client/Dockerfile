@@ -1,6 +1,7 @@
 # Stage 1: Build Angular production
 FROM oven/bun:1 AS builder
 WORKDIR /app
+RUN mkdir -p /app/uploads
 
 # Cache dependencies
 COPY client/package.json ./
