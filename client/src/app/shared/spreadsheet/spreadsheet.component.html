@@ -264,7 +264,7 @@
         @for (
           column of tableColumnService.frozenColumns();
           let columnIndex = $index;
-          track column
+          track column.id
         ) {
           <ng-container
             *ngTemplateOutlet="headerCellTemplate; context: { column, columnIndex }"
@@ -285,7 +285,7 @@
         @for (
           column of tableColumnService.scrollableColumns();
           let columnIndex = $index;
-          track column
+          track column.id
         ) {
           <ng-container
             *ngTemplateOutlet="
@@ -957,7 +957,7 @@
           @for (
             column of tableColumnService.frozenColumns();
             let columnIndex = $index;
-            track column
+            track column.id
           ) {
             <ng-container
               *ngTemplateOutlet="footerCellTempTemplate; context: { column, columnIndex }"
@@ -979,7 +979,7 @@
           @for (
             column of tableColumnService.scrollableColumns();
             let columnIndex = $index;
-            track column
+            track column.id
           ) {
             <ng-container
               *ngTemplateOutlet="
