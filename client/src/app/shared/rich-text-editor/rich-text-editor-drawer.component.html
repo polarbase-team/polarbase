@@ -1,11 +1,19 @@
+<p-confirmdialog appendTo="body" styleClass="max-w-100" />
+
 <p-drawer
-  [(visible)]="visible"
+  [visible]="visible()"
   position="right"
   header="Rich Text Editor"
   styleClass="!w-180 custom-drawer rich-text-editor-drawer"
+  (onHide)="onHide()"
 >
   <ng-template #content>
-    <p-editor [(ngModel)]="value" [readonly]="viewOnly()" class="h-full !flex flex-col" />
+    <p-editor
+      [(ngModel)]="value"
+      (ngModelChange)="isValueChanged = true"
+      [readonly]="viewOnly()"
+      class="h-full !flex flex-col"
+    />
   </ng-template>
   <ng-template #footer>
     <div class="flex justify-end gap-2">

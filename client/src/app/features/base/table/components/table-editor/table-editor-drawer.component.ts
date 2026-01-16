@@ -22,6 +22,8 @@ import { MessageModule } from 'primeng/message';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { DividerModule } from 'primeng/divider';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyStrings } from '@app/core/utils';
@@ -44,7 +46,9 @@ const DEFAULT_VALUE = { idType: 'integer', timestamps: true } as TableFormData;
     AutoFocusModule,
     DividerModule,
     RadioButtonModule,
+    ConfirmDialogModule,
   ],
+  providers: [ConfirmationService],
 })
 export class TableEditorDrawerComponent extends DrawerComponent {
   table = input<TableDefinition>();
@@ -58,6 +62,7 @@ export class TableEditorDrawerComponent extends DrawerComponent {
 
   constructor(
     private destroyRef: DestroyRef,
+    private confirmationService: ConfirmationService,
     private tblService: TableService,
   ) {
     super();
@@ -65,6 +70,35 @@ export class TableEditorDrawerComponent extends DrawerComponent {
     effect(() => {
       this.tableFormData = { ...DEFAULT_VALUE, ...this.table() };
     });
+  }
+
+  protected override onHide() {
+    super.onHide();
+
+    if (this.tableForm().dirty) {
+      this.confirmationService.confirm({
+        target: null,
+        header: 'Discard changes?',
+        message: 'You have unsaved changes. Are you sure you want to discard them?',
+        rejectButtonProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+          outlined: true,
+        },
+        acceptButtonProps: {
+          label: 'Discard',
+          severity: 'primary',
+        },
+        accept: () => {
+          this.close();
+          this.reset();
+        },
+      });
+      return;
+    }
+
+    this.close();
+    this.reset();
   }
 
   protected async onSubmit() {
