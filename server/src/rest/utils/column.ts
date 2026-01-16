@@ -268,7 +268,10 @@ export const addLengthCheck = (
   minLength: number | null,
   maxLength: number | null
 ) => {
-  if (minLength === null && maxLength === null) {
+  if (
+    (minLength === null || minLength === undefined) &&
+    (maxLength === null || maxLength === undefined)
+  ) {
     return;
   }
 
@@ -304,7 +307,10 @@ export const addRangeCheck = (
   minValue: number | null,
   maxValue: number | null
 ) => {
-  if (minValue === null && maxValue === null) {
+  if (
+    (minValue === undefined || minValue === null) &&
+    (maxValue === undefined || maxValue === null)
+  ) {
     return;
   }
 
@@ -340,7 +346,10 @@ export const addDateRangeCheck = (
   minDate: string | null,
   maxDate: string | null
 ) => {
-  if (minDate === null && maxDate === null) {
+  if (
+    (minDate === undefined || minDate === null) &&
+    (maxDate === undefined || maxDate === null)
+  ) {
     return;
   }
 
@@ -380,7 +389,7 @@ export const addSizeCheck = (
   columnName: string,
   maxSize: number | null
 ) => {
-  if (maxSize === null || maxSize <= 0) {
+  if (maxSize === undefined || maxSize === null || maxSize <= 0) {
     return;
   }
 
@@ -412,7 +421,7 @@ export const addFileCountCheck = (
   columnName: string,
   maxFiles: number | null
 ) => {
-  if (maxFiles === null || maxFiles <= 0) {
+  if (maxFiles === undefined || maxFiles === null || maxFiles <= 0) {
     return;
   }
 
