@@ -673,7 +673,20 @@ export class TableService {
           recreateConstraints ||
           JSON.stringify(options) !== JSON.stringify(oldSchema.options)
         ) {
-          removeOptionsCheck(tableBuilder, tableName, columnName);
+          if (!recreateConstraints) {
+            const constraintName = getConstraintName(
+              tableName,
+              columnName,
+              'options'
+            );
+            if (
+              oldSchema.metadata.constraints?.find(
+                (c: any) => c.constraint_name === constraintName
+              )
+            ) {
+              removeOptionsCheck(tableBuilder, tableName, columnName);
+            }
+          }
           addOptionsCheck(
             tableBuilder,
             tableName,
