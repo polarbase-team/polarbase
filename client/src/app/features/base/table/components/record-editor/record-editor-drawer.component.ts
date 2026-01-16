@@ -19,11 +19,12 @@ import { finalize, Observable, map } from 'rxjs';
 import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { FluidModule } from 'primeng/fluid';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
@@ -43,7 +44,6 @@ import { GeoPointFieldEditorComponent } from '@app/shared/field-system/editors/g
 import { ReferenceFieldEditorComponent } from '@app/shared/field-system/editors/reference/editor.component';
 import { AttachmentFieldEditorComponent } from '@app/shared/field-system/editors/attachment/editor.component';
 import { TableDefinition, TableService } from '../../services/table.service';
-import { InputText } from 'primeng/inputtext';
 
 @Component({
   selector: 'record-editor-drawer',
@@ -59,6 +59,8 @@ import { InputText } from 'primeng/inputtext';
     InputTextModule,
     InputNumberModule,
     FluidModule,
+    InputTextModule,
+    ConfirmDialogModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -73,9 +75,8 @@ import { InputText } from 'primeng/inputtext';
     GeoPointFieldEditorComponent,
     ReferenceFieldEditorComponent,
     AttachmentFieldEditorComponent,
-    InputText,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
 })
 export class RecordEditorDrawerComponent extends DrawerComponent {
   table = input<TableDefinition>();
@@ -91,10 +92,12 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
   protected isSaving = signal<boolean>(false);
   protected DataType = DataType;
   protected updatedRecord: Record<string, any> = {};
+  protected isDataChanged = false;
 
   constructor(
     private destroyRef: DestroyRef,
     private messageService: MessageService,
+    private confirmationService: ConfirmationService,
     private tblService: TableService,
   ) {
     super();
@@ -119,6 +122,35 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
       this.requiredFields.set(requiredFields);
       this.optionalFields.set(optionalFields);
     });
+  }
+
+  protected override onHide() {
+    super.onHide();
+
+    if (this.isDataChanged) {
+      this.confirmationService.confirm({
+        target: null,
+        header: 'Discard changes?',
+        message: 'You have unsaved changes. Are you sure you want to discard them?',
+        rejectButtonProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+          outlined: true,
+        },
+        acceptButtonProps: {
+          label: 'Discard',
+          severity: 'primary',
+        },
+        accept: () => {
+          this.close();
+          this.isDataChanged = false;
+        },
+      });
+      return;
+    }
+
+    this.close();
+    this.isDataChanged = false;
   }
 
   protected save() {

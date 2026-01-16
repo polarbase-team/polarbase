@@ -128,15 +128,13 @@ export class ApiKeyManagementComponent implements OnInit {
       target: null,
       header: 'Revoke key',
       message: `Are you sure you want to revoke "${apiKey.name}"?`,
-      acceptLabel: 'Revoke',
-      rejectLabel: 'Cancel',
       rejectButtonProps: {
         label: 'Cancel',
         severity: 'secondary',
         outlined: true,
       },
       acceptButtonProps: {
-        label: 'Delete',
+        label: 'Revoke',
         severity: 'danger',
       },
       accept: () => {
