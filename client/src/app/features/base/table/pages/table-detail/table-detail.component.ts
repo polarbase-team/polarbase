@@ -336,6 +336,8 @@ export class TableDetailComponent {
   }
 
   private loadTable(table: TableDefinition) {
+    this.columns.set(null);
+    this.rows.set(null);
     this.loadTableSchema(table);
   }
 
