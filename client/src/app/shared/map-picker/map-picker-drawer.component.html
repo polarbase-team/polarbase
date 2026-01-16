@@ -1,12 +1,15 @@
+<p-confirmdialog appendTo="body" styleClass="max-w-100" />
+
 <p-drawer
-  [(visible)]="visible"
+  [visible]="visible()"
   position="right"
   header="Map Picker"
   styleClass="!w-180 custom-drawer"
   (onShow)="mapPicker().refresh()"
+  (onHide)="onHide()"
 >
   <ng-template #content>
-    <map-picker #mapPicker [(loc)]="loc" />
+    <map-picker #mapPicker [(loc)]="loc" (locChange)="isLocChanged = true" />
   </ng-template>
   <ng-template #footer>
     <div class="flex justify-end gap-2">

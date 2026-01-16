@@ -268,6 +268,13 @@ export const addLengthCheck = (
   minLength: number | null,
   maxLength: number | null
 ) => {
+  if (
+    (minLength === null || minLength === undefined) &&
+    (maxLength === null || maxLength === undefined)
+  ) {
+    return;
+  }
+
   const quotedColumn = `"${columnName}"`;
   const constraintName = getConstraintName(tableName, columnName, 'length');
   const checks: string[] = [];
@@ -300,6 +307,13 @@ export const addRangeCheck = (
   minValue: number | null,
   maxValue: number | null
 ) => {
+  if (
+    (minValue === undefined || minValue === null) &&
+    (maxValue === undefined || maxValue === null)
+  ) {
+    return;
+  }
+
   const quotedColumn = `"${columnName}"`;
   const constraintName = getConstraintName(tableName, columnName, 'range');
   const checks: string[] = [];
@@ -332,6 +346,13 @@ export const addDateRangeCheck = (
   minDate: string | null,
   maxDate: string | null
 ) => {
+  if (
+    (minDate === undefined || minDate === null) &&
+    (maxDate === undefined || maxDate === null)
+  ) {
+    return;
+  }
+
   const quotedColumn = `"${columnName}"`;
   const constraintName = getConstraintName(tableName, columnName, 'date-range');
   const checks: string[] = [];
@@ -368,6 +389,10 @@ export const addSizeCheck = (
   columnName: string,
   maxSize: number | null
 ) => {
+  if (maxSize === undefined || maxSize === null || maxSize <= 0) {
+    return;
+  }
+
   const quotedColumn = `"${columnName}"`;
   const constraintName = getConstraintName(tableName, columnName, 'size');
   const checks: string[] = [];
@@ -396,16 +421,18 @@ export const addFileCountCheck = (
   columnName: string,
   maxFiles: number | null
 ) => {
-  if (typeof maxFiles === 'number' && maxFiles > 0) {
-    const quotedColumn = `"${columnName}"`;
-    const constraintName = `${tableName}_${columnName}${FILE_COUNT_CHECK_SUFFIX}`;
-
-    tableBuilder.check(
-      `cardinality(${quotedColumn}) <= ${maxFiles}`,
-      [],
-      `"${constraintName}"`
-    );
+  if (maxFiles === undefined || maxFiles === null || maxFiles <= 0) {
+    return;
   }
+
+  const quotedColumn = `"${columnName}"`;
+  const constraintName = `${tableName}_${columnName}${FILE_COUNT_CHECK_SUFFIX}`;
+
+  tableBuilder.check(
+    `cardinality(${quotedColumn}) <= ${maxFiles}`,
+    [],
+    `"${constraintName}"`
+  );
 };
 
 export const removeFileCountCheck = (
@@ -423,6 +450,10 @@ export const addEmailDomainCheck = (
   columnName: string,
   allowedDomains: string
 ) => {
+  if (!allowedDomains || allowedDomains.trim() === '') {
+    return;
+  }
+
   const quotedColumn = `"${columnName}"`;
   const constraintName = getConstraintName(
     tableName,
@@ -457,6 +488,10 @@ export const addOptionsCheck = (
   options: string[],
   isMulti: boolean
 ) => {
+  if (!options || options.length === 0) {
+    return;
+  }
+
   const constraintName = getConstraintName(tableName, columnName, 'options');
   const quotedColumn = `"${columnName}"`;
   const escapedOptions = options

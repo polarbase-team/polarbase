@@ -27,6 +27,8 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { FluidModule } from 'primeng/fluid';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyStrings } from '@app/core/utils';
@@ -89,6 +91,7 @@ const DEFAULT_VALUE = {
     FluidModule,
     SelectButtonModule,
     TooltipModule,
+    ConfirmDialogModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -102,6 +105,7 @@ const DEFAULT_VALUE = {
     JSONFieldEditorComponent,
     GeoPointFieldEditorComponent,
   ],
+  providers: [ConfirmationService],
 })
 export class ColumnEditorDrawerComponent extends DrawerComponent {
   table = input<TableDefinition>();
@@ -144,6 +148,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
   constructor(
     private destroyRef: DestroyRef,
+    private confirmationService: ConfirmationService,
     private tblService: TableService,
   ) {
     super();
@@ -169,6 +174,35 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
         this.tableOptions.push({ name: table.tableName, value: table.tableName });
       }
     });
+  }
+
+  protected override onHide() {
+    super.onHide();
+
+    if (this.columnForm().dirty) {
+      this.confirmationService.confirm({
+        target: null,
+        header: 'Discard changes?',
+        message: 'You have unsaved changes. Are you sure you want to discard them?',
+        rejectButtonProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+          outlined: true,
+        },
+        acceptButtonProps: {
+          label: 'Discard',
+          severity: 'primary',
+        },
+        accept: () => {
+          this.close();
+          this.reset();
+        },
+      });
+      return;
+    }
+
+    this.close();
+    this.reset();
   }
 
   protected save() {

@@ -1,11 +1,14 @@
+<p-confirmdialog appendTo="body" styleClass="max-w-100" />
+
 <p-drawer
-  [(visible)]="visible"
+  [visible]="visible()"
   position="right"
   header="JSON Editor"
   styleClass="!w-180 custom-drawer"
+  (onHide)="onHide()"
 >
   <ng-template #content>
-    <json-editor [(value)]="value" />
+    <json-editor [(value)]="value" (valueChange)="isValueChanged = true" />
   </ng-template>
   <ng-template #footer>
     <div class="flex justify-end gap-2">

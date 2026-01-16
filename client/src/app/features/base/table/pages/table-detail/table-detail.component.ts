@@ -250,6 +250,32 @@ export class TableDetailComponent {
   }
 
   protected onColumnSave(savedColumn: ColumnDefinition) {
+    if (this.updatedColumnMode === 'edit') {
+      const columnIndex = this.columns().findIndex((c) => c.id === this.updatedColumn.name);
+      if (columnIndex >= 0) {
+        const updatedColumn: TableColumn = {
+          id: savedColumn.name,
+          field: this.tblService.buildField(savedColumn),
+        };
+        this.columns.update((arr) => {
+          const newArr = [...arr];
+          if (newArr[columnIndex].field.dataType !== updatedColumn.field.dataType) {
+            this.rows.update((rows) =>
+              rows.map((row) => ({
+                ...row,
+                data: { ...row.data, [savedColumn.name]: undefined },
+              })),
+            );
+            newArr.splice(columnIndex, 1, updatedColumn);
+          } else {
+            newArr[columnIndex] = updatedColumn;
+          }
+          return newArr;
+        });
+      }
+      return;
+    }
+
     const column: TableColumn = {
       id: savedColumn.name,
       field: this.tblService.buildField(savedColumn),
