@@ -1,4 +1,5 @@
 import { Client } from 'pg';
+import { EventEmitter } from 'node:events';
 import {
   LogicalReplicationService,
   PgoutputPlugin,
@@ -6,7 +7,12 @@ import {
 
 import { log } from '../utils/logger';
 import { pgConfig } from '../plugins/pg';
-import { WebSocket } from '../plugins/web-socket';
+
+export const CDC_EVENTS = {
+  CHANGE: 'cdc:change',
+} as const;
+
+export const cdcEmitter = new EventEmitter();
 
 /**
  * Name of the logical replication slot used for CDC.
@@ -99,7 +105,7 @@ export async function startCDC() {
       case 'insert':
       case 'update':
       case 'delete':
-        WebSocket.broadcast(message);
+        cdcEmitter.emit(CDC_EVENTS.CHANGE, message);
         break;
     }
   });

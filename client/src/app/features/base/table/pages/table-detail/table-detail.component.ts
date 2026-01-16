@@ -111,7 +111,7 @@ export class TableDetailComponent {
 
   ngOnInit() {
     this.tblRealtimeService
-      .enable()
+      .enableSSE()
       .pipe(delay(200), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ({ tableKeyColumn, action, record }) => {
