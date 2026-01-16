@@ -26,12 +26,14 @@
   </div>
 </ng-template>
 
+<p-confirmdialog appendTo="body" styleClass="max-w-100" />
+
 <p-drawer
-  [(visible)]="visible"
+  [visible]="visible()"
   position="right"
   [header]="mode() === 'edit' ? `Edit column: ${column().name}` : 'Add column'"
   styleClass="!w-150 custom-drawer"
-  (onHide)="reset()"
+  (onHide)="onHide()"
 >
   <ng-template #content>
     <form #columnForm="ngForm" (ngSubmit)="onSubmit()">

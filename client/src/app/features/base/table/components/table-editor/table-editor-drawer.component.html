@@ -1,9 +1,11 @@
+<p-confirmdialog appendTo="body" styleClass="max-w-100" />
+
 <p-drawer
-  [(visible)]="visible"
+  [visible]="visible()"
   position="right"
   [header]="mode() === 'edit' ? `Edit table: ${table().tableName}` : 'New table'"
   styleClass="!w-150 custom-drawer"
-  (onHide)="reset()"
+  (onHide)="onHide()"
 >
   <ng-template #content>
     <form #tableForm="ngForm" (ngSubmit)="onSubmit()">
