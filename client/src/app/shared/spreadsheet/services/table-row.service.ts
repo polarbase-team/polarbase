@@ -67,15 +67,14 @@ export class TableRowService extends TableBaseService {
     effect(() => {
       const rows = this.host.sourceRows() || [];
       for (const row of rows) {
-        if (!this.rowById.has(row.id)) {
-          row.id ??= _.uniqueId();
-        }
+        row.id ??= _.uniqueId();
+        this.rowById.set(row.id, row);
+
         if (row.selected) {
           this.selectedRows.add(row);
         } else {
           this.selectedRows.delete(row);
         }
-        this.rowById.set(row.id, row);
       }
 
       this.tableService.refreshView();
