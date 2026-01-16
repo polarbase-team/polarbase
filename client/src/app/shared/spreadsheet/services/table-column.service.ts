@@ -130,11 +130,10 @@ export class TableColumnService extends TableBaseService {
       const groupedColumns: TableColumn[] = [];
       const sortedColumns: TableColumn[] = [];
       for (const column of columns) {
-        if (!this.columnById.has(column.id)) {
-          column.id ??= _.uniqueId();
-          column.width ??= this.tableService.config().column.defaultWidth;
-          this.columnById.set(column.id, column);
-        }
+        column.id ??= _.uniqueId();
+        column.width ??= this.tableService.config().column.defaultWidth;
+        this.columnById.set(column.id, column);
+
         if (column.calculateType) {
           calculatedColumns.push(column);
         }
