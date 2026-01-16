@@ -10,7 +10,7 @@ services:
       # Core
       - NODE_ENV=production
       - NAME=PolarBase
-      - VERSION=v0.4.1-beta
+      - VERSION=v0.4.2-beta
       - HOSTNAME=0.0.0.0
       - PORT=3000
       - VERBOSE=false
