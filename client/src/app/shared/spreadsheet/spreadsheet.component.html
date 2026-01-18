@@ -52,6 +52,13 @@
           (onMove)="tableColumnService.moveColumn($event.column, $event.newIndex)"
         />
       }
+      @if ($any(tableService.config().toolbar).filter) {
+        <data-filter-options
+          [columns]="sourceColumns()"
+          [rows]="sourceRows()"
+          (onFilter)="tableService.onApplyFilter($event)"
+        />
+      }
       @if ($any(tableService.config().toolbar).group) {
         <data-view-options
           type="group"

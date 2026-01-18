@@ -12,6 +12,7 @@ export interface TableConfig {
   allowSelectAllRows?: boolean;
   toolbar?:
     | {
+        filter?: boolean;
         customize?: boolean;
         group?: boolean;
         sort?: boolean;
