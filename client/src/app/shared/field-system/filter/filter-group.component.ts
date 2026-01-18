@@ -1,4 +1,4 @@
-import { Component, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, model, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -14,11 +14,19 @@ import { AutoFocusModule } from 'primeng/autofocus';
 
 import { Field } from '../models/field.object';
 import { DataType } from '../models/field.interface';
-import { Conjunction, FilterGroup, FilterRule, getOperatorsByDataType, SymOp } from './models';
+import {
+  Conjunction,
+  FilterGroup,
+  FilterRule,
+  FilterType,
+  getOperatorsByDataType,
+  SymOp,
+} from './models';
 
 @Component({
   selector: 'filter-group',
-  standalone: true,
+  templateUrl: './filter-group.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -32,7 +40,6 @@ import { Conjunction, FilterGroup, FilterRule, getOperatorsByDataType, SymOp } f
     FluidModule,
     AutoFocusModule,
   ],
-  templateUrl: './filter-group.component.html',
 })
 export class FilterGroupComponent {
   group = model.required<FilterGroup>();
@@ -60,7 +67,8 @@ export class FilterGroupComponent {
 
   protected onFieldChange(rule: FilterRule) {
     const ops = this.getOps(rule.field);
-    rule.operator = ops[0].value;
+    const op = ops.find((o) => o.value === SymOp.Equal) || ops[0];
+    rule.operator = op.value;
     rule.value = null;
   }
 
@@ -72,7 +80,7 @@ export class FilterGroupComponent {
     this.group.update((group) => {
       this.autoFocusIdx =
         group.children.push({
-          type: 'rule',
+          type: FilterType.Rule,
           field: field.name,
           operator: op.value,
           value: '',
@@ -84,7 +92,7 @@ export class FilterGroupComponent {
   protected addGroup() {
     this.group.update((group) => {
       group.children.push({
-        type: 'group',
+        type: FilterType.Group,
         conjunction: Conjunction.AND,
         children: [],
       });

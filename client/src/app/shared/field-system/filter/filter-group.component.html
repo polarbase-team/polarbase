@@ -55,6 +55,7 @@
             optionValue="name"
             (onChange)="onFieldChange(it)"
             class="w-44"
+            appendTo="body"
           >
             <ng-template let-item #item>
               <div class="flex items-center gap-2">
@@ -75,6 +76,7 @@
             optionLabel="label"
             optionValue="value"
             class="w-32"
+            appendTo="body"
           />
           @if (it.operator !== SymOp.Empty && it.operator !== SymOp.NotEmpty) {
             <div class="flex-grow min-w-[220px]">
