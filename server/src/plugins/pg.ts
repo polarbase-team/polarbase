@@ -44,6 +44,15 @@ const parsePgArray = (val: any) => {
     });
 };
 
+const parsePgPoint = (val: any) => {
+  if (val === null) return null;
+  const point = val.replace(/[()]/g, '').split(',');
+  return {
+    x: parseFloat(point[0]),
+    y: parseFloat(point[1]),
+  };
+};
+
 /**
  * Initialize Custom DB Types
  * Includes Email, URL, and Attachment domains.
@@ -62,7 +71,7 @@ export const initDatabaseTypes = async () => {
           -- URL Domain
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'url_address') THEN
               CREATE DOMAIN url_address AS TEXT
-              CHECK (VALUE ~* '^https\\?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$');
+              CHECK (VALUE ~* '^https\\?:\\/\\/[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(\\/.*)\\?$');
           END IF;
 
           -- Attachment Domain
@@ -84,13 +93,18 @@ export const initDatabaseTypes = async () => {
     `);
 
     const result = await pg.raw(`
-      SELECT oid FROM pg_type WHERE typname = '_attachment'
+      SELECT typname, oid FROM pg_type 
+      WHERE typname = '_attachment' OR typname = 'point'
     `);
 
-    if (result.rows.length > 0) {
-      const arrayOid = result.rows[0].oid;
-      types.setTypeParser(arrayOid, parsePgArray);
-    }
+    result.rows.forEach((row: { typname: string; oid: number }) => {
+      if (row.typname === 'point') {
+        types.setTypeParser(row.oid, parsePgPoint);
+      }
+      if (row.typname === '_attachment') {
+        types.setTypeParser(row.oid, parsePgArray);
+      }
+    });
 
     log.info('✅ Custom database types initialized');
   } catch (error) {

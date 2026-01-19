@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 
-import { getApiKey } from '@app/core/guards/api-key.guard';
-
 /**
  * Generic message format received from/sent to the WebSocket server.
  * Adjust this interface to match your actual server protocol.
@@ -49,12 +47,9 @@ export class WebsocketService {
       return this.messages$;
     }
 
-    const apiKey = getApiKey();
-    const fullUrl = `${url}${url.includes('?') ? '&' : '?'}x-api-key=${apiKey}`;
-
     // Create new WebSocket connection
     this.socket$ = webSocket<WebSocketMessage>({
-      url: fullUrl,
+      url,
       // Called when the connection is successfully opened
       openObserver: {
         next: () => {

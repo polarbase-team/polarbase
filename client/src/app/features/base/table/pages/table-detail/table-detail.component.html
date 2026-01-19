@@ -1,67 +1,58 @@
-@if (columns()) {
-  <column-editor-drawer
-    [(visible)]="visibleColumnEditor"
-    [table]="tblService.selectedTable()"
-    [column]="updatedColumn"
-    [mode]="updatedColumnMode"
-    (onSave)="onColumnSave($any($event))"
-  />
-  <record-editor-drawer
-    [(visible)]="visibleRecordEditor"
-    [table]="updatedRecord.table"
-    [fields]="updatedRecord.fields"
-    [record]="updatedRecord.data"
-    [mode]="updatedRecordMode"
-    (onSave)="onRecordSave($event)"
-  />
-  @if (isLoading()) {
-    <div class="flex gap-2 justify-between px-[20px] py-[16px]">
-      <div class="flex flex-wrap gap-2">
-        <div
-          class="relative flex items-center pr-4 mr-2 after:content-[''] after:absolute after:right-0 after:top-2/3 after:-translate-y-2/3 after:h-2/3 after:w-[1px] after:bg-surface-200"
-        >
-          <p-skeleton width="100px" height="33px" />
-        </div>
-        <p-skeleton width="90px" height="33px" />
-        <p-skeleton width="90px" height="33px" />
-        <p-skeleton width="90px" height="33px" />
-        <p-skeleton width="90px" height="33px" />
-      </div>
+<column-editor-drawer
+  [(visible)]="visibleColumnEditor"
+  [table]="tblService.selectedTable()"
+  [column]="updatedColumn"
+  [mode]="updatedColumnMode"
+  (onSave)="onColumnSave($any($event))"
+/>
+<record-editor-drawer
+  [(visible)]="visibleRecordEditor"
+  [table]="updatedRecord.table"
+  [fields]="updatedRecord.fields"
+  [record]="updatedRecord.data"
+  [mode]="updatedRecordMode"
+  (onSave)="onRecordSave($event)"
+/>
+@if (isLoading()) {
+  <div class="flex gap-2 justify-between px-[20px] py-[16px]">
+    <p-skeleton width="100px" height="33px" />
+    <div class="flex flex-wrap gap-2 flex-1 justify-end min-w-[400px]">
+      <p-skeleton width="90px" height="33px" />
+      <p-skeleton width="90px" height="33px" />
+      <p-skeleton width="90px" height="33px" />
+      <p-skeleton width="90px" height="33px" />
+      <p-skeleton width="90px" height="33px" />
       <p-skeleton width="224px" height="33px" />
     </div>
-    <div class="flex flex-col gap-3.5 px-[20px]">
-      <p-skeleton width="100%" height="36px" />
-      <div class="flex flex-col gap-1">
-        <p-skeleton width="100%" height="32px" />
-        <p-skeleton width="100%" height="32px" />
-        <p-skeleton width="100%" height="32px" />
-        <p-skeleton width="100%" height="32px" />
-        <p-skeleton width="100%" height="32px" />
-      </div>
+  </div>
+  <div class="flex flex-col gap-3.5 px-[20px]">
+    <p-skeleton width="100%" height="36px" />
+    <div class="flex flex-col gap-1">
+      <p-skeleton width="100%" height="32px" />
+      <p-skeleton width="100%" height="32px" />
+      <p-skeleton width="100%" height="32px" />
+      <p-skeleton width="100%" height="32px" />
+      <p-skeleton width="100%" height="32px" />
     </div>
-  } @else {
-    <spreadsheet
-      [config]="config()"
-      [columns]="columns()"
-      [rows]="rows()"
-      (action)="onTableAction($event)"
-      (columnAction)="onColumnAction($event)"
-      (rowAction)="onRowAction($event)"
-      (cellAction)="onCellAction($event)"
-    >
-      <ng-template #toolbar>
-        <div
-          class="relative flex items-center pr-4 mr-2 after:content-[''] after:absolute after:right-0 after:top-2/3 after:-translate-y-2/3 after:h-2/3 after:w-[1px] after:bg-surface-200"
-        >
-          <p-splitbutton
-            label="Insert"
-            icon="icon icon-plus"
-            class="w-30 h-fit"
-            [model]="insertMenuItems"
-            (onClick)="addNewRecord()"
-          />
-        </div>
-      </ng-template>
-    </spreadsheet>
-  }
+  </div>
+} @else {
+  <spreadsheet
+    [config]="config()"
+    [columns]="columns()"
+    [rows]="rows()"
+    (action)="onTableAction($event)"
+    (columnAction)="onColumnAction($event)"
+    (rowAction)="onRowAction($event)"
+    (cellAction)="onCellAction($event)"
+  >
+    <ng-template #toolbar>
+      <p-splitbutton
+        label="Insert"
+        icon="icon icon-plus"
+        class="w-30 h-fit"
+        [model]="insertMenuItems"
+        (onClick)="addNewRecord()"
+      />
+    </ng-template>
+  </spreadsheet>
 }

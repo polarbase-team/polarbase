@@ -1,9 +1,10 @@
 import { DestroyRef, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, filter } from 'rxjs';
+import { Observable, Subject, filter } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
+import { getApiKey } from '@app/core/guards/api-key.guard';
 import { WebSocketMessage, WebsocketService } from '@app/shared/websocket/websocket.service';
 import { TableService } from './table.service';
 
@@ -12,7 +13,7 @@ export type RealtimeChange<T = Record<string, any>> =
   | { tag: 'update'; old: null; new: T; key: null }
   | { tag: 'delete'; old: null; new: undefined; key: T };
 
-export interface WSRealtimeMessage<T = Record<string, any>> {
+export interface RealtimePayload<T = Record<string, any>> {
   tag: 'insert' | 'update' | 'delete';
   relation: {
     name: string;
@@ -32,14 +33,17 @@ export type TableRealtimeMessage<T = Record<string, any>> = {
     new: RealtimeChange<T>['new'];
     key: RealtimeChange<T>['key'];
   };
-  metadata: WSRealtimeMessage<T>;
+  metadata: RealtimePayload<T>;
 };
+
+const REALTIME_EVENT_NAME = 'db_change';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TableRealtimeService {
   private wsUrl = `${environment.wsUrl}/realtime`;
+  private sseUrl = `${environment.apiUrl}/realtime`;
   private messages$ = new Subject<TableRealtimeMessage>();
 
   constructor(
@@ -48,33 +52,82 @@ export class TableRealtimeService {
     private tableService: TableService,
   ) {}
 
-  enable() {
+  /**
+   * Enable WebSocket for realtime updates
+   */
+  enableWS() {
+    const apiKey = getApiKey();
+    const wsUrl = `${this.wsUrl}${this.wsUrl.includes('?') ? '&' : '?'}x-api-key=${apiKey}`;
+
     this.websocketService
-      .connect(this.wsUrl)
+      .connect(wsUrl)
       .pipe(
         filter(
-          ({ data }: WebSocketMessage<WSRealtimeMessage>) =>
-            data.relation.name === this.tableService.selectedTable()?.tableName,
+          ({
+            data,
+          }: WebSocketMessage<{
+            event: string;
+            payload: RealtimePayload;
+            timestamp: string;
+          }>) =>
+            data.event === REALTIME_EVENT_NAME &&
+            data.payload.relation.name === this.tableService.selectedTable()?.tableName,
         ),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: ({ data }: WebSocketMessage<WSRealtimeMessage>) => {
-          const tableName = data.relation.name;
-          const tableKeyColumn = data.relation.keyColumns[0] || 'id';
-          const action = data.tag;
-          const record = { old: data.old, new: data.new, key: data.key };
-          this.messages$.next({
-            tableName,
-            tableKeyColumn,
-            action,
-            record,
-            metadata: data,
-          });
-        },
+        next: ({ data }) => this.emitMessage(data.payload),
         error: (err) => console.error('WebSocket error:', err),
       });
 
     return this.messages$;
+  }
+
+  /**
+   * Enable Server-Sent Events for realtime updates
+   */
+  enableSSE() {
+    const apiKey = getApiKey();
+    const sseUrl = `${this.sseUrl}?apiKey=${apiKey}`;
+
+    const sseStream$ = new Observable<RealtimePayload>((observer) => {
+      const eventSource = new EventSource(sseUrl);
+
+      eventSource.addEventListener(REALTIME_EVENT_NAME, (event) => {
+        try {
+          observer.next(JSON.parse(event.data));
+        } catch (e) {
+          console.error('Failed to parse SSE payload', e);
+        }
+      });
+
+      eventSource.onerror = (err) => {
+        console.error('SSE Connection Error:', err);
+      };
+
+      return () => eventSource.close();
+    });
+
+    sseStream$
+      .pipe(
+        filter((data) => data.relation.name === this.tableService.selectedTable()?.tableName),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (data) => this.emitMessage(data),
+        error: (err) => console.error('SSE Stream error:', err),
+      });
+
+    return this.messages$;
+  }
+
+  private emitMessage(data: RealtimePayload) {
+    this.messages$.next({
+      tableName: data.relation.name,
+      tableKeyColumn: data.relation.keyColumns[0] || 'id',
+      action: data.tag,
+      record: { old: data.old, new: data.new, key: data.key },
+      metadata: data,
+    });
   }
 }

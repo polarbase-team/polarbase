@@ -111,7 +111,7 @@ export class TableDetailComponent {
 
   ngOnInit() {
     this.tblRealtimeService
-      .enable()
+      .enableSSE()
       .pipe(delay(200), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ({ tableKeyColumn, action, record }) => {
@@ -260,12 +260,6 @@ export class TableDetailComponent {
         this.columns.update((arr) => {
           const newArr = [...arr];
           if (newArr[columnIndex].field.dataType !== updatedColumn.field.dataType) {
-            this.rows.update((rows) =>
-              rows.map((row) => ({
-                ...row,
-                data: { ...row.data, [savedColumn.name]: undefined },
-              })),
-            );
             newArr.splice(columnIndex, 1, updatedColumn);
           } else {
             newArr[columnIndex] = updatedColumn;
