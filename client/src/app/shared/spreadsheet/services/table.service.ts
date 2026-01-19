@@ -418,13 +418,9 @@ export class TableService extends TableBaseService {
 
     if (this.isStreaming || !columns?.length) return;
 
-    const rootGroup = groupBy(
-      this.getCurrentRows(),
-      columns,
-      (group: TableGroup) => {
-        group.isCollapsed = this.tableGroupService.collapsedGroupIds.has(group.id);
-      },
-    );
+    const rootGroup = groupBy(this.getCurrentRows(), columns, (group: TableGroup) => {
+      group.isCollapsed = this.tableGroupService.collapsedGroupIds.has(group.id);
+    });
     this.tableGroupService.rootGroup.set(rootGroup);
 
     this.sort();
@@ -458,9 +454,7 @@ export class TableService extends TableBaseService {
     if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.sortInGroup(columns);
     } else {
-      this.tableRowService.rows.set(
-        sortBy(this.getCurrentRows(), columns),
-      );
+      this.tableRowService.rows.set(sortBy(this.getCurrentRows(), columns));
     }
   }
 
@@ -468,9 +462,7 @@ export class TableService extends TableBaseService {
     if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.unsortInGroup();
     } else {
-      this.tableRowService.rows.set(
-        this.getCurrentRows(),
-      );
+      this.tableRowService.rows.set(this.getCurrentRows());
     }
 
     for (const column of this.tableColumnService.sortedColumns()) {
@@ -614,7 +606,7 @@ export class TableService extends TableBaseService {
     this.layout.fillHandle.hidden = false;
     this.cdRef.detectChanges();
   }
-  
+
   private getCurrentRows() {
     return this.isFiltering ? this.tableRowService.rows() : this.host.sourceRows();
   }

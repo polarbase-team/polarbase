@@ -326,6 +326,14 @@ export class SpreadsheetComponent
     this.clipboard.destroy();
   }
 
+  setColumns(columns: TableColumn[]) {
+    this.tableColumnService.setColumns(columns);
+  }
+
+  setRows(rows: TableRow[]) {
+    this.tableRowService.setRows(rows);
+  }
+
   detectChanges() {
     this.cdRef.detectChanges();
   }
