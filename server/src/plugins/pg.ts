@@ -71,7 +71,7 @@ export const initDatabaseTypes = async () => {
           -- URL Domain
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'url_address') THEN
               CREATE DOMAIN url_address AS TEXT
-              CHECK (VALUE ~* '^https\\?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$');
+              CHECK (VALUE ~* '^https\\?:\\/\\/[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(\\/.*)\\?$');
           END IF;
 
           -- Attachment Domain
