@@ -7,6 +7,7 @@ import {
   effect,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, finalize, forkJoin } from 'rxjs';
@@ -64,6 +65,8 @@ interface UpdatedRecord {
   ],
 })
 export class TableDetailComponent {
+  spreadsheet = viewChild<SpreadsheetComponent>('spreadsheet');
+
   protected config = signal<TableConfig>({
     sideSpacing: 20,
     row: { insertable: false, reorderable: false },
@@ -120,13 +123,13 @@ export class TableDetailComponent {
               const recordPk = record.new[tableKeyColumn];
               if (this.rows().find((row) => row.id === recordPk)) return;
 
-              this.rows.update((arr) => [...arr, { id: recordPk, data: record.new }]);
+              this.spreadsheet().setRows([...this.rows(), { id: recordPk, data: record.new }]);
               break;
             }
             case 'update': {
               const recordPk = record.new[tableKeyColumn];
-              this.rows.update((rows) =>
-                rows.map((row) =>
+              this.spreadsheet().setRows(
+                this.rows().map((row) =>
                   row.id === recordPk ? { ...row, data: { ...row.data, ...record.new } } : row,
                 ),
               );
@@ -134,7 +137,7 @@ export class TableDetailComponent {
             }
             case 'delete': {
               const recordPk = record.key[tableKeyColumn];
-              this.rows.update((arr) => arr.filter((row) => row.id !== recordPk));
+              this.spreadsheet().setRows(this.rows().filter((row) => row.id !== recordPk));
               break;
             }
           }

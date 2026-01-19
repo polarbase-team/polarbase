@@ -101,7 +101,7 @@ export class DataViewOptionsComponent {
     this.onApply.emit([...this.rules()]);
   }
 
-  protected clear() {
+  protected reset() {
     this.rules.set([]);
     this.onApply.emit([]);
   }
