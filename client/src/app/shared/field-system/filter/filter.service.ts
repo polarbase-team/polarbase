@@ -45,6 +45,11 @@ export class FilterService {
           .toLowerCase()
           .includes(String(target || '').toLowerCase());
 
+      case SymOp.NotContains:
+        return !String(value || '')
+          .toLowerCase()
+          .includes(String(target || '').toLowerCase());
+
       case SymOp.Empty:
         return value === null || value === undefined || value === '';
 
