@@ -16,6 +16,7 @@ export const SymOp = {
   Empty: 'NULL',
   NotEmpty: 'NOT_NULL',
   Contains: 'LIKE',
+  NotContains: 'NOT_LIKE',
   In: 'IN',
   NotIn: 'NOT_IN',
 } as const;
@@ -62,7 +63,10 @@ const COMPARISON_OPS: ConditionOp[] = [
   { label: 'Greater than or equals', value: SymOp.GreaterEqual },
 ];
 
-const TEXT_OPS: ConditionOp[] = [{ label: 'Contains', value: SymOp.Contains }];
+const TEXT_OPS: ConditionOp[] = [
+  { label: 'Contains', value: SymOp.Contains },
+  { label: 'Not Contains', value: SymOp.NotContains },
+];
 const SET_OPS: ConditionOp[] = [
   { label: 'In', value: SymOp.In },
   { label: 'Not in', value: SymOp.NotIn },
