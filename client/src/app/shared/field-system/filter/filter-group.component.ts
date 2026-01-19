@@ -11,6 +11,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FluidModule } from 'primeng/fluid';
 import { AutoFocusModule } from 'primeng/autofocus';
+import { MultiSelectModule } from 'primeng/multiselect';
 
 import { Field } from '../models/field.object';
 import { DataType } from '../models/field.interface';
@@ -39,6 +40,7 @@ import {
     DatePickerModule,
     FluidModule,
     AutoFocusModule,
+    MultiSelectModule,
   ],
 })
 export class FilterGroupComponent {
@@ -56,19 +58,23 @@ export class FilterGroupComponent {
   ];
   protected autoFocusIdx = -1;
 
+  protected getField(fieldName: string) {
+    return this.fields().find((f) => f.name === fieldName);
+  }
+
   protected getOps(fieldName: string) {
     const field = this.fields().find((f) => f.name === fieldName);
     return field ? getOperatorsByDataType(field.dataType) : [];
-  }
-
-  protected getFieldType(fieldName: string) {
-    return this.fields().find((f) => f.name === fieldName)?.dataType || DataType.Text;
   }
 
   protected onFieldChange(rule: FilterRule) {
     const ops = this.getOps(rule.field);
     const op = ops.find((o) => o.value === SymOp.Equal) || ops[0];
     rule.operator = op.value;
+    rule.value = null;
+  }
+
+  protected onOperatorChange(rule: FilterRule) {
     rule.value = null;
   }
 

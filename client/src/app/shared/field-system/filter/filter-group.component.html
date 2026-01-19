@@ -75,14 +75,15 @@
             [(ngModel)]="it.operator"
             optionLabel="label"
             optionValue="value"
+            (onChange)="onOperatorChange(it)"
             class="w-32"
             appendTo="body"
           />
           @if (it.operator !== SymOp.Empty && it.operator !== SymOp.NotEmpty) {
             <div class="flex-grow min-w-[220px]">
-              @let type = getFieldType(it.field);
+              @let field = getField(it.field);
 
-              @switch (type) {
+              @switch (field.dataType) {
                 @case (DataType.Integer) {
                   <p-inputnumber
                     [(ngModel)]="it.value"
@@ -133,6 +134,41 @@
                       {{ checkbox.checked ? 'TRUE' : 'FALSE' }}
                     </span>
                   </div>
+                }
+                @case (DataType.Select) {
+                  @if (it.operator === SymOp.In || it.operator === SymOp.NotIn) {
+                    <p-multiselect
+                      placeholder="Select options"
+                      [(ngModel)]="it.value"
+                      [pAutoFocus]="autoFocusIdx === i"
+                      [options]="$any(field).options"
+                      [showClear]="true"
+                      appendTo="body"
+                      fluid
+                    />
+                  } @else {
+                    <p-select
+                      placeholder="Select options"
+                      [(ngModel)]="it.value"
+                      [pAutoFocus]="autoFocusIdx === i"
+                      [options]="$any(field).options"
+                      [checkmark]="true"
+                      [showClear]="true"
+                      appendTo="body"
+                      fluid
+                    />
+                  }
+                }
+                @case (DataType.MultiSelect) {
+                  <p-multiselect
+                    placeholder="Select options"
+                    [(ngModel)]="it.value"
+                    [pAutoFocus]="autoFocusIdx === i"
+                    [options]="$any(field).options"
+                    [showClear]="true"
+                    appendTo="body"
+                    fluid
+                  />
                 }
                 @default {
                   <input
