@@ -82,7 +82,19 @@
       } @else {
         All columns have been added
       }
-      <p-button label="Apply changes" (click)="applyChanges(); popover.hide()" />
+      <div class="flex justify-end gap-2 flex-1">
+        <p-button
+          label="Clear"
+          severity="secondary"
+          [text]="true"
+          (click)="clear(); popover.hide()"
+        />
+        <p-button
+          label="Apply changes"
+          [disabled]="!rules().length"
+          (click)="applyChanges(); popover.hide()"
+        />
+      </div>
     </div>
   </div>
 </p-popover>
@@ -97,8 +109,8 @@
           : 'Group'
     "
     icon="icon icon-list-collapse"
-    variant="outlined"
-    [severity]="rules().length ? 'primary' : 'secondary'"
+    [variant]="rules().length ? 'outlined' : 'text'"
+    [severity]="rules().length ? 'help' : 'secondary'"
     (click)="popover.show($event)"
   />
 } @else {
@@ -111,8 +123,8 @@
           : 'Sort'
     "
     icon="icon icon-arrow-down-up"
-    variant="outlined"
-    [severity]="rules().length ? 'primary' : 'secondary'"
+    [variant]="rules().length ? 'outlined' : 'text'"
+    [severity]="rules().length ? 'warn' : 'secondary'"
     (click)="popover.show($event)"
   />
 }

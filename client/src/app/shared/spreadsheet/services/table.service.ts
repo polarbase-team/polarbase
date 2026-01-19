@@ -89,6 +89,7 @@ const DEFAULT_CONFIG: TableConfig = {
   sideSpacing: 0,
   allowSelectAllRows: true,
   toolbar: {
+    filter: true,
     customize: true,
     group: true,
     sort: true,
@@ -189,6 +190,7 @@ export class TableService extends TableBaseService {
   };
   dataStream$: Subject<TableRow[]>;
   isStreaming: boolean;
+  isFiltering: boolean;
   searchResults: [TableRow, TableColumn][];
   calcResults: Map<TableColumn['id'], any>;
 
@@ -416,9 +418,13 @@ export class TableService extends TableBaseService {
 
     if (this.isStreaming || !columns?.length) return;
 
-    const rootGroup = groupBy(this.host.sourceRows(), columns, (group: TableGroup) => {
-      group.isCollapsed = this.tableGroupService.collapsedGroupIds.has(group.id);
-    });
+    const rootGroup = groupBy(
+      this.getCurrentRows(),
+      columns,
+      (group: TableGroup) => {
+        group.isCollapsed = this.tableGroupService.collapsedGroupIds.has(group.id);
+      },
+    );
     this.tableGroupService.rootGroup.set(rootGroup);
 
     this.sort();
@@ -452,7 +458,9 @@ export class TableService extends TableBaseService {
     if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.sortInGroup(columns);
     } else {
-      this.tableRowService.rows.set(sortBy(this.host.sourceRows(), columns));
+      this.tableRowService.rows.set(
+        sortBy(this.getCurrentRows(), columns),
+      );
     }
   }
 
@@ -460,13 +468,21 @@ export class TableService extends TableBaseService {
     if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.unsortInGroup();
     } else {
-      this.tableRowService.rows.set(this.host.sourceRows());
+      this.tableRowService.rows.set(
+        this.getCurrentRows(),
+      );
     }
 
     for (const column of this.tableColumnService.sortedColumns()) {
       delete column.sortType;
     }
     this.tableColumnService.sortedColumns.set([]);
+  }
+
+  onApplyFilter(rows: TableRow[]) {
+    this.isFiltering = true;
+    this.tableRowService.rows.set(rows);
+    this.refreshView();
   }
 
   onApplyGroup(rules: OrderingRule[]) {
@@ -597,5 +613,9 @@ export class TableService extends TableBaseService {
     this.layout.fillHandle.offset = offset;
     this.layout.fillHandle.hidden = false;
     this.cdRef.detectChanges();
+  }
+  
+  private getCurrentRows() {
+    return this.isFiltering ? this.tableRowService.rows() : this.host.sourceRows();
   }
 }

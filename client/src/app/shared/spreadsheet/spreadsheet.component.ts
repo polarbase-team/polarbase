@@ -65,6 +65,7 @@ import { Keyboard } from './utils/keyboard';
 import { VirtualScrollComponent } from './components/virtual-scroll/virtual-scroll.component';
 import { VirtualScrollViewportComponent } from './components/virtual-scroll/virtual-scroll-viewport.component';
 import { ColumnViewOptionsComponent } from './components/view-options/column-view-options/column-view-options.component';
+import { DataFilterOptionsComponent } from './components/view-options/data-filter-options/data-filter-options.component';
 import { DataViewOptionsComponent } from './components/view-options/data-view-options/data-view-options.component';
 import { RowSizeOptionsComponent } from './components/view-options/row-size-options/row-size-options.component';
 import { FieldCellService } from './components/field-cell/field-cell.service';
@@ -138,6 +139,7 @@ const stack: SpreadsheetComponent[] = [];
     VirtualScrollLeftContentWrapperComponent,
     VirtualScrollRightContentWrapperComponent,
     FieldCellFactoryDirective,
+    DataFilterOptionsComponent,
     DataViewOptionsComponent,
     ColumnViewOptionsComponent,
     RowSizeOptionsComponent,

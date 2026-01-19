@@ -26,10 +26,10 @@
     [readonly]="viewOnly()"
     [(ngModel)]="data"
     [options]="field().options"
-    appendTo="body"
-    fluid
     [checkmark]="true"
     [showClear]="true"
+    appendTo="body"
+    fluid
   />
   @if (input.invalid && input.touched) {
     <p-message severity="error" size="small" variant="simple">
