@@ -12,6 +12,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { FluidModule } from 'primeng/fluid';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { TextareaModule } from 'primeng/textarea';
 
 import { Field } from '../models/field.object';
 import { DataType } from '../models/field.interface';
@@ -41,6 +42,7 @@ import {
     FluidModule,
     AutoFocusModule,
     MultiSelectModule,
+    TextareaModule,
   ],
 })
 export class FilterGroupComponent {

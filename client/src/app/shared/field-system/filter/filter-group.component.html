@@ -47,7 +47,7 @@
   <div class="space-y-3">
     @for (it of group().children; track it; let i = $index) {
       @if (it.type === 'rule') {
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-start gap-2">
           <p-select
             [options]="fields()"
             [(ngModel)]="it.field"
@@ -84,6 +84,17 @@
               @let field = getField(it.field);
 
               @switch (field.dataType) {
+                @case (DataType.LongText) {
+                  <textarea
+                    pTextarea
+                    [(ngModel)]="it.value"
+                    [pAutoFocus]="autoFocusIdx === i"
+                    placeholder="Input here..."
+                    rows="1"
+                    class="min-h-[33px]"
+                    fluid
+                  ></textarea>
+                }
                 @case (DataType.Integer) {
                   <p-inputnumber
                     [(ngModel)]="it.value"
@@ -115,10 +126,28 @@
                   />
                 }
                 @case (DataType.Date) {
-                  <p-datepicker [(ngModel)]="it.value" [pAutoFocus]="autoFocusIdx === i" fluid />
+                  <p-datepicker
+                    [(ngModel)]="it.value"
+                    [pAutoFocus]="autoFocusIdx === i"
+                    [showClear]="true"
+                    [showIcon]="true"
+                    iconDisplay="input"
+                    placeholder="Select date"
+                    appendTo="body"
+                    fluid
+                  />
                 }
                 @case (DataType.AutoDate) {
-                  <p-datepicker [(ngModel)]="it.value" [pAutoFocus]="autoFocusIdx === i" fluid />
+                  <p-datepicker
+                    [(ngModel)]="it.value"
+                    [pAutoFocus]="autoFocusIdx === i"
+                    [showClear]="true"
+                    [showIcon]="true"
+                    iconDisplay="input"
+                    placeholder="Select date"
+                    appendTo="body"
+                    fluid
+                  />
                 }
                 @case (DataType.Checkbox) {
                   <div
