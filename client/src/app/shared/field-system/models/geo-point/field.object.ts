@@ -7,16 +7,7 @@ import { GeoPointData, GeoPointPattern } from './field.interface';
 export const formatPoint = (data: GeoPointData) => {
   if (!data) return '';
 
-  if (typeof data === 'string') {
-    return data
-      .replace(/[()]/g, '')
-      .split(',')
-      .map((s) => s.trim())
-      .filter((part) => part !== '')
-      .join(', ');
-  }
-
-  if (typeof data === 'object' && Number.isFinite(data.x) && Number.isFinite(data.y)) {
+  if (Number.isFinite(data.x) && Number.isFinite(data.y)) {
     return `${data.x}, ${data.y}`;
   }
 

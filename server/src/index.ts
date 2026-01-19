@@ -118,12 +118,12 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
   if (REALTIME_ENABLED) {
     await enableRealtime(app);
     logService(
-      'Realtime (WS+CDC)',
+      'Realtime CDC (WS+SSE)',
       true,
-      `ws://${APP_HOSTNAME}:${APP_PORT}${REALTIME_PATH}`
+      `ws://${APP_HOSTNAME}:${APP_PORT}${REALTIME_PATH}, http://${APP_HOSTNAME}:${APP_PORT}${REALTIME_PATH}`
     );
   } else {
-    logService('Realtime (WS+CDC)', false);
+    logService('Realtime CDC (WS+SSE)', false);
   }
 
   // Health check

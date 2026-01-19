@@ -101,6 +101,11 @@ export class DataViewOptionsComponent {
     this.onApply.emit([...this.rules()]);
   }
 
+  protected clear() {
+    this.rules.set([]);
+    this.onApply.emit([]);
+  }
+
   protected onDropped(event: CdkDragDrop<OrderingRule[]>) {
     const newItems = [...this.rules()];
     moveItemInArray(newItems, event.previousIndex, event.currentIndex);
