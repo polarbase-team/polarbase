@@ -97,7 +97,6 @@ export const getOperatorsByDataType = (dataType: DataType) => {
     case DataType.Checkbox:
     case DataType.Date:
     case DataType.AutoDate:
-    case DataType.GeoPoint:
       ops = [...ops, ...EQUALITY_OPS];
       break;
 
