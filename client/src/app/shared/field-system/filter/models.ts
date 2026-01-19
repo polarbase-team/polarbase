@@ -88,6 +88,7 @@ export const getOperatorsByDataType = (dataType: DataType) => {
     case DataType.Text:
     case DataType.Email:
     case DataType.Url:
+    case DataType.GeoPoint:
       ops = [...ops, ...EQUALITY_OPS, ...TEXT_OPS];
       break;
 
@@ -101,6 +102,7 @@ export const getOperatorsByDataType = (dataType: DataType) => {
     case DataType.Checkbox:
     case DataType.Date:
     case DataType.AutoDate:
+    case DataType.GeoPoint:
       ops = [...ops, ...EQUALITY_OPS];
       break;
 
