@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { TooltipModule } from 'primeng/tooltip';
@@ -7,7 +5,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MapPickerDrawerComponent } from '@app/shared/map-picker/map-picker-drawer.component';
 import { MapLocation } from '@app/shared/map-picker/map-picker.component';
 import { formatPoint } from '@app/shared/field-system/models/geo-point/field.object';
-import { GeoPoint, GeoPointData } from '@app/shared/field-system/models/geo-point/field.interface';
+import { GeoPointData } from '@app/shared/field-system/models/geo-point/field.interface';
 import { PointFormatPipe } from '@app/shared/field-system/pipes/point-format.pipe';
 import { FieldCellInputable } from '../field-cell-inputable';
 import { InputBoxComponent } from '../input-box.component';
@@ -26,10 +24,6 @@ export class GeoPointFieldCellComponent extends FieldCellInputable<GeoPointData>
   protected loc: MapLocation | null;
   protected visibleMapPicker = false;
 
-  override save(data: GeoPointData) {
-    super.save(data ? `(${data})` : null);
-  }
-
   protected override onInput(e: CellTouchEvent) {
     this.pointStr = formatPoint(this.data);
   }
@@ -38,13 +32,8 @@ export class GeoPointFieldCellComponent extends FieldCellInputable<GeoPointData>
     let loc: MapLocation | null = null;
 
     if (this.data) {
-      if (_.isString(this.data)) {
-        const data = formatPoint(this.data);
-        loc = { lat: Number(data[0]), lng: Number(data[1]) };
-      } else {
-        const data = this.data as GeoPoint;
-        loc = { lat: data.x, lng: data.y };
-      }
+      const data = this.data;
+      loc = { lat: this.data.x, lng: this.data.y };
     }
 
     this.loc = loc;
@@ -52,6 +41,6 @@ export class GeoPointFieldCellComponent extends FieldCellInputable<GeoPointData>
   }
 
   protected onSaveNewLocation(loc: MapLocation) {
-    this.save(`${loc.lat}, ${loc.lng}`);
+    this.save({ x: loc.lat, y: loc.lng });
   }
 }
