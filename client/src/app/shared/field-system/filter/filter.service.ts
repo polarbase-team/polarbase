@@ -4,26 +4,42 @@ import { Conjunction, FilterGroup, FilterRule, FilterType, SymOp } from './model
 
 @Injectable()
 export class FilterService {
-  filterRecords(records: Record<string, any>[], query: FilterGroup) {
-    return records.filter((record) => this.evaluateGroup(record, query));
+  filter<T = Record<string, any>>(
+    items: T[],
+    query: FilterGroup,
+    valuePredicate?: (item: T, rule: FilterRule) => any,
+  ) {
+    return items.filter((item) => this.evaluateGroup(item, query, valuePredicate));
   }
 
-  private evaluateGroup(record: Record<string, any>, group: FilterGroup) {
+  private evaluateGroup<T>(
+    item: T,
+    group: FilterGroup,
+    valuePredicate?: (item: T, rule: FilterRule) => any,
+  ) {
     if (!group.children || group.children.length === 0) return true;
 
     return group.conjunction === Conjunction.AND
-      ? group.children.every((child) => this.evaluateItem(record, child))
-      : group.children.some((child) => this.evaluateItem(record, child));
+      ? group.children.every((child) => this.evaluateChild(item, child, valuePredicate))
+      : group.children.some((child) => this.evaluateChild(item, child, valuePredicate));
   }
 
-  private evaluateItem(record: Record<string, any>, item: FilterRule | FilterGroup) {
-    return item.type === FilterType.Group
-      ? this.evaluateGroup(record, item)
-      : this.evaluateRule(record, item);
+  private evaluateChild<T>(
+    item: T,
+    child: FilterRule | FilterGroup,
+    valuePredicate?: (item: T, rule: FilterRule) => any,
+  ) {
+    return child.type === FilterType.Group
+      ? this.evaluateGroup(item, child)
+      : this.evaluateRule(item, child, valuePredicate);
   }
 
-  private evaluateRule(record: Record<string, any>, rule: FilterRule) {
-    const value = record[rule.field];
+  private evaluateRule<T>(
+    item: T,
+    rule: FilterRule,
+    valuePredicate?: (item: T, rule: FilterRule) => any,
+  ) {
+    const value = valuePredicate ? valuePredicate(item, rule) : item[rule.field];
     const target = rule.value;
 
     switch (rule.operator) {

@@ -49,11 +49,14 @@
       @if (it.type === 'rule') {
         <div class="flex flex-wrap items-start gap-2">
           <p-select
+            #fieldSelect
             [options]="fields()"
             [(ngModel)]="it.field"
             optionLabel="name"
             optionValue="name"
             (onChange)="onFieldChange(it)"
+            [checkmark]="true"
+            placeholder="Select field"
             class="w-44"
             appendTo="body"
           >
@@ -70,102 +73,129 @@
               </div>
             </ng-template>
           </p-select>
-          <p-select
-            [options]="getOps(it.field)"
-            [(ngModel)]="it.operator"
-            optionLabel="label"
-            optionValue="value"
-            (onChange)="onOperatorChange(it)"
-            class="w-32"
-            appendTo="body"
-          />
-          @if (it.operator !== SymOp.Empty && it.operator !== SymOp.NotEmpty) {
-            <div class="flex-grow min-w-[220px]">
-              @let field = getField(it.field);
+          @if (it.field) {
+            <p-select
+              [options]="getOps(it.field)"
+              [(ngModel)]="it.operator"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="onOperatorChange(it)"
+              [checkmark]="true"
+              placeholder="Select operator"
+              class="w-32"
+              appendTo="body"
+            />
 
-              @switch (field.dataType) {
-                @case (DataType.LongText) {
-                  <textarea
-                    pTextarea
-                    [(ngModel)]="it.value"
-                    [pAutoFocus]="autoFocusIdx === i"
-                    placeholder="Input here..."
-                    rows="1"
-                    class="min-h-[33px]"
-                    fluid
-                  ></textarea>
-                }
-                @case (DataType.Integer) {
-                  <p-inputnumber
-                    [(ngModel)]="it.value"
-                    [useGrouping]="false"
-                    [pAutoFocus]="autoFocusIdx === i"
-                    placeholder="Input here..."
-                    fluid
-                  />
-                }
-                @case (DataType.Number) {
-                  <p-inputnumber
-                    [(ngModel)]="it.value"
-                    [useGrouping]="false"
-                    [pAutoFocus]="autoFocusIdx === i"
-                    mode="decimal"
-                    [minFractionDigits]="0"
-                    [maxFractionDigits]="5"
-                    placeholder="Input here..."
-                    fluid
-                  />
-                }
-                @case (DataType.AutoNumber) {
-                  <p-inputnumber
-                    [(ngModel)]="it.value"
-                    [useGrouping]="false"
-                    [pAutoFocus]="autoFocusIdx === i"
-                    placeholder="Input here..."
-                    fluid
-                  />
-                }
-                @case (DataType.Date) {
-                  <p-datepicker
-                    [(ngModel)]="it.value"
-                    [pAutoFocus]="autoFocusIdx === i"
-                    [showClear]="true"
-                    [showIcon]="true"
-                    iconDisplay="input"
-                    placeholder="Select date"
-                    appendTo="body"
-                    fluid
-                  />
-                }
-                @case (DataType.AutoDate) {
-                  <p-datepicker
-                    [(ngModel)]="it.value"
-                    [pAutoFocus]="autoFocusIdx === i"
-                    [showClear]="true"
-                    [showIcon]="true"
-                    iconDisplay="input"
-                    placeholder="Select date"
-                    appendTo="body"
-                    fluid
-                  />
-                }
-                @case (DataType.Checkbox) {
-                  <div
-                    class="flex items-center gap-2 h-[33px] px-3 border border-surface-300 rounded-md"
-                  >
-                    <p-checkbox
-                      #checkbox
+            @if (it.operator && it.operator !== SymOp.Empty && it.operator !== SymOp.NotEmpty) {
+              <div class="flex-grow min-w-[220px]">
+                @let field = getField(it.field);
+
+                @switch (field.dataType) {
+                  @case (DataType.LongText) {
+                    <textarea
+                      pTextarea
                       [(ngModel)]="it.value"
                       [pAutoFocus]="autoFocusIdx === i"
-                      [binary]="true"
+                      placeholder="Input here..."
+                      rows="1"
+                      class="min-h-[33px]"
+                      fluid
+                    ></textarea>
+                  }
+                  @case (DataType.Integer) {
+                    <p-inputnumber
+                      [(ngModel)]="it.value"
+                      [useGrouping]="false"
+                      [pAutoFocus]="autoFocusIdx === i"
+                      placeholder="Input here..."
+                      fluid
                     />
-                    <span class="text-sm">
-                      {{ checkbox.checked ? 'TRUE' : 'FALSE' }}
-                    </span>
-                  </div>
-                }
-                @case (DataType.Select) {
-                  @if (it.operator === SymOp.In || it.operator === SymOp.NotIn) {
+                  }
+                  @case (DataType.Number) {
+                    <p-inputnumber
+                      [(ngModel)]="it.value"
+                      [useGrouping]="false"
+                      [pAutoFocus]="autoFocusIdx === i"
+                      mode="decimal"
+                      [minFractionDigits]="0"
+                      [maxFractionDigits]="5"
+                      placeholder="Input here..."
+                      fluid
+                    />
+                  }
+                  @case (DataType.AutoNumber) {
+                    <p-inputnumber
+                      [(ngModel)]="it.value"
+                      [useGrouping]="false"
+                      [pAutoFocus]="autoFocusIdx === i"
+                      placeholder="Input here..."
+                      fluid
+                    />
+                  }
+                  @case (DataType.Date) {
+                    <p-datepicker
+                      [(ngModel)]="it.value"
+                      [pAutoFocus]="autoFocusIdx === i"
+                      [showClear]="true"
+                      [showIcon]="true"
+                      iconDisplay="input"
+                      placeholder="Select date"
+                      appendTo="body"
+                      fluid
+                    />
+                  }
+                  @case (DataType.AutoDate) {
+                    <p-datepicker
+                      [(ngModel)]="it.value"
+                      [pAutoFocus]="autoFocusIdx === i"
+                      [showClear]="true"
+                      [showIcon]="true"
+                      iconDisplay="input"
+                      placeholder="Select date"
+                      appendTo="body"
+                      fluid
+                    />
+                  }
+                  @case (DataType.Checkbox) {
+                    <div
+                      class="flex items-center gap-2 h-[33px] px-3 border border-surface-300 rounded-md"
+                    >
+                      <p-checkbox
+                        #checkbox
+                        [(ngModel)]="it.value"
+                        [pAutoFocus]="autoFocusIdx === i"
+                        [binary]="true"
+                      />
+                      <span class="text-sm">
+                        {{ checkbox.checked ? 'TRUE' : 'FALSE' }}
+                      </span>
+                    </div>
+                  }
+                  @case (DataType.Select) {
+                    @if (it.operator === SymOp.In || it.operator === SymOp.NotIn) {
+                      <p-multiselect
+                        placeholder="Select options"
+                        [(ngModel)]="it.value"
+                        [pAutoFocus]="autoFocusIdx === i"
+                        [options]="$any(field).options"
+                        [showClear]="true"
+                        appendTo="body"
+                        fluid
+                      />
+                    } @else {
+                      <p-select
+                        placeholder="Select options"
+                        [(ngModel)]="it.value"
+                        [pAutoFocus]="autoFocusIdx === i"
+                        [options]="$any(field).options"
+                        [checkmark]="true"
+                        [showClear]="true"
+                        appendTo="body"
+                        fluid
+                      />
+                    }
+                  }
+                  @case (DataType.MultiSelect) {
                     <p-multiselect
                       placeholder="Select options"
                       [(ngModel)]="it.value"
@@ -175,50 +205,28 @@
                       appendTo="body"
                       fluid
                     />
-                  } @else {
-                    <p-select
-                      placeholder="Select options"
+                  }
+                  @default {
+                    <input
+                      pInputText
                       [(ngModel)]="it.value"
                       [pAutoFocus]="autoFocusIdx === i"
-                      [options]="$any(field).options"
-                      [checkmark]="true"
-                      [showClear]="true"
-                      appendTo="body"
+                      placeholder="Input here..."
                       fluid
                     />
                   }
                 }
-                @case (DataType.MultiSelect) {
-                  <p-multiselect
-                    placeholder="Select options"
-                    [(ngModel)]="it.value"
-                    [pAutoFocus]="autoFocusIdx === i"
-                    [options]="$any(field).options"
-                    [showClear]="true"
-                    appendTo="body"
-                    fluid
-                  />
-                }
-                @default {
-                  <input
-                    pInputText
-                    [(ngModel)]="it.value"
-                    [pAutoFocus]="autoFocusIdx === i"
-                    placeholder="Input here..."
-                    fluid
-                  />
-                }
-              }
-            </div>
-          }
+              </div>
+            }
 
-          <p-button
-            icon="icon icon-x"
-            severity="danger"
-            [rounded]="true"
-            [text]="true"
-            (click)="removeChild(i)"
-          />
+            <p-button
+              icon="icon icon-x"
+              severity="danger"
+              [rounded]="true"
+              [text]="true"
+              (click)="removeChild(i)"
+            />
+          }
         </div>
       } @else {
         <filter-group

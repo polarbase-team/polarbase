@@ -1,8 +1,16 @@
-import { ChangeDetectionStrategy, Component, input, model, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  input,
+  model,
+  output,
+  viewChildren,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { SelectModule } from 'primeng/select';
+import { Select, SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -52,6 +60,8 @@ export class FilterGroupComponent {
 
   removeGroup = output();
 
+  readonly fieldSelects = viewChildren<Select>('fieldSelect');
+
   protected readonly DataType = DataType;
   protected readonly SymOp = SymOp;
   protected conjunctionOptions = [
@@ -59,6 +69,18 @@ export class FilterGroupComponent {
     { label: 'Or', value: Conjunction.OR },
   ];
   protected autoFocusIdx = -1;
+
+  constructor() {
+    effect(() => {
+      const selects = this.fieldSelects();
+
+      if (selects.length > 0) {
+        setTimeout(() => {
+          selects[selects.length - 1].show();
+        });
+      }
+    });
+  }
 
   protected getField(fieldName: string) {
     return this.fields().find((f) => f.name === fieldName);
@@ -81,16 +103,12 @@ export class FilterGroupComponent {
   }
 
   protected addRule() {
-    const field = this.fields()[0];
-    const ops = this.getOps(field.name);
-    const op = ops.find((o) => o.value === SymOp.Equal) || ops[0];
-
     this.group.update((group) => {
       this.autoFocusIdx =
         group.children.push({
           type: FilterType.Rule,
-          field: field.name,
-          operator: op.value,
+          field: null,
+          operator: null,
           value: '',
         }) - 1;
       return { ...group };
