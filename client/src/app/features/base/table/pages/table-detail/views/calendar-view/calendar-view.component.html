@@ -1,0 +1,48 @@
+<p-popover #popover appendTo="body">
+  <div class="flex gap-2 mb-3 items-end">
+    <div class="flex flex-col gap-1">
+      <label for="startField" class="text-sm">Start Date Field</label>
+      <p-select
+        id="startField"
+        [options]="dateColumns"
+        optionLabel="name"
+        optionValue="name"
+        placeholder="Select here..."
+        [(ngModel)]="selectedStartField"
+        class="w-3xs"
+      ></p-select>
+    </div>
+    <div class="flex flex-col gap-1">
+      <label for="endField" class="text-sm">End Date Field</label>
+      <p-select
+        id="endField"
+        [options]="dateColumns"
+        optionLabel="name"
+        optionValue="name"
+        placeholder="Select here..."
+        [(ngModel)]="selectedEndField"
+        class="w-3xs"
+      ></p-select>
+    </div>
+  </div>
+
+  <p-divider />
+
+  <div class="flex justify-end gap-2 flex-1">
+    <p-button
+      label="Apply changes"
+      [disabled]="!selectedStartField || !selectedEndField"
+      (click)="applyChanges(); popover.hide()"
+    />
+  </div>
+</p-popover>
+
+<calendar #calendar [events]="events()" (onChangeDateRange)="onChangeDateRange($event)">
+  <ng-template #toolbar>
+    <ng-content></ng-content>
+    <div class="flex flex-wrap gap-2">
+      <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
+      <p-button label="Choose Fields" icon="icon icon-calendar" severity="secondary" [text]="true" (click)="popover.show($event)" />
+    </div>
+  </ng-template>
+</calendar>

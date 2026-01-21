@@ -17,7 +17,8 @@ import { Field } from '@app/shared/field-system/models/field.object';
 import { ColumnEditorDrawerComponent } from '../../components/column-editor/column-editor-drawer.component';
 import { RecordEditorDrawerComponent } from '../../components/record-editor/record-editor-drawer.component';
 import { ColumnDefinition, TableDefinition, TableService } from '../../services/table.service';
-import { DataViewComponent } from './views/data-view.component';
+import { DataViewComponent } from './views/data-view/data-view.component';
+import { CalendarViewComponent } from './views/calendar-view/calendar-view.component';
 
 export type DisplayMode = 'data-view' | 'calendar-view';
 
@@ -52,10 +53,11 @@ export interface UpdateRecordEvent {
     RecordEditorDrawerComponent,
     ColumnEditorDrawerComponent,
     DataViewComponent,
+    CalendarViewComponent,
   ],
 })
 export class TableDetailComponent {
-  dataView = viewChild<DataViewComponent>('dataView');
+  view = viewChild<DataViewComponent | CalendarViewComponent>('view');
 
   protected tblService = inject(TableService);
 
@@ -88,7 +90,7 @@ export class TableDetailComponent {
   constructor() {
     effect(() => {
       this.tblService.selectedTable();
-      this.displayMode.set('data-view');
+      this.displayMode.set('calendar-view');
     });
   }
 
@@ -105,10 +107,10 @@ export class TableDetailComponent {
   }
 
   protected onColumnSave(savedColumn: ColumnDefinition) {
-    this.dataView().onColumnSave(savedColumn, this.updatedColumnMode, this.updatedColumn);
+    this.view().onColumnSave(savedColumn, this.updatedColumnMode, this.updatedColumn);
   }
 
   protected onRecordSave(savedRecord: Record<string, any>) {
-    this.dataView().onRecordSave(savedRecord, this.updatedRecordMode, this.updatedRecord);
+    this.view().onRecordSave(savedRecord, this.updatedRecordMode, this.updatedRecord);
   }
 }

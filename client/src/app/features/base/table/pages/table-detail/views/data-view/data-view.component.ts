@@ -1,14 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  effect,
-  output,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { delay, finalize, forkJoin } from 'rxjs';
+import { forkJoin } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { MenuItem } from 'primeng/api';
@@ -38,14 +30,10 @@ import {
   TableColumnActionType,
 } from '@app/shared/spreadsheet/events/table-column';
 import { ReferenceViewDetailEvent } from '@app/shared/spreadsheet/components/field-cell/reference/cell.component';
-import { ColumnDefinition, TableDefinition, TableService } from '../../../services/table.service';
-import { TableRealtimeService } from '../../../services/table-realtime.service';
-import type {
-  UpdateColumnEvent,
-  UpdatedColumnMode,
-  UpdatedRecordMode,
-  UpdateRecordEvent,
-} from '../table-detail.component';
+import { ColumnDefinition, TableDefinition } from '../../../../services/table.service';
+import { TableRealtimeMessage } from '../../../../services/table-realtime.service';
+import type { UpdatedColumnMode, UpdatedRecordMode } from '../../table-detail.component';
+import { ViewBaseComponent } from '../view-base.component';
 
 @Component({
   selector: 'data-view',
@@ -53,11 +41,8 @@ import type {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ButtonModule, SplitButtonModule, DividerModule, SkeletonModule, SpreadsheetComponent],
 })
-export class DataViewComponent {
+export class DataViewComponent extends ViewBaseComponent {
   spreadsheet = viewChild<SpreadsheetComponent>('spreadsheet');
-
-  onUpdateColumn = output<UpdateColumnEvent>();
-  onUpdateRecord = output<UpdateRecordEvent>();
 
   protected config = signal<TableConfig>({
     sideSpacing: 20,
@@ -65,7 +50,6 @@ export class DataViewComponent {
   });
   protected columns = signal<TableColumn[]>([]);
   protected rows = signal<TableRow[]>([]);
-  protected isLoading = signal(false);
   protected insertMenuItems: MenuItem[] = [
     {
       label: 'Insert row',
@@ -83,11 +67,11 @@ export class DataViewComponent {
     },
   ];
 
-  constructor(
-    private destroyRef: DestroyRef,
-    private tblService: TableService,
-    private tblRealtimeService: TableRealtimeService,
-  ) {
+  private references = new Map<string, string>();
+
+  constructor() {
+    super();
+
     effect(() => {
       const selectedTable = this.tblService.selectedTable();
       if (!selectedTable) return;
@@ -96,40 +80,7 @@ export class DataViewComponent {
     });
   }
 
-  ngOnInit() {
-    this.tblRealtimeService
-      .enableSSE()
-      .pipe(delay(200), takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: ({ tableKeyColumn, action, record }) => {
-          switch (action) {
-            case 'insert': {
-              const recordPk = record.new[tableKeyColumn];
-              if (this.rows().find((row) => row.id === recordPk)) return;
-
-              this.spreadsheet().setRows([...this.rows(), { id: recordPk, data: record.new }]);
-              break;
-            }
-            case 'update': {
-              const recordPk = record.new[tableKeyColumn];
-              this.spreadsheet().setRows(
-                this.rows().map((row) =>
-                  row.id === recordPk ? { ...row, data: { ...row.data, ...record.new } } : row,
-                ),
-              );
-              break;
-            }
-            case 'delete': {
-              const recordPk = record.key[tableKeyColumn];
-              this.spreadsheet().setRows(this.rows().filter((row) => row.id !== recordPk));
-              break;
-            }
-          }
-        },
-      });
-  }
-
-  onColumnSave(
+  override onColumnSave(
     savedColumn: ColumnDefinition,
     mode: UpdatedColumnMode,
     currentColumn?: ColumnDefinition,
@@ -174,7 +125,7 @@ export class DataViewComponent {
     }
   }
 
-  onRecordSave(
+  override onRecordSave(
     savedRecord: Record<string, any>,
     mode: UpdatedRecordMode,
     currentRecord?: Record<string, any>,
@@ -190,6 +141,84 @@ export class DataViewComponent {
       this.rows.update((rows) =>
         rows.map((row) => (row.id === recordId ? { ...row, data: savedRecord } : row)),
       );
+    }
+  }
+
+  protected override async loadTable(table: TableDefinition) {
+    this.columns.set(null);
+    this.rows.set(null);
+    await super.loadTable(table);
+  }
+
+  protected override onSchemaLoaded(columnDefs: ColumnDefinition[]) {
+    this.columns.set(null);
+
+    if (!columnDefs.length) return;
+
+    const columns: TableColumn[] = [];
+    for (const c of columnDefs) {
+      columns.push({
+        id: c.name,
+        primary: c.primary,
+        editable: !c.primary,
+        field: this.tblService.buildField(c),
+      });
+      if (c.dataType === DataType.Reference) {
+        this.references.set(c.name, c.foreignKey.table);
+      }
+    }
+    setTimeout(() => {
+      this.columns.set(columns);
+    });
+  }
+
+  protected override onRecordsLoaded(records: any[]) {
+    this.rows.set(null);
+
+    if (!records) return;
+
+    const rows: TableRow[] = records.map((record: any) => {
+      return {
+        id: record.id,
+        data: {
+          ...record,
+          ...Object.fromEntries(
+            Array.from(this.references.entries())
+              .filter(([key]) => key in record)
+              .map(([key, refKey]) => [key, record[refKey]]),
+          ),
+        },
+      };
+    });
+    setTimeout(() => {
+      this.rows.set(rows);
+    });
+  }
+
+  protected override onDataUpdated(message: TableRealtimeMessage) {
+    const { action, record } = message;
+    switch (action) {
+      case 'insert': {
+        const recordPk = record.new['id'];
+        if (this.rows().find((row) => row.id === recordPk)) return;
+
+        this.spreadsheet().setRows([...this.rows(), { id: recordPk, data: record.new }]);
+        break;
+      }
+      case 'update': {
+        const recordPk = record.new['id'];
+        this.spreadsheet().setRows(
+          this.rows().map((row) =>
+            row.id === recordPk ? { ...row, data: { ...row.data, ...record.new } } : row,
+          ),
+        );
+        break;
+      }
+      case 'delete': {
+        const recordPk = record.key['id'];
+        this.spreadsheet().setRows(this.rows().filter((row) => row.id !== recordPk));
+        break;
+      }
     }
   }
 
@@ -325,73 +354,5 @@ export class DataViewComponent {
       },
       mode: 'add',
     });
-  }
-
-  private loadTable(table: TableDefinition) {
-    this.columns.set(null);
-    this.rows.set(null);
-    this.loadTableSchema(table);
-  }
-
-  private loadTableSchema(table: TableDefinition) {
-    this.isLoading.set(true);
-    this.tblService
-      .getTableSchema(table.tableName)
-      .pipe(
-        finalize(() => this.isLoading.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((columnDefs) => {
-        this.columns.set(null);
-
-        if (!columnDefs.length) return;
-
-        const columns: TableColumn[] = [];
-        const references = new Map<string, string>();
-        for (const c of columnDefs) {
-          columns.push({
-            id: c.name,
-            primary: c.primary,
-            editable: !c.primary,
-            field: this.tblService.buildField(c),
-          });
-          if (c.dataType === DataType.Reference) {
-            references.set(c.name, c.foreignKey.table);
-          }
-        }
-        setTimeout(() => {
-          this.columns.set(columns);
-        });
-
-        this.loadTableData(table, references);
-      });
-  }
-
-  private loadTableData(table: TableDefinition, references: Map<string, string>) {
-    this.tblService
-      .getRecords(table.tableName)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((records) => {
-        this.rows.set(null);
-
-        if (!records) return;
-
-        const rows: TableRow[] = records.map((record: any) => {
-          return {
-            id: record.id,
-            data: {
-              ...record,
-              ...Object.fromEntries(
-                Array.from(references.entries())
-                  .filter(([key]) => key in record)
-                  .map(([key, refKey]) => [key, record[refKey]]),
-              ),
-            },
-          };
-        });
-        setTimeout(() => {
-          this.rows.set(rows);
-        });
-      });
   }
 }

@@ -15,30 +15,36 @@
 />
 
 <ng-template #displayModeTmpl>
-  <p-menu #displayModeMenu [model]="displayModeMenuItems" [popup]="true" appendTo="body" />
-  <button pButton severity="secondary" [text]="true" (click)="displayModeMenu.show($event)">
-    @switch (displayMode()) {
-      @case ('data-view') {
-        <i pButtonIcon class="icon icon-sheet"></i>
-        <span pButtonLabel>Data View</span>
-      }
-      @case ('calendar-view') {
-        <i pButtonIcon class="icon icon-calendar-days"></i>
-        <span pButtonLabel>Calendar View</span>
-      }
-    }
-    <i pButtonIcon class="icon icon-chevron-down"></i>
-  </button>
-  <p-divider layout="vertical" class="scale-80" />
+  <div class="flex items-center">
+    <div>
+      <p-menu #displayModeMenu [model]="displayModeMenuItems" [popup]="true" appendTo="body" />
+      <button pButton severity="secondary" [outlined]="true" (click)="displayModeMenu.show($event)">
+        @switch (displayMode()) {
+          @case ('data-view') {
+            <i pButtonIcon class="icon icon-sheet"></i>
+            <span pButtonLabel>Data View</span>
+          }
+          @case ('calendar-view') {
+            <i pButtonIcon class="icon icon-calendar-days"></i>
+            <span pButtonLabel>Calendar View</span>
+          }
+        }
+        <i pButtonIcon class="icon icon-chevron-down"></i>
+      </button>
+    </div>
+    <p-divider layout="vertical" class="scale-80" />
+  </div>
 </ng-template>
 
 @switch (displayMode()) {
   @case ('data-view') {
-    <data-view (onUpdateColumn)="onUpdateColumn($event)" (onUpdateRecord)="onUpdateRecord($event)">
+    <data-view #view (onUpdateColumn)="onUpdateColumn($event)" (onUpdateRecord)="onUpdateRecord($event)">
       <ng-container *ngTemplateOutlet="displayModeTmpl"></ng-container>
     </data-view>
   }
   @case ('calendar-view') {
-    <ng-container *ngTemplateOutlet="displayModeTmpl"></ng-container>
+    <calendar-view #view (onUpdateColumn)="onUpdateColumn($event)" (onUpdateRecord)="onUpdateRecord($event)">
+      <ng-container *ngTemplateOutlet="displayModeTmpl"></ng-container>
+    </calendar-view>
   }
 }
