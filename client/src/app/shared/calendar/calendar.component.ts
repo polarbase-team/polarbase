@@ -19,6 +19,13 @@ import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { DividerModule } from 'primeng/divider';
 
+export const CalendarView = {
+  MONTH: 'dayGridMonth',
+  WEEK: 'dayGridWeek',
+  DAY: 'dayGridDay',
+} as const;
+export type CalendarView = (typeof CalendarView)[keyof typeof CalendarView];
+
 @Component({
   selector: 'calendar',
   templateUrl: './calendar.component.html',
@@ -44,26 +51,27 @@ export class CalendarComponent {
   onDateClick = output<DateClickArg>();
   onEventClick = output<EventClickArg>();
 
+  protected readonly CV = CalendarView;
   protected calendarOptions: CalendarOptions = {
     headerToolbar: false,
     plugins: [dayGridPlugin, interactionPlugin],
-    initialView: 'dayGridMonth',
+    initialView: CalendarView.MONTH,
     dateClick: (arg) => this.onDateClick.emit(arg),
     eventClick: (arg) => this.onEventClick.emit(arg),
   };
-  protected view = 'dayGridMonth';
+  protected view: CalendarView = CalendarView.MONTH;
   protected viewOptions = [
     {
       label: 'month',
-      value: 'dayGridMonth',
+      value: CalendarView.MONTH,
     },
     {
       label: 'week',
-      value: 'dayGridWeek',
+      value: CalendarView.WEEK,
     },
     {
       label: 'day',
-      value: 'dayGridDay',
+      value: CalendarView.DAY,
     },
   ];
 
@@ -72,11 +80,11 @@ export class CalendarComponent {
   }
 
   reset() {
-    this.changeView('dayGridMonth');
+    this.changeView(CalendarView.MONTH);
     this.today();
   }
 
-  protected changeView(view: string) {
+  protected changeView(view: CalendarView) {
     this.view = view;
     this.fullCalendar().getApi()?.changeView(view);
     this.onChangeView.emit(view);

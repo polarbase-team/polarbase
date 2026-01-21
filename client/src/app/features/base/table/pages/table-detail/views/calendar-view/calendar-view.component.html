@@ -49,16 +49,22 @@
     <div class="flex flex-wrap gap-2">
       <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
       <p-button
-        [label]="
-          selectedStartField && selectedEndField
-            ? selectedStartField + ' - ' + selectedEndField
-            : 'Choose fields'
-        "
+        label="Choose fields"
         icon="icon icon-calendar"
         severity="secondary"
         [text]="true"
         (click)="popover.show($event)"
-      />
+      >
+        <ng-template pTemplate="content">
+          <span class="p-button-label truncate max-w-3xs">
+            {{
+              selectedStartField && selectedEndField
+                ? selectedStartField + ' - ' + selectedEndField
+                : 'Choose fields'
+            }}
+          </span>
+        </ng-template>
+      </p-button>
     </div>
   </ng-template>
 </calendar>

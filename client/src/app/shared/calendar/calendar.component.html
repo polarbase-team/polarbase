@@ -13,13 +13,13 @@
       <div class="flex items-center">
         <p>
           @switch (view) {
-            @case ('dayGridMonth') {
+            @case (CV.MONTH) {
               {{ fullCalendar.getApi()?.getDate() | date: 'MMM, y' }}
             }
-            @case ('dayGridWeek') {
+            @case (CV.WEEK) {
               {{ fullCalendar.getApi()?.getDate() | date: 'E, MMM d, y' }}
             }
-            @case ('dayGridDay') {
+            @case (CV.DAY) {
               {{ fullCalendar.getApi()?.getDate() | date: 'MMM d, y' }}
             }
           }
