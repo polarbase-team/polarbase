@@ -10,8 +10,9 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
-import { CalendarOptions, EventInput } from '@fullcalendar/core';
+import { CalendarOptions, EventClickArg, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { ButtonModule } from 'primeng/button';
@@ -40,11 +41,15 @@ export class CalendarComponent {
 
   onChangeView = output<string>();
   onChangeDateRange = output<[Dayjs, Dayjs]>();
+  onDateClick = output<DateClickArg>();
+  onEventClick = output<EventClickArg>();
 
   protected calendarOptions: CalendarOptions = {
     headerToolbar: false,
-    plugins: [dayGridPlugin],
+    plugins: [dayGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
+    dateClick: (arg) => this.onDateClick.emit(arg),
+    eventClick: (arg) => this.onEventClick.emit(arg),
   };
   protected view = 'dayGridMonth';
   protected viewOptions = [

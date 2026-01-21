@@ -1,5 +1,5 @@
 <p-popover #popover appendTo="body">
-  <div class="flex gap-2 mb-3 items-end">
+  <div class="flex gap-2">
     <div class="flex flex-col gap-1">
       <label for="startField" class="text-sm">Start Date Field</label>
       <p-select
@@ -37,12 +37,24 @@
   </div>
 </p-popover>
 
-<calendar #calendar [events]="events()" (onChangeDateRange)="onChangeDateRange($event)">
+<calendar
+  #calendar
+  [events]="events()"
+  (onDateClick)="onDateClick($event)"
+  (onEventClick)="onEventClick($event)"
+  (onChangeDateRange)="onChangeDateRange($event)"
+>
   <ng-template #toolbar>
     <ng-content></ng-content>
     <div class="flex flex-wrap gap-2">
       <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
-      <p-button label="Choose Fields" icon="icon icon-calendar" severity="secondary" [text]="true" (click)="popover.show($event)" />
+      <p-button
+        label="Choose Fields"
+        icon="icon icon-calendar"
+        severity="secondary"
+        [text]="true"
+        (click)="popover.show($event)"
+      />
     </div>
   </ng-template>
 </calendar>

@@ -4,21 +4,29 @@ import { EventInput } from '@fullcalendar/core';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { ButtonModule } from 'primeng/button';
-import { PopoverModule } from "primeng/popover";
+import { PopoverModule } from 'primeng/popover';
 import { SelectModule } from 'primeng/select';
-import { DividerModule } from "primeng/divider";
+import { DividerModule } from 'primeng/divider';
 
+import { getRecordDisplayLabel } from '@app/core/utils';
 import { CalendarComponent } from '@app/shared/calendar/calendar.component';
-import { ColumnDefinition } from '../../../../services/table.service';
-import { ViewBaseComponent } from '../view-base.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
+import { ColumnDefinition } from '../../../../services/table.service';
+import { ViewBaseComponent } from '../view-base.component';
 
 @Component({
   selector: 'calendar-view',
   templateUrl: './calendar-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, ButtonModule, PopoverModule, SelectModule, DividerModule, CalendarComponent],
+  imports: [
+    FormsModule,
+    ButtonModule,
+    PopoverModule,
+    SelectModule,
+    DividerModule,
+    CalendarComponent,
+  ],
 })
 export class CalendarViewComponent extends ViewBaseComponent {
   calendar = viewChild<CalendarComponent>('calendar');
@@ -27,6 +35,7 @@ export class CalendarViewComponent extends ViewBaseComponent {
   protected dateColumns: ColumnDefinition[] = [];
   protected selectedStartField: string;
   protected selectedEndField: string;
+  protected records = [];
   protected events = signal<EventInput[]>([]);
 
   constructor() {
@@ -42,17 +51,36 @@ export class CalendarViewComponent extends ViewBaseComponent {
 
   protected override onSchemaLoaded(columnDefs: ColumnDefinition[]) {
     this.fields = columnDefs.map((c) => this.tblService.buildField(c));
-    this.dateColumns = columnDefs.filter((c) => c.dataType === DataType.AutoDate || c.dataType === DataType.Date);
+    this.dateColumns = columnDefs.filter(
+      (c) => c.dataType === DataType.AutoDate || c.dataType === DataType.Date,
+    );
   }
 
   protected override onRecordsLoaded(records: any[]) {
+    this.records = records;
     this.events.set(
       records.map((record) => ({
-        title: record.id,
+        id: record.id,
+        title: getRecordDisplayLabel(record),
         start: record[this.selectedStartField],
         end: record[this.selectedEndField],
-      }))
+      })),
     );
+  }
+
+  protected onDateClick(e) {
+    this.addNewRecord(e.date);
+  }
+
+  protected onEventClick(e) {
+    this.onUpdateRecord.emit({
+      record: {
+        table: this.tblService.selectedTable(),
+        fields: this.fields,
+        data: this.records.find((r) => r.id === e.event.id),
+      },
+      mode: 'edit',
+    });
   }
 
   protected onChangeDateRange([start, end]: [Dayjs, Dayjs]) {
@@ -66,12 +94,15 @@ export class CalendarViewComponent extends ViewBaseComponent {
     this.loadTableDataInRange(startOfMonth, endOfMonth);
   }
 
-  protected addNewRecord() {
+  protected addNewRecord(date?: Dayjs) {
     this.onUpdateRecord.emit({
       record: {
         table: this.tblService.selectedTable(),
         fields: this.fields,
-        data: {},
+        data: {
+          [this.selectedStartField]: date,
+          [this.selectedEndField]: date,
+        },
       },
       mode: 'add',
     });
@@ -82,12 +113,9 @@ export class CalendarViewComponent extends ViewBaseComponent {
       return;
     }
 
-    this.loadTableData(
-      this.tblService.selectedTable(),
-      {
-        [this.selectedStartField]: start,
-        [this.selectedEndField]: end,
-      }
-    );
+    this.loadTableData(this.tblService.selectedTable(), {
+      [this.selectedStartField]: start,
+      [this.selectedEndField]: end,
+    });
   }
 }
