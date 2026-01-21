@@ -90,7 +90,7 @@ export class TableDetailComponent {
   constructor() {
     effect(() => {
       this.tblService.selectedTable();
-      this.displayMode.set('calendar-view');
+      this.displayMode.set('data-view');
     });
   }
 

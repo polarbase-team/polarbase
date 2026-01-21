@@ -68,7 +68,7 @@ export class CalendarComponent {
   ];
 
   getCurrentDate() {
-    return this.fullCalendar().getApi().getDate();
+    return this.fullCalendar().getApi()?.getDate();
   }
 
   reset() {
@@ -78,22 +78,22 @@ export class CalendarComponent {
 
   protected changeView(view: string) {
     this.view = view;
-    this.fullCalendar().getApi().changeView(view);
+    this.fullCalendar().getApi()?.changeView(view);
     this.onChangeView.emit(view);
   }
 
   protected today() {
-    this.fullCalendar().getApi().today();
+    this.fullCalendar().getApi()?.today();
     this.emitCurrentMonthDateRange();
   }
 
   protected next() {
-    this.fullCalendar().getApi().next();
+    this.fullCalendar().getApi()?.next();
     this.emitCurrentMonthDateRange();
   }
 
   protected prev() {
-    this.fullCalendar().getApi().prev();
+    this.fullCalendar().getApi()?.prev();
     this.emitCurrentMonthDateRange();
   }
 
