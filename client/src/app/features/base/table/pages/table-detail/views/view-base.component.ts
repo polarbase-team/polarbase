@@ -1,4 +1,4 @@
-import { Directive, DestroyRef, effect, output, signal, inject } from '@angular/core';
+import { Directive, DestroyRef, output, signal, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, finalize } from 'rxjs';
 
@@ -35,6 +35,10 @@ export class ViewBaseComponent {
       });
   }
 
+  reset() {
+    this.isLoading.set(false);
+  }
+
   onColumnSave(
     savedColumn: ColumnDefinition,
     mode: UpdatedColumnMode,
@@ -59,7 +63,7 @@ export class ViewBaseComponent {
   }
 
   protected loadTableSchema(table: TableDefinition) {
-    return new Promise((resolve, reject) => { 
+    return new Promise((resolve, reject) => {
       this.isLoading.set(true);
       this.tblService
         .getTableSchema(table.tableName)
@@ -75,24 +79,24 @@ export class ViewBaseComponent {
           error: (error) => {
             reject(error);
           },
-      });
+        });
     });
   }
 
   protected loadTableData(table: TableDefinition, filter?: Record<string, any>) {
     return new Promise((resolve, reject) => {
       this.tblService
-      .getRecords(table.tableName, filter)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (records) => {
-          this.onRecordsLoaded(records);
-          resolve(records);
-        },
-        error: (error) => {
-          reject(error);
-        },
-      });
+        .getRecords(table.tableName, filter)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (records) => {
+            this.onRecordsLoaded(records);
+            resolve(records);
+          },
+          error: (error) => {
+            reject(error);
+          },
+        });
     });
   }
 }

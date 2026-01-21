@@ -12,8 +12,10 @@ import { getRecordDisplayLabel } from '@app/core/utils';
 import { CalendarComponent } from '@app/shared/calendar/calendar.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
+import { TableRealtimeMessage } from '@app/features/base/table/services/table-realtime.service';
 import { ColumnDefinition } from '../../../../services/table.service';
 import { ViewBaseComponent } from '../view-base.component';
+import { UpdatedRecordMode } from '../../table-detail.component';
 
 @Component({
   selector: 'calendar-view',
@@ -33,10 +35,11 @@ export class CalendarViewComponent extends ViewBaseComponent {
 
   protected fields: Field[] = [];
   protected dateColumns: ColumnDefinition[] = [];
-  protected records = [];
   protected events = signal<EventInput[]>([]);
   protected selectedStartField: string;
   protected selectedEndField: string;
+
+  private records = [];
 
   constructor() {
     super();
@@ -45,17 +48,50 @@ export class CalendarViewComponent extends ViewBaseComponent {
       const selectedTable = this.tblService.selectedTable();
       if (!selectedTable) return;
 
-      this.fields = [];
-      this.dateColumns = [];
-      this.records = [];
-      this.events.set([]);
-      this.selectedStartField = undefined;
-      this.selectedEndField = undefined;
-
-      this.calendar().reset();
-
+      this.reset();
       this.loadTableSchema(selectedTable);
     });
+  }
+
+  override reset() {
+    super.reset();
+
+    this.fields = [];
+    this.dateColumns = [];
+    this.events.set([]);
+    this.selectedStartField = undefined;
+    this.selectedEndField = undefined;
+    this.records = [];
+
+    this.calendar().reset();
+  }
+
+  override onRecordSave(
+    savedRecord: Record<string, any>,
+    mode: UpdatedRecordMode,
+    currentRecord?: Record<string, any>,
+  ): void {
+    if (mode === 'add') {
+      this.records.push(savedRecord);
+      this.events.update((events) => [
+        ...events,
+        {
+          id: savedRecord['id'],
+          title: getRecordDisplayLabel(savedRecord),
+          start: savedRecord[this.selectedStartField],
+          end: savedRecord[this.selectedEndField],
+        },
+      ]);
+    } else if (mode === 'edit') {
+      const index = this.records.findIndex((r) => r.id === currentRecord['id']);
+      this.records[index] = savedRecord;
+      this.events.update((events) => {
+        const event = events.find((e) => e.id === currentRecord['id']);
+        event.start = savedRecord[this.selectedStartField];
+        event.end = savedRecord[this.selectedEndField];
+        return [...events];
+      });
+    }
   }
 
   protected override onSchemaLoaded(columnDefs: ColumnDefinition[]) {
@@ -75,6 +111,49 @@ export class CalendarViewComponent extends ViewBaseComponent {
         end: record[this.selectedEndField],
       })),
     );
+  }
+
+  protected override onDataUpdated(message: TableRealtimeMessage) {
+    const { action, record } = message;
+    switch (action) {
+      case 'insert': {
+        const index = this.records.findIndex((r) => r.id === record.new['id']);
+        if (index !== -1) return;
+
+        this.records.push(record.new);
+        this.events.update((events) => [
+          ...events,
+          {
+            id: record.new['id'],
+            title: getRecordDisplayLabel(record.new),
+            start: record.new[this.selectedStartField],
+            end: record.new[this.selectedEndField],
+          },
+        ]);
+        break;
+      }
+      case 'update': {
+        const index = this.records.findIndex((r) => r.id === record.new['id']);
+        if (index === -1) return;
+
+        this.records[index] = record.new;
+        this.events.update((events) => {
+          const event = events.find((e) => e.id === record.new['id']);
+          event.start = record.new[this.selectedStartField];
+          event.end = record.new[this.selectedEndField];
+          return [...events];
+        });
+        break;
+      }
+      case 'delete': {
+        const index = this.records.findIndex((r) => r.id === record.new['id']);
+        if (index === -1) return;
+
+        this.records.splice(index, 1);
+        this.events.update((events) => events.filter((e) => e.id !== record.new['id']));
+        break;
+      }
+    }
   }
 
   protected onDateClick(e) {

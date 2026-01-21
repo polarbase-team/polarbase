@@ -30,7 +30,7 @@ import {
   TableColumnActionType,
 } from '@app/shared/spreadsheet/events/table-column';
 import { ReferenceViewDetailEvent } from '@app/shared/spreadsheet/components/field-cell/reference/cell.component';
-import { ColumnDefinition, TableDefinition } from '../../../../services/table.service';
+import { ColumnDefinition } from '../../../../services/table.service';
 import { TableRealtimeMessage } from '../../../../services/table-realtime.service';
 import type { UpdatedColumnMode, UpdatedRecordMode } from '../../table-detail.component';
 import { ViewBaseComponent } from '../view-base.component';
@@ -76,8 +76,16 @@ export class DataViewComponent extends ViewBaseComponent {
       const selectedTable = this.tblService.selectedTable();
       if (!selectedTable) return;
 
+      this.reset();
       this.loadTable(selectedTable);
     });
+  }
+
+  override reset() {
+    super.reset();
+
+    this.rows.set(null);
+    this.columns.set(null);
   }
 
   override onColumnSave(
@@ -144,12 +152,6 @@ export class DataViewComponent extends ViewBaseComponent {
     }
   }
 
-  protected override async loadTable(table: TableDefinition) {
-    this.columns.set(null);
-    this.rows.set(null);
-    await super.loadTable(table);
-  }
-
   protected override onSchemaLoaded(columnDefs: ColumnDefinition[]) {
     this.columns.set(null);
 
@@ -199,24 +201,30 @@ export class DataViewComponent extends ViewBaseComponent {
     const { action, record } = message;
     switch (action) {
       case 'insert': {
-        const recordPk = record.new['id'];
-        if (this.rows().find((row) => row.id === recordPk)) return;
+        const index = this.rows().findIndex((row) => row.id === record.new['id']);
+        if (index !== -1) return;
 
-        this.spreadsheet().setRows([...this.rows(), { id: recordPk, data: record.new }]);
+        const rows = [...this.rows()];
+        rows.push({ id: record.new['id'], data: record.new });
+        this.spreadsheet().setRows(rows);
         break;
       }
       case 'update': {
-        const recordPk = record.new['id'];
-        this.spreadsheet().setRows(
-          this.rows().map((row) =>
-            row.id === recordPk ? { ...row, data: { ...row.data, ...record.new } } : row,
-          ),
-        );
+        const index = this.rows().findIndex((row) => row.id === record.new['id']);
+        if (index === -1) return;
+
+        const rows = [...this.rows()];
+        rows[index] = { ...rows[index], data: { ...rows[index].data, ...record.new } };
+        this.spreadsheet().setRows(rows);
         break;
       }
       case 'delete': {
-        const recordPk = record.key['id'];
-        this.spreadsheet().setRows(this.rows().filter((row) => row.id !== recordPk));
+        const index = this.rows().findIndex((row) => row.id === record.key['id']);
+        if (index === -1) return;
+
+        const rows = [...this.rows()];
+        rows.splice(index, 1);
+        this.spreadsheet().setRows(rows);
         break;
       }
     }
