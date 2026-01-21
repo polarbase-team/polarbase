@@ -33,10 +33,10 @@ export class CalendarViewComponent extends ViewBaseComponent {
 
   protected fields: Field[] = [];
   protected dateColumns: ColumnDefinition[] = [];
-  protected selectedStartField: string;
-  protected selectedEndField: string;
   protected records = [];
   protected events = signal<EventInput[]>([]);
+  protected selectedStartField: string;
+  protected selectedEndField: string;
 
   constructor() {
     super();
@@ -44,6 +44,15 @@ export class CalendarViewComponent extends ViewBaseComponent {
     effect(() => {
       const selectedTable = this.tblService.selectedTable();
       if (!selectedTable) return;
+
+      this.fields = [];
+      this.dateColumns = [];
+      this.records = [];
+      this.events.set([]);
+      this.selectedStartField = undefined;
+      this.selectedEndField = undefined;
+
+      this.calendar().reset();
 
       this.loadTableSchema(selectedTable);
     });

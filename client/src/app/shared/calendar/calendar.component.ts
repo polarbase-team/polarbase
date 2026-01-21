@@ -71,9 +71,15 @@ export class CalendarComponent {
     return this.fullCalendar().getApi().getDate();
   }
 
-  protected changeView(mode: string) {
-    this.fullCalendar().getApi().changeView(mode);
-    this.onChangeView.emit(mode);
+  reset() {
+    this.changeView('dayGridMonth');
+    this.today();
+  }
+
+  protected changeView(view: string) {
+    this.view = view;
+    this.fullCalendar().getApi().changeView(view);
+    this.onChangeView.emit(view);
   }
 
   protected today() {
