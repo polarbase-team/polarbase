@@ -7,9 +7,9 @@ import { TextareaModule } from 'primeng/textarea';
 import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
-import { LongTextField } from '@app/shared/field-system/models/long-text/field.object';
-import { LongTextData } from '@app/shared/field-system/models/long-text/field.interface';
 import { RichTextEditorDrawerComponent } from '@app/shared/rich-text-editor/rich-text-editor-drawer.component';
+import { LongTextField } from '../../models/long-text/field.object';
+import { LongTextData } from '../../models/long-text/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 
 @Component({

@@ -8,11 +8,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
-import {
-  parseReferenceData,
-  ReferenceField,
-} from '@app/shared/field-system/models/reference/field.object';
-import { ReferenceData } from '@app/shared/field-system/models/reference/field.interface';
+import { parseReferenceData, ReferenceField } from '../../models/reference/field.object';
+import { ReferenceData } from '../../models/reference/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 import {
   ReferencePickedEvent,

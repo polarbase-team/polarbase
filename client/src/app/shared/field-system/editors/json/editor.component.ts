@@ -9,9 +9,9 @@ import { TextareaModule } from 'primeng/textarea';
 import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
-import { JSONField } from '@app/shared/field-system/models/json/field.object';
-import { JSONData } from '@app/shared/field-system/models/json/field.interface';
 import { JSONEditorDrawerComponent } from '@app/shared/json-editor/json-editor-drawer.component';
+import { JSONField } from '../../models/json/field.object';
+import { JSONData } from '../../models/json/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 
 @Component({

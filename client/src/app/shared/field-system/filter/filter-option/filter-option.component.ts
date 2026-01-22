@@ -4,8 +4,8 @@ import { PopoverModule } from 'primeng/popover';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 
-import { DataType } from '@app/shared/field-system/models/field.interface';
-import { Field } from '@app/shared/field-system/models/field.object';
+import { DataType } from '../../models/field.interface';
+import { Field } from '../../models/field.object';
 import { Conjunction, FilterGroup, FilterRule, FilterType } from '../models';
 import { FilterService } from '../filter.service';
 import { FilterGroupComponent } from '../filter-group/filter-group.component';
