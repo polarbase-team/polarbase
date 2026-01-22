@@ -1,41 +1,7 @@
-<p-popover #popover>
-  <div class="w-2xl max-w-2xl">
-    <!-- Body -->
-    <div class="overflow-y-auto max-h-150">
-      <filter-group [(group)]="query" [fields]="fields()" />
-    </div>
-
-    <p-divider />
-
-    <!-- Footer -->
-    <div class="flex items-center justify-between">
-      <div class="flex justify-end gap-2 flex-1">
-        <p-button
-          label="Reset"
-          severity="secondary"
-          [text]="true"
-          (click)="reset(); popover.hide()"
-        />
-        <p-button
-          label="Apply changes"
-          [disabled]="!query().children.length"
-          (click)="applyChanges(); popover.hide()"
-        />
-      </div>
-    </div>
-  </div>
-</p-popover>
-
-<p-button
-  [label]="
-    query().children.length === 1
-      ? `Filtered by 1 rule`
-      : query().children.length > 1
-        ? `Filtered by ${query().children.length} rules`
-        : 'Filter'
-  "
-  icon="icon icon-list-filter"
-  [variant]="query().children.length ? 'outlined' : 'text'"
-  [severity]="query().children.length ? 'success' : 'secondary'"
-  (click)="popover.show($event)"
+<filter-option
+  [query]="query()"
+  [fields]="fields()"
+  [items]="rows()"
+  itemValue="data"
+  (onFilter)="onFilter.emit($event)"
 />

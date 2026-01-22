@@ -43,18 +43,6 @@
         <ng-container *ngTemplateOutlet="toolbarTmpl()"></ng-container>
       </div>
       <div class="flex flex-wrap gap-2 flex-1 justify-end min-w-[400px]">
-        @if ($any(tableService.config().toolbar).customize) {
-          <column-view-options
-            [sourceColumns]="sourceColumns()"
-            [visibleColumns]="tableColumnService.columns()"
-            (onToggle)="
-              $event.hidden
-                ? tableColumnService.hideColumn($event.column)
-                : tableColumnService.showColumn($event.column)
-            "
-            (onMove)="tableColumnService.moveColumn($event.column, $event.newIndex)"
-          />
-        }
         @if ($any(tableService.config().toolbar).filter) {
           <data-filter-options
             [columns]="sourceColumns()"
@@ -77,6 +65,18 @@
             [sourceColumns]="sourceColumns()"
             [currentColumns]="tableColumnService.sortedColumns()"
             (onApply)="tableService.onApplySort($event)"
+          />
+        }
+        @if ($any(tableService.config().toolbar).customize) {
+          <column-view-options
+            [sourceColumns]="sourceColumns()"
+            [visibleColumns]="tableColumnService.columns()"
+            (onToggle)="
+              $event.hidden
+                ? tableColumnService.hideColumn($event.column)
+                : tableColumnService.showColumn($event.column)
+            "
+            (onMove)="tableColumnService.moveColumn($event.column, $event.newIndex)"
           />
         }
         @if ($any(tableService.config().toolbar).rowSize) {

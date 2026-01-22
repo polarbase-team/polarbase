@@ -1,7 +1,7 @@
 <p-popover #popover appendTo="body">
   <div class="flex gap-2">
     <div class="flex flex-col gap-1">
-      <label for="startField" class="text-sm">Start Date Field</label>
+      <label for="startField" class="text-sm">Start Date</label>
       <p-select
         id="startField"
         [options]="dateColumns"
@@ -9,11 +9,12 @@
         optionValue="name"
         placeholder="Select here..."
         [(ngModel)]="selectedStartField"
+        [checkmark]="true"
         class="w-3xs"
-      ></p-select>
+      />
     </div>
     <div class="flex flex-col gap-1">
-      <label for="endField" class="text-sm">End Date Field</label>
+      <label for="endField" class="text-sm">End Date</label>
       <p-select
         id="endField"
         [options]="dateColumns"
@@ -21,8 +22,9 @@
         optionValue="name"
         placeholder="Select here..."
         [(ngModel)]="selectedEndField"
+        [checkmark]="true"
         class="w-3xs"
-      ></p-select>
+      />
     </div>
   </div>
 
@@ -32,7 +34,7 @@
     <p-button
       label="Apply changes"
       [disabled]="!selectedStartField || !selectedEndField"
-      (click)="applyChanges(); popover.hide()"
+      (click)="onChangeDateRange(); popover.hide()"
     />
   </div>
 </p-popover>
@@ -48,23 +50,19 @@
     <ng-content></ng-content>
     <div class="flex flex-wrap gap-2">
       <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
-      <p-button
-        label="Choose fields"
-        icon="icon icon-calendar"
-        severity="secondary"
-        [text]="true"
-        (click)="popover.show($event)"
-      >
+      <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
         <ng-template pTemplate="content">
+          <i class="icon icon-calendar"></i>
           <span class="p-button-label truncate max-w-3xs">
             {{
               selectedStartField && selectedEndField
                 ? selectedStartField + ' - ' + selectedEndField
-                : 'Choose fields'
+                : 'Select date fields'
             }}
           </span>
         </ng-template>
       </p-button>
+      <filter-option [fields]="fields" [items]="records" (onFilter)="onRecordsFiltered($event)" />
     </div>
   </ng-template>
 </calendar>

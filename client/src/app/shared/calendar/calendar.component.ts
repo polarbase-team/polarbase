@@ -26,6 +26,17 @@ export const CalendarView = {
 } as const;
 export type CalendarView = (typeof CalendarView)[keyof typeof CalendarView];
 
+export interface CalendarEvent extends EventInput {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+}
+
+export interface CalendarDateClickArg extends DateClickArg {}
+
+export interface CalendarEventClickArg extends EventClickArg {}
+
 @Component({
   selector: 'calendar',
   templateUrl: './calendar.component.html',
@@ -44,18 +55,23 @@ export class CalendarComponent {
   toolbarTmpl = contentChild<TemplateRef<any>>('toolbar');
   fullCalendar = viewChild<FullCalendarComponent>('fullCalendar');
 
-  events = input<EventInput[]>();
+  events = input<CalendarEvent[]>();
 
   onChangeView = output<string>();
   onChangeDateRange = output<[Dayjs, Dayjs]>();
-  onDateClick = output<DateClickArg>();
-  onEventClick = output<EventClickArg>();
+  onDateClick = output<CalendarDateClickArg>();
+  onEventClick = output<CalendarEventClickArg>();
 
   protected readonly CV = CalendarView;
   protected calendarOptions: CalendarOptions = {
     headerToolbar: false,
     plugins: [dayGridPlugin, interactionPlugin],
     initialView: CalendarView.MONTH,
+    eventTimeFormat: {
+      hour: 'numeric',
+      minute: '2-digit',
+      meridiem: 'short',
+    },
     dateClick: (arg) => this.onDateClick.emit(arg),
     eventClick: (arg) => this.onEventClick.emit(arg),
   };

@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, effect, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { EventInput } from '@fullcalendar/core';
 import dayjs, { Dayjs } from 'dayjs';
 
 import { ButtonModule } from 'primeng/button';
@@ -9,9 +8,15 @@ import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
-import { CalendarComponent } from '@app/shared/calendar/calendar.component';
+import {
+  CalendarComponent,
+  CalendarDateClickArg,
+  CalendarEvent,
+  CalendarEventClickArg,
+} from '@app/shared/calendar/calendar.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
+import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { TableRealtimeMessage } from '@app/features/base/table/services/table-realtime.service';
 import { ColumnDefinition } from '../../../../services/table.service';
 import { ViewBaseComponent } from '../view-base.component';
@@ -28,18 +33,18 @@ import { UpdatedRecordMode } from '../../table-detail.component';
     SelectModule,
     DividerModule,
     CalendarComponent,
+    FilterOptionComponent,
   ],
 })
 export class CalendarViewComponent extends ViewBaseComponent {
   calendar = viewChild<CalendarComponent>('calendar');
 
   protected fields: Field[] = [];
+  protected records = [];
   protected dateColumns: ColumnDefinition[] = [];
-  protected events = signal<EventInput[]>([]);
+  protected events = signal<CalendarEvent[]>([]);
   protected selectedStartField: string;
   protected selectedEndField: string;
-
-  private records = [];
 
   constructor() {
     super();
@@ -113,6 +118,17 @@ export class CalendarViewComponent extends ViewBaseComponent {
     );
   }
 
+  protected onRecordsFiltered(records: any[]) {
+    this.events.set(
+      records.map((record) => ({
+        id: record.id,
+        title: getRecordDisplayLabel(record),
+        start: record[this.selectedStartField],
+        end: record[this.selectedEndField],
+      })),
+    );
+  }
+
   protected override onDataUpdated(message: TableRealtimeMessage) {
     const { action, record } = message;
     switch (action) {
@@ -156,11 +172,11 @@ export class CalendarViewComponent extends ViewBaseComponent {
     }
   }
 
-  protected onDateClick(e) {
-    this.addNewRecord(e.date);
+  protected onDateClick(e: CalendarDateClickArg) {
+    this.addNewRecord(dayjs(e.date));
   }
 
-  protected onEventClick(e) {
+  protected onEventClick(e: CalendarEventClickArg) {
     this.onUpdateRecord.emit({
       record: {
         table: this.tblService.selectedTable(),
@@ -171,15 +187,20 @@ export class CalendarViewComponent extends ViewBaseComponent {
     });
   }
 
-  protected onChangeDateRange([start, end]: [Dayjs, Dayjs]) {
-    this.loadTableDataInRange(start, end);
-  }
+  protected onChangeDateRange(range?: [Dayjs, Dayjs]) {
+    let start: Dayjs;
+    let end: Dayjs;
 
-  protected applyChanges() {
-    const currentDate = this.calendar().getCurrentDate();
-    const startOfMonth = dayjs(currentDate).startOf('month');
-    const endOfMonth = dayjs(currentDate).endOf('month');
-    this.loadTableDataInRange(startOfMonth, endOfMonth);
+    if (range) {
+      start = range[0];
+      end = range[1];
+    } else {
+      const currentDate = this.calendar().getCurrentDate();
+      start = dayjs(currentDate).startOf('month');
+      end = dayjs(currentDate).endOf('month');
+    }
+
+    this.loadTableDataInRange(start, end);
   }
 
   protected addNewRecord(date?: Dayjs) {
