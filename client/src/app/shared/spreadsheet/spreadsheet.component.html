@@ -753,6 +753,7 @@
                 <ng-container
                   *virtualScrollColumnRepeater="
                     virtualScroll.viewport.rightWrapper.columns;
+                    cacheSize: 0;
                     let column;
                     let columnIndex = index;
                     let columnRect = rect
@@ -814,6 +815,7 @@
               <ng-container
                 *virtualScrollColumnRepeater="
                   virtualScroll.viewport.rightWrapper.columns;
+                  cacheSize: 0;
                   startIndex: tableService.frozenCount() + 1;
                   let column;
                   let columnIndex = index;
