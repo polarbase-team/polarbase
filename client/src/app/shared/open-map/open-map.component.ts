@@ -101,7 +101,7 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
 
   protected searchAddress(event: AutoCompleteCompleteEvent) {
     const query = event.query;
-    const email = 'qui.nguyen@polarbase.io';
+    const email = environment.openStreetMap.email;
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&email=${email}`;
 
     this.http
@@ -123,11 +123,16 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
 
   private initMap() {
     this.map = L.map(this.container().nativeElement).setView(
-      environment ? [environment.defaultLocation[0], environment.defaultLocation[1]] : [0, 0],
-      13,
+      environment.openStreetMap.defaultLocation
+        ? [
+            environment.openStreetMap.defaultLocation[0],
+            environment.openStreetMap.defaultLocation[1],
+          ]
+        : [0, 0],
+      this.zoom(),
     );
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
+    L.tileLayer(environment.openStreetMap.url, {
+      attribution: environment.openStreetMap.attribution,
     }).addTo(this.map);
 
     this.map.on('click', (e: L.LeafletMouseEvent) => {
