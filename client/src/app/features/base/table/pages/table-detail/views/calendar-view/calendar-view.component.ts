@@ -218,9 +218,22 @@ export class CalendarViewComponent extends ViewBaseComponent {
       return;
     }
 
-    this.loadTableData(this.tblService.selectedTable(), {
-      [this.selectedStartField]: start,
-      [this.selectedEndField]: end,
-    });
+    const filter = {};
+
+    if (this.selectedStartField === this.selectedEndField) {
+      filter[this.selectedStartField] = {
+        gte: start,
+        lte: end,
+      };
+    } else {
+      filter[this.selectedStartField] = {
+        gte: start,
+      };
+      filter[this.selectedEndField] = {
+        lte: end,
+      };
+    }
+
+    this.loadTableData(this.tblService.selectedTable(), filter);
   }
 }
