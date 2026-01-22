@@ -147,10 +147,12 @@ export class TableService {
     return this.http.delete(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`);
   }
 
-  getRecords(tableName: string): Observable<Record<string, any>[]> {
-    return this.http
-      .get(`${this.apiUrl}/${tableName}?expand=all`)
-      .pipe(map((res) => res['data']['rows']));
+  getRecords(tableName: string, filter?: Record<string, any>): Observable<Record<string, any>[]> {
+    let url = `${this.apiUrl}/${tableName}?expand=all`;
+    if (filter) {
+      url += `&filter=${JSON.stringify(filter)}`;
+    }
+    return this.http.get(url).pipe(map((res) => res['data'].rows));
   }
 
   getRecord(tableName: string, recordId: number | string): Observable<Record<string, any>[]> {

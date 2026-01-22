@@ -6,8 +6,8 @@ import { SelectModule } from 'primeng/select';
 import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
-import { SelectField } from '@app/shared/field-system/models/select/field.object';
-import { SelectData } from '@app/shared/field-system/models/select/field.interface';
+import { SelectField } from '../../models/select/field.object';
+import { SelectData } from '../../models/select/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 
 @Component({

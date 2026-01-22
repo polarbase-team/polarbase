@@ -1,0 +1,46 @@
+<div class="px-[20px] py-[16px]">
+  <div class="flex flex-wrap justify-between gap-2">
+    <div class="flex">
+      <div class="flex items-start">
+        <ng-container *ngTemplateOutlet="toolbarTmpl()"></ng-container>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-y-2">
+      <div class="flex items-center">
+        <p>
+          @switch (view) {
+            @case (CV.MONTH) {
+              {{ fullCalendar.getApi()?.getDate() | date: 'MMM, y' }}
+            }
+            @case (CV.WEEK) {
+              {{ fullCalendar.getApi()?.getDate() | date: 'E, MMM d, y' }}
+            }
+            @case (CV.DAY) {
+              {{ fullCalendar.getApi()?.getDate() | date: 'MMM d, y' }}
+            }
+          }
+        </p>
+        <p-divider layout="vertical" class="scale-80" />
+      </div>
+      <div class="flex">
+        <p-selectbutton
+          [options]="viewOptions"
+          [allowEmpty]="false"
+          [(ngModel)]="view"
+          (ngModelChange)="changeView($event)"
+          optionLabel="label"
+          optionValue="value"
+        />
+        <p-divider layout="vertical" class="scale-80" />
+      </div>
+      <div class="flex gap-2">
+        <p-button label="Today" severity="secondary" (click)="today()" />
+        <p-button icon="icon icon-chevron-left" severity="secondary" (click)="prev()" />
+        <p-button icon="icon icon-chevron-right" severity="secondary" (click)="next()" />
+      </div>
+    </div>
+  </div>
+</div>
+<div class="px-[20px] pb-[16px]">
+  <full-calendar #fullCalendar [options]="calendarOptions" [events]="events()" />
+</div>

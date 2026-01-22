@@ -175,7 +175,7 @@ export class SpreadsheetComponent
   rowAction = output<TableRowAction>();
   cellAction = output<TableCellAction>();
 
-  toolbarTemplate = contentChild<TemplateRef<any>>('toolbar');
+  toolbarTmpl = contentChild<TemplateRef<any>>('toolbar');
 
   @ViewChild('menu', { static: true }) menu: Menu;
   @ViewChild('contextMenu', { static: true }) contextMenu: ContextMenu;

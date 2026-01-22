@@ -10,17 +10,14 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { DrawerComponent, usingModules } from '@app/core/components/drawer.component';
-import { DataType } from '@app/shared/field-system/models/field.interface';
-import { ReferenceData } from '@app/shared/field-system/models/reference/field.interface';
-import {
-  getReferenceDisplayLabel,
-  ReferenceField,
-} from '@app/shared/field-system/models/reference/field.object';
 import { TableRowAction, TableRowActionType } from '@app/shared/spreadsheet/events/table-row';
 import { TableConfig } from '@app/shared/spreadsheet/models/table';
 import { TableColumn } from '@app/shared/spreadsheet/models/table-column';
 import { TableRow } from '@app/shared/spreadsheet/models/table-row';
 import { SpreadsheetComponent } from '@app/shared/spreadsheet/spreadsheet.component';
+import { DataType } from '../../../models/field.interface';
+import { ReferenceData } from '../../../models/reference/field.interface';
+import { getReferenceDisplayLabel, ReferenceField } from '../../../models/reference/field.object';
 
 export interface ReferencePickedEvent {
   value: string | number;

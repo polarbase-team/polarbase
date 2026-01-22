@@ -203,11 +203,11 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
 
       let cmp = this.fieldCellService.get(dataType);
       if (cmp) {
-        this.vcRef.insert(cmp.hostView);
+        this.vcRef.insert(cmp.hostView, 0);
       } else {
         // Dynamically load the component class
         const componentClass = await loader();
-        cmp = this.vcRef.createComponent(componentClass);
+        cmp = this.vcRef.createComponent(componentClass, { index: 0 });
       }
       this.cmpRef = cmp;
 
@@ -227,7 +227,7 @@ export class FieldCellFactoryDirective implements OnChanges, OnDestroy {
    */
   private storeCmp() {
     if (!this.cmpRef || this.cmpRef.hostView.destroyed) return;
-    this.fieldCellService.set(this.dataType, this.cmpRef);
+    this.fieldCellService.set(this.cmpRef.instance.field.dataType, this.cmpRef);
   }
 
   /**

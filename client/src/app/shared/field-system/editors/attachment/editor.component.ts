@@ -5,8 +5,8 @@ import {
   FileUploaderComponent,
   FileMetadata,
 } from '@app/shared/file/file-uploader/file-uploader.component';
-import { AttachmentField } from '@app/shared/field-system/models/attachment/field.object';
-import { AttachmentData } from '@app/shared/field-system/models/attachment/field.interface';
+import { AttachmentField } from '../../models/attachment/field.object';
+import { AttachmentData } from '../../models/attachment/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 
 @Component({

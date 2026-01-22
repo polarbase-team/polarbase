@@ -7,14 +7,11 @@ import { KeyFilterModule } from 'primeng/keyfilter';
 import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
-import { GeoPointField } from '@app/shared/field-system/models/geo-point/field.object';
-import {
-  GeoPointData,
-  GeoPointPattern,
-} from '@app/shared/field-system/models/geo-point/field.interface';
-import { PointFormatPipe } from '@app/shared/field-system/pipes/point-format.pipe';
-import { FieldEditorComponent } from '../editor.component';
 import { convertToHtmlPattern } from '@app/core/utils';
+import { GeoPointField } from '../../models/geo-point/field.object';
+import { GeoPointData, GeoPointPattern } from '../../models/geo-point/field.interface';
+import { PointFormatPipe } from '../../pipes/point-format.pipe';
+import { FieldEditorComponent } from '../editor.component';
 
 @Component({
   selector: 'geo-point-field-editor',

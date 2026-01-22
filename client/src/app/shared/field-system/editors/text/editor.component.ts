@@ -6,8 +6,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
-import { TextField } from '@app/shared/field-system/models/text/field.object';
-import { TextData } from '@app/shared/field-system/models/text/field.interface';
+import { TextField } from '../../models/text/field.object';
+import { TextData } from '../../models/text/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 
 @Component({
