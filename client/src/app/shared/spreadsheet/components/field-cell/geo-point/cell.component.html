@@ -2,7 +2,7 @@
   <div class="flex items-start justify-between w-full gap-1">
     @if (data !== undefined && data !== null) {
       <div class="field-cell__text-content">
-        {{ pointStr }}
+        {{ data | pointFormat }}
       </div>
     }
     @if (selecting) {
@@ -24,7 +24,7 @@
 } @else {
   <input-box
     type="text"
-    [content]="pointStr"
+    [content]="data | pointFormat"
     (edited)="onInputBoxEdited($event)"
     (input)="onInputBoxInput($event)"
     (focus)="onInputBoxFocus($event)"

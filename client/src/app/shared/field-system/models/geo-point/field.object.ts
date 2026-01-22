@@ -9,7 +9,7 @@ export const formatPoint = (data: GeoPointData) => {
     return `${data.x}, ${data.y}`;
   }
 
-  return data as string;
+  return (data as string).replace(/\(|\)/g, '');
 };
 
 export class GeoPointField extends Field<GeoPointData> {
