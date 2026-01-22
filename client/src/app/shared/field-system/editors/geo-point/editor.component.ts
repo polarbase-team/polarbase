@@ -7,9 +7,8 @@ import { KeyFilterModule } from 'primeng/keyfilter';
 import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
-import { convertToHtmlPattern } from '@app/core/utils';
 import { GeoPointField } from '../../models/geo-point/field.object';
-import { GeoPointData, GeoPointPattern } from '../../models/geo-point/field.interface';
+import { GeoPointData } from '../../models/geo-point/field.interface';
 import { PointFormatPipe } from '../../pipes/point-format.pipe';
 import { FieldEditorComponent } from '../editor.component';
 
@@ -31,6 +30,5 @@ export class GeoPointFieldEditorComponent extends FieldEditorComponent<
   GeoPointField,
   GeoPointData
 > {
-  protected readonly geoPattern = convertToHtmlPattern(GeoPointPattern);
   protected readonly geoRegex: RegExp = /[0-9.,\s\-\(\)]/;
 }

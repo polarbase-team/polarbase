@@ -26,7 +26,7 @@ export class MapPickerComponent {
   location = model<Location>();
   viewOnly = input(false);
 
-  locations = computed(() => [this.location()]);
+  locations = computed(() => (this.location() ? [this.location()] : []));
 
   protected onMapClick(location: Location) {
     if (this.viewOnly()) return;

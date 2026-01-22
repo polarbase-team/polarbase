@@ -2,14 +2,14 @@
   <div class="flex items-start justify-between w-full gap-1">
     @if (data !== undefined && data !== null) {
       <div class="field-cell__text-content">
-        {{ data | pointFormat }}
+        {{ pointStr }}
       </div>
     }
     @if (selecting) {
       <map-picker-drawer
         [(visible)]="visibleMapPicker"
         [location]="location"
-        (onSave)="onSaveNewLocation($event)"
+        (onSave)="onLocationSave($event)"
       />
       <div
         class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"

@@ -44,15 +44,6 @@ const parsePgArray = (val: any) => {
     });
 };
 
-const parsePgPoint = (val: any) => {
-  if (val === null) return null;
-  const point = val.replace(/[()]/g, '').split(',');
-  return {
-    x: parseFloat(point[0]),
-    y: parseFloat(point[1]),
-  };
-};
-
 /**
  * Initialize Custom DB Types
  * Includes Email, URL, and Attachment domains.
@@ -94,13 +85,10 @@ export const initDatabaseTypes = async () => {
 
     const result = await pg.raw(`
       SELECT typname, oid FROM pg_type 
-      WHERE typname = '_attachment' OR typname = 'point'
+      WHERE typname = '_attachment'
     `);
 
     result.rows.forEach((row: { typname: string; oid: number }) => {
-      if (row.typname === 'point') {
-        types.setTypeParser(row.oid, parsePgPoint);
-      }
       if (row.typname === '_attachment') {
         types.setTypeParser(row.oid, parsePgArray);
       }
