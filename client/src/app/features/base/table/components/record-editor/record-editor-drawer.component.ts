@@ -29,6 +29,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
+import { DateFormatPipe } from '@app/shared/field-system/pipes/date-format.pipe';
 import { TextFieldEditorComponent } from '@app/shared/field-system/editors/text/editor.component';
 import { LongTextFieldEditorComponent } from '@app/shared/field-system/editors/long-text/editor.component';
 import { IntegerFieldEditorComponent } from '@app/shared/field-system/editors/integer/editor.component';
@@ -61,6 +62,7 @@ import { TableDefinition, TableService } from '../../services/table.service';
     FluidModule,
     InputTextModule,
     ConfirmDialogModule,
+    DateFormatPipe,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
