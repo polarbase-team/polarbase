@@ -7,5 +7,5 @@ export const environment = {
   uploadUrl: '/files/upload',
   dateFormat: 'DD/MM/YYYY',
   dateTimeFormat: 'DD/MM/YYYY HH:mm',
-  defaultLoc: [21.028511, 105.804817], // Hanoi, Vietnam
+  defaultLocation: [21.028511, 105.804817], // Hanoi, Vietnam
 };

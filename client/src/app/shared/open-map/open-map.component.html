@@ -1,0 +1,18 @@
+<div class="flex flex-col gap-4 w-full h-full">
+  <div class="flex flex-wrap justify-between gap-2" [class]="toolbarStyleClass()">
+    <div class="flex">
+      <div class="flex items-start">
+        <ng-container *ngTemplateOutlet="toolbarTmpl()"></ng-container>
+      </div>
+    </div>
+    <p-inputgroup class="w-3xs max-w-3xs">
+      <p-iconfield>
+        <p-inputicon class="icon icon-search !z-2" />
+        <input type="text" pInputText placeholder="Search location" />
+      </p-iconfield>
+    </p-inputgroup>
+  </div>
+  <div class="flex-1" [class]="contentStyleClass()">
+    <div #container style="height: 100%; width: 100%"></div>
+  </div>
+</div>

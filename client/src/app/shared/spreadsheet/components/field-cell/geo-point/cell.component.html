@@ -8,7 +8,7 @@
     @if (selecting) {
       <map-picker-drawer
         [(visible)]="visibleMapPicker"
-        [loc]="loc"
+        [location]="location"
         (onSave)="onSaveNewLocation($event)"
       />
       <div

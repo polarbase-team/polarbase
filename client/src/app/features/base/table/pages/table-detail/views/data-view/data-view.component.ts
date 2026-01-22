@@ -93,43 +93,36 @@ export class DataViewComponent extends ViewBaseComponent {
     mode: UpdatedColumnMode,
     currentColumn?: ColumnDefinition,
   ) {
+    super.onColumnSave(savedColumn, mode, currentColumn);
+
+    const columnName = savedColumn.name;
+    const currentColumnId = currentColumn?.name;
+
     if (mode === 'add') {
-      const column: TableColumn = {
-        id: savedColumn.name,
+      const newColumn: TableColumn = {
+        id: columnName,
         field: this.tblService.buildField(savedColumn),
       };
-      this.columns.update((arr) => [...arr, column]);
+      this.columns.update((arr) => [...arr, newColumn]);
 
       if (savedColumn.defaultValue !== undefined) {
         this.rows.update((rows) =>
-          rows.map((row) => {
-            if (row.data[savedColumn.name] === undefined) {
-              return {
-                ...row,
-                data: { ...row.data, [savedColumn.name]: savedColumn.defaultValue },
-              };
-            }
-            return row;
-          }),
+          rows.map((row) =>
+            row.data[columnName] === undefined
+              ? { ...row, data: { ...row.data, [columnName]: savedColumn.defaultValue } }
+              : row,
+          ),
         );
       }
-    } else if (mode === 'edit') {
-      const columnIndex = this.columns().findIndex((c) => c.id === currentColumn.name);
-      if (columnIndex >= 0) {
-        const updatedColumn: TableColumn = {
-          id: savedColumn.name,
-          field: this.tblService.buildField(savedColumn),
-        };
-        this.columns.update((arr) => {
-          const newArr = [...arr];
-          if (newArr[columnIndex].field.dataType !== updatedColumn.field.dataType) {
-            newArr.splice(columnIndex, 1, updatedColumn);
-          } else {
-            newArr[columnIndex] = updatedColumn;
-          }
-          return newArr;
-        });
-      }
+    } else if (mode === 'edit' && currentColumnId !== undefined) {
+      const updatedColumn: TableColumn = {
+        id: columnName,
+        field: this.tblService.buildField(savedColumn),
+      };
+
+      this.columns.update((columns) =>
+        columns.map((col) => (col.id === currentColumnId ? updatedColumn : col)),
+      );
     }
   }
 
@@ -138,16 +131,19 @@ export class DataViewComponent extends ViewBaseComponent {
     mode: UpdatedRecordMode,
     currentRecord?: Record<string, any>,
   ) {
+    const recordId = mode === 'add' ? savedRecord['id'] : currentRecord?.['id'];
+
     if (mode === 'add') {
-      const newRow: TableRow = {
-        id: savedRecord['id'],
-        data: savedRecord,
-      };
-      this.rows.update((arr) => [...arr, newRow]);
-    } else if (mode === 'edit') {
-      const recordId = currentRecord['id'];
+      this.rows.update((arr) => {
+        if (arr.some((row) => row.id === recordId)) return arr;
+
+        return [...arr, { id: recordId, data: savedRecord }];
+      });
+    } else if (mode === 'edit' && recordId !== undefined) {
       this.rows.update((rows) =>
-        rows.map((row) => (row.id === recordId ? { ...row, data: savedRecord } : row)),
+        rows.map((row) =>
+          row.id === recordId ? { ...row, data: { ...row.data, ...savedRecord } } : row,
+        ),
       );
     }
   }
@@ -199,32 +195,32 @@ export class DataViewComponent extends ViewBaseComponent {
 
   protected override onDataUpdated(message: TableRealtimeMessage) {
     const { action, record } = message;
+    const recordId = record.new?.['id'] ?? record.key?.['id'];
+    const currentRows = this.rows();
+
     switch (action) {
       case 'insert': {
-        const index = this.rows().findIndex((row) => row.id === record.new['id']);
-        if (index !== -1) return;
+        if (currentRows.some((row) => row.id === recordId)) return;
 
-        const rows = [...this.rows()];
-        rows.push({ id: record.new['id'], data: record.new });
-        this.spreadsheet().setRows(rows);
+        const newRow = { id: recordId, data: record.new };
+        this.spreadsheet().setRows([...currentRows, newRow]);
         break;
       }
+
       case 'update': {
-        const index = this.rows().findIndex((row) => row.id === record.new['id']);
-        if (index === -1) return;
+        const updatedRows = currentRows.map((row) =>
+          row.id === recordId ? { ...row, data: { ...row.data, ...record.new } } : row,
+        );
 
-        const rows = [...this.rows()];
-        rows[index] = { ...rows[index], data: { ...rows[index].data, ...record.new } };
-        this.spreadsheet().setRows(rows);
+        this.spreadsheet().setRows(updatedRows);
         break;
       }
-      case 'delete': {
-        const index = this.rows().findIndex((row) => row.id === record.key['id']);
-        if (index === -1) return;
 
-        const rows = [...this.rows()];
-        rows.splice(index, 1);
-        this.spreadsheet().setRows(rows);
+      case 'delete': {
+        const filteredRows = currentRows.filter((row) => row.id !== recordId);
+        if (filteredRows.length === currentRows.length) return;
+
+        this.spreadsheet().setRows(filteredRows);
         break;
       }
     }
@@ -242,13 +238,12 @@ export class DataViewComponent extends ViewBaseComponent {
           .getTableSchema(tableName)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe((columnDefs) => {
-            const fields = columnDefs.map((c) => this.tblService.buildField(c));
             this.tblService
               .getRecord(tableName, getReferenceValue(data))
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe((record) => {
                 this.onUpdateRecord.emit({
-                  record: { table, fields, data: record },
+                  record: { table, fields: this.fields(), data: record },
                   mode: 'edit',
                 });
               });
@@ -311,7 +306,7 @@ export class DataViewComponent extends ViewBaseComponent {
         this.onUpdateRecord.emit({
           record: {
             table: this.tblService.selectedTable(),
-            fields: this.columns().map((c) => c.field),
+            fields: this.fields(),
             data: action.payload['data'],
           },
           mode: 'edit',
@@ -357,7 +352,7 @@ export class DataViewComponent extends ViewBaseComponent {
     this.onUpdateRecord.emit({
       record: {
         table: this.tblService.selectedTable(),
-        fields: this.columns().map((c) => c.field),
+        fields: this.fields(),
         data: {},
       },
       mode: 'add',

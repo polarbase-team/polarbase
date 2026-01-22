@@ -19,8 +19,9 @@ import { RecordEditorDrawerComponent } from '../../components/record-editor/reco
 import { ColumnDefinition, TableDefinition, TableService } from '../../services/table.service';
 import { DataViewComponent } from './views/data-view/data-view.component';
 import { CalendarViewComponent } from './views/calendar-view/calendar-view.component';
+import { MapViewComponent } from './views/map-view/map-view.component';
 
-export type DisplayMode = 'data-view' | 'calendar-view';
+export type DisplayMode = 'data-view' | 'calendar-view' | 'map-view';
 
 interface UpdatedRecord {
   table: TableDefinition;
@@ -54,6 +55,7 @@ export interface UpdateRecordEvent {
     ColumnEditorDrawerComponent,
     DataViewComponent,
     CalendarViewComponent,
+    MapViewComponent,
   ],
 })
 export class TableDetailComponent {
@@ -75,6 +77,13 @@ export class TableDetailComponent {
       icon: 'icon icon-calendar-days',
       command: () => {
         this.displayMode.set('calendar-view');
+      },
+    },
+    {
+      label: 'Map View',
+      icon: 'icon icon-map',
+      command: () => {
+        this.displayMode.set('map-view');
       },
     },
   ];

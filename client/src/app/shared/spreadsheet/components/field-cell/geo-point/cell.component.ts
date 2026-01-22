@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { TooltipModule } from 'primeng/tooltip';
 
-import { MapPickerDrawerComponent } from '@app/shared/map-picker/map-picker-drawer.component';
-import { MapLocation } from '@app/shared/map-picker/map-picker.component';
+import { MapPickerDrawerComponent } from '@app/shared/open-map/map-picker/map-picker-drawer.component';
+import { Location } from '@app/shared/open-map/open-map.component';
 import { formatPoint } from '@app/shared/field-system/models/geo-point/field.object';
 import { GeoPointData } from '@app/shared/field-system/models/geo-point/field.interface';
 import { PointFormatPipe } from '@app/shared/field-system/pipes/point-format.pipe';
@@ -21,7 +21,7 @@ import { CellTouchEvent } from '../field-cell-touchable';
 })
 export class GeoPointFieldCellComponent extends FieldCellInputable<GeoPointData> {
   protected pointStr: string;
-  protected loc: MapLocation | null;
+  protected location: Location | null;
   protected visibleMapPicker = false;
 
   protected override onInput(e: CellTouchEvent) {
@@ -29,18 +29,17 @@ export class GeoPointFieldCellComponent extends FieldCellInputable<GeoPointData>
   }
 
   protected openMap() {
-    let loc: MapLocation | null = null;
+    let location: Location | null = null;
 
     if (this.data) {
-      const data = this.data;
-      loc = { lat: this.data.x, lng: this.data.y };
+      location = { lng: this.data.x, lat: this.data.y };
     }
 
-    this.loc = loc;
+    this.location = location;
     this.visibleMapPicker = true;
   }
 
-  protected onSaveNewLocation(loc: MapLocation) {
-    this.save({ x: loc.lat, y: loc.lng });
+  protected onSaveNewLocation(location: Location) {
+    this.save({ x: location.lng, y: location.lat });
   }
 }
