@@ -10,7 +10,7 @@ import { DataType } from '@app/shared/field-system/models/field.interface';
 import { OpenMapComponent, Location } from '@app/shared/open-map/open-map.component';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { TableRealtimeMessage } from '@app/features/base/table/services/table-realtime.service';
-import { ColumnDefinition } from '../../../../services/table.service';
+import { ColumnDefinition, RecordData } from '../../../../services/table.service';
 import { ViewBaseComponent } from '../view-base.component';
 import { UpdatedRecordMode } from '../../table-detail.component';
 
@@ -53,9 +53,9 @@ export class MapViewComponent extends ViewBaseComponent {
   }
 
   override onRecordSave(
-    savedRecord: Record<string, any>,
+    savedRecord: RecordData,
     mode: UpdatedRecordMode,
-    currentRecord?: Record<string, any>,
+    currentRecord?: RecordData,
   ) {
     super.onRecordSave(savedRecord, mode, currentRecord);
   }
@@ -84,7 +84,7 @@ export class MapViewComponent extends ViewBaseComponent {
 
   protected override onDataUpdated(message: TableRealtimeMessage) {
     const { action, record } = message;
-    const recordId = record.new['id'];
+    const recordId = record.new.id;
 
     switch (action) {
       case 'insert':
@@ -130,6 +130,7 @@ export class MapViewComponent extends ViewBaseComponent {
         table: this.tblService.selectedTable(),
         fields: this.fields(),
         data: {
+          id: undefined,
           [this.selectedGeoPointField]: location ? { x: location.lng, y: location.lat } : undefined,
         },
       },

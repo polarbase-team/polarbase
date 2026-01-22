@@ -30,7 +30,7 @@ import {
   TableColumnActionType,
 } from '@app/shared/spreadsheet/events/table-column';
 import { ReferenceViewDetailEvent } from '@app/shared/spreadsheet/components/field-cell/reference/cell.component';
-import { ColumnDefinition } from '../../../../services/table.service';
+import { ColumnDefinition, RecordData } from '../../../../services/table.service';
 import { TableRealtimeMessage } from '../../../../services/table-realtime.service';
 import type { UpdatedColumnMode, UpdatedRecordMode } from '../../table-detail.component';
 import { ViewBaseComponent } from '../view-base.component';
@@ -127,11 +127,11 @@ export class DataViewComponent extends ViewBaseComponent {
   }
 
   override onRecordSave(
-    savedRecord: Record<string, any>,
+    savedRecord: RecordData,
     mode: UpdatedRecordMode,
-    currentRecord?: Record<string, any>,
+    currentRecord?: RecordData,
   ) {
-    const recordId = mode === 'add' ? savedRecord['id'] : currentRecord?.['id'];
+    const recordId = mode === 'add' ? savedRecord.id : currentRecord?.id;
 
     if (mode === 'add') {
       this.rows.update((arr) => {
@@ -195,7 +195,7 @@ export class DataViewComponent extends ViewBaseComponent {
 
   protected override onDataUpdated(message: TableRealtimeMessage) {
     const { action, record } = message;
-    const recordId = record.new?.['id'] ?? record.key?.['id'];
+    const recordId = record.new?.id ?? record.key?.id;
     const currentRows = this.rows();
 
     switch (action) {
@@ -289,7 +289,7 @@ export class DataViewComponent extends ViewBaseComponent {
           .subscribe(({ data }) => {
             for (let i = 0; i < rows.length; i++) {
               const row = rows[i];
-              row.id = data.returning[i]['id'];
+              row.id = data.returning[i].id;
               row.data = data.returning[i];
             }
             this.rows.update((arr) => [...arr]);
@@ -353,7 +353,7 @@ export class DataViewComponent extends ViewBaseComponent {
       record: {
         table: this.tblService.selectedTable(),
         fields: this.fields(),
-        data: {},
+        data: { id: undefined },
       },
       mode: 'add',
     });

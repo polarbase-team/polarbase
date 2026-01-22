@@ -2,7 +2,12 @@ import { Directive, DestroyRef, output, signal, inject, computed } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, finalize } from 'rxjs';
 
-import { ColumnDefinition, TableDefinition, TableService } from '../../../services/table.service';
+import {
+  ColumnDefinition,
+  RecordData,
+  TableDefinition,
+  TableService,
+} from '../../../services/table.service';
 import {
   TableRealtimeMessage,
   TableRealtimeService,
@@ -24,7 +29,7 @@ export class ViewBaseComponent {
   protected tblRealtimeService = inject(TableRealtimeService);
   protected isLoading = signal(false);
   protected columnDefs = signal<ColumnDefinition[]>([]);
-  protected records = signal([]);
+  protected records = signal<RecordData[]>([]);
   protected fields = computed(() => this.columnDefs().map((c) => this.tblService.buildField(c)));
 
   constructor() {
@@ -34,7 +39,7 @@ export class ViewBaseComponent {
       .subscribe({
         next: (event) => {
           const { action, record } = event;
-          const recordId = record.new['id'];
+          const recordId = record.new.id;
 
           switch (action) {
             case 'insert':
@@ -81,12 +86,8 @@ export class ViewBaseComponent {
     }
   }
 
-  onRecordSave(
-    savedRecord: Record<string, any>,
-    mode: UpdatedRecordMode,
-    currentRecord?: Record<string, any>,
-  ) {
-    const recordId = currentRecord?.['id'];
+  onRecordSave(savedRecord: RecordData, mode: UpdatedRecordMode, currentRecord?: RecordData) {
+    const recordId = currentRecord?.id;
 
     if (mode === 'add') {
       this.records.update((arr) => [...arr, savedRecord]);
@@ -101,7 +102,7 @@ export class ViewBaseComponent {
 
   protected onDataUpdated(message: TableRealtimeMessage) {}
 
-  protected async loadTable(table: TableDefinition, filter?: Record<string, any>[]) {
+  protected async loadTable(table: TableDefinition, filter?: Record<string, any>) {
     await this.loadTableSchema(table);
     await this.loadTableData(table, filter);
   }
