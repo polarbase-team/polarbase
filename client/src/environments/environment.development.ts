@@ -7,5 +7,11 @@ export const environment = {
   uploadUrl: '/files/upload',
   dateFormat: 'DD/MM/YYYY',
   dateTimeFormat: 'DD/MM/YYYY HH:mm',
-  defaultLoc: [21.028511, 105.804817], // Hanoi, Vietnam
+  openStreetMap: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    email: 'polarbase-team@polarbase.io',
+    defaultLocation: [21.028511, 105.804817], // Hanoi, Vietnam
+  },
 };

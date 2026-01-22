@@ -56,6 +56,8 @@ export class CalendarComponent {
   fullCalendar = viewChild<FullCalendarComponent>('fullCalendar');
 
   events = input<CalendarEvent[]>();
+  toolbarStyleClass = input<string>();
+  contentStyleClass = input<string>();
 
   onChangeView = output<string>();
   onChangeDateRange = output<[Dayjs, Dayjs]>();

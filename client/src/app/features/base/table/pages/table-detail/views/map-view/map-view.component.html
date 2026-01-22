@@ -1,0 +1,47 @@
+<p-popover #popover appendTo="body">
+  <div class="flex flex-col gap-1">
+    <label for="geoPointField" class="text-sm">GeoPoint Field</label>
+    <p-select
+      id="geoPointField"
+      [options]="geoPointColumns"
+      optionLabel="name"
+      optionValue="name"
+      placeholder="Select here..."
+      [(ngModel)]="selectedGeoPointField"
+      [checkmark]="true"
+      class="w-2xs"
+    />
+  </div>
+
+  <p-divider />
+
+  <div class="flex justify-end gap-2 flex-1">
+    <p-button
+      label="Apply changes"
+      [disabled]="!selectedGeoPointField"
+      (click)="onChangeGeoPointField(); popover.hide()"
+    />
+  </div>
+</p-popover>
+
+<open-map [locations]="locations()" [zoom]="5" toolbarStyleClass="pt-[16px] px-[20px]">
+  <ng-template #toolbar>
+    <ng-content></ng-content>
+    <div class="flex flex-wrap gap-2">
+      <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
+      <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
+        <ng-template pTemplate="content">
+          <i class="icon icon-map-pin"></i>
+          <span class="p-button-label truncate max-w-3xs">
+            {{ selectedGeoPointField || 'Select GeoPoint Field' }}
+          </span>
+        </ng-template>
+      </p-button>
+      <filter-option
+        [fields]="fields()"
+        [items]="records()"
+        (onFilter)="onRecordsFiltered($event)"
+      />
+    </div>
+  </ng-template>
+</open-map>

@@ -1,4 +1,4 @@
-import { Directive, DestroyRef, output, signal, inject } from '@angular/core';
+import { Directive, DestroyRef, output, signal, inject, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, finalize } from 'rxjs';
 
@@ -23,6 +23,9 @@ export class ViewBaseComponent {
   protected tblService = inject(TableService);
   protected tblRealtimeService = inject(TableRealtimeService);
   protected isLoading = signal(false);
+  protected columnDefs = signal<ColumnDefinition[]>([]);
+  protected records = signal([]);
+  protected fields = computed(() => this.columnDefs().map((c) => this.tblService.buildField(c)));
 
   constructor() {
     this.tblRealtimeService
@@ -30,6 +33,27 @@ export class ViewBaseComponent {
       .pipe(delay(200), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (event) => {
+          const { action, record } = event;
+          const recordId = record.new['id'];
+
+          switch (action) {
+            case 'insert':
+              this.records.update((arr) =>
+                arr.some((r) => r.id === recordId) ? arr : [...arr, record.new],
+              );
+              break;
+
+            case 'update':
+              this.records.update((records) =>
+                records.map((r) => (r.id === recordId ? record.new : r)),
+              );
+              break;
+
+            case 'delete':
+              this.records.update((records) => records.filter((r) => r.id !== recordId));
+              break;
+          }
+
           this.onDataUpdated(event);
         },
       });
@@ -37,19 +61,39 @@ export class ViewBaseComponent {
 
   reset() {
     this.isLoading.set(false);
+    this.columnDefs.set([]);
+    this.records.set([]);
   }
 
   onColumnSave(
     savedColumn: ColumnDefinition,
     mode: UpdatedColumnMode,
     currentColumn?: ColumnDefinition,
-  ) {}
+  ) {
+    const columnName = currentColumn?.name;
+
+    if (mode === 'add') {
+      this.columnDefs.update((arr) => [...arr, savedColumn]);
+    } else if (mode === 'edit' && columnName !== undefined) {
+      this.columnDefs.update((columns) =>
+        columns.map((c) => (c.name === columnName ? currentColumn : c)),
+      );
+    }
+  }
 
   onRecordSave(
     savedRecord: Record<string, any>,
     mode: UpdatedRecordMode,
     currentRecord?: Record<string, any>,
-  ) {}
+  ) {
+    const recordId = currentRecord?.['id'];
+
+    if (mode === 'add') {
+      this.records.update((arr) => [...arr, savedRecord]);
+    } else if (mode === 'edit' && recordId !== undefined) {
+      this.records.update((records) => records.map((r) => (r.id === recordId ? savedRecord : r)));
+    }
+  }
 
   protected onSchemaLoaded(columnDefs: ColumnDefinition[]) {}
 
@@ -73,6 +117,7 @@ export class ViewBaseComponent {
         )
         .subscribe({
           next: (columnDefs) => {
+            this.columnDefs.set(columnDefs);
             this.onSchemaLoaded(columnDefs);
             resolve(columnDefs);
           },
@@ -90,6 +135,7 @@ export class ViewBaseComponent {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (records) => {
+            this.records.set(records);
             this.onRecordsLoaded(records);
             resolve(records);
           },

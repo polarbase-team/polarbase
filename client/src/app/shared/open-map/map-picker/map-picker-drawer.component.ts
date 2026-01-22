@@ -6,7 +6,8 @@ import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
-import { MapPickerComponent, MapLocation } from './map-picker.component';
+import { Location } from '../open-map.component';
+import { MapPickerComponent } from './map-picker.component';
 
 @Component({
   selector: 'map-picker-drawer',
@@ -18,13 +19,13 @@ import { MapPickerComponent, MapLocation } from './map-picker.component';
 export class MapPickerDrawerComponent extends DrawerComponent {
   mapPicker = viewChild<MapPickerComponent>('mapPicker');
 
-  loc = model<MapLocation>();
+  location = model<Location>();
   viewOnly = input(false);
 
-  onSave = output<MapLocation>();
+  onSave = output<Location>();
   onCancel = output();
 
-  protected isLocChanged = false;
+  protected isLocationChanged = false;
 
   constructor(private confirmationService: ConfirmationService) {
     super();
@@ -33,7 +34,7 @@ export class MapPickerDrawerComponent extends DrawerComponent {
   protected override onHide() {
     super.onHide();
 
-    if (this.isLocChanged) {
+    if (this.isLocationChanged) {
       this.confirmationService.confirm({
         target: null,
         header: 'Discard changes?',
@@ -49,18 +50,18 @@ export class MapPickerDrawerComponent extends DrawerComponent {
         },
         accept: () => {
           this.close();
-          this.isLocChanged = false;
+          this.isLocationChanged = false;
         },
       });
       return;
     }
 
     this.close();
-    this.isLocChanged = false;
+    this.isLocationChanged = false;
   }
 
   protected save() {
-    this.onSave.emit(this.loc());
+    this.onSave.emit(this.location());
     this.close();
   }
 

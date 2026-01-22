@@ -39,30 +39,36 @@
   </div>
 </p-popover>
 
-<calendar
-  #calendar
-  [events]="events()"
-  (onDateClick)="onDateClick($event)"
-  (onEventClick)="onEventClick($event)"
-  (onChangeDateRange)="onChangeDateRange($event)"
->
-  <ng-template #toolbar>
-    <ng-content></ng-content>
-    <div class="flex flex-wrap gap-2">
-      <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
-      <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
-        <ng-template pTemplate="content">
-          <i class="icon icon-calendar"></i>
-          <span class="p-button-label truncate max-w-3xs">
-            {{
-              selectedStartField && selectedEndField
-                ? selectedStartField + ' - ' + selectedEndField
-                : 'Select date fields'
-            }}
-          </span>
-        </ng-template>
-      </p-button>
-      <filter-option [fields]="fields" [items]="records" (onFilter)="onRecordsFiltered($event)" />
-    </div>
-  </ng-template>
-</calendar>
+<div class="px-[20px] py-[16px] w-full h-full">
+  <calendar
+    #calendar
+    [events]="events()"
+    (onDateClick)="onDateClick($event)"
+    (onEventClick)="onEventClick($event)"
+    (onChangeDateRange)="onChangeDateRange($event)"
+  >
+    <ng-template #toolbar>
+      <ng-content></ng-content>
+      <div class="flex flex-wrap gap-2">
+        <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
+        <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
+          <ng-template pTemplate="content">
+            <i class="icon icon-calendar"></i>
+            <span class="p-button-label truncate max-w-3xs">
+              {{
+                selectedStartField && selectedEndField
+                  ? selectedStartField + ' - ' + selectedEndField
+                  : 'Select Date Fields'
+              }}
+            </span>
+          </ng-template>
+        </p-button>
+        <filter-option
+          [fields]="fields()"
+          [items]="records()"
+          (onFilter)="onRecordsFiltered($event)"
+        />
+      </div>
+    </ng-template>
+  </calendar>
+</div>

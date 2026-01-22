@@ -28,6 +28,10 @@
             <i pButtonIcon class="icon icon-calendar-days"></i>
             <span pButtonLabel>Calendar View</span>
           }
+          @case ('map-view') {
+            <i pButtonIcon class="icon icon-map-pin"></i>
+            <span pButtonLabel>Map View</span>
+          }
         }
         <i pButtonIcon class="icon icon-chevron-down"></i>
       </button>
@@ -38,13 +42,30 @@
 
 @switch (displayMode()) {
   @case ('data-view') {
-    <data-view #view (onUpdateColumn)="onUpdateColumn($event)" (onUpdateRecord)="onUpdateRecord($event)">
+    <data-view
+      #view
+      (onUpdateColumn)="onUpdateColumn($event)"
+      (onUpdateRecord)="onUpdateRecord($event)"
+    >
       <ng-container *ngTemplateOutlet="displayModeTmpl"></ng-container>
     </data-view>
   }
   @case ('calendar-view') {
-    <calendar-view #view (onUpdateColumn)="onUpdateColumn($event)" (onUpdateRecord)="onUpdateRecord($event)">
+    <calendar-view
+      #view
+      (onUpdateColumn)="onUpdateColumn($event)"
+      (onUpdateRecord)="onUpdateRecord($event)"
+    >
       <ng-container *ngTemplateOutlet="displayModeTmpl"></ng-container>
     </calendar-view>
+  }
+  @case ('map-view') {
+    <map-view
+      #view
+      (onUpdateColumn)="onUpdateColumn($event)"
+      (onUpdateRecord)="onUpdateRecord($event)"
+    >
+      <ng-container *ngTemplateOutlet="displayModeTmpl"></ng-container>
+    </map-view>
   }
 }

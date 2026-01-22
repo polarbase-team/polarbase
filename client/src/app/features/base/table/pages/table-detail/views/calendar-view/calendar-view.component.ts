@@ -15,7 +15,6 @@ import {
   CalendarEventClickArg,
 } from '@app/shared/calendar/calendar.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
-import { Field } from '@app/shared/field-system/models/field.object';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { TableRealtimeMessage } from '@app/features/base/table/services/table-realtime.service';
 import { ColumnDefinition } from '../../../../services/table.service';
@@ -39,8 +38,6 @@ import { UpdatedRecordMode } from '../../table-detail.component';
 export class CalendarViewComponent extends ViewBaseComponent {
   calendar = viewChild<CalendarComponent>('calendar');
 
-  protected fields: Field[] = [];
-  protected records = [];
   protected dateColumns: ColumnDefinition[] = [];
   protected events = signal<CalendarEvent[]>([]);
   protected selectedStartField: string;
@@ -61,12 +58,10 @@ export class CalendarViewComponent extends ViewBaseComponent {
   override reset() {
     super.reset();
 
-    this.fields = [];
     this.dateColumns = [];
     this.events.set([]);
     this.selectedStartField = undefined;
     this.selectedEndField = undefined;
-    this.records = [];
 
     this.calendar().reset();
   }
@@ -75,9 +70,12 @@ export class CalendarViewComponent extends ViewBaseComponent {
     savedRecord: Record<string, any>,
     mode: UpdatedRecordMode,
     currentRecord?: Record<string, any>,
-  ): void {
+  ) {
+    super.onRecordSave(savedRecord, mode, currentRecord);
+
+    const recordId = currentRecord?.['id'];
+
     if (mode === 'add') {
-      this.records.push(savedRecord);
       this.events.update((events) => [
         ...events,
         {
@@ -87,35 +85,30 @@ export class CalendarViewComponent extends ViewBaseComponent {
           end: savedRecord[this.selectedEndField],
         },
       ]);
-    } else if (mode === 'edit') {
-      const index = this.records.findIndex((r) => r.id === currentRecord['id']);
-      this.records[index] = savedRecord;
-      this.events.update((events) => {
-        const event = events.find((e) => e.id === currentRecord['id']);
-        event.start = savedRecord[this.selectedStartField];
-        event.end = savedRecord[this.selectedEndField];
-        return [...events];
-      });
+    } else if (mode === 'edit' && recordId !== undefined) {
+      this.events.update((events) =>
+        events.map((e) =>
+          e.id === recordId
+            ? {
+                ...e,
+                title: getRecordDisplayLabel(savedRecord),
+                start: savedRecord[this.selectedStartField],
+                end: savedRecord[this.selectedEndField],
+              }
+            : e,
+        ),
+      );
     }
   }
 
   protected override onSchemaLoaded(columnDefs: ColumnDefinition[]) {
-    this.fields = columnDefs.map((c) => this.tblService.buildField(c));
     this.dateColumns = columnDefs.filter(
       (c) => c.dataType === DataType.AutoDate || c.dataType === DataType.Date,
     );
   }
 
   protected override onRecordsLoaded(records: any[]) {
-    this.records = records;
-    this.events.set(
-      records.map((record) => ({
-        id: record.id,
-        title: getRecordDisplayLabel(record),
-        start: record[this.selectedStartField],
-        end: record[this.selectedEndField],
-      })),
-    );
+    this.onRecordsFiltered(records);
   }
 
   protected onRecordsFiltered(records: any[]) {
@@ -131,44 +124,47 @@ export class CalendarViewComponent extends ViewBaseComponent {
 
   protected override onDataUpdated(message: TableRealtimeMessage) {
     const { action, record } = message;
+    const recordId = record.new['id'];
+
     switch (action) {
-      case 'insert': {
-        const index = this.records.findIndex((r) => r.id === record.new['id']);
-        if (index !== -1) return;
-
-        this.records.push(record.new);
-        this.events.update((events) => [
-          ...events,
-          {
-            id: record.new['id'],
-            title: getRecordDisplayLabel(record.new),
-            start: record.new[this.selectedStartField],
-            end: record.new[this.selectedEndField],
-          },
-        ]);
-        break;
-      }
-      case 'update': {
-        const index = this.records.findIndex((r) => r.id === record.new['id']);
-        if (index === -1) return;
-
-        this.records[index] = record.new;
+      case 'insert':
         this.events.update((events) => {
-          const event = events.find((e) => e.id === record.new['id']);
-          event.start = record.new[this.selectedStartField];
-          event.end = record.new[this.selectedEndField];
-          return [...events];
+          if (events.some((e) => e.id === recordId)) return events;
+
+          return [
+            ...events,
+            {
+              id: recordId,
+              title: getRecordDisplayLabel(record.new),
+              start: record.new[this.selectedStartField],
+              end: record.new[this.selectedEndField],
+            },
+          ];
         });
         break;
-      }
-      case 'delete': {
-        const index = this.records.findIndex((r) => r.id === record.new['id']);
-        if (index === -1) return;
 
-        this.records.splice(index, 1);
-        this.events.update((events) => events.filter((e) => e.id !== record.new['id']));
+      case 'update':
+        if (record.new[this.selectedStartField]) {
+          this.events.update((events) =>
+            events.map((e) =>
+              e.id === recordId
+                ? {
+                    ...e,
+                    title: getRecordDisplayLabel(record.new),
+                    start: record.new[this.selectedStartField],
+                    end: record.new[this.selectedEndField],
+                  }
+                : e,
+            ),
+          );
+        } else {
+          this.events.update((events) => events.filter((e) => e.id !== recordId));
+        }
         break;
-      }
+
+      case 'delete':
+        this.events.update((events) => events.filter((e) => e.id !== recordId));
+        break;
     }
   }
 
@@ -180,8 +176,8 @@ export class CalendarViewComponent extends ViewBaseComponent {
     this.onUpdateRecord.emit({
       record: {
         table: this.tblService.selectedTable(),
-        fields: this.fields,
-        data: this.records.find((r) => r.id === e.event.id),
+        fields: this.fields(),
+        data: this.records().find((r) => r.id === e.event.id),
       },
       mode: 'edit',
     });
@@ -207,7 +203,7 @@ export class CalendarViewComponent extends ViewBaseComponent {
     this.onUpdateRecord.emit({
       record: {
         table: this.tblService.selectedTable(),
-        fields: this.fields,
+        fields: this.fields(),
         data: {
           [this.selectedStartField]: date,
           [this.selectedEndField]: date,
