@@ -60,8 +60,8 @@ export class MapViewComponent extends ViewBaseComponent {
     super.onRecordSave(savedRecord, mode, currentRecord);
   }
 
-  protected override onSchemaLoaded(columnDefs: ColumnDefinition[]) {
-    this.geoPointColumns = columnDefs.filter((c) => c.dataType === DataType.GeoPoint);
+  protected override onColumnsLoaded(columns: ColumnDefinition[]) {
+    this.geoPointColumns = columns.filter((c) => c.dataType === DataType.GeoPoint);
   }
 
   protected override onRecordsLoaded(records: any[]) {
@@ -82,7 +82,7 @@ export class MapViewComponent extends ViewBaseComponent {
     this.locations.set(locations);
   }
 
-  protected override onDataUpdated(message: TableRealtimeMessage) {
+  protected override onRealtimeMessage(message: TableRealtimeMessage) {
     const { action, record } = message;
     const recordId = record.new.id;
 

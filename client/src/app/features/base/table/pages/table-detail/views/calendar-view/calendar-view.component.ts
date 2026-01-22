@@ -101,8 +101,8 @@ export class CalendarViewComponent extends ViewBaseComponent {
     }
   }
 
-  protected override onSchemaLoaded(columnDefs: ColumnDefinition[]) {
-    this.dateColumns = columnDefs.filter(
+  protected override onColumnsLoaded(columns: ColumnDefinition[]) {
+    this.dateColumns = columns.filter(
       (c) => c.dataType === DataType.AutoDate || c.dataType === DataType.Date,
     );
   }
@@ -122,7 +122,7 @@ export class CalendarViewComponent extends ViewBaseComponent {
     );
   }
 
-  protected override onDataUpdated(message: TableRealtimeMessage) {
+  protected override onRealtimeMessage(message: TableRealtimeMessage) {
     const { action, record } = message;
     const recordId = record.new.id;
 

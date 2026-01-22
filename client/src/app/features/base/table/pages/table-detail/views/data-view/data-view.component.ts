@@ -148,14 +148,14 @@ export class DataViewComponent extends ViewBaseComponent {
     }
   }
 
-  protected override onSchemaLoaded(columnDefs: ColumnDefinition[]) {
+  protected override onColumnsLoaded(columns: ColumnDefinition[]) {
     this.ssColumns.set(null);
 
-    if (!columnDefs.length) return;
+    if (!columns.length) return;
 
-    const columns: TableColumn[] = [];
-    for (const c of columnDefs) {
-      columns.push({
+    const ssColumns: TableColumn[] = [];
+    for (const c of columns) {
+      ssColumns.push({
         id: c.name,
         primary: c.primary,
         editable: !c.primary,
@@ -166,7 +166,7 @@ export class DataViewComponent extends ViewBaseComponent {
       }
     }
     setTimeout(() => {
-      this.ssColumns.set(columns);
+      this.ssColumns.set(ssColumns);
     });
   }
 
@@ -193,7 +193,7 @@ export class DataViewComponent extends ViewBaseComponent {
     });
   }
 
-  protected override onDataUpdated(message: TableRealtimeMessage) {
+  protected override onRealtimeMessage(message: TableRealtimeMessage) {
     const { action, record } = message;
     const recordId = record.new?.id ?? record.key?.id;
     const currentRows = this.ssRows();
@@ -237,7 +237,7 @@ export class DataViewComponent extends ViewBaseComponent {
         this.tblService
           .getTableSchema(tableName)
           .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((columnDefs) => {
+          .subscribe((columns) => {
             this.tblService
               .getRecord(tableName, getReferenceValue(data))
               .pipe(takeUntilDestroyed(this.destroyRef))

@@ -59,7 +59,7 @@ export class ViewBaseComponent {
               break;
           }
 
-          this.onDataUpdated(event);
+          this.onRealtimeMessage(event);
         },
       });
   }
@@ -96,11 +96,11 @@ export class ViewBaseComponent {
     }
   }
 
-  protected onSchemaLoaded(columns: ColumnDefinition[]) {}
+  protected onColumnsLoaded(columns: ColumnDefinition[]) {}
 
   protected onRecordsLoaded(records: RecordData[]) {}
 
-  protected onDataUpdated(message: TableRealtimeMessage) {}
+  protected onRealtimeMessage(message: TableRealtimeMessage) {}
 
   protected async loadTable(table: TableDefinition, filter?: Record<string, any>) {
     await this.loadTableSchema(table);
@@ -119,7 +119,7 @@ export class ViewBaseComponent {
         .subscribe({
           next: (columns) => {
             this.columns.set(columns);
-            this.onSchemaLoaded(columns);
+            this.onColumnsLoaded(columns);
             resolve(columns);
           },
           error: (error) => {
