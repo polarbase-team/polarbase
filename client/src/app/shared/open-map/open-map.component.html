@@ -5,12 +5,30 @@
         <ng-container *ngTemplateOutlet="toolbarTmpl()"></ng-container>
       </div>
     </div>
-    <p-inputgroup class="w-3xs max-w-3xs">
-      <p-iconfield>
-        <p-inputicon class="icon icon-search !z-2" />
-        <input type="text" pInputText placeholder="Search location" />
-      </p-iconfield>
-    </p-inputgroup>
+    <div class="flex gap-2">
+      <p-button
+        icon="icon icon-locate-fixed"
+        severity="secondary"
+        [outlined]="true"
+        (click)="getCurrentLocation()"
+        pTooltip="Current location"
+      />
+      <p-inputgroup class="w-3xs max-w-3xs">
+        <p-iconfield>
+          <p-inputicon class="icon icon-search !z-2" />
+          <p-autocomplete
+            [suggestions]="suggestions()"
+            (completeMethod)="searchAddress($event)"
+            (onSelect)="onSelectAddress($event)"
+            [delay]="500"
+            [panelStyle]="{ 'max-width': '400px', width: '100%' }"
+            optionLabel="display_name"
+            placeholder="Search location"
+            appendTo="body"
+          />
+        </p-iconfield>
+      </p-inputgroup>
+    </div>
   </div>
   <div class="flex-1" [class]="contentStyleClass()">
     <div #container style="height: 100%; width: 100%"></div>

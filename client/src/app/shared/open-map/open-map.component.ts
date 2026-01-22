@@ -10,14 +10,25 @@ import {
   output,
   contentChild,
   TemplateRef,
+  DestroyRef,
+  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { take } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import * as L from 'leaflet';
 
 import { InputGroupModule } from 'primeng/inputgroup';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { InputTextModule } from 'primeng/inputtext';
+import {
+  AutoCompleteCompleteEvent,
+  AutoCompleteModule,
+  AutoCompleteSelectEvent,
+} from 'primeng/autocomplete';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { environment } from '@environments/environment';
 
@@ -31,22 +42,36 @@ export interface Location {
   selector: 'open-map',
   templateUrl: './open-map.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, InputGroupModule, IconFieldModule, InputIconModule, InputTextModule],
+  imports: [
+    CommonModule,
+    InputGroupModule,
+    IconFieldModule,
+    InputIconModule,
+    AutoCompleteModule,
+    ButtonModule,
+    TooltipModule,
+  ],
 })
 export class OpenMapComponent implements AfterViewInit, OnDestroy {
   toolbarTmpl = contentChild<TemplateRef<any>>('toolbar');
   container = viewChild<ElementRef<HTMLDivElement>>('container');
 
   locations = input<Location[]>();
+  zoom = input<number>(13);
   toolbarStyleClass = input<string>();
   contentStyleClass = input<string>();
 
   onMapClick = output<Location>();
 
+  protected suggestions = signal<any[]>([]);
+
   private map!: L.Map;
   private markers!: L.Marker[];
 
-  constructor() {
+  constructor(
+    private http: HttpClient,
+    private destroyRef: DestroyRef,
+  ) {
     effect(() => {
       this.initMarkers(this.locations());
     });
@@ -62,6 +87,38 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
 
   refresh() {
     this.map?.invalidateSize();
+  }
+
+  protected getCurrentLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        this.map.flyTo([lat, lng], this.zoom());
+      });
+    }
+  }
+
+  protected searchAddress(event: AutoCompleteCompleteEvent) {
+    const query = event.query;
+    const email = 'qui.nguyen@polarbase.io';
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&email=${email}`;
+
+    this.http
+      .get<any[]>(url)
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        this.suggestions.set(data);
+      });
+  }
+
+  protected onSelectAddress(event: AutoCompleteSelectEvent) {
+    const { lat, lon } = event.value;
+    const targetLatLng = new L.LatLng(lat, lon);
+
+    this.map.flyTo(targetLatLng, 16);
+
+    L.marker(targetLatLng).addTo(this.map).bindPopup(event.value.display_name).openPopup();
   }
 
   private initMap() {
@@ -98,7 +155,7 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
       }
       this.markers = markers;
 
-      this.map.setView([locations[0].lat, locations[0].lng], 13);
+      this.map.setView([locations[0].lat, locations[0].lng], this.zoom());
     }
   }
 }
