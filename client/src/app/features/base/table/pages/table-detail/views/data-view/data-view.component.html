@@ -25,9 +25,9 @@
 } @else {
   <spreadsheet
     #spreadsheet
-    [config]="config()"
-    [columns]="columns()"
-    [rows]="rows()"
+    [config]="ssConfig()"
+    [columns]="ssColumns()"
+    [rows]="ssRows()"
     (action)="onTableAction($event)"
     (columnAction)="onColumnAction($event)"
     (rowAction)="onRowAction($event)"

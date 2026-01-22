@@ -44,12 +44,12 @@ import { ViewBaseComponent } from '../view-base.component';
 export class DataViewComponent extends ViewBaseComponent {
   spreadsheet = viewChild<SpreadsheetComponent>('spreadsheet');
 
-  protected config = signal<TableConfig>({
+  protected ssConfig = signal<TableConfig>({
     sideSpacing: 20,
     row: { insertable: false, reorderable: false },
   });
-  protected columns = signal<TableColumn[]>([]);
-  protected rows = signal<TableRow[]>([]);
+  protected ssColumns = signal<TableColumn[]>([]);
+  protected ssRows = signal<TableRow[]>([]);
   protected insertMenuItems: MenuItem[] = [
     {
       label: 'Insert row',
@@ -84,8 +84,8 @@ export class DataViewComponent extends ViewBaseComponent {
   override reset() {
     super.reset();
 
-    this.rows.set(null);
-    this.columns.set(null);
+    this.ssRows.set(null);
+    this.ssColumns.set(null);
   }
 
   override onColumnSave(
@@ -103,10 +103,10 @@ export class DataViewComponent extends ViewBaseComponent {
         id: columnName,
         field: this.tblService.buildField(savedColumn),
       };
-      this.columns.update((arr) => [...arr, newColumn]);
+      this.ssColumns.update((arr) => [...arr, newColumn]);
 
       if (savedColumn.defaultValue !== undefined) {
-        this.rows.update((rows) =>
+        this.ssRows.update((rows) =>
           rows.map((row) =>
             row.data[columnName] === undefined
               ? { ...row, data: { ...row.data, [columnName]: savedColumn.defaultValue } }
@@ -120,7 +120,7 @@ export class DataViewComponent extends ViewBaseComponent {
         field: this.tblService.buildField(savedColumn),
       };
 
-      this.columns.update((columns) =>
+      this.ssColumns.update((columns) =>
         columns.map((col) => (col.id === currentColumnId ? updatedColumn : col)),
       );
     }
@@ -134,13 +134,13 @@ export class DataViewComponent extends ViewBaseComponent {
     const recordId = mode === 'add' ? savedRecord.id : currentRecord?.id;
 
     if (mode === 'add') {
-      this.rows.update((arr) => {
+      this.ssRows.update((arr) => {
         if (arr.some((row) => row.id === recordId)) return arr;
 
         return [...arr, { id: recordId, data: savedRecord }];
       });
     } else if (mode === 'edit' && recordId !== undefined) {
-      this.rows.update((rows) =>
+      this.ssRows.update((rows) =>
         rows.map((row) =>
           row.id === recordId ? { ...row, data: { ...row.data, ...savedRecord } } : row,
         ),
@@ -149,7 +149,7 @@ export class DataViewComponent extends ViewBaseComponent {
   }
 
   protected override onSchemaLoaded(columnDefs: ColumnDefinition[]) {
-    this.columns.set(null);
+    this.ssColumns.set(null);
 
     if (!columnDefs.length) return;
 
@@ -166,12 +166,12 @@ export class DataViewComponent extends ViewBaseComponent {
       }
     }
     setTimeout(() => {
-      this.columns.set(columns);
+      this.ssColumns.set(columns);
     });
   }
 
   protected override onRecordsLoaded(records: any[]) {
-    this.rows.set(null);
+    this.ssRows.set(null);
 
     if (!records) return;
 
@@ -189,14 +189,14 @@ export class DataViewComponent extends ViewBaseComponent {
       };
     });
     setTimeout(() => {
-      this.rows.set(rows);
+      this.ssRows.set(rows);
     });
   }
 
   protected override onDataUpdated(message: TableRealtimeMessage) {
     const { action, record } = message;
     const recordId = record.new?.id ?? record.key?.id;
-    const currentRows = this.rows();
+    const currentRows = this.ssRows();
 
     switch (action) {
       case 'insert': {
@@ -292,7 +292,7 @@ export class DataViewComponent extends ViewBaseComponent {
               row.id = data.returning[i].id;
               row.data = data.returning[i];
             }
-            this.rows.update((arr) => [...arr]);
+            this.ssRows.update((arr) => [...arr]);
           });
         break;
       case TableRowActionType.Delete:
