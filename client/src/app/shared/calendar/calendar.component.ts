@@ -74,6 +74,7 @@ export class CalendarComponent {
       minute: '2-digit',
       meridiem: 'short',
     },
+    height: '100%',
     dateClick: (arg) => this.onDateClick.emit(arg),
     eventClick: (arg) => this.onEventClick.emit(arg),
   };

@@ -4,7 +4,7 @@ import { Field } from '../field.object';
 import { ReferenceData, ReferenceFieldConfig, ReferenceResources } from './field.interface';
 
 export const getReferenceValue = (data: ReferenceData) => {
-  return typeof data === 'object' ? data?.['id'] : data;
+  return typeof data === 'object' ? data?.id : data;
 };
 
 export const getReferenceDisplayLabel = (data: ReferenceData) => {

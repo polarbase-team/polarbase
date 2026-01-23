@@ -16,7 +16,12 @@ import { MenuItem } from 'primeng/api';
 import { Field } from '@app/shared/field-system/models/field.object';
 import { ColumnEditorDrawerComponent } from '../../components/column-editor/column-editor-drawer.component';
 import { RecordEditorDrawerComponent } from '../../components/record-editor/record-editor-drawer.component';
-import { ColumnDefinition, TableDefinition, TableService } from '../../services/table.service';
+import {
+  ColumnDefinition,
+  RecordData,
+  TableDefinition,
+  TableService,
+} from '../../services/table.service';
 import { DataViewComponent } from './views/data-view/data-view.component';
 import { CalendarViewComponent } from './views/calendar-view/calendar-view.component';
 import { MapViewComponent } from './views/map-view/map-view.component';
@@ -26,7 +31,7 @@ export type DisplayMode = 'data-view' | 'calendar-view' | 'map-view';
 interface UpdatedRecord {
   table: TableDefinition;
   fields: Field[];
-  data: Record<string, any>;
+  data: RecordData;
 }
 
 export type UpdatedColumnMode = 'add' | 'edit';
@@ -92,7 +97,11 @@ export class TableDetailComponent {
   protected updatedColumnMode: UpdatedColumnMode = 'add';
   protected visibleColumnEditor: boolean;
 
-  protected updatedRecord: UpdatedRecord = {} as UpdatedRecord;
+  protected updatedRecord: UpdatedRecord = {
+    table: {} as TableDefinition,
+    fields: [],
+    data: { id: undefined },
+  };
   protected updatedRecordMode: UpdatedRecordMode = 'add';
   protected visibleRecordEditor: boolean;
 
@@ -119,7 +128,7 @@ export class TableDetailComponent {
     this.view().onColumnSave(savedColumn, this.updatedColumnMode, this.updatedColumn);
   }
 
-  protected onRecordSave(savedRecord: Record<string, any>) {
-    this.view().onRecordSave(savedRecord, this.updatedRecordMode, this.updatedRecord);
+  protected onRecordSave(savedRecord: RecordData) {
+    this.view().onRecordSave(savedRecord, this.updatedRecordMode, this.updatedRecord.data);
   }
 }

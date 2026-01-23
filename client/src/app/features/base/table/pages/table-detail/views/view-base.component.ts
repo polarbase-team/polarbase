@@ -2,7 +2,12 @@ import { Directive, DestroyRef, output, signal, inject, computed } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, finalize } from 'rxjs';
 
-import { ColumnDefinition, TableDefinition, TableService } from '../../../services/table.service';
+import {
+  ColumnDefinition,
+  RecordData,
+  TableDefinition,
+  TableService,
+} from '../../../services/table.service';
 import {
   TableRealtimeMessage,
   TableRealtimeService,
@@ -23,9 +28,9 @@ export class ViewBaseComponent {
   protected tblService = inject(TableService);
   protected tblRealtimeService = inject(TableRealtimeService);
   protected isLoading = signal(false);
-  protected columnDefs = signal<ColumnDefinition[]>([]);
-  protected records = signal([]);
-  protected fields = computed(() => this.columnDefs().map((c) => this.tblService.buildField(c)));
+  protected columns = signal<ColumnDefinition[]>([]);
+  protected records = signal<RecordData[]>([]);
+  protected fields = computed(() => this.columns().map((c) => this.tblService.buildField(c)));
 
   constructor() {
     this.tblRealtimeService
@@ -34,7 +39,7 @@ export class ViewBaseComponent {
       .subscribe({
         next: (event) => {
           const { action, record } = event;
-          const recordId = record.new['id'];
+          const recordId = record.new.id;
 
           switch (action) {
             case 'insert':
@@ -54,14 +59,14 @@ export class ViewBaseComponent {
               break;
           }
 
-          this.onDataUpdated(event);
+          this.onRealtimeMessage(event);
         },
       });
   }
 
   reset() {
     this.isLoading.set(false);
-    this.columnDefs.set([]);
+    this.columns.set([]);
     this.records.set([]);
   }
 
@@ -73,20 +78,16 @@ export class ViewBaseComponent {
     const columnName = currentColumn?.name;
 
     if (mode === 'add') {
-      this.columnDefs.update((arr) => [...arr, savedColumn]);
+      this.columns.update((arr) => [...arr, savedColumn]);
     } else if (mode === 'edit' && columnName !== undefined) {
-      this.columnDefs.update((columns) =>
+      this.columns.update((columns) =>
         columns.map((c) => (c.name === columnName ? currentColumn : c)),
       );
     }
   }
 
-  onRecordSave(
-    savedRecord: Record<string, any>,
-    mode: UpdatedRecordMode,
-    currentRecord?: Record<string, any>,
-  ) {
-    const recordId = currentRecord?.['id'];
+  onRecordSave(savedRecord: RecordData, mode: UpdatedRecordMode, currentRecord?: RecordData) {
+    const recordId = currentRecord?.id;
 
     if (mode === 'add') {
       this.records.update((arr) => [...arr, savedRecord]);
@@ -95,13 +96,13 @@ export class ViewBaseComponent {
     }
   }
 
-  protected onSchemaLoaded(columnDefs: ColumnDefinition[]) {}
+  protected onColumnsLoaded(columns: ColumnDefinition[]) {}
 
-  protected onRecordsLoaded(records: any[]) {}
+  protected onRecordsLoaded(records: RecordData[]) {}
 
-  protected onDataUpdated(message: TableRealtimeMessage) {}
+  protected onRealtimeMessage(message: TableRealtimeMessage) {}
 
-  protected async loadTable(table: TableDefinition, filter?: Record<string, any>[]) {
+  protected async loadTable(table: TableDefinition, filter?: Record<string, any>) {
     await this.loadTableSchema(table);
     await this.loadTableData(table, filter);
   }
@@ -116,10 +117,10 @@ export class ViewBaseComponent {
           takeUntilDestroyed(this.destroyRef),
         )
         .subscribe({
-          next: (columnDefs) => {
-            this.columnDefs.set(columnDefs);
-            this.onSchemaLoaded(columnDefs);
-            resolve(columnDefs);
+          next: (columns) => {
+            this.columns.set(columns);
+            this.onColumnsLoaded(columns);
+            resolve(columns);
           },
           error: (error) => {
             reject(error);

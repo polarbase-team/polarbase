@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, SimpleChanges } from '@angular/core';
 
 import { TooltipModule } from 'primeng/tooltip';
 
@@ -20,26 +20,29 @@ import { CellTouchEvent } from '../field-cell-touchable';
   imports: [TooltipModule, MapPickerDrawerComponent, InputBoxComponent, PointFormatPipe],
 })
 export class GeoPointFieldCellComponent extends FieldCellInputable<GeoPointData> {
-  protected pointStr: string;
   protected location: Location | null;
   protected visibleMapPicker = false;
 
-  protected override onInput(e: CellTouchEvent) {
-    this.pointStr = formatPoint(this.data);
+  override save(value: string) {
+    super.save(value || null);
   }
 
   protected openMap() {
     let location: Location | null = null;
 
     if (this.data) {
-      location = { lng: this.data.x, lat: this.data.y };
+      const point =
+        typeof this.data === 'object'
+          ? [this.data.x, this.data.y]
+          : this.data.split(',').map((p) => parseFloat(p));
+      location = { lng: point[0], lat: point[1] };
     }
 
     this.location = location;
     this.visibleMapPicker = true;
   }
 
-  protected onSaveNewLocation(location: Location) {
-    this.save({ x: location.lng, y: location.lat });
+  protected onLocationSave(location: Location) {
+    this.save(`(${location.lng}, ${location.lat})`);
   }
 }

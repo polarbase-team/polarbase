@@ -17,7 +17,7 @@ import {
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { TableRealtimeMessage } from '@app/features/base/table/services/table-realtime.service';
-import { ColumnDefinition } from '../../../../services/table.service';
+import { ColumnDefinition, RecordData } from '../../../../services/table.service';
 import { ViewBaseComponent } from '../view-base.component';
 import { UpdatedRecordMode } from '../../table-detail.component';
 
@@ -67,19 +67,19 @@ export class CalendarViewComponent extends ViewBaseComponent {
   }
 
   override onRecordSave(
-    savedRecord: Record<string, any>,
+    savedRecord: RecordData,
     mode: UpdatedRecordMode,
-    currentRecord?: Record<string, any>,
+    currentRecord?: RecordData,
   ) {
     super.onRecordSave(savedRecord, mode, currentRecord);
 
-    const recordId = currentRecord?.['id'];
+    const recordId = currentRecord?.id;
 
     if (mode === 'add') {
       this.events.update((events) => [
         ...events,
         {
-          id: savedRecord['id'],
+          id: String(savedRecord.id),
           title: getRecordDisplayLabel(savedRecord),
           start: savedRecord[this.selectedStartField],
           end: savedRecord[this.selectedEndField],
@@ -101,8 +101,8 @@ export class CalendarViewComponent extends ViewBaseComponent {
     }
   }
 
-  protected override onSchemaLoaded(columnDefs: ColumnDefinition[]) {
-    this.dateColumns = columnDefs.filter(
+  protected override onColumnsLoaded(columns: ColumnDefinition[]) {
+    this.dateColumns = columns.filter(
       (c) => c.dataType === DataType.AutoDate || c.dataType === DataType.Date,
     );
   }
@@ -122,9 +122,9 @@ export class CalendarViewComponent extends ViewBaseComponent {
     );
   }
 
-  protected override onDataUpdated(message: TableRealtimeMessage) {
+  protected override onRealtimeMessage(message: TableRealtimeMessage) {
     const { action, record } = message;
-    const recordId = record.new['id'];
+    const recordId = record.new.id;
 
     switch (action) {
       case 'insert':
@@ -134,7 +134,7 @@ export class CalendarViewComponent extends ViewBaseComponent {
           return [
             ...events,
             {
-              id: recordId,
+              id: String(recordId),
               title: getRecordDisplayLabel(record.new),
               start: record.new[this.selectedStartField],
               end: record.new[this.selectedEndField],
@@ -205,6 +205,7 @@ export class CalendarViewComponent extends ViewBaseComponent {
         table: this.tblService.selectedTable(),
         fields: this.fields(),
         data: {
+          id: undefined,
           [this.selectedStartField]: date,
           [this.selectedEndField]: date,
         },
@@ -218,9 +219,22 @@ export class CalendarViewComponent extends ViewBaseComponent {
       return;
     }
 
-    this.loadTableData(this.tblService.selectedTable(), {
-      [this.selectedStartField]: start,
-      [this.selectedEndField]: end,
-    });
+    const filter = {};
+
+    if (this.selectedStartField === this.selectedEndField) {
+      filter[this.selectedStartField] = {
+        gte: start,
+        lte: end,
+      };
+    } else {
+      filter[this.selectedStartField] = {
+        gte: start,
+      };
+      filter[this.selectedEndField] = {
+        lte: end,
+      };
+    }
+
+    this.loadTableData(this.tblService.selectedTable(), filter);
   }
 }

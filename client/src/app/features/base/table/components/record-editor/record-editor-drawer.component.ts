@@ -44,7 +44,7 @@ import { JSONFieldEditorComponent } from '@app/shared/field-system/editors/json/
 import { GeoPointFieldEditorComponent } from '@app/shared/field-system/editors/geo-point/editor.component';
 import { ReferenceFieldEditorComponent } from '@app/shared/field-system/editors/reference/editor.component';
 import { AttachmentFieldEditorComponent } from '@app/shared/field-system/editors/attachment/editor.component';
-import { TableDefinition, TableService } from '../../services/table.service';
+import { RecordData, TableDefinition, TableService } from '../../services/table.service';
 
 @Component({
   selector: 'record-editor-drawer',
@@ -83,17 +83,17 @@ import { TableDefinition, TableService } from '../../services/table.service';
 export class RecordEditorDrawerComponent extends DrawerComponent {
   table = input<TableDefinition>();
   fields = input<Field[]>([]);
-  record = input({});
+  record = input<RecordData>({ id: undefined });
   mode = input<'add' | 'edit' | 'view'>('add');
 
-  onSave = output<Record<string, any>>();
+  onSave = output<RecordData>();
 
   protected viewOnly = computed(() => this.mode() === 'view');
   protected requiredFields = signal<Field[]>([]);
   protected optionalFields = signal<Field[]>([]);
   protected isSaving = signal<boolean>(false);
   protected DataType = DataType;
-  protected updatedRecord: Record<string, any> = {};
+  protected updatedRecord: RecordData = { id: undefined };
   protected isDataChanged = false;
 
   constructor(
@@ -105,7 +105,7 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     super();
 
     effect(() => {
-      this.updatedRecord = { ...(this.record() || {}) };
+      this.updatedRecord = { ...(this.record() || { id: undefined }) };
     });
 
     effect(() => {
@@ -176,7 +176,7 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     }
 
     const { tableName } = this.table();
-    const id = this.record()['id'] ?? undefined;
+    const id = this.record().id ?? undefined;
     const data = { ...this.updatedRecord };
 
     let fn: Observable<any>;
@@ -206,7 +206,7 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
   }
 
   protected reset() {
-    this.updatedRecord = {};
+    this.updatedRecord = { id: undefined };
     this.close();
   }
 }
