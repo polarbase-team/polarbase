@@ -53,6 +53,8 @@ export interface CalendarEventClickArg extends EventClickArg {}
 })
 export class CalendarComponent {
   toolbarTmpl = contentChild<TemplateRef<any>>('toolbar');
+  leftToolbarTmpl = contentChild<TemplateRef<any>>('leftToolbar');
+  rightToolbarTmpl = contentChild<TemplateRef<any>>('rightToolbar');
   fullCalendar = viewChild<FullCalendarComponent>('fullCalendar');
 
   events = input<CalendarEvent[]>();

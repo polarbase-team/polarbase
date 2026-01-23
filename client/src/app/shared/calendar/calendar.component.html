@@ -3,9 +3,11 @@
     <div class="flex">
       <div class="flex items-start">
         <ng-container *ngTemplateOutlet="toolbarTmpl()"></ng-container>
+        <ng-container *ngTemplateOutlet="leftToolbarTmpl()"></ng-container>
       </div>
     </div>
     <div class="flex flex-wrap gap-y-2">
+      <ng-container *ngTemplateOutlet="rightToolbarTmpl()"></ng-container>
       <div class="flex items-center">
         <p>
           @switch (view) {

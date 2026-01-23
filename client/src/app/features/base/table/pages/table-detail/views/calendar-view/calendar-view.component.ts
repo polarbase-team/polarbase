@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import { ChangeDetectionStrategy, Component, effect, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import dayjs, { Dayjs } from 'dayjs';
@@ -6,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { PopoverModule } from 'primeng/popover';
 import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
 import {
@@ -31,6 +34,7 @@ import { UpdatedRecordMode } from '../../table-detail.component';
     PopoverModule,
     SelectModule,
     DividerModule,
+    ProgressSpinnerModule,
     CalendarComponent,
     FilterOptionComponent,
   ],
@@ -214,27 +218,31 @@ export class CalendarViewComponent extends ViewBaseComponent {
     });
   }
 
-  private loadTableDataInRange(start: Dayjs, end: Dayjs) {
-    if (!this.selectedStartField || !this.selectedEndField) {
-      return;
-    }
+  private loadTableDataInRange = _.debounce(
+    async (start: Dayjs, end: Dayjs) => {
+      if (!this.selectedStartField || !this.selectedEndField) {
+        return;
+      }
 
-    const filter = {};
+      const filter = {};
 
-    if (this.selectedStartField === this.selectedEndField) {
-      filter[this.selectedStartField] = {
-        gte: start,
-        lte: end,
-      };
-    } else {
-      filter[this.selectedStartField] = {
-        gte: start,
-      };
-      filter[this.selectedEndField] = {
-        lte: end,
-      };
-    }
+      if (this.selectedStartField === this.selectedEndField) {
+        filter[this.selectedStartField] = {
+          gte: start,
+          lte: end,
+        };
+      } else {
+        filter[this.selectedStartField] = {
+          gte: start,
+        };
+        filter[this.selectedEndField] = {
+          lte: end,
+        };
+      }
 
-    this.loadTableData(this.tblService.selectedTable(), filter);
-  }
+      await this.loadTableData(this.tblService.selectedTable(), filter);
+    },
+    1000,
+    { leading: true },
+  );
 }
