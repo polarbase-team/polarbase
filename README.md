@@ -37,9 +37,33 @@
 
 ## 2. Screenshots
 
-![Spreadsheet UI](./assets/screenshots/1.png)
-![AI Agent Interface](./assets/screenshots/2.png)
-![API Keys Management](./assets/screenshots/3.png)
+<table width="100%">
+  <tr>
+    <td width="50%" align="center">
+      <b>Spreadsheet UI (Data View)</b><br>
+      <img src="./assets/screenshots/1.png" width="100%">
+    </td>
+    <td width="50%" align="center">
+      <b>Calendar View</b><br>
+      <img src="./assets/screenshots/2.png" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>Map View</b><br>
+      <img src="./assets/screenshots/3.png" width="100%">
+    </td>
+    <td align="center">
+      <b>AI Agent Interface</b><br>
+      <img src="./assets/screenshots/4.png" width="100%">
+    </td>
+  </tr>
+</table>
+
+<div align="center">
+  <b>API Keys Management</b><br>
+  <img src="./assets/screenshots/5.png" width="60%">
+</div>
 
 ## 3. Key Features
 
