@@ -11,6 +11,7 @@ export const environment = {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    nominatimUrl: 'https://nominatim.openstreetmap.org/search',
     email: 'polarbase-team@polarbase.io',
     defaultLocation: [21.028511, 105.804817], // Hanoi, Vietnam
   },

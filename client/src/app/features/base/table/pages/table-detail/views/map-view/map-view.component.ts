@@ -6,6 +6,7 @@ import { PopoverModule } from 'primeng/popover';
 import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 
+import { getRecordDisplayLabel } from '@app/core/utils';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { OpenMapComponent, Location } from '@app/shared/open-map/open-map.component';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
@@ -74,6 +75,7 @@ export class MapViewComponent extends ViewBaseComponent {
       if (record[this.selectedGeoPointField]) {
         locations.push({
           id: record.id,
+          title: getRecordDisplayLabel(record),
           lng: record[this.selectedGeoPointField].x,
           lat: record[this.selectedGeoPointField].y,
         });
@@ -91,6 +93,8 @@ export class MapViewComponent extends ViewBaseComponent {
         this.locations.update((l) => [
           ...l,
           {
+            id: record.new.id,
+            title: getRecordDisplayLabel(record.new),
             lng: record.new[this.selectedGeoPointField].x,
             lat: record.new[this.selectedGeoPointField].y,
           },
@@ -103,6 +107,8 @@ export class MapViewComponent extends ViewBaseComponent {
             l.map((l) =>
               l.id === recordId
                 ? {
+                    id: record.new.id,
+                    title: getRecordDisplayLabel(record.new),
                     lng: record.new[this.selectedGeoPointField].x,
                     lat: record.new[this.selectedGeoPointField].y,
                   }

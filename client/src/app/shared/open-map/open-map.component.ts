@@ -33,7 +33,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { environment } from '@environments/environment';
 
 export interface Location {
-  id?: string;
+  id?: string | number;
+  title?: string;
   lat: number;
   lng: number;
 }
@@ -102,7 +103,7 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
   protected searchAddress(event: AutoCompleteCompleteEvent) {
     const query = event.query;
     const email = environment.openStreetMap.email;
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&email=${email}`;
+    const url = `${environment.openStreetMap.nominatimUrl}?format=json&q=${query}&limit=5&email=${email}`;
 
     this.http
       .get<any[]>(url)
@@ -154,9 +155,10 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
     if (locations?.length) {
       const markers: L.Marker[] = [];
       for (const location of locations) {
-        const marker = L.marker([location.lat, location.lng]);
+        const marker = L.marker([location.lat, location.lng])
+          .addTo(this.map)
+          .bindTooltip(String(location.title));
         markers.push(marker);
-        this.map.addLayer(marker);
       }
       this.markers = markers;
 
