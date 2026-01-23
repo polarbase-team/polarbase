@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0-beta] - 2026-01-23
+
+### Added
+
+- **Calendar View**: New view mode to visualize records with date fields on a calendar.
+- **Map View**: New view mode to visualize records with GeoPoint fields on a map.
+
+### Fixed
+
+- **GeoPoint Field**: Fixed issues with GeoPoint field data handling and display.
+
+## [0.5.1-beta] - 2026-01-20
+
+### Added
+
+- **Dynamic Row Management**: Integrated spreadsheet component for dynamic row operations.
+
+### Changed
+
+- **Filtering**: Enhanced filter component and service functionality.
+- **Sorting**: Simplified group and row sorting logic in table service.
+
+## [0.5.0-beta] - 2026-01-18
+
+### Added
+
+- **Server-Sent Events (SSE)**: Implemented SSE and WebSocket support for real-time table updates.
+- **Advanced Filtering**: Added 'Not Contains' operator and long text support to filter groups.
+- **Spreadsheet Filtering**: Added filtering capabilities directly to the spreadsheet component.
+
+### Changed
+
+- **Field Components**: Updated Email and Website fields (refactored).
+- **UI/UX**: Streamlined toolbar layout and HTML structure in table details.
+- **Form Components**: Enhanced form components with improved selection options.
+
+## [0.4.2-beta] - 2026-01-16
+
+### Fixed
+
+- **Table Loading**: Fixed issue by resetting columns and rows in `loadTable` method.
+
+## [0.4.1-beta] - 2026-01-15
+
+### Added
+
+- **Confirmation Dialogs**: Added confirmation dialogs for unsaved changes in map picker and other editors.
+- **Deletion Safety**: Enhanced confirmation dialog for deletion actions.
+
+### Fixed
+
+- **UI Styling**: Improved layout and styling in table detail and spreadsheet components.
+
 ## [0.4.0-beta] - 2026-01-14
 
 ### Added

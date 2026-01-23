@@ -528,6 +528,7 @@ export class TableColumnService extends TableBaseService {
               'Delete columns',
               () => this.deleteSelectedColumns(),
               void 0,
+              void 0,
               'delete-multiple-columns-confirmation',
             );
           },
@@ -627,6 +628,7 @@ export class TableColumnService extends TableBaseService {
                 'Are you sure you want to delete this column?',
                 'Delete column',
                 () => this.deleteColumn(column),
+                void 0,
                 void 0,
                 'delete-column-confirmation',
               );

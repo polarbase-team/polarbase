@@ -451,6 +451,7 @@ export class TableRowService extends TableBaseService {
             'Delete rows',
             () => this.deleteSelectedRows(),
             void 0,
+            void 0,
             'delete-multiple-rows-confirmation',
           );
         },
@@ -521,6 +522,7 @@ export class TableRowService extends TableBaseService {
               'Are you sure you want to delete this row?',
               'Delete row',
               () => this.deleteRow(row),
+              void 0,
               void 0,
               'delete-single-row-confirmation',
             );

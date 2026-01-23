@@ -6,8 +6,8 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
-import { MultiSelectField } from '@app/shared/field-system/models/multi-select/field.object';
-import { MultiSelectData } from '@app/shared/field-system/models/multi-select/field.interface';
+import { MultiSelectField } from '../../models/multi-select/field.object';
+import { MultiSelectData } from '../../models/multi-select/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 
 @Component({

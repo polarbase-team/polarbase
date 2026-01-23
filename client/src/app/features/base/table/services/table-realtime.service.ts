@@ -6,14 +6,14 @@ import { environment } from '@environments/environment';
 
 import { getApiKey } from '@app/core/guards/api-key.guard';
 import { WebSocketMessage, WebsocketService } from '@app/shared/websocket/websocket.service';
-import { TableService } from './table.service';
+import { RecordData, TableService } from './table.service';
 
-export type RealtimeChange<T = Record<string, any>> =
+export type RealtimeChange<T = RecordData> =
   | { tag: 'insert'; old: undefined; new: T; key: undefined }
   | { tag: 'update'; old: null; new: T; key: null }
   | { tag: 'delete'; old: null; new: undefined; key: T };
 
-export interface RealtimePayload<T = Record<string, any>> {
+export interface RealtimePayload<T = RecordData> {
   tag: 'insert' | 'update' | 'delete';
   relation: {
     name: string;
@@ -24,7 +24,7 @@ export interface RealtimePayload<T = Record<string, any>> {
   key: RealtimeChange<T>['key'];
 }
 
-export type TableRealtimeMessage<T = Record<string, any>> = {
+export type TableRealtimeMessage<T = RecordData> = {
   tableName: string;
   tableKeyColumn: string;
   action: 'insert' | 'update' | 'delete';

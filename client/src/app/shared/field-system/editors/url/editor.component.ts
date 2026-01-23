@@ -7,8 +7,8 @@ import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
 import { convertToHtmlPattern } from '@app/core/utils';
-import { UrlField } from '@app/shared/field-system/models/url/field.object';
-import { UrlData, UrlPattern } from '@app/shared/field-system/models/url/field.interface';
+import { UrlField } from '../../models/url/field.object';
+import { UrlData, UrlPattern } from '../../models/url/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 
 @Component({

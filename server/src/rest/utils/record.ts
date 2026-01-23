@@ -60,33 +60,41 @@ const applySimpleFilter = (
 
       switch (op) {
         case 'eq':
-          return qb.andWhere(column, '=', val);
+          qb.andWhere(column, '=', val);
+          break;
         case 'ne':
-          return qb.andWhere(column, '!=', val);
+          qb.andWhere(column, '!=', val);
+          break;
         case 'gt':
-          return qb.andWhere(column, '>', val);
+          qb.andWhere(column, '>', val);
+          break;
         case 'gte':
-          return qb.andWhere(column, '>=', val);
+          qb.andWhere(column, '>=', val);
+          break;
         case 'lt':
-          return qb.andWhere(column, '<', val);
+          qb.andWhere(column, '<', val);
+          break;
         case 'lte':
-          return qb.andWhere(column, '<=', val);
+          qb.andWhere(column, '<=', val);
+          break;
         case 'in':
-          return qb.andWhere(column, 'in', Array.isArray(val) ? val : [val]);
+          qb.andWhere(column, 'in', Array.isArray(val) ? val : [val]);
+          break;
         case 'notIn':
-          return qb.andWhere(
-            column,
-            'not in',
-            Array.isArray(val) ? val : [val]
-          );
+          qb.andWhere(column, 'not in', Array.isArray(val) ? val : [val]);
+          break;
         case 'like':
-          return qb.andWhere(column, 'like', val);
+          qb.andWhere(column, 'like', val);
+          break;
         case 'ilike':
-          return qb.andWhere(column, 'ilike', val);
+          qb.andWhere(column, 'ilike', val);
+          break;
         case 'notLike':
-          return qb.andWhere(column, 'not like', val);
+          qb.andWhere(column, 'not like', val);
+          break;
         case 'notIlike':
-          return qb.andWhere(column, 'not ilike', val);
+          qb.andWhere(column, 'not ilike', val);
+          break;
         default:
           throw new Error(`Unsupported operator: ${op}`);
       }

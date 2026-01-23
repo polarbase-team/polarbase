@@ -9,7 +9,7 @@
     },
     "client": {
       "name": "polarbase-client",
-      "version": "0.5.1-beta",
+      "version": "0.6.0-beta",
       "dependencies": {
         "@angular/common": "^20.3.0",
         "@angular/compiler": "^20.3.0",
@@ -18,6 +18,10 @@
         "@angular/platform-browser": "^20.3.0",
         "@angular/router": "^20.3.0",
         "@formulajs/formulajs": "^4.5.4",
+        "@fullcalendar/angular": "^6.1.20",
+        "@fullcalendar/core": "^6.1.20",
+        "@fullcalendar/daygrid": "^6.1.20",
+        "@fullcalendar/interaction": "^6.1.20",
         "@primeuix/themes": "^1.2.5",
         "@types/leaflet": "^1.9.21",
         "ace-builds": "^1.43.5",
@@ -53,7 +57,7 @@
     },
     "server": {
       "name": "polarbase-server",
-      "version": "0.5.1-beta",
+      "version": "0.6.0-beta",
       "dependencies": {
         "@ai-sdk/anthropic": "^2.0.53",
         "@ai-sdk/google": "^2.0.44",
@@ -1087,6 +1091,41 @@
         "bin": { "formulajs": "bin/cli.js" },
       },
       "sha512-Brtye/l1yn5B/q3hcOPo7EIVd7m8bIoE401me4TAGFRyGGJYKJSf9+vRZCI+qOsK1wqpl3whj+24YAE4D/bC7Q==",
+    ],
+
+    "@fullcalendar/angular": [
+      "@fullcalendar/angular@6.1.20",
+      "",
+      {
+        "dependencies": { "tslib": "^2.3.0" },
+        "peerDependencies": {
+          "@angular/common": "12 - 21",
+          "@angular/core": "12 - 21",
+          "@fullcalendar/core": "~6.1.20",
+        },
+      },
+      "sha512-/V5wZuZSzWZxD3dnVteqY844Onv6we5ah0RU9ZJdRIeNbBFknHLeVYpIjYKsAPwkGigYX7UGOJR6NNpyarBLlQ==",
+    ],
+
+    "@fullcalendar/core": [
+      "@fullcalendar/core@6.1.20",
+      "",
+      { "dependencies": { "preact": "~10.12.1" } },
+      "sha512-1cukXLlePFiJ8YKXn/4tMKsy0etxYLCkXk8nUCFi11nRONF2Ba2CD5b21/ovtOO2tL6afTJfwmc1ed3HG7eB1g==",
+    ],
+
+    "@fullcalendar/daygrid": [
+      "@fullcalendar/daygrid@6.1.20",
+      "",
+      { "peerDependencies": { "@fullcalendar/core": "~6.1.20" } },
+      "sha512-AO9vqhkLP77EesmJzuU+IGXgxNulsA8mgQHynclJ8U70vSwAVnbcLG9qftiTAFSlZjiY/NvhE7sflve6cJelyQ==",
+    ],
+
+    "@fullcalendar/interaction": [
+      "@fullcalendar/interaction@6.1.20",
+      "",
+      { "peerDependencies": { "@fullcalendar/core": "~6.1.20" } },
+      "sha512-p6txmc5txL0bMiPaJxe2ip6o0T384TyoD2KGdsU6UjZ5yoBlaY+dg7kxfnYKpYMzEJLG58n+URrHr2PgNL2fyA==",
     ],
 
     "@gar/promisify": [
@@ -5620,6 +5659,13 @@
       "",
       { "dependencies": { "xtend": "^4.0.0" } },
       "sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==",
+    ],
+
+    "preact": [
+      "preact@10.12.1",
+      "",
+      {},
+      "sha512-l8386ixSsBdbreOAkqtrwqHwdvR35ID8c3rKPa8lCWuO86dBi32QWHV4vfsZK1utLLFMvw+Z5Ad4XLkZzchscg==",
     ],
 
     "prebuild-install": [

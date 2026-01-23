@@ -1,54 +1,50 @@
-import _ from 'lodash';
-
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   effect,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { delay, finalize, forkJoin } from 'rxjs';
+import { CommonModule } from '@angular/common';
 
 import { ButtonModule } from 'primeng/button';
+import { DividerModule } from 'primeng/divider';
+import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
-import { SplitButtonModule } from 'primeng/splitbutton';
-import { SkeletonModule } from 'primeng/skeleton';
 
-import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
-import { getReferenceValue } from '@app/shared/field-system/models/reference/field.object';
-import { TableColumn } from '@app/shared/spreadsheet/models/table-column';
-import { TableRow } from '@app/shared/spreadsheet/models/table-row';
-import { TableConfig } from '@app/shared/spreadsheet/models/table';
-import { SpreadsheetComponent } from '@app/shared/spreadsheet/spreadsheet.component';
-import { TableAction, TableActionType } from '@app/shared/spreadsheet/events/table';
-import {
-  TableRowAction,
-  TableRowActionType,
-  TableRowAddedEvent,
-} from '@app/shared/spreadsheet/events/table-row';
-import {
-  TableCellAction,
-  TableCellActionType,
-  TableCellEditedEvent,
-} from '@app/shared/spreadsheet/events/table-cell';
-import {
-  TableColumnAction,
-  TableColumnActionType,
-} from '@app/shared/spreadsheet/events/table-column';
-import { ReferenceViewDetailEvent } from '@app/shared/spreadsheet/components/field-cell/reference/cell.component';
 import { ColumnEditorDrawerComponent } from '../../components/column-editor/column-editor-drawer.component';
 import { RecordEditorDrawerComponent } from '../../components/record-editor/record-editor-drawer.component';
-import { ColumnDefinition, TableDefinition, TableService } from '../../services/table.service';
-import { TableRealtimeService } from '../../services/table-realtime.service';
+import {
+  ColumnDefinition,
+  RecordData,
+  TableDefinition,
+  TableService,
+} from '../../services/table.service';
+import { DataViewComponent } from './views/data-view/data-view.component';
+import { CalendarViewComponent } from './views/calendar-view/calendar-view.component';
+import { MapViewComponent } from './views/map-view/map-view.component';
+
+export type DisplayMode = 'data-view' | 'calendar-view' | 'map-view';
 
 interface UpdatedRecord {
   table: TableDefinition;
   fields: Field[];
-  data: Record<string, any>;
+  data: RecordData;
+}
+
+export type UpdatedColumnMode = 'add' | 'edit';
+export type UpdatedRecordMode = 'add' | 'edit' | 'view';
+
+export interface UpdateColumnEvent {
+  column: ColumnDefinition;
+  mode: UpdatedColumnMode;
+}
+
+export interface UpdateRecordEvent {
+  record: UpdatedRecord;
+  mode: UpdatedRecordMode;
 }
 
 @Component({
@@ -56,347 +52,83 @@ interface UpdatedRecord {
   templateUrl: './table-detail.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CommonModule,
     ButtonModule,
-    SplitButtonModule,
-    SkeletonModule,
-    SpreadsheetComponent,
+    DividerModule,
+    MenuModule,
     RecordEditorDrawerComponent,
     ColumnEditorDrawerComponent,
+    DataViewComponent,
+    CalendarViewComponent,
+    MapViewComponent,
   ],
 })
 export class TableDetailComponent {
-  spreadsheet = viewChild<SpreadsheetComponent>('spreadsheet');
+  view = viewChild<DataViewComponent | CalendarViewComponent>('view');
 
-  protected config = signal<TableConfig>({
-    sideSpacing: 20,
-    row: { insertable: false, reorderable: false },
-  });
-  protected columns = signal<TableColumn[]>([]);
-  protected rows = signal<TableRow[]>([]);
-  protected isLoading = signal(false);
   protected tblService = inject(TableService);
-  protected updatedColumn: ColumnDefinition;
-  protected updatedColumnMode: 'add' | 'edit' = 'add';
-  protected visibleColumnEditor: boolean;
-  protected updatedRecord: UpdatedRecord = {} as UpdatedRecord;
-  protected updatedRecordMode: 'add' | 'edit' | 'view' = 'add';
-  protected visibleRecordEditor: boolean;
-  protected insertMenuItems: MenuItem[] = [
+
+  protected displayMode = signal<DisplayMode>('data-view');
+  protected displayModeMenuItems: MenuItem[] = [
     {
-      label: 'Insert row',
-      icon: 'icon icon-rows-3',
+      label: 'Data View',
+      icon: 'icon icon-sheet',
       command: () => {
-        this.addNewRecord();
+        this.displayMode.set('data-view');
       },
     },
     {
-      label: 'Insert column',
-      icon: 'icon icon-columns-3',
+      label: 'Calendar View',
+      icon: 'icon icon-calendar-days',
       command: () => {
-        this.addNewColumn();
+        this.displayMode.set('calendar-view');
+      },
+    },
+    {
+      label: 'Map View',
+      icon: 'icon icon-map',
+      command: () => {
+        this.displayMode.set('map-view');
       },
     },
   ];
 
-  constructor(
-    private destroyRef: DestroyRef,
-    private tblRealtimeService: TableRealtimeService,
-  ) {
+  protected updatedColumn: ColumnDefinition;
+  protected updatedColumnMode: UpdatedColumnMode = 'add';
+  protected visibleColumnEditor: boolean;
+
+  protected updatedRecord: UpdatedRecord = {
+    table: {} as TableDefinition,
+    fields: [],
+    data: { id: undefined },
+  };
+  protected updatedRecordMode: UpdatedRecordMode = 'add';
+  protected visibleRecordEditor: boolean;
+
+  constructor() {
     effect(() => {
-      this.visibleRecordEditor = false;
-
-      const selectedTable = this.tblService.selectedTable();
-      if (!selectedTable) return;
-
-      this.loadTable(selectedTable);
+      this.tblService.selectedTable();
+      this.displayMode.set('data-view');
     });
   }
 
-  ngOnInit() {
-    this.tblRealtimeService
-      .enableSSE()
-      .pipe(delay(200), takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: ({ tableKeyColumn, action, record }) => {
-          switch (action) {
-            case 'insert': {
-              const recordPk = record.new[tableKeyColumn];
-              if (this.rows().find((row) => row.id === recordPk)) return;
-
-              this.spreadsheet().setRows([...this.rows(), { id: recordPk, data: record.new }]);
-              break;
-            }
-            case 'update': {
-              const recordPk = record.new[tableKeyColumn];
-              this.spreadsheet().setRows(
-                this.rows().map((row) =>
-                  row.id === recordPk ? { ...row, data: { ...row.data, ...record.new } } : row,
-                ),
-              );
-              break;
-            }
-            case 'delete': {
-              const recordPk = record.key[tableKeyColumn];
-              this.spreadsheet().setRows(this.rows().filter((row) => row.id !== recordPk));
-              break;
-            }
-          }
-        },
-      });
-  }
-
-  protected onTableAction(action: TableAction) {
-    switch (action.type) {
-      case TableActionType.ViewReferenceDetail: {
-        const { field, data } = action.payload as ReferenceViewDetailEvent;
-        const tableName = field.referenceTo;
-        const table = this.tblService.tables().find((t) => t.tableName === tableName);
-        if (!table) return;
-
-        this.tblService
-          .getTableSchema(tableName)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((columnDefs) => {
-            const fields = columnDefs.map((c) => this.tblService.buildField(c));
-            this.tblService
-              .getRecord(tableName, getReferenceValue(data))
-              .pipe(takeUntilDestroyed(this.destroyRef))
-              .subscribe((record) => {
-                this.updatedRecord = { table, fields, data: record };
-                this.updatedRecordMode = 'edit';
-                this.visibleRecordEditor = true;
-              });
-          });
-        break;
-      }
-    }
-  }
-
-  protected onColumnAction(action: TableColumnAction) {
-    const { tableName } = this.tblService.selectedTable();
-    switch (action.type) {
-      case TableColumnActionType.Add:
-        this.addNewColumn();
-        break;
-      case TableColumnActionType.Edit:
-        this.editColumn(action.payload as TableColumn);
-        break;
-      case TableColumnActionType.Delete:
-        const columns = action.payload as TableColumn[];
-        const obs = {};
-        for (const column of columns) {
-          obs[column.id] = this.tblService.deleteColumn(tableName, column.id as string);
-        }
-        forkJoin(obs).subscribe();
-        break;
-    }
-  }
-
-  protected onRowAction(action: TableRowAction) {
-    const { tableName } = this.tblService.selectedTable();
-    switch (action.type) {
-      case TableRowActionType.Add:
-        const rows = [];
-        const records = [];
-        for (const { row } of action.payload as TableRowAddedEvent[]) {
-          rows.push(row);
-          records.push(row.data || {});
-        }
-        this.tblService
-          .createRecords(tableName, records)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe(({ data }) => {
-            for (let i = 0; i < rows.length; i++) {
-              const row = rows[i];
-              row.id = data.returning[i]['id'];
-              row.data = data.returning[i];
-            }
-            this.rows.update((arr) => [...arr]);
-          });
-        break;
-      case TableRowActionType.Delete:
-        const recordIds = (action.payload as TableRow[]).map((row) => row.id);
-        this.tblService
-          .deleteRecords(tableName, recordIds)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe();
-        break;
-      case TableRowActionType.Expand:
-        this.updatedRecord = {
-          table: this.tblService.selectedTable(),
-          fields: this.columns().map((c) => c.field),
-          data: action.payload['data'],
-        };
-        this.updatedRecordMode = 'edit';
-        this.visibleRecordEditor = true;
-        break;
-    }
-  }
-
-  protected onCellAction(action: TableCellAction) {
-    const { tableName } = this.tblService.selectedTable();
-    switch (action.type) {
-      case TableCellActionType.Edit:
-      case TableCellActionType.Paste:
-      case TableCellActionType.Clear:
-      case TableCellActionType.Fill:
-        const recordUpdates: { id: string | number; data: any }[] = [];
-        for (const { row, newData } of action.payload as TableCellEditedEvent[]) {
-          recordUpdates.push({ id: row.id, data: newData });
-        }
-        this.tblService
-          .updateRecords(tableName, recordUpdates)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe();
-        break;
-    }
-  }
-
-  protected onColumnSave(savedColumn: ColumnDefinition) {
-    if (this.updatedColumnMode === 'edit') {
-      const columnIndex = this.columns().findIndex((c) => c.id === this.updatedColumn.name);
-      if (columnIndex >= 0) {
-        const updatedColumn: TableColumn = {
-          id: savedColumn.name,
-          field: this.tblService.buildField(savedColumn),
-        };
-        this.columns.update((arr) => {
-          const newArr = [...arr];
-          if (newArr[columnIndex].field.dataType !== updatedColumn.field.dataType) {
-            newArr.splice(columnIndex, 1, updatedColumn);
-          } else {
-            newArr[columnIndex] = updatedColumn;
-          }
-          return newArr;
-        });
-      }
-      return;
-    }
-
-    const column: TableColumn = {
-      id: savedColumn.name,
-      field: this.tblService.buildField(savedColumn),
-    };
-    this.columns.update((arr) => [...arr, column]);
-
-    if (savedColumn.defaultValue !== undefined) {
-      this.rows.update((rows) =>
-        rows.map((row) => {
-          if (row.data[savedColumn.name] === undefined) {
-            return {
-              ...row,
-              data: { ...row.data, [savedColumn.name]: savedColumn.defaultValue },
-            };
-          }
-          return row;
-        }),
-      );
-    }
-  }
-
-  protected onRecordSave(savedRecord: Record<string, any>) {
-    const recordId = savedRecord['id'];
-
-    if (this.updatedRecordMode === 'add') {
-      const newRow: TableRow = {
-        id: recordId,
-        data: savedRecord,
-      };
-      this.rows.update((arr) => [...arr, newRow]);
-    } else {
-      this.rows.update((rows) =>
-        rows.map((row) => (row.id === recordId ? { ...row, data: savedRecord } : row)),
-      );
-    }
-  }
-
-  protected addNewColumn() {
-    this.updatedColumn = null;
-    this.updatedColumnMode = 'add';
+  protected onUpdateColumn(event: UpdateColumnEvent) {
+    this.updatedColumn = event.column;
+    this.updatedColumnMode = event.mode;
     this.visibleColumnEditor = true;
   }
 
-  protected editColumn(column: TableColumn) {
-    this.updatedColumn = column.field.params;
-    this.updatedColumnMode = 'edit';
-    this.visibleColumnEditor = true;
-  }
-
-  protected addNewRecord() {
-    this.updatedRecord = {
-      table: this.tblService.selectedTable(),
-      fields: this.columns().map((c) => c.field),
-      data: {},
-    };
-    this.updatedRecordMode = 'add';
+  protected onUpdateRecord(event: UpdateRecordEvent) {
+    this.updatedRecord = event.record;
+    this.updatedRecordMode = event.mode;
     this.visibleRecordEditor = true;
   }
 
-  private loadTable(table: TableDefinition) {
-    this.columns.set(null);
-    this.rows.set(null);
-    this.loadTableSchema(table);
+  protected onColumnSave(savedColumn: ColumnDefinition) {
+    this.view().onColumnSave(savedColumn, this.updatedColumnMode, this.updatedColumn);
   }
 
-  private loadTableSchema(table: TableDefinition) {
-    this.isLoading.set(true);
-    this.tblService
-      .getTableSchema(table.tableName)
-      .pipe(
-        finalize(() => this.isLoading.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((columnDefs) => {
-        this.columns.set(null);
-
-        if (!columnDefs.length) return;
-
-        const columns: TableColumn[] = [];
-        const references = new Map<string, string>();
-        for (const c of columnDefs) {
-          columns.push({
-            id: c.name,
-            primary: c.primary,
-            editable: !c.primary,
-            field: this.tblService.buildField(c),
-          });
-          if (c.dataType === DataType.Reference) {
-            references.set(c.name, c.foreignKey.table);
-          }
-        }
-        setTimeout(() => {
-          this.columns.set(columns);
-        });
-
-        this.loadTableData(table, references);
-      });
-  }
-
-  private loadTableData(table: TableDefinition, references: Map<string, string>) {
-    this.tblService
-      .getRecords(table.tableName)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((records) => {
-        this.rows.set(null);
-
-        if (!records) return;
-
-        const rows: TableRow[] = records.map((record: any) => {
-          return {
-            id: record.id,
-            data: {
-              ...record,
-              ...Object.fromEntries(
-                Array.from(references.entries())
-                  .filter(([key]) => key in record)
-                  .map(([key, refKey]) => [key, record[refKey]]),
-              ),
-            },
-          };
-        });
-        setTimeout(() => {
-          this.rows.set(rows);
-        });
-      });
+  protected onRecordSave(savedRecord: RecordData) {
+    this.view().onRecordSave(savedRecord, this.updatedRecordMode, this.updatedRecord.data);
   }
 }

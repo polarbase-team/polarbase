@@ -8,8 +8,8 @@
     @if (selecting) {
       <map-picker-drawer
         [(visible)]="visibleMapPicker"
-        [loc]="loc"
-        (onSave)="onSaveNewLocation($event)"
+        [location]="location"
+        (onSave)="onLocationSave($event)"
       />
       <div
         class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
@@ -24,7 +24,7 @@
 } @else {
   <input-box
     type="text"
-    [content]="pointStr"
+    [content]="data | pointFormat"
     (edited)="onInputBoxEdited($event)"
     (input)="onInputBoxInput($event)"
     (focus)="onInputBoxFocus($event)"

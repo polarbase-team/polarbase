@@ -1,0 +1,74 @@
+<p-popover #popover appendTo="body">
+  <div class="flex gap-2">
+    <div class="flex flex-col gap-1">
+      <label for="startField" class="text-sm">Start Date</label>
+      <p-select
+        id="startField"
+        [options]="dateColumns"
+        optionLabel="name"
+        optionValue="name"
+        placeholder="Select here..."
+        [(ngModel)]="selectedStartField"
+        [checkmark]="true"
+        class="w-3xs"
+      />
+    </div>
+    <div class="flex flex-col gap-1">
+      <label for="endField" class="text-sm">End Date</label>
+      <p-select
+        id="endField"
+        [options]="dateColumns"
+        optionLabel="name"
+        optionValue="name"
+        placeholder="Select here..."
+        [(ngModel)]="selectedEndField"
+        [checkmark]="true"
+        class="w-3xs"
+      />
+    </div>
+  </div>
+
+  <p-divider />
+
+  <div class="flex justify-end gap-2 flex-1">
+    <p-button
+      label="Apply changes"
+      [disabled]="!selectedStartField || !selectedEndField"
+      (click)="onChangeDateRange(); popover.hide()"
+    />
+  </div>
+</p-popover>
+
+<div class="px-[20px] py-[16px] w-full h-full">
+  <calendar
+    #calendar
+    [events]="events()"
+    (onDateClick)="onDateClick($event)"
+    (onEventClick)="onEventClick($event)"
+    (onChangeDateRange)="onChangeDateRange($event)"
+  >
+    <ng-template #toolbar>
+      <ng-content></ng-content>
+      <div class="flex flex-wrap gap-2">
+        <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
+        <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
+          <ng-template pTemplate="content">
+            <i class="icon icon-calendar"></i>
+            <span class="p-button-label truncate max-w-3xs">
+              {{
+                selectedStartField && selectedEndField
+                  ? selectedStartField + ' - ' + selectedEndField
+                  : 'Select Date Fields'
+              }}
+            </span>
+          </ng-template>
+        </p-button>
+        <filter-option
+          [fields]="fields()"
+          [items]="records()"
+          (onFilter)="onRecordsFiltered($event)"
+        />
+      </div>
+    </ng-template>
+  </calendar>
+</div>

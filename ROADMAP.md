@@ -17,10 +17,14 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Advanced Field Types**: GeoPoint, Email, URL, Multi-Select.
 - **System Fields**: AutoNumber, AutoDate.
 - **File Management**: Attachment field type with storage integration.
+- **Multi-View Foundation:** Building the core architecture to support switching between different data lenses (Spreadsheet, Calendar, Map,...).
+- **Advanced Filtering:** Support for single and group conditions for complex datasets.
 
 ### 🖥️ Interface & Experience
 
 - **Spreadsheet-UI:** A user-friendly, Excel-like interface for intuitive data visualization and manipulation.
+- **Calendar View:** Visualize records with date fields on a calendar.
+- **Map View:** Visualize records with GeoPoint fields on a map.
 - **API Key Management:** Generate and manage keys for controlled access to REST API or AI features.
 - **Super Admin Control:** Secure administrative access via a dedicated Super Admin Key.
 
@@ -36,9 +40,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 
 ### 🖼️ Multi-View Workspace
 
-- **Multi-View Foundation:** Building the core architecture to support switching between different data lenses (Spreadsheet, Calendar, Kanban,...).
 - **Layout Configuration Storage:** Support storing UI layout configurations (column widths, filters, view states) directly in **SQLite** to maintain a clean main database.
-- **Advanced Filtering:** Support for single and group conditions for complex datasets.
 
 ### 🗄️ Multi-Schema Management
 

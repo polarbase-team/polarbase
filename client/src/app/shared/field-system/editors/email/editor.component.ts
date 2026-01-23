@@ -7,8 +7,8 @@ import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
 import { convertToHtmlPattern } from '@app/core/utils';
-import { EmailField } from '@app/shared/field-system/models/email/field.object';
-import { EmailData, EmailPattern } from '@app/shared/field-system/models/email/field.interface';
+import { EmailField } from '../../models/email/field.object';
+import { EmailData, EmailPattern } from '../../models/email/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 
 @Component({
