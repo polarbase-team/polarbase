@@ -2,25 +2,26 @@
   <div class="flex flex-col gap-1">
     <label class="text-sm">Options</label>
     <div class="flex flex-col gap-2">
-      @for (option of columnFormData.options; track $index; let idx = $index) {
-        <div class="flex gap-1">
-          <input
-            pInputText
-            [pAutoFocus]="true"
-            [ngModel]="option"
-            [ngModelOptions]="{ standalone: true }"
-            (ngModelChange)="editOption(idx, $event)"
-            placeholder="Input here..."
-            fluid
-          />
-          <p-button
-            icon="icon icon-trash"
-            [text]="true"
-            severity="danger"
-            (click)="removeOption(idx)"
-          />
-        </div>
-      }
+      <div class="flex flex-col gap-2 overflow-y-auto max-h-60">
+        @for (option of columnFormData.options; track $index; let idx = $index) {
+          <div class="flex gap-1">
+            <input
+              pInputText
+              [ngModel]="option"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="editOption(idx, $event)"
+              placeholder="Input here..."
+              fluid
+            />
+            <p-button
+              icon="icon icon-trash"
+              [text]="true"
+              severity="danger"
+              (click)="removeOption(idx)"
+            />
+          </div>
+        }
+      </div>
       <p-button icon="icon icon-plus" label="Add option" (click)="addOption()" />
     </div>
   </div>

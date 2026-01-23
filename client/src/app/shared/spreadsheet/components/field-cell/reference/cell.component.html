@@ -3,12 +3,9 @@
     @if (data !== undefined && data !== null) {
       @if (displayLabel !== data) {
         <div class="field-cell__block-content">
-          <p-tag
-            class="cursor-pointer"
-            severity="info"
-            [value]="displayLabel"
-            (click)="viewDetail.emit({ field, data })"
-          ></p-tag>
+          <p-tag class="cursor-pointer" severity="info" (click)="viewDetail.emit({ field, data })">
+            <p class="whitespace-nowrap">{{ displayLabel }}</p>
+          </p-tag>
         </div>
       } @else {
         <div class="field-cell__text-content">
