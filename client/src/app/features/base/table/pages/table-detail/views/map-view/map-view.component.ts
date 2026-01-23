@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { PopoverModule } from 'primeng/popover';
 import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
 import { DataType } from '@app/shared/field-system/models/field.interface';
@@ -25,6 +26,7 @@ import { UpdatedRecordMode } from '../../table-detail.component';
     PopoverModule,
     SelectModule,
     DividerModule,
+    ProgressSpinnerModule,
     OpenMapComponent,
     FilterOptionComponent,
   ],
