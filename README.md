@@ -17,7 +17,7 @@
 
 ## 1. Introduction
 
-**Polarbase** is an open-source **Extensible Data Backend** built directly on the PostgreSQL core. It acts as a powerful bridge that empowers developers to architect, manage, and scale complex databases with ease, combining enterprise-grade reliability with a modern, developer-centric experience.
+**Polarbase** is an open-source **Extensible Data Backend** built directly on the PostgreSQL core. It empowers developers to architect, manage, and scale complex databases with ease, combining enterprise-grade reliability with a modern, developer-centric experience.
 
 **Architect your database with an intuitive UI and deploy data-driven solutions in minutes.**<br>
 [Explore Demo](https://polarbase-client.onrender.com) • [View Roadmap](./ROADMAP.md)
@@ -26,10 +26,10 @@
 
 ### Why Polarbase?
 
-- **Multi-View Workspace:** Go beyond standard tables. Architect your data through specialized interfaces—**Spreadsheet** for rapid editing, **Dashboards** for real-time insights, and **Operational Views** (Forms/Calendars) for seamless workflows.
+- **Multi-View Workspace:** Go beyond standard tables. **Structure** your data through specialized interfaces—**Spreadsheet** for rapid editing, **Dashboards** for real-time insights, and **Operational Views** (Forms/Calendars) for seamless workflows.
 - **Built for Extensibility:** Designed as a core foundation, not a closed silo. With upcoming **SDKs** and native **MCP (Model Context Protocol)** support, Polarbase is engineered to power both custom frontends and autonomous AI Agents.
 - **Pure PostgreSQL, Zero Lock-in:** We respect your data. By using SQLite exclusively for metadata and layout configurations, your PostgreSQL database remains clean, independent, and free from platform-specific overhead.
-- **Developer-Centric & Agile:** Optimized for SME solutions that demand high performance and minimal backend overhead without sacrificing the power of a professional-grade engine.
+- **Developer-Centric & Agile:** Optimized for **data-intensive applications** that demand high performance and minimal backend overhead without sacrificing the power of a professional-grade engine.
 
 ---
 
@@ -58,12 +58,17 @@
       <img src="./assets/screenshots/4.png" width="100%">
     </td>
   </tr>
+  <tr>
+    <td align="center">
+      <b>Diversity of Data Types</b><br>
+      <img src="./assets/screenshots/5.png" width="100%">
+    </td>
+    <td align="center">
+      <b>API Keys Management</b><br>
+      <img src="./assets/screenshots/6.png" width="100%">
+    </td>
+  </tr>
 </table>
-
-<div align="center">
-  <b>API Keys Management</b><br>
-  <img src="./assets/screenshots/5.png" width="60%">
-</div>
 
 ## 3. Key Features
 
@@ -173,7 +178,7 @@ docker run -e GEMINI_API_KEY=<YOUR_GEMINI_KEY> -p 3000:3000 polarbase-team/polar
 
 ## 7. Try It Out
 
-1. Go to the [app](https://only-laura-polarbase-b97c3a27.koyeb.app).
+1. Go to the [app](https://polarbase-client.onrender.com).
 2. Connect your PostgreSQL database.
 3. Use the REST API or AI agent for operations.
 4. Explore realtime features and spreadsheet-UI for data management.
@@ -183,9 +188,11 @@ docker run -e GEMINI_API_KEY=<YOUR_GEMINI_KEY> -p 3000:3000 polarbase-team/polar
 
 - **Knexjs**: For type-safe database querying and migrations.
 - **ai-sdk**: Integration for AI agents and providers (Gemini, OpenAI).
-- **fast-mcp**: Efficient implementation of the Model Context Protocol server.
+- **fastmcp**: Efficient implementation of the Model Context Protocol server.
 - **PrimeNG**: Rich set of UI components for Angular.
 - **Tailwind CSS**: Utility-first CSS framework for rapid styling.
+- **Leaflet**: Open-source JavaScript library for mobile-friendly interactive maps.
+- **FullCalendar**: The most popular JavaScript Calendar.
 - Other dependencies: WebSocket libraries for realtime updates, Angular modules for frontend, and more (see `package.json` files in `client` and `server` for the full list).
 
 ## 9. Community & Support
