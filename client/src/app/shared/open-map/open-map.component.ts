@@ -73,6 +73,8 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
     private http: HttpClient,
     private destroyRef: DestroyRef,
   ) {
+    L.Icon.Default.imagePath = 'media/';
+
     effect(() => {
       this.initMarkers(this.locations());
     });
