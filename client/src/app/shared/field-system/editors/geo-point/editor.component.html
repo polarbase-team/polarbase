@@ -20,7 +20,6 @@
     pInputText
     #input="ngModel"
     [required]="field().required"
-    [pattern]="geoPattern"
     [invalid]="input.invalid && input.touched"
     [id]="fieldName"
     [placeholder]="placeholder() ?? 'Input here...'"
@@ -31,7 +30,7 @@
     (ngModelChange)="data.set($any($event))"
     fluid
   />
-  <p class="text-surface-500 text-xs">Ex: 10.7626, 106.6601</p>
+  <p class="text-surface-500 text-xs">Ex: 105.804817, 21.028511</p>
   @if (input.invalid && input.touched) {
     <p-message severity="error" size="small" variant="simple">
       @if (input.hasError('required')) {

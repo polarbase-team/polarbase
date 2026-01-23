@@ -5,11 +5,11 @@
   position="right"
   header="Map Picker"
   styleClass="!w-180 custom-drawer"
-  (onShow)="mapPicker().refresh()"
+  (onShow)="mapPicker().openMap().refresh()"
   (onHide)="onHide()"
 >
   <ng-template #content>
-    <map-picker #mapPicker [(loc)]="loc" (locChange)="isLocChanged = true" />
+    <map-picker #mapPicker [(location)]="location" (locChange)="isLocationChanged = true" />
   </ng-template>
   <ng-template #footer>
     <div class="flex justify-end gap-2">

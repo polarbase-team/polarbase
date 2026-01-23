@@ -5,8 +5,8 @@ import { AutoFocusModule } from 'primeng/autofocus';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 
-import { CheckboxField } from '@app/shared/field-system/models/checkbox/field.object';
-import { CheckboxData } from '@app/shared/field-system/models/checkbox/field.interface';
+import { CheckboxField } from '../../models/checkbox/field.object';
+import { CheckboxData } from '../../models/checkbox/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 
 @Component({

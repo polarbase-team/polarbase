@@ -62,6 +62,11 @@ export interface ColumnDefinition {
 
 export interface ColumnFormData extends Omit<ColumnDefinition, 'primary' | 'metadata'> {}
 
+export interface RecordData {
+  id: string | number;
+  [key: string]: any;
+}
+
 const DATA_TYPE_MAPPING = {
   integer: DataType.Integer,
   number: DataType.Number,
@@ -147,30 +152,29 @@ export class TableService {
     return this.http.delete(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`);
   }
 
-  getRecords(tableName: string): Observable<Record<string, any>[]> {
-    return this.http
-      .get(`${this.apiUrl}/${tableName}?expand=all`)
-      .pipe(map((res) => res['data']['rows']));
+  getRecords(tableName: string, filter?: Record<string, any>): Observable<RecordData[]> {
+    let url = `${this.apiUrl}/${tableName}?expand=all`;
+    if (filter) {
+      url += `&filter=${JSON.stringify(filter)}`;
+    }
+    return this.http.get(url).pipe(map((res) => res['data'].rows));
   }
 
-  getRecord(tableName: string, recordId: number | string): Observable<Record<string, any>[]> {
+  getRecord(tableName: string, recordId: number | string): Observable<RecordData> {
     return this.http
       .get(`${this.apiUrl}/${tableName}/${recordId}?expand=all`)
       .pipe(map((res) => res['data']));
   }
 
-  createRecords(tableName: string, records: Record<string, any>[]) {
-    return this.http.post<ApiResponse<{ insertedCount: number; returning: Record<string, any>[] }>>(
+  createRecords(tableName: string, records: RecordData[]) {
+    return this.http.post<ApiResponse<{ insertedCount: number; returning: RecordData[] }>>(
       `${this.apiUrl}/${tableName}/bulk-create`,
       records,
     );
   }
 
-  updateRecords(
-    tableName: string,
-    recordUpdates: { id: string | number; data: Record<string, any> }[],
-  ) {
-    return this.http.patch<ApiResponse<{ updatedCount: number; returning: any[] }>>(
+  updateRecords(tableName: string, recordUpdates: { id: string | number; data: RecordData }[]) {
+    return this.http.patch<ApiResponse<{ updatedCount: number; returning: RecordData[] }>>(
       `${this.apiUrl}/${tableName}/bulk-update`,
       recordUpdates,
     );

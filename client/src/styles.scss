@@ -21,6 +21,11 @@ html {
   line-height: normal;
 }
 
+html,
+body {
+  overscroll-behavior-x: none !important;
+}
+
 :focus,
 :focus-visible {
   outline: none;

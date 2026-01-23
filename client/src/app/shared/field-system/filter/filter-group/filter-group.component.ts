@@ -22,8 +22,8 @@ import { AutoFocusModule } from 'primeng/autofocus';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { TextareaModule } from 'primeng/textarea';
 
-import { Field } from '../models/field.object';
-import { DataType } from '../models/field.interface';
+import { Field } from '../../models/field.object';
+import { DataType } from '../../models/field.interface';
 import {
   Conjunction,
   FilterGroup,
@@ -31,7 +31,7 @@ import {
   FilterType,
   getOperatorsByDataType,
   SymOp,
-} from './models';
+} from '../models';
 
 @Component({
   selector: 'filter-group',

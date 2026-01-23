@@ -40,13 +40,7 @@ export class TableRecordService {
 
     // WHERE
     if (where) {
-      const prefixedWhere: Record<string, any> = {};
-      for (const [key, value] of Object.entries(where)) {
-        if (validColumnNames.includes(key)) {
-          prefixedWhere[`${tableName}.${key}`] = value;
-        }
-      }
-      qb = qb.where(prefixedWhere);
+      qb = buildWhereClause(qb, where);
     }
 
     // Global SEARCH across text columns
@@ -203,7 +197,7 @@ export class TableRecordService {
     qb = qb.select(safeSelect);
 
     // WHERE
-    if (where) qb = qb.where(where);
+    if (where) qb = buildWhereClause(qb, where);
 
     // GROUP BY
     if (group) {
