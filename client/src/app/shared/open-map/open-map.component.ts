@@ -55,6 +55,8 @@ export interface Location {
 })
 export class OpenMapComponent implements AfterViewInit, OnDestroy {
   toolbarTmpl = contentChild<TemplateRef<any>>('toolbar');
+  leftToolbarTmpl = contentChild<TemplateRef<any>>('leftToolbar');
+  rightToolbarTmpl = contentChild<TemplateRef<any>>('rightToolbar');
   container = viewChild<ElementRef<HTMLDivElement>>('container');
 
   locations = input<Location[]>();
@@ -73,6 +75,8 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
     private http: HttpClient,
     private destroyRef: DestroyRef,
   ) {
+    L.Icon.Default.imagePath = 'media/';
+
     effect(() => {
       this.initMarkers(this.locations());
     });

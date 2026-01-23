@@ -27,7 +27,8 @@ export class ViewBaseComponent {
   protected destroyRef = inject(DestroyRef);
   protected tblService = inject(TableService);
   protected tblRealtimeService = inject(TableRealtimeService);
-  protected isLoading = signal(false);
+  protected isColumnsLoading = signal(false);
+  protected isRecordsLoading = signal(false);
   protected columns = signal<ColumnDefinition[]>([]);
   protected records = signal<RecordData[]>([]);
   protected fields = computed(() => this.columns().map((c) => this.tblService.buildField(c)));
@@ -65,7 +66,8 @@ export class ViewBaseComponent {
   }
 
   reset() {
-    this.isLoading.set(false);
+    this.isColumnsLoading.set(false);
+    this.isRecordsLoading.set(false);
     this.columns.set([]);
     this.records.set([]);
   }
@@ -109,11 +111,11 @@ export class ViewBaseComponent {
 
   protected loadTableSchema(table: TableDefinition) {
     return new Promise((resolve, reject) => {
-      this.isLoading.set(true);
+      this.isColumnsLoading.set(true);
       this.tblService
         .getTableSchema(table.tableName)
         .pipe(
-          finalize(() => this.isLoading.set(false)),
+          finalize(() => this.isColumnsLoading.set(false)),
           takeUntilDestroyed(this.destroyRef),
         )
         .subscribe({
@@ -131,9 +133,13 @@ export class ViewBaseComponent {
 
   protected loadTableData(table: TableDefinition, filter?: Record<string, any>) {
     return new Promise((resolve, reject) => {
+      this.isRecordsLoading.set(true);
       this.tblService
         .getRecords(table.tableName, filter)
-        .pipe(takeUntilDestroyed(this.destroyRef))
+        .pipe(
+          finalize(() => this.isRecordsLoading.set(false)),
+          takeUntilDestroyed(this.destroyRef),
+        )
         .subscribe({
           next: (records) => {
             this.records.set(records);
