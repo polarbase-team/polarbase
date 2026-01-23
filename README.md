@@ -58,12 +58,17 @@
       <img src="./assets/screenshots/4.png" width="100%">
     </td>
   </tr>
+  <tr>
+    <td align="center">
+      <b>Diversity of Data Types</b><br>
+      <img src="./assets/screenshots/5.png" width="100%">
+    </td>
+    <td align="center">
+      <b>API Keys Management</b><br>
+      <img src="./assets/screenshots/6.png" width="100%">
+    </td>
+  </tr>
 </table>
-
-<div align="center">
-  <b>API Keys Management</b><br>
-  <img src="./assets/screenshots/5.png" width="60%">
-</div>
 
 ## 3. Key Features
 
@@ -186,6 +191,8 @@ docker run -e GEMINI_API_KEY=<YOUR_GEMINI_KEY> -p 3000:3000 polarbase-team/polar
 - **fast-mcp**: Efficient implementation of the Model Context Protocol server.
 - **PrimeNG**: Rich set of UI components for Angular.
 - **Tailwind CSS**: Utility-first CSS framework for rapid styling.
+- **Leaflet**: Open-source JavaScript library for mobile-friendly interactive maps.
+- **FullCalendar**: The most popular JavaScript Calendar.
 - Other dependencies: WebSocket libraries for realtime updates, Angular modules for frontend, and more (see `package.json` files in `client` and `server` for the full list).
 
 ## 9. Community & Support
