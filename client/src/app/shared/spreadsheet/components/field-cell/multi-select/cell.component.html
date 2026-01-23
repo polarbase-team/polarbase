@@ -3,13 +3,15 @@
     <div class="field-cell__block-content">
       @for (option of data; track option) {
         <p-tag severity="secondary">
-          {{ option }}
-          @if (selecting && !readonly) {
-            <i
-              class="icon icon-x cursor-pointer text-surface-500"
-              (click)="removeSelectedOption(option)"
-            ></i>
-          }
+          <p class="whitespace-nowrap">
+            {{ option }}
+            @if (selecting && !readonly) {
+              <i
+                class="icon icon-x cursor-pointer text-surface-500"
+                (click)="removeSelectedOption(option)"
+              ></i>
+            }
+          </p>
         </p-tag>
       }
     </div>
