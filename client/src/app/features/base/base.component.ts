@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 
 import { TabsModule } from 'primeng/tabs';
 import { ButtonModule } from 'primeng/button';
@@ -24,8 +24,9 @@ import { TableService } from './table/services/table.service';
   ],
 })
 export class BaseComponent {
-  protected tblService = inject(TableService);
   protected sidebarVisible = signal<boolean>(true);
+
+  constructor(protected tblService: TableService) {}
 
   protected toggleSidebar() {
     this.sidebarVisible.update((v) => !v);

@@ -59,8 +59,6 @@ export interface UpdateRecordEvent {
 export class TableDetailComponent {
   view = viewChild<DataViewComponent | CalendarViewComponent>('view');
 
-  protected tblService = inject(TableService);
-
   protected displayMode = signal<DisplayMode>('data-view');
   protected displayModeMenuItems: MenuItem[] = [
     {
@@ -97,6 +95,8 @@ export class TableDetailComponent {
   };
   protected updatedRecordMode: UpdatedRecordMode = 'add';
   protected visibleRecordEditor: boolean;
+
+  constructor(protected tblService: TableService) {}
 
   protected onUpdateColumn(event: UpdateColumnEvent) {
     this.updatedColumn = event.column;

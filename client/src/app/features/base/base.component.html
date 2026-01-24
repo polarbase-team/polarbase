@@ -3,7 +3,12 @@
     <table-list />
   </div>
   <div class="base-table-detail w-full h-full">
-    <p-tabs [value]="tblService.activeTable()?.tableName" class="w-full h-full">
+    <p-tabs
+      lazy
+      [value]="tblService.activeTable()?.tableName"
+      class="w-full"
+      [class.h-full]="!!tblService.selectedTables().length"
+    >
       <p-tablist lazy class="min-h-[48px]">
         <div class="flex items-center p-1 min-h-[47px]">
           <p-button
@@ -17,8 +22,8 @@
           />
         </div>
         @for (table of tblService.selectedTables(); track table.tableName) {
-          <p-tab [value]="table.tableName">
-            <div class="flex items-center gap-2 mt-1 group relative">
+          <p-tab [value]="table.tableName" class="group">
+            <div class="flex items-center gap-2 mt-1 relative">
               <i class="icon icon-table-2"></i>
               <span>{{ table.tableName }}</span>
               <i
