@@ -44,28 +44,25 @@
   @case ('data-view') {
     <data-view
       #view
+      [displayModeTmpl]="displayModeTmpl"
       (onUpdateColumn)="onUpdateColumn($event)"
       (onUpdateRecord)="onUpdateRecord($event)"
-    >
-      <ng-container *ngTemplateOutlet="displayModeTmpl"></ng-container>
-    </data-view>
+    />
   }
   @case ('calendar-view') {
     <calendar-view
       #view
+      [displayModeTmpl]="displayModeTmpl"
       (onUpdateColumn)="onUpdateColumn($event)"
       (onUpdateRecord)="onUpdateRecord($event)"
-    >
-      <ng-container *ngTemplateOutlet="displayModeTmpl"></ng-container>
-    </calendar-view>
+    />
   }
   @case ('map-view') {
     <map-view
       #view
+      [displayModeTmpl]="displayModeTmpl"
       (onUpdateColumn)="onUpdateColumn($event)"
       (onUpdateRecord)="onUpdateRecord($event)"
-    >
-      <ng-container *ngTemplateOutlet="displayModeTmpl"></ng-container>
-    </map-view>
+    />
   }
 }

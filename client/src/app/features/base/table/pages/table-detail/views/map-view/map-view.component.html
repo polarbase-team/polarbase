@@ -24,19 +24,32 @@
   </div>
 </p-popover>
 
-<open-map [locations]="locations()" (onMarkerClick)="onMarkerClick($event)" toolbarStyleClass="pt-[16px] px-[20px]">
+<open-map
+  [locations]="locations()"
+  (onMarkerClick)="onMarkerClick($event)"
+  toolbarStyleClass="pt-[16px] px-[20px]"
+>
   <ng-template #leftToolbar>
-    <ng-content></ng-content>
     <div class="flex flex-wrap gap-2">
-      <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
-      <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
-        <ng-template pTemplate="content">
-          <i class="icon icon-map-pin"></i>
-          <span class="p-button-label truncate max-w-3xs">
-            {{ selectedGeoPointField || 'Select GeoPoint Field' }}
-          </span>
-        </ng-template>
-      </p-button>
+      <div class="flex items-start">
+        <ng-template [ngTemplateOutlet]="displayModeTmpl()"></ng-template>
+        <div class="flex gap-2">
+          @if (isColumnsLoading()) {
+            <p-skeleton width="100px" height="33px" />
+            <p-skeleton width="187px" height="33px" />
+          } @else {
+            <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
+            <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
+              <ng-template pTemplate="content">
+                <i class="icon icon-map-pin"></i>
+                <span class="p-button-label truncate max-w-3xs">
+                  {{ selectedGeoPointField || 'Select GeoPoint Field' }}
+                </span>
+              </ng-template>
+            </p-button>
+          }
+        </div>
+      </div>
     </div>
   </ng-template>
 
@@ -47,11 +60,15 @@
           <p-progress-spinner class="w-4! h-4!" strokeWidth="8" />
         </div>
       }
-      <filter-option
-        [fields]="fields()"
-        [items]="records()"
-        (onFilter)="onRecordsFiltered($event)"
-      />
+      @if (isColumnsLoading()) {
+        <p-skeleton width="90px" height="33px" />
+      } @else {
+        <filter-option
+          [fields]="fields()"
+          [items]="records()"
+          (onFilter)="onRecordsFiltered($event)"
+        />
+      }
       <p-divider layout="vertical" class="scale-80" />
     </div>
   </ng-template>

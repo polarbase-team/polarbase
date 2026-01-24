@@ -1,4 +1,13 @@
-import { Directive, DestroyRef, output, signal, inject, computed } from '@angular/core';
+import {
+  Directive,
+  DestroyRef,
+  output,
+  signal,
+  inject,
+  computed,
+  input,
+  TemplateRef,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, finalize } from 'rxjs';
 
@@ -21,6 +30,8 @@ import type {
 
 @Directive()
 export class ViewBaseComponent {
+  displayModeTmpl = input<TemplateRef<any>>();
+
   onUpdateColumn = output<UpdateColumnEvent>();
   onUpdateRecord = output<UpdateRecordEvent>();
 

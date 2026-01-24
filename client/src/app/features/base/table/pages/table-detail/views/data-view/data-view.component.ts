@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, effect, signal, viewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
 
@@ -39,7 +40,14 @@ import { ViewBaseComponent } from '../view-base.component';
   selector: 'data-view',
   templateUrl: './data-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonModule, SplitButtonModule, DividerModule, SkeletonModule, SpreadsheetComponent],
+  imports: [
+    CommonModule,
+    ButtonModule,
+    SplitButtonModule,
+    DividerModule,
+    SkeletonModule,
+    SpreadsheetComponent,
+  ],
 })
 export class DataViewComponent extends ViewBaseComponent {
   spreadsheet = viewChild<SpreadsheetComponent>('spreadsheet');

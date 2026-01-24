@@ -1,6 +1,7 @@
 import _ from 'lodash';
 
 import { ChangeDetectionStrategy, Component, effect, signal, viewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import dayjs, { Dayjs } from 'dayjs';
 
@@ -9,6 +10,7 @@ import { PopoverModule } from 'primeng/popover';
 import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SkeletonModule } from 'primeng/skeleton';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
 import {
@@ -29,12 +31,14 @@ import { UpdatedRecordMode } from '../../table-detail.component';
   templateUrl: './calendar-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CommonModule,
     FormsModule,
     ButtonModule,
     PopoverModule,
     SelectModule,
     DividerModule,
     ProgressSpinnerModule,
+    SkeletonModule,
     CalendarComponent,
     FilterOptionComponent,
   ],
