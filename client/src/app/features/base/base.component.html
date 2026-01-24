@@ -1,12 +1,15 @@
-@let hasSelectedTable = !!tblService.selectedTable();
-
 <div class="base w-full h-full" [class.sidebar--invisible]="!sidebarVisible()">
   <div class="base-sidebar border-r-1 border-surface-200">
     <table-list />
   </div>
   <div class="base-table-detail w-full h-full">
-    <p-tabs value="0" class="w-full" [class.h-full]="hasSelectedTable">
-      <p-tablist class="min-h-[48px]">
+    <p-tabs
+      lazy
+      [value]="tblService.activeTable()?.tableName"
+      class="w-full"
+      [class.h-full]="!!tblService.selectedTables().length"
+    >
+      <p-tablist lazy class="min-h-[48px]">
         <div class="flex items-center p-1 min-h-[47px]">
           <p-button
             [icon]="`icon ${sidebarVisible() ? 'icon-panel-left-close' : 'icon-panel-right-close'}`"
@@ -18,25 +21,31 @@
             (click)="toggleSidebar()"
           />
         </div>
-        @if (hasSelectedTable) {
-          <p-tab value="0">
-            <div class="flex items-center">
-              <i class="icon icon-table-2 mr-2"></i>
-              <span>{{ tblService.selectedTable().tableName }}</span>
+        @for (table of tblService.selectedTables(); track table.tableName) {
+          <p-tab [value]="table.tableName" class="group">
+            <div class="flex items-center gap-2 mt-1 relative">
+              <i class="icon icon-table-2"></i>
+              <span>{{ table.tableName }}</span>
+              <i
+                class="icon icon-x cursor-pointer absolute right-[-15px] top-0.5 opacity-0 group-hover:opacity-100"
+                (click)="$event.stopPropagation(); tblService.removeTable(table.tableName)"
+              ></i>
             </div>
           </p-tab>
         }
       </p-tablist>
-      @if (hasSelectedTable) {
-        <p-tabpanels class="flex-1 !p-0">
-          <p-tabpanel value="0">
-            <table-detail />
+      <p-tabpanels class="flex-1 !p-0">
+        @for (table of tblService.selectedTables(); track table.tableName) {
+          <p-tabpanel [value]="table.tableName">
+            <ng-template #content>
+              <table-detail />
+            </ng-template>
           </p-tabpanel>
-        </p-tabpanels>
-      }
+        }
+      </p-tabpanels>
     </p-tabs>
 
-    @if (!hasSelectedTable) {
+    @if (!tblService.selectedTables().length) {
       <div class="flex flex-col w-full h-full items-center pt-50 bg-gray-50">
         <p-image src="assets/images/chill-bear.png" width="320" height="320" />
         <p class="text-surface-500 italic flex items-center" style="margin-top: -45px">

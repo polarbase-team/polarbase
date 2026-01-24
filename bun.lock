@@ -9,7 +9,7 @@
     },
     "client": {
       "name": "polarbase-client",
-      "version": "0.6.0-beta",
+      "version": "0.6.1-beta",
       "dependencies": {
         "@angular/common": "^20.3.0",
         "@angular/compiler": "^20.3.0",
@@ -57,7 +57,7 @@
     },
     "server": {
       "name": "polarbase-server",
-      "version": "0.6.0-beta",
+      "version": "0.6.1-beta",
       "dependencies": {
         "@ai-sdk/anthropic": "^2.0.53",
         "@ai-sdk/google": "^2.0.44",

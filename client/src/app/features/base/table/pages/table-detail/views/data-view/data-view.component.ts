@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, effect, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
 
@@ -30,7 +31,7 @@ import {
   TableColumnActionType,
 } from '@app/shared/spreadsheet/events/table-column';
 import { ReferenceViewDetailEvent } from '@app/shared/spreadsheet/components/field-cell/reference/cell.component';
-import { ColumnDefinition, RecordData } from '../../../../services/table.service';
+import { ColumnDefinition, RecordData, TableDefinition } from '../../../../services/table.service';
 import { TableRealtimeMessage } from '../../../../services/table-realtime.service';
 import type { UpdatedColumnMode, UpdatedRecordMode } from '../../table-detail.component';
 import { ViewBaseComponent } from '../view-base.component';
@@ -39,7 +40,14 @@ import { ViewBaseComponent } from '../view-base.component';
   selector: 'data-view',
   templateUrl: './data-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonModule, SplitButtonModule, DividerModule, SkeletonModule, SpreadsheetComponent],
+  imports: [
+    CommonModule,
+    ButtonModule,
+    SplitButtonModule,
+    DividerModule,
+    SkeletonModule,
+    SpreadsheetComponent,
+  ],
 })
 export class DataViewComponent extends ViewBaseComponent {
   spreadsheet = viewChild<SpreadsheetComponent>('spreadsheet');
@@ -67,18 +75,14 @@ export class DataViewComponent extends ViewBaseComponent {
     },
   ];
 
+  private table: TableDefinition;
   private references = new Map<string, string>();
 
   constructor() {
     super();
 
-    effect(() => {
-      const selectedTable = this.tblService.selectedTable();
-      if (!selectedTable) return;
-
-      this.reset();
-      this.loadTable(selectedTable);
-    });
+    this.table = this.tblService.activeTable();
+    this.loadTable(this.table);
   }
 
   override reset() {
@@ -254,7 +258,6 @@ export class DataViewComponent extends ViewBaseComponent {
   }
 
   protected onColumnAction(action: TableColumnAction) {
-    const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
       case TableColumnActionType.Add:
         this.addNewColumn();
@@ -266,7 +269,7 @@ export class DataViewComponent extends ViewBaseComponent {
         const columns = action.payload as TableColumn[];
         const obs = {};
         for (const column of columns) {
-          obs[column.id] = this.tblService.deleteColumn(tableName, column.id as string);
+          obs[column.id] = this.tblService.deleteColumn(this.table.tableName, column.id as string);
         }
         forkJoin(obs).subscribe();
         break;
@@ -274,7 +277,6 @@ export class DataViewComponent extends ViewBaseComponent {
   }
 
   protected onRowAction(action: TableRowAction) {
-    const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
       case TableRowActionType.Add:
         const rows = [];
@@ -284,7 +286,7 @@ export class DataViewComponent extends ViewBaseComponent {
           records.push(row.data || {});
         }
         this.tblService
-          .createRecords(tableName, records)
+          .createRecords(this.table.tableName, records)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe(({ data }) => {
             for (let i = 0; i < rows.length; i++) {
@@ -298,14 +300,14 @@ export class DataViewComponent extends ViewBaseComponent {
       case TableRowActionType.Delete:
         const recordIds = (action.payload as TableRow[]).map((row) => row.id);
         this.tblService
-          .deleteRecords(tableName, recordIds)
+          .deleteRecords(this.table.tableName, recordIds)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;
       case TableRowActionType.Expand:
         this.onUpdateRecord.emit({
           record: {
-            table: this.tblService.selectedTable(),
+            table: this.table,
             fields: this.fields(),
             data: action.payload['data'],
           },
@@ -316,7 +318,6 @@ export class DataViewComponent extends ViewBaseComponent {
   }
 
   protected onCellAction(action: TableCellAction) {
-    const { tableName } = this.tblService.selectedTable();
     switch (action.type) {
       case TableCellActionType.Edit:
       case TableCellActionType.Paste:
@@ -327,7 +328,7 @@ export class DataViewComponent extends ViewBaseComponent {
           recordUpdates.push({ id: row.id, data: newData });
         }
         this.tblService
-          .updateRecords(tableName, recordUpdates)
+          .updateRecords(this.table.tableName, recordUpdates)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;
@@ -351,7 +352,7 @@ export class DataViewComponent extends ViewBaseComponent {
   protected addNewRecord() {
     this.onUpdateRecord.emit({
       record: {
-        table: this.tblService.selectedTable(),
+        table: this.table,
         fields: this.fields(),
         data: { id: undefined },
       },

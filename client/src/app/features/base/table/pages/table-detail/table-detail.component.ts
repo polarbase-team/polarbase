@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { ButtonModule } from 'primeng/button';
@@ -66,8 +59,6 @@ export interface UpdateRecordEvent {
 export class TableDetailComponent {
   view = viewChild<DataViewComponent | CalendarViewComponent>('view');
 
-  protected tblService = inject(TableService);
-
   protected displayMode = signal<DisplayMode>('data-view');
   protected displayModeMenuItems: MenuItem[] = [
     {
@@ -105,12 +96,7 @@ export class TableDetailComponent {
   protected updatedRecordMode: UpdatedRecordMode = 'add';
   protected visibleRecordEditor: boolean;
 
-  constructor() {
-    effect(() => {
-      this.tblService.selectedTable();
-      this.displayMode.set('data-view');
-    });
-  }
+  constructor(protected tblService: TableService) {}
 
   protected onUpdateColumn(event: UpdateColumnEvent) {
     this.updatedColumn = event.column;

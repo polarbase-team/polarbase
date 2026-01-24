@@ -91,11 +91,32 @@ const DATA_TYPE_MAPPING = {
 })
 export class TableService {
   tables = signal<TableDefinition[]>([]);
-  selectedTable = signal<TableDefinition>(null);
+  activeTable = signal<TableDefinition>(null);
+  selectedTables = signal<TableDefinition[]>([]);
 
   private apiUrl = `${environment.apiUrl}/rest/db`;
 
   constructor(private http: HttpClient) {}
+
+  selectTable(table: TableDefinition) {
+    this.selectedTables.update((tables) => (tables.includes(table) ? tables : [...tables, table]));
+    this.activeTable.set(table);
+  }
+
+  removeTable(tableName: string) {
+    this.selectedTables.update((tables) => [...tables.filter((t) => t.tableName !== tableName)]);
+
+    let activeTable = this.activeTable();
+    this.activeTable.set(null);
+    setTimeout(() => {
+      if (tableName === activeTable.tableName) {
+        activeTable = this.selectedTables().at(0);
+      }
+      if (activeTable) {
+        this.activeTable.set(activeTable);
+      }
+    }, 0);
+  }
 
   getEnumTypes() {
     return this.http
@@ -131,7 +152,14 @@ export class TableService {
   }
 
   deleteTable(tableName: string, casecade = false) {
-    return this.http.delete<ApiResponse>(`${this.apiUrl}/tables/${tableName}?cascade=${casecade}`);
+    return this.http
+      .delete<ApiResponse>(`${this.apiUrl}/tables/${tableName}?cascade=${casecade}`)
+      .pipe(
+        map((res) => {
+          this.removeTable(tableName);
+          return res;
+        }),
+      );
   }
 
   createColumn(tableName: string, column: ColumnFormData) {

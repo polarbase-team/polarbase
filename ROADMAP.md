@@ -102,4 +102,4 @@ Polarbase aims to be the go-to engine for developers building custom enterprise 
 
 ---
 
-> **Note:** This roadmap is a living document. We prioritize features based on community feedback. If you have any suggestion, let [open an issue](https://github.com/polarbase-team/polarbase/issues)!
+> **Note:** This roadmap is a living document. We prioritize features based on community feedback. If you have any suggestions, please [open an issue](https://github.com/polarbase-team/polarbase/issues)!

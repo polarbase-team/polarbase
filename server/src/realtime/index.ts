@@ -12,12 +12,18 @@ export async function enableRealtime(app: Elysia) {
   await setupReplication();
   await startCDC();
 
+  const sseClients = new Set<(data: any) => void>();
+
   cdcEmitter.on(CDC_EVENTS.CHANGE, (message) => {
     WebSocket.broadcast({
       event: REALTIME_EVENT_NAME,
       payload: message,
       timestamp: new Date().toISOString(),
     });
+
+    for (const push of sseClients) {
+      push(message);
+    }
   });
 
   // WebSocket endpoint
@@ -83,50 +89,35 @@ export async function enableRealtime(app: Elysia) {
       return { error: 'Invalid API Key' };
     }
 
-    const signal = request.signal;
+    const queue: any[] = [];
     let resolve: (value: unknown) => void;
     let promise = new Promise((r) => (resolve = r));
-    const queue: any[] = [];
 
-    const listener = (data: any) => {
+    const pushToQueue = (data: any) => {
       queue.push(data);
       resolve(true);
     };
 
-    cdcEmitter.on('cdc:change', listener);
+    sseClients.add(pushToQueue);
 
     try {
-      // First chunk sends headers and primes the connection
       yield sse(': ok');
 
-      while (!signal.aborted) {
-        const timeoutPromise = new Promise((r) =>
-          setTimeout(() => r('timeout'), 15000)
-        );
+      while (!request.signal.aborted) {
+        await Promise.race([
+          promise,
+          new Promise((r) => setTimeout(() => r('timeout'), 15000)),
+        ]);
 
-        // Wait for activity
-        // Since this is a generator, we await the promise inside the loop
-        await Promise.race([promise, timeoutPromise]);
-
-        if (signal.aborted) break;
-
-        // Send pending events from queue using the documented 'sse' helper
         while (queue.length > 0) {
-          const data = queue.shift();
-          yield sse({
-            event: REALTIME_EVENT_NAME,
-            data: data,
-          });
+          yield sse({ event: REALTIME_EVENT_NAME, data: queue.shift() });
         }
 
-        // Heartbeat
         yield sse(': heartbeat');
-
-        // Reset for next event
         promise = new Promise((r) => (resolve = r));
       }
     } finally {
-      cdcEmitter.off('cdc:change', listener);
+      sseClients.delete(pushToQueue);
     }
   });
 }
