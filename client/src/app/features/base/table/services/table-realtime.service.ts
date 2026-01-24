@@ -79,8 +79,6 @@ export class TableRealtimeService {
         next: ({ data }) => this.emitMessage(data.payload),
         error: (err) => console.error('WebSocket error:', err),
       });
-
-    return this.messages$;
   }
 
   /**
@@ -117,8 +115,13 @@ export class TableRealtimeService {
         next: (data) => this.emitMessage(data),
         error: (err) => console.error('SSE Stream error:', err),
       });
+  }
 
-    return this.messages$;
+  /**
+   * Watch for realtime updates
+   */
+  watch() {
+    return this.messages$.pipe(takeUntilDestroyed(this.destroyRef));
   }
 
   private emitMessage(data: RealtimePayload) {
