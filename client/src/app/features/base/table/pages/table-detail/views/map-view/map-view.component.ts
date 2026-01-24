@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, effect, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
@@ -6,13 +7,14 @@ import { PopoverModule } from 'primeng/popover';
 import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SkeletonModule } from 'primeng/skeleton';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { OpenMapComponent, Location } from '@app/shared/open-map/open-map.component';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { TableRealtimeMessage } from '@app/features/base/table/services/table-realtime.service';
-import { ColumnDefinition, RecordData } from '../../../../services/table.service';
+import { ColumnDefinition, RecordData, TableDefinition } from '../../../../services/table.service';
 import { ViewBaseComponent } from '../view-base.component';
 import { UpdatedRecordMode } from '../../table-detail.component';
 
@@ -21,12 +23,14 @@ import { UpdatedRecordMode } from '../../table-detail.component';
   templateUrl: './map-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CommonModule,
     FormsModule,
     ButtonModule,
     PopoverModule,
     SelectModule,
     DividerModule,
     ProgressSpinnerModule,
+    SkeletonModule,
     OpenMapComponent,
     FilterOptionComponent,
   ],
@@ -36,16 +40,13 @@ export class MapViewComponent extends ViewBaseComponent {
   protected locations = signal<Location[]>([]);
   protected selectedGeoPointField: string;
 
+  private table: TableDefinition;
+
   constructor() {
     super();
 
-    effect(() => {
-      const selectedTable = this.tblService.selectedTable();
-      if (!selectedTable) return;
-
-      this.reset();
-      this.loadTable(selectedTable);
-    });
+    this.table = this.tblService.activeTable();
+    this.loadTable(this.table);
   }
 
   override reset() {
@@ -128,6 +129,17 @@ export class MapViewComponent extends ViewBaseComponent {
     }
   }
 
+  protected onMarkerClick(location: Location) {
+    this.onUpdateRecord.emit({
+      record: {
+        table: this.table,
+        fields: this.fields(),
+        data: this.records().find((r) => r.id === location.id),
+      },
+      mode: 'edit',
+    });
+  }
+
   protected onChangeGeoPointField() {
     this.onRecordsFiltered(this.records());
   }
@@ -135,7 +147,7 @@ export class MapViewComponent extends ViewBaseComponent {
   protected addNewRecord(location?: Location) {
     this.onUpdateRecord.emit({
       record: {
-        table: this.tblService.selectedTable(),
+        table: this.table,
         fields: this.fields(),
         data: {
           id: undefined,

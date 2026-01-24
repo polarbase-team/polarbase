@@ -91,11 +91,17 @@ const DATA_TYPE_MAPPING = {
 })
 export class TableService {
   tables = signal<TableDefinition[]>([]);
-  selectedTable = signal<TableDefinition>(null);
+  activeTable = signal<TableDefinition>(null);
+  selectedTables = signal<TableDefinition[]>([]);
 
   private apiUrl = `${environment.apiUrl}/rest/db`;
 
   constructor(private http: HttpClient) {}
+
+  selectTable(table: TableDefinition) {
+    this.activeTable.set(table);
+    this.selectedTables.update((tables) => (tables.includes(table) ? tables : [...tables, table]));
+  }
 
   getEnumTypes() {
     return this.http

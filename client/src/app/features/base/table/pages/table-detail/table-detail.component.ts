@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { ButtonModule } from 'primeng/button';
@@ -104,13 +97,6 @@ export class TableDetailComponent {
   };
   protected updatedRecordMode: UpdatedRecordMode = 'add';
   protected visibleRecordEditor: boolean;
-
-  constructor() {
-    effect(() => {
-      this.tblService.selectedTable();
-      this.displayMode.set('data-view');
-    });
-  }
 
   protected onUpdateColumn(event: UpdateColumnEvent) {
     this.updatedColumn = event.column;
