@@ -45,7 +45,6 @@ import { TableEditorDrawerComponent } from '../../components/table-editor/table-
   providers: [ConfirmationService, MessageService],
 })
 export class TableListComponent {
-  protected tblService = inject(TableService);
   protected tables = signal<TableDefinition[]>([]);
   protected filteredTables = signal<TableDefinition[]>([]);
   protected isLoading = signal(false);
@@ -65,6 +64,7 @@ export class TableListComponent {
     private activatedRoute: ActivatedRoute,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
+    protected tblService: TableService,
   ) {
     let tableFromQueryParam: string;
 

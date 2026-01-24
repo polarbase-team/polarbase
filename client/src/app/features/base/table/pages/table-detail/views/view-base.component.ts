@@ -46,7 +46,7 @@ export class ViewBaseComponent {
 
   constructor() {
     this.tblRealtimeService
-      .enableSSE()
+      .watch()
       .pipe(delay(200), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (event) => {
