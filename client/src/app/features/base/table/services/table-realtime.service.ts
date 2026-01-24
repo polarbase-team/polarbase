@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, Subject, filter } from 'rxjs';
+import { Observable, Subject, filter, shareReplay } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -106,7 +106,7 @@ export class TableRealtimeService {
       };
 
       return () => eventSource.close();
-    });
+    }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
     sseStream$
       .pipe(

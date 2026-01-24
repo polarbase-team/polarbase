@@ -9,7 +9,7 @@ import {
   TemplateRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { delay, finalize, shareReplay } from 'rxjs';
+import { delay, finalize } from 'rxjs';
 
 import {
   ColumnDefinition,
@@ -47,7 +47,7 @@ export class ViewBaseComponent {
   constructor() {
     this.tblRealtimeService
       .enableSSE()
-      .pipe(delay(200), shareReplay(1), takeUntilDestroyed(this.destroyRef))
+      .pipe(delay(200), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (event) => {
           const { action, record } = event;
