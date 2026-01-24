@@ -28,7 +28,7 @@
               <span>{{ table.tableName }}</span>
               <i
                 class="icon icon-x cursor-pointer absolute right-[-15px] top-0.5 opacity-0 group-hover:opacity-100"
-                (click)="$event.stopPropagation(); tblService.removeTable(table)"
+                (click)="$event.stopPropagation(); tblService.removeTable(table.tableName)"
               ></i>
             </div>
           </p-tab>
