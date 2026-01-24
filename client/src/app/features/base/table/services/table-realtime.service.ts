@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, Subject, filter } from 'rxjs';
+import { Observable, Subject, filter, shareReplay } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -71,7 +71,7 @@ export class TableRealtimeService {
             timestamp: string;
           }>) =>
             data.event === REALTIME_EVENT_NAME &&
-            data.payload.relation.name === this.tableService.selectedTable()?.tableName,
+            data.payload.relation.name === this.tableService.activeTable()?.tableName,
         ),
         takeUntilDestroyed(this.destroyRef),
       )
@@ -79,8 +79,6 @@ export class TableRealtimeService {
         next: ({ data }) => this.emitMessage(data.payload),
         error: (err) => console.error('WebSocket error:', err),
       });
-
-    return this.messages$;
   }
 
   /**
@@ -106,19 +104,24 @@ export class TableRealtimeService {
       };
 
       return () => eventSource.close();
-    });
+    }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
     sseStream$
       .pipe(
-        filter((data) => data.relation.name === this.tableService.selectedTable()?.tableName),
+        filter((data) => data.relation.name === this.tableService.activeTable()?.tableName),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: (data) => this.emitMessage(data),
         error: (err) => console.error('SSE Stream error:', err),
       });
+  }
 
-    return this.messages$;
+  /**
+   * Watch for realtime updates
+   */
+  watch() {
+    return this.messages$.pipe(takeUntilDestroyed(this.destroyRef));
   }
 
   private emitMessage(data: RealtimePayload) {

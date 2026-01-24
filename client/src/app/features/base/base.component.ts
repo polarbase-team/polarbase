@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 
 import { TabsModule } from 'primeng/tabs';
 import { ButtonModule } from 'primeng/button';
@@ -8,6 +8,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TableListComponent } from './table/pages/table-list/table-list.component';
 import { TableDetailComponent } from './table/pages/table-detail/table-detail.component';
 import { TableService } from './table/services/table.service';
+import { TableRealtimeService } from './table/services/table-realtime.service';
 
 @Component({
   selector: 'base',
@@ -24,8 +25,14 @@ import { TableService } from './table/services/table.service';
   ],
 })
 export class BaseComponent {
-  protected tblService = inject(TableService);
   protected sidebarVisible = signal<boolean>(true);
+
+  constructor(
+    protected tblService: TableService,
+    protected tblRealtimeService: TableRealtimeService,
+  ) {
+    this.tblRealtimeService.enableSSE();
+  }
 
   protected toggleSidebar() {
     this.sidebarVisible.update((v) => !v);

@@ -1,6 +1,7 @@
 import _ from 'lodash';
 
-import { ChangeDetectionStrategy, Component, effect, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import dayjs, { Dayjs } from 'dayjs';
 
@@ -9,6 +10,7 @@ import { PopoverModule } from 'primeng/popover';
 import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SkeletonModule } from 'primeng/skeleton';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
 import {
@@ -20,7 +22,7 @@ import {
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { TableRealtimeMessage } from '@app/features/base/table/services/table-realtime.service';
-import { ColumnDefinition, RecordData } from '../../../../services/table.service';
+import { ColumnDefinition, RecordData, TableDefinition } from '../../../../services/table.service';
 import { ViewBaseComponent } from '../view-base.component';
 import { UpdatedRecordMode } from '../../table-detail.component';
 
@@ -29,12 +31,14 @@ import { UpdatedRecordMode } from '../../table-detail.component';
   templateUrl: './calendar-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CommonModule,
     FormsModule,
     ButtonModule,
     PopoverModule,
     SelectModule,
     DividerModule,
     ProgressSpinnerModule,
+    SkeletonModule,
     CalendarComponent,
     FilterOptionComponent,
   ],
@@ -47,16 +51,13 @@ export class CalendarViewComponent extends ViewBaseComponent {
   protected selectedStartField: string;
   protected selectedEndField: string;
 
+  private table: TableDefinition;
+
   constructor() {
     super();
 
-    effect(() => {
-      const selectedTable = this.tblService.selectedTable();
-      if (!selectedTable) return;
-
-      this.reset();
-      this.loadTableSchema(selectedTable);
-    });
+    this.table = this.tblService.activeTable();
+    this.loadTableSchema(this.table);
   }
 
   override reset() {
@@ -179,7 +180,7 @@ export class CalendarViewComponent extends ViewBaseComponent {
   protected onEventClick(e: CalendarEventClickArg) {
     this.onUpdateRecord.emit({
       record: {
-        table: this.tblService.selectedTable(),
+        table: this.table,
         fields: this.fields(),
         data: this.records().find((r) => r.id === e.event.id),
       },
@@ -206,7 +207,7 @@ export class CalendarViewComponent extends ViewBaseComponent {
   protected addNewRecord(date?: Dayjs) {
     this.onUpdateRecord.emit({
       record: {
-        table: this.tblService.selectedTable(),
+        table: this.table,
         fields: this.fields(),
         data: {
           id: undefined,
@@ -240,7 +241,7 @@ export class CalendarViewComponent extends ViewBaseComponent {
         };
       }
 
-      await this.loadTableData(this.tblService.selectedTable(), filter);
+      await this.loadTableData(this.table, filter);
     },
     1000,
     { leading: true },
