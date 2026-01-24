@@ -18,9 +18,13 @@
         </div>
         @for (table of tblService.selectedTables(); track table.tableName) {
           <p-tab [value]="table.tableName">
-            <div class="flex items-center gap-2 mt-1">
+            <div class="flex items-center gap-2 mt-1 group relative">
               <i class="icon icon-table-2"></i>
               <span>{{ table.tableName }}</span>
+              <i
+                class="icon icon-x cursor-pointer absolute right-[-15px] top-0.5 opacity-0 group-hover:opacity-100"
+                (click)="$event.stopPropagation(); tblService.removeTable(table)"
+              ></i>
             </div>
           </p-tab>
         }

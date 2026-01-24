@@ -99,8 +99,25 @@ export class TableService {
   constructor(private http: HttpClient) {}
 
   selectTable(table: TableDefinition) {
-    this.activeTable.set(table);
     this.selectedTables.update((tables) => (tables.includes(table) ? tables : [...tables, table]));
+    this.activeTable.set(table);
+  }
+
+  removeTable(table: TableDefinition) {
+    this.selectedTables.update((tables) => [
+      ...tables.filter((t) => t.tableName !== table.tableName),
+    ]);
+
+    let activeTable = this.activeTable();
+    this.activeTable.set(null);
+    setTimeout(() => {
+      if (table === activeTable) {
+        activeTable = this.selectedTables().at(0);
+      }
+      if (activeTable) {
+        this.activeTable.set(activeTable);
+      }
+    }, 0);
   }
 
   getEnumTypes() {
