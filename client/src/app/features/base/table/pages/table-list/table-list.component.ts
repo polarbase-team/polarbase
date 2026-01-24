@@ -118,7 +118,7 @@ export class TableListComponent {
   }
 
   protected selectTable(table: TableDefinition) {
-    this.tblService.selectedTable.set(table);
+    this.tblService.selectTable(table);
     this.router.navigate([], {
       relativeTo: this.activatedRoute,
       queryParams: { table: table.tableName },

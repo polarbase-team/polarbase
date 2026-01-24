@@ -1,6 +1,6 @@
 <column-editor-drawer
   [(visible)]="visibleColumnEditor"
-  [table]="tblService.selectedTable()"
+  [table]="tblService.activeTable()"
   [column]="updatedColumn"
   [mode]="updatedColumnMode"
   (onSave)="onColumnSave($any($event))"
