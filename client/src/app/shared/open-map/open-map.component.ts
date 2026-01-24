@@ -65,6 +65,7 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
   contentStyleClass = input<string>();
 
   onMapClick = output<Location>();
+  onMarkerClick = output<Location>();
 
   protected suggestions = signal<any[]>([]);
 
@@ -163,6 +164,9 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
           .addTo(this.map)
           .bindTooltip(String(location.title));
         markers.push(marker);
+        marker.on('click', () => {
+          this.onMarkerClick.emit(location);
+        });
       }
       this.markers = markers;
 

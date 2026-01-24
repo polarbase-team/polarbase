@@ -24,7 +24,7 @@
   </div>
 </p-popover>
 
-<open-map [locations]="locations()" toolbarStyleClass="pt-[16px] px-[20px]">
+<open-map [locations]="locations()" (onMarkerClick)="onMarkerClick($event)" toolbarStyleClass="pt-[16px] px-[20px]">
   <ng-template #leftToolbar>
     <ng-content></ng-content>
     <div class="flex flex-wrap gap-2">

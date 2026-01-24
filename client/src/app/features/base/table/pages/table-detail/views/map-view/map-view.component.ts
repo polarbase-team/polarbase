@@ -128,6 +128,17 @@ export class MapViewComponent extends ViewBaseComponent {
     }
   }
 
+  protected onMarkerClick(location: Location) {
+    this.onUpdateRecord.emit({
+      record: {
+        table: this.tblService.selectedTable(),
+        fields: this.fields(),
+        data: this.records().find((r) => r.id === location.id),
+      },
+      mode: 'edit',
+    });
+  }
+
   protected onChangeGeoPointField() {
     this.onRecordsFiltered(this.records());
   }
