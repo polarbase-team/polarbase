@@ -315,7 +315,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                 t.Nullable(
                   t.Object({
                     uiName: t.Optional(t.Nullable(t.String())),
-                    format: t.Optional(t.Nullable(t.String())),
+                    format: t.Optional(t.Nullable(t.Any())),
                   })
                 )
               ),
@@ -406,7 +406,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
               presentation: t.Nullable(
                 t.Object({
                   uiName: t.Optional(t.Nullable(t.String())),
-                  format: t.Optional(t.Nullable(t.String())),
+                  format: t.Optional(t.Nullable(t.Any())),
                 })
               ),
               validation: t.Nullable(

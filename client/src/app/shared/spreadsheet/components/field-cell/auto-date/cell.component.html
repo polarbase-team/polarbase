@@ -1,5 +1,6 @@
 @if (data !== undefined && data !== null) {
   <div class="field-cell__text-content">
-    {{ data | dateFormat }}
+    @let presentation = field.params.presentation?.format;
+    {{ data | dateFormat: presentation?.dateFormat : presentation?.showTime }}
   </div>
 }

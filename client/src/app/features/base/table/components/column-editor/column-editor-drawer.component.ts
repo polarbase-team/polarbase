@@ -29,6 +29,9 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+
+import { environment } from '@environments/environment';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyStrings } from '@app/core/utils';
@@ -93,6 +96,7 @@ const DEFAULT_VALUE = {
     SelectButtonModule,
     TooltipModule,
     ConfirmDialogModule,
+    ToggleSwitchModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -126,6 +130,18 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   }));
   protected selectedDataType = signal<DataType>(null);
   protected internalField: Field;
+
+  // Date type
+  protected dateFormats = [
+    { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
+    { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
+    { value: 'YYYY/MM/DD', label: 'YYYY/MM/DD' },
+    { value: 'YYYY/DD/MM', label: 'YYYY/DD/MM' },
+    { value: 'DD-MM-YYYY', label: 'DD-MM-YYYY' },
+    { value: 'MM-DD-YYYY', label: 'MM-DD-YYYY' },
+    { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' },
+    { value: 'YYYY-DD-MM', label: 'YYYY-DD-MM' },
+  ];
 
   // Reference type
   protected tableOptions: { name: string; value: string }[] | undefined;
@@ -272,8 +288,19 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   protected onDataTypeSelect(dataType: DataType) {
     this.columnFormData.dataType = dataType;
     this.columnFormData.defaultValue = null;
+    this.columnFormData.presentation = { ...DEFAULT_VALUE.presentation };
     this.columnFormData.validation = { ...DEFAULT_VALUE.validation };
     this.columnFormData.foreignKey = { ...DEFAULT_VALUE.foreignKey };
+
+    switch (dataType) {
+      case DataType.Date:
+      case DataType.AutoDate:
+        this.columnFormData.presentation.format = {
+          dateFormat: environment.dateFormat,
+          showTime: true,
+        };
+        break;
+    }
   }
 
   protected addOption() {

@@ -1,3 +1,23 @@
+<ng-template #dateFormatBuilder>
+  <div class="space-y-2">
+    <div class="flex flex-col gap-1">
+      <label class="text-sm">Format</label>
+      <p-select
+        name="format"
+        [(ngModel)]="columnFormData.presentation.format.dateFormat"
+        [options]="dateFormats"
+        [checkmark]="true"
+        [showClear]="true"
+        placeholder="Select here..."
+      />
+    </div>
+    <div class="flex items-center gap-2">
+      <p-toggleswitch name="showTime" [(ngModel)]="columnFormData.presentation.format.showTime" />
+      <label class="text-sm">Show time</label>
+    </div>
+  </div>
+</ng-template>
+
 <ng-template #optionsBuilder>
   <div class="flex flex-col gap-1">
     <label class="text-sm">Options</label>
@@ -218,6 +238,7 @@
                 </div>
               }
               @case (DataType.Date) {
+                <ng-container [ngTemplateOutlet]="dateFormatBuilder"></ng-container>
                 <div class="flex flex-col gap-1">
                   <label class="text-sm">Min date</label>
                   <p-datepicker
@@ -355,7 +376,9 @@
                 </div>
               }
               @case (DataType.AutoNumber) {}
-              @case (DataType.AutoDate) {}
+              @case (DataType.AutoDate) {
+                <ng-container [ngTemplateOutlet]="dateFormatBuilder"></ng-container>
+              }
             }
           </div>
         </div>
