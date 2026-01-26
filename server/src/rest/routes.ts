@@ -151,9 +151,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
        */
       .get('/tables', async () => {
         const tables = await tableService.getAll();
-        return tables.filter(
-          (t) => !REST_BLACKLISTED_TABLES.includes(t.name)
-        );
+        return tables.filter((t) => !REST_BLACKLISTED_TABLES.includes(t.name));
       })
 
       /**
@@ -405,13 +403,11 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                   error: 'Comment too long (max 500 chars)',
                 })
               ),
-              presentation: t.Optional(
-                t.Nullable(
-                  t.Object({
-                    uiName: t.Optional(t.String()),
-                    format: t.Optional(t.String()),
-                  })
-                )
+              presentation: t.Nullable(
+                t.Object({
+                  uiName: t.Optional(t.Nullable(t.String())),
+                  format: t.Optional(t.Nullable(t.String())),
+                })
               ),
               validation: t.Nullable(
                 t.Object({
