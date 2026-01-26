@@ -4,7 +4,6 @@ import {
   DestroyRef,
   effect,
   input,
-  model,
   output,
   signal,
   viewChild,
@@ -29,7 +28,7 @@ import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyStrings } from '@app/core/utils';
 import { TableFormData, TableDefinition, TableService } from '../../services/table.service';
 
-const DEFAULT_VALUE = { idType: 'integer', timestamps: true } as TableFormData;
+const DEFAULT_VALUE = { idType: 'integer', timestamps: true, presentation: {} } as TableFormData;
 
 @Component({
   selector: 'table-editor-drawer',
@@ -68,7 +67,11 @@ export class TableEditorDrawerComponent extends DrawerComponent {
     super();
 
     effect(() => {
-      this.tableFormData = { ...DEFAULT_VALUE, ...this.table() };
+      const table = { ...DEFAULT_VALUE, ...this.table() };
+      table.presentation = { ...table.presentation };
+
+      const { tablePrimaryKey, ...rest } = table;
+      this.tableFormData = rest;
     });
   }
 

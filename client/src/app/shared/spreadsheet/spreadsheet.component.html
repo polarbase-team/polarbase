@@ -191,7 +191,7 @@
             <i [class]="`${column.field.icon}`"></i>
           }
           <div class="text-sm white-space-nowrap overflow-hidden truncate">
-            {{ column.field.name }}
+            {{ column.name }}
           </div>
           @if (column.field.required) {
             <i class="icon icon-asterisk text-red-500"></i>
@@ -224,11 +224,8 @@
         } @else {
           <i [class]="`${column.field.icon}`"></i>
         }
-        <div
-          class="text-sm white-space-nowrap overflow-hidden truncate"
-          [attr.title]="column.field.name"
-        >
-          {{ column.field.name }}
+        <div class="text-sm white-space-nowrap overflow-hidden truncate" [attr.title]="column.name">
+          {{ column.name }}
         </div>
         @if (column.field.required) {
           <i class="icon icon-asterisk text-red-500"></i>

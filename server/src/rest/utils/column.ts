@@ -34,15 +34,12 @@ export interface Column {
   primary: boolean;
   nullable: boolean;
   unique: boolean;
-  defaultValue: string;
-  comment: string;
-  options: string[];
-  foreignKey: {
-    table: string;
-    column: { name: string; type: string };
-    onUpdate: ReferentialAction;
-    onDelete: ReferentialAction;
-  };
+  defaultValue: string | null;
+  comment: string | null;
+  presentation: {
+    uiName?: string;
+    format?: any;
+  } | null;
   validation: {
     minLength?: number;
     maxLength?: number;
@@ -53,8 +50,25 @@ export interface Column {
     maxSize?: number;
     maxFiles?: number;
     allowedDomains?: string;
+  } | null;
+  options: string[] | null;
+  foreignKey: {
+    table: string;
+    column: { name: string; type: string };
+    onUpdate: ReferentialAction;
+    onDelete: ReferentialAction;
+  } | null;
+  metadata: {
+    pgDataType?: string;
+    pgRawType?: string;
+    pgDomainName?: string;
+    pgDefaultValue?: string;
+    constraints?: {
+      constraint_name: string;
+      constraint_type: string;
+      constraint_definition: string;
+    }[];
   };
-  metadata: any;
 }
 
 const PG_TYPE_MAPPING: Record<string, DataType> = {
@@ -149,7 +163,7 @@ export const mapDataType = (column: Column) => {
     return DataType.Attachment;
   }
 
-  const normalizedType = pgDataType
+  const normalizedType = pgDataType!
     .toLowerCase()
     .split('(')[0]
     .trim()

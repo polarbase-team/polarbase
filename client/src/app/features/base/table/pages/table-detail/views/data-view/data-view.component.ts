@@ -105,6 +105,7 @@ export class DataViewComponent extends ViewBaseComponent {
     if (mode === 'add') {
       const newColumn: TableColumn = {
         id: columnName,
+        name: savedColumn.presentation?.uiName || savedColumn.name,
         field: this.tblService.buildField(savedColumn),
       };
       this.ssColumns.update((arr) => [...arr, newColumn]);
@@ -121,6 +122,7 @@ export class DataViewComponent extends ViewBaseComponent {
     } else if (mode === 'edit' && currentColumnId !== undefined) {
       const updatedColumn: TableColumn = {
         id: columnName,
+        name: savedColumn.presentation?.uiName || savedColumn.name,
         field: this.tblService.buildField(savedColumn),
       };
 
@@ -161,6 +163,7 @@ export class DataViewComponent extends ViewBaseComponent {
     for (const c of columns) {
       ssColumns.push({
         id: c.name,
+        name: c.presentation?.uiName || c.name,
         primary: c.primary,
         editable: !c.primary,
         field: this.tblService.buildField(c),

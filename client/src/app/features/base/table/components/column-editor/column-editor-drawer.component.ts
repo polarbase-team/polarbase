@@ -60,14 +60,15 @@ const DEFAULT_VALUE = {
   unique: false,
   defaultValue: null,
   comment: null,
+  presentation: {},
+  validation: {},
+  options: [],
   foreignKey: {
     table: null,
     column: null,
     onUpdate: 'NO ACTION',
     onDelete: 'NO ACTION',
   },
-  options: [],
-  validation: {},
 } as ColumnFormData;
 
 @Component({
@@ -155,12 +156,13 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
     effect(() => {
       const column = { ...DEFAULT_VALUE, ...this.column() };
-      column.validation ??= {};
+      column.presentation = { ...column.presentation };
+      column.validation = { ...column.validation };
 
       this.selectedDataType.set(column.dataType);
 
-      const { primary, metadata, ...remain } = column;
-      this.columnFormData = remain;
+      const { primary, metadata, ...rest } = column;
+      this.columnFormData = rest;
     });
 
     effect(() => {

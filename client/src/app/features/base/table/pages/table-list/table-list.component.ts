@@ -54,6 +54,7 @@ export class TableListComponent {
   protected visibleTableEditorDrawer = false;
   protected updatedTable: TableDefinition;
   protected updatedTableMode: 'add' | 'edit' = 'add';
+  protected tableToConfirm = '';
   protected tableToDelete = '';
   protected isCascadeDeleteEnabled = false;
   protected refreshTables = _.debounce(() => this.getTables(), 1000, { leading: true });
@@ -138,11 +139,12 @@ export class TableListComponent {
   }
 
   protected deleteTable(table: TableDefinition) {
+    this.tableToConfirm = table.tableName;
     this.tableToDelete = '';
     this.isCascadeDeleteEnabled = false;
     this.confirmationService.confirm({
       target: null,
-      message: `Are you sure you want to delete "${table.tableName}"?`,
+      message: `Are you sure you want to delete "${table.presentation?.uiName || table.tableName}"?`,
       header: 'Delete table',
       rejectLabel: 'Cancel',
       rejectButtonProps: {
@@ -155,7 +157,7 @@ export class TableListComponent {
         severity: 'danger',
       },
       accept: () => {
-        if (this.tableToDelete !== table.tableName) {
+        if (this.tableToDelete !== this.tableToConfirm) {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -166,7 +168,7 @@ export class TableListComponent {
         }
         this.isLoading.set(true);
         this.tblService
-          .deleteTable(table.tableName, this.isCascadeDeleteEnabled)
+          .deleteTable(this.tableToConfirm, this.isCascadeDeleteEnabled)
           .pipe(
             finalize(() => this.isLoading.set(false)),
             takeUntilDestroyed(this.destroyRef),

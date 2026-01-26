@@ -212,6 +212,11 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
               )
             ),
             timestamps: t.Optional(t.Boolean()),
+            presentation: t.Optional(
+              t.Object({
+                uiName: t.Optional(t.String()),
+              })
+            ),
           }),
         }
       )
@@ -243,6 +248,11 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                     error: 'Comment too long (max 500 chars)',
                   })
                 )
+              ),
+              presentation: t.Optional(
+                t.Object({
+                  uiName: t.Optional(t.String()),
+                })
               ),
             },
             {
@@ -292,14 +302,22 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
               dataType: t.Enum(DataType, {
                 error: 'Unsupported dataType provided.',
               }),
-              nullable: t.Optional(t.Nullable(t.Boolean())),
-              unique: t.Optional(t.Nullable(t.Boolean())),
+              nullable: t.Optional(t.Boolean()),
+              unique: t.Optional(t.Boolean()),
               defaultValue: t.Optional(t.Nullable(t.Any())),
               comment: t.Optional(
                 t.Nullable(
                   t.String({
                     maxLength: 500,
                     error: 'Comment too long (max 500 chars)',
+                  })
+                )
+              ),
+              presentation: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    uiName: t.Optional(t.Nullable(t.String())),
+                    format: t.Optional(t.Nullable(t.String())),
                   })
                 )
               ),
@@ -378,14 +396,22 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                   'Invalid format. Use letters, numbers, or _ (max 63 chars).',
               }),
               dataType: t.Enum(DataType, { error: 'Invalid dataType.' }),
-              nullable: t.Nullable(t.Boolean()),
-              unique: t.Nullable(t.Boolean()),
+              nullable: t.Boolean(),
+              unique: t.Boolean(),
               defaultValue: t.Nullable(t.Any()),
               comment: t.Nullable(
                 t.String({
                   maxLength: 500,
                   error: 'Comment too long (max 500 chars)',
                 })
+              ),
+              presentation: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    uiName: t.Optional(t.String()),
+                    format: t.Optional(t.String()),
+                  })
+                )
               ),
               validation: t.Nullable(
                 t.Object({

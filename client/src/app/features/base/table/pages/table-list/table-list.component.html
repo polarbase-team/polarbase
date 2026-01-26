@@ -26,7 +26,7 @@
       }
       <div class="flex flex-col gap-1">
         <label for="confirmation" class="text-sm font-medium">
-          Enter the table name to confirm:
+          Enter the table name <b>{{ tableToConfirm }}</b> to confirm:
         </label>
         <input pInputText [(ngModel)]="tableToDelete" id="confirmation" />
       </div>
@@ -97,7 +97,12 @@
           <div class="flex flex-1">
             <i class="icon icon-table-2 text-surface-500 mr-2 mt-0.5"></i>
             <div class="flex-1">
-              <p class="font-medium">{{ table.tableName }}</p>
+              <div class="flex items-center gap-2">
+                <p class="font-medium">{{ table.presentation?.uiName || table.tableName }}</p>
+                @if (table.presentation?.uiName) {
+                  <p class="text-surface-500 text-xs">{{ table.tableName }}</p>
+                }
+              </div>
               <p class="text-surface-500 text-xs">
                 @if (table.tableComment) {
                   {{ table.tableComment }}

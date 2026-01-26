@@ -1,5 +1,7 @@
 import { Knex } from 'knex';
 import { LRUCache } from 'lru-cache';
+import { getAllTableMetadata } from '../db/table-metadata';
+import { getAllColumnMetadata, getColumnMetadata } from '../db/column-metadata';
 import {
   Column,
   LENGTH_CHECK_SUFFIX,
@@ -14,8 +16,11 @@ import {
 
 export interface Table {
   tableName: string;
-  tableComment: string;
+  tableComment: string | null;
   tablePrimaryKey: { name: string; type: string };
+  presentation?: {
+    uiName?: string;
+  } | null;
 }
 
 /**
@@ -23,6 +28,7 @@ export interface Table {
  * along with their comments.
  */
 export const getTableList = async (pg: Knex, schemaName: string) => {
+  // Get table list from database
   const tables: Table[] = await pg('pg_class as c')
     .select({
       tableName: 'c.relname',
@@ -57,6 +63,19 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
     })
     .orderBy('c.relname');
 
+  // Get table presentation metadata
+  const allTableMetadata = await getAllTableMetadata(schemaName);
+  tables.forEach((table) => {
+    const tableMetadata = allTableMetadata.find(
+      (metadata) => metadata.tableName === table.tableName
+    );
+    table.presentation = tableMetadata
+      ? {
+          uiName: tableMetadata.uiName,
+        }
+      : null;
+  });
+
   return tables;
 };
 
@@ -82,6 +101,7 @@ export const getTableSchema = async (
     foreignKeys,
     uniqueConstraints,
     checkConstraints,
+    columnMetadata,
   ] = await Promise.all([
     // Basic column properties (type, nullability, default values)
     pg('information_schema.columns')
@@ -208,6 +228,11 @@ export const getTableSchema = async (
     `,
       columnName ? [schemaName, tableName, columnName] : [schemaName, tableName]
     ),
+
+    // Get column metadata
+    columnName
+      ? getColumnMetadata(schemaName, tableName, columnName)
+      : getAllColumnMetadata(schemaName, tableName),
   ]);
 
   /**
@@ -266,6 +291,22 @@ export const getTableSchema = async (
   }
 
   /**
+   * 4. Get column presentation metadata
+   * columnMetadata is either a single object or an array of objects
+   */
+  const presentationMap: Record<string, { uiName: string; format: any }> = {};
+  if (columnMetadata) {
+    for (const m of Array.isArray(columnMetadata)
+      ? columnMetadata
+      : [columnMetadata]) {
+      presentationMap[m.columnName] = {
+        uiName: m.uiName,
+        format: m.format,
+      };
+    }
+  }
+
+  /**
    * 5. Final Schema Assembly
    * Combine all metadata into a unified Column object.
    */
@@ -287,6 +328,7 @@ export const getTableSchema = async (
       options: optionsMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
       validation: Object.keys(validation).length ? validation : null,
+      presentation: presentationMap[col.column_name] ?? null,
       metadata: {
         pgDataType: col.data_type,
         pgRawType: col.udt_name,

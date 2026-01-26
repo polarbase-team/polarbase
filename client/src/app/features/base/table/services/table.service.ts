@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, mergeAll } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -22,13 +22,14 @@ export interface TableDefinition {
   tableName: string;
   tableComment: string;
   tablePrimaryKey: { name: string; type: string };
+  presentation: {
+    uiName?: string;
+  } | null;
 }
 
-export interface TableFormData {
-  tableName: string;
-  tableComment?: string;
-  idType?: 'integer' | 'biginteger' | 'uuid' | 'shortid';
-  timestamps?: boolean;
+export interface TableFormData extends Omit<TableDefinition, 'tablePrimaryKey'> {
+  idType: 'integer' | 'biginteger' | 'uuid' | 'shortid';
+  timestamps: boolean;
 }
 
 export interface ColumnDefinition {
@@ -39,12 +40,9 @@ export interface ColumnDefinition {
   unique: boolean;
   defaultValue: any | null;
   comment: string | null;
-  options: string[] | null;
-  foreignKey: {
-    table: string;
-    column: { name: string; type: string };
-    onUpdate?: string;
-    onDelete?: string;
+  presentation: {
+    uiName?: string;
+    format?: any;
   } | null;
   validation: {
     minLength?: number | null;
@@ -56,6 +54,13 @@ export interface ColumnDefinition {
     maxSize?: number | null;
     maxFiles?: number | null;
     allowedDomains?: string | null;
+  } | null;
+  options: string[] | null;
+  foreignKey: {
+    table: string;
+    column: { name: string; type: string };
+    onUpdate?: string;
+    onDelete?: string;
   } | null;
   metadata: any;
 }

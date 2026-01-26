@@ -21,6 +21,8 @@ import {
   addEmailDomainCheck,
   removeEmailDomainCheck,
 } from '../utils/column';
+import { setTableMetadata } from '../db/table-metadata';
+import { setColumnMetadata } from '../db/column-metadata';
 
 export class TableService {
   async getAll({ schemaName = 'public' }: { schemaName?: string } = {}) {
@@ -48,12 +50,16 @@ export class TableService {
     tableComment,
     idType = 'integer',
     timestamps = true,
+    presentation,
   }: {
     schemaName?: string;
     tableName: string;
-    tableComment?: string;
+    tableComment?: string | null;
     idType?: 'integer' | 'biginteger' | 'uuid' | 'shortid';
     timestamps?: boolean;
+    presentation?: {
+      uiName?: string;
+    } | null;
   }) {
     const fullTableName = `${schemaName}.${tableName}`;
     const schemaBuilder = pg.schema.withSchema(schemaName);
@@ -128,6 +134,12 @@ export class TableService {
       }
     });
 
+    if (presentation !== undefined) {
+      setTableMetadata(schemaName, tableName, {
+        uiName: presentation?.uiName || null,
+      });
+    }
+
     return { message: `Table ${fullTableName} created successfully` };
   }
 
@@ -140,10 +152,18 @@ export class TableService {
     tableName: string;
     data: {
       tableName?: string;
+      tableUiName?: string | null;
       tableComment?: string | null;
+      presentation?: {
+        uiName?: string | null;
+      } | null;
     };
   }) {
-    const { tableName: newTableName, tableComment: newTableComment } = data;
+    const {
+      tableName: newTableName,
+      tableComment: newTableComment,
+      presentation: newPresentation,
+    } = data;
     const fullTableName = `${schemaName}.${tableName}`;
     const schemaBuilder = pg.schema.withSchema(schemaName);
 
@@ -173,6 +193,16 @@ export class TableService {
         .alterTable(finalTableName, (table) => {
           table.comment(newTableComment ?? '');
         });
+    }
+
+    if (newPresentation !== undefined) {
+      const metadata: { uiName?: string | null } = {};
+      if (newPresentation === null) {
+        metadata.uiName = null;
+      } else {
+        metadata.uiName = newPresentation.uiName;
+      }
+      setTableMetadata(schemaName, finalTableName, metadata);
     }
 
     return { message: `Table ${fullTableName} updated successfully` };
@@ -215,10 +245,14 @@ export class TableService {
     tableName: string;
     column: {
       name: string;
-      nullable?: boolean | null;
-      unique?: boolean | null;
+      nullable?: boolean;
+      unique?: boolean;
       defaultValue?: any | null;
       comment?: string | null;
+      presentation?: {
+        uiName?: string;
+        format?: string;
+      } | null;
       validation?: {
         minLength?: number | null;
         maxLength?: number | null;
@@ -265,9 +299,10 @@ export class TableService {
       unique,
       defaultValue,
       comment,
+      presentation,
+      validation,
       options,
       foreignKey,
-      validation,
     } = column;
     const {
       minLength,
@@ -365,6 +400,13 @@ export class TableService {
           );
         }
       });
+
+      if (presentation !== undefined) {
+        setColumnMetadata(schemaName, tableName, name, {
+          uiName: presentation?.uiName || null,
+          format: presentation?.format || null,
+        });
+      }
     } catch (error) {
       // Drop column
       await pg.raw(`ALTER TABLE ?? DROP COLUMN IF EXISTS ??`, [
@@ -390,10 +432,14 @@ export class TableService {
     column: {
       name: string;
       dataType: DataType;
-      nullable: boolean | null;
-      unique: boolean | null;
+      nullable: boolean;
+      unique: boolean;
       defaultValue: any | null;
       comment: string | null;
+      presentation?: {
+        uiName?: string | null;
+        format?: string | null;
+      } | null;
       validation: {
         minLength?: number | null;
         maxLength?: number | null;
@@ -440,9 +486,10 @@ export class TableService {
       unique,
       defaultValue,
       comment,
+      presentation,
+      validation,
       options,
       foreignKey,
-      validation,
     } = column;
     const {
       minLength,
@@ -561,7 +608,7 @@ export class TableService {
               'range'
             );
             if (
-              oldSchema.metadata.constraints.find(
+              oldSchema.metadata.constraints?.find(
                 (c: any) => c.constraint_name === constraintName
               )
             ) {
@@ -584,7 +631,7 @@ export class TableService {
               'range'
             );
             if (
-              oldSchema.metadata.constraints.find(
+              oldSchema.metadata.constraints?.find(
                 (c: any) => c.constraint_name === constraintName
               )
             ) {
@@ -740,6 +787,18 @@ export class TableService {
           );
         }
       });
+
+    if (presentation !== undefined) {
+      const metadata: { uiName?: string | null; format?: any | null } = {};
+      if (presentation === null) {
+        metadata.uiName = null;
+        metadata.format = null;
+      } else {
+        metadata.uiName = presentation.uiName;
+        metadata.format = presentation.format;
+      }
+      setColumnMetadata(schemaName, tableName, newName, metadata);
+    }
 
     return (await getTableSchema(pg, schemaName, tableName, newName))[0];
   }
