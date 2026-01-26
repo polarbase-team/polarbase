@@ -24,21 +24,21 @@
                 <input
                   pInputText
                   id="name"
-                  name="tableName"
+                  name="name"
                   [pAutoFocus]="true"
-                  [invalid]="tableName.invalid && (tableName.touched || tableForm.submitted)"
+                  [invalid]="name.invalid && (name.touched || tableForm.submitted)"
                   [(ngModel)]="tableFormData.name"
-                  #tableName="ngModel"
+                  #name="ngModel"
                   placeholder="Input here..."
                   required
                   pattern="^[a-zA-Z_][a-zA-Z0-9_]*$"
                   maxlength="63"
                 />
-                @if (tableName.invalid && (tableName.touched || tableForm.submitted)) {
+                @if (name.invalid && (name.touched || tableForm.submitted)) {
                   <p-message severity="error" size="small" variant="simple">
-                    @if (tableName.errors['required']) {
+                    @if (name.errors['required']) {
                       Table name is required.
-                    } @else if (tableName.errors?.['pattern']) {
+                    } @else if (name.errors?.['pattern']) {
                       Invalid table name.
                     }
                   </p-message>
@@ -52,7 +52,7 @@
                 <input
                   pInputText
                   id="uiName"
-                  name="tableUiName"
+                  name="uiName"
                   [(ngModel)]="tableFormData.presentation.uiName"
                   placeholder="Input here..."
                   maxlength="63"
@@ -97,11 +97,11 @@
                         name="idType"
                         [(ngModel)]="tableFormData.idType"
                       />
-                      <div>
-                        <label for="integer" class="text-sm">Integer</label>
+                      <label for="integer" class="text-sm">
+                        Integer
                         <p class="text-surface-500 text-xs">Ex: 1, 2, 3, ..., 2147483647</p>
                         <p class="text-surface-500 text-xs">Limited to ~2.1 billion rows</p>
-                      </div>
+                      </label>
                     </div>
 
                     <!-- Big Integer -->
@@ -112,15 +112,15 @@
                         name="idType"
                         [(ngModel)]="tableFormData.idType"
                       />
-                      <div>
-                        <label for="biginteger" class="text-sm">Big Integer</label>
+                      <label for="biginteger" class="text-sm">
+                        Big Integer
                         <p class="text-surface-500 text-xs">
                           Ex: 1, 123456789, 9223372036854775807
                         </p>
                         <p class="text-surface-500 text-xs">
                           Recommended – supports up to ~9 quintillion rows
                         </p>
-                      </div>
+                      </label>
                     </div>
 
                     <!-- UUID -->
@@ -131,15 +131,15 @@
                         name="idType"
                         [(ngModel)]="tableFormData.idType"
                       />
-                      <div>
-                        <label for="uuid" class="text-sm">UUID</label>
+                      <label for="uuid" class="text-sm">
+                        UUID
                         <p class="text-surface-500 text-xs">
                           Ex: 17bd48cc-61c1-4ee1-96bf-6059bfe6d69b
                         </p>
                         <p class="text-surface-500 text-xs">
                           Globally unique, good for distributed systems
                         </p>
-                      </div>
+                      </label>
                     </div>
 
                     <!-- Short ID (random 16 characters) -->
@@ -150,31 +150,31 @@
                         name="idType"
                         [(ngModel)]="tableFormData.idType"
                       />
-                      <div>
-                        <label for="shortid" class="text-sm">Short ID (alphanumeric)</label>
+                      <label for="shortid" class="text-sm">
+                        Short ID (alphanumeric)
                         <p class="text-surface-500 text-xs">Ex: aEF1xWKBLzb4XLrx</p>
                         <p class="text-surface-500 text-xs">
                           Compact & URL-friendly, suitable for public IDs
                         </p>
-                      </div>
+                      </label>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="flex gap-4">
                 <p-checkbox
-                  id="timestamps"
+                  inputId="timestamps"
                   name="timestamps"
                   [(ngModel)]="tableFormData.timestamps"
                   [binary]="true"
                   size="large"
                 />
-                <div>
-                  <label for="timestamps" class="text-sm">Timestamps</label>
+                <label for="timestamps" class="text-sm">
+                  Timestamps
                   <p class="text-surface-500 text-xs">
                     Enable automatic "Created At" and "Updated At" columns for this table.
                   </p>
-                </div>
+                </label>
               </div>
             </div>
           </div>
