@@ -7,7 +7,7 @@ import {
   LENGTH_CHECK_SUFFIX,
   mapDataType,
   SIZE_CHECK_SUFFIX,
-  RANGE_CHECK_SUFFIX,
+  VALUE_RANGE_CHECK_SUFFIX,
   DATE_RANGE_CHECK_SUFFIX,
   FILE_COUNT_CHECK_SUFFIX,
   OPTIONS_CHECK_SUFFIX,
@@ -283,7 +283,7 @@ export const getTableSchema = async (
           validationMap[colName].minLength = range[1].value;
         }
       }
-    } else if (cons.constraint_name.endsWith(RANGE_CHECK_SUFFIX)) {
+    } else if (cons.constraint_name.endsWith(VALUE_RANGE_CHECK_SUFFIX)) {
       const range = extractValueRange(def);
       if (range?.[0]) {
         if (range[0].operator === '<=') {

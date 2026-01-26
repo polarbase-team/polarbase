@@ -237,7 +237,7 @@ export const specificType = (
 };
 
 export const LENGTH_CHECK_SUFFIX = '_length_check';
-export const RANGE_CHECK_SUFFIX = '_range_check';
+export const VALUE_RANGE_CHECK_SUFFIX = '_value_range_check';
 export const DATE_RANGE_CHECK_SUFFIX = '_date_range_check';
 export const SIZE_CHECK_SUFFIX = '_size_check';
 export const EMAIL_DOMAIN_CHECK_SUFFIX = '_email_domain_check';
@@ -249,7 +249,7 @@ export const getConstraintName = (
   columnName: string,
   type:
     | 'length'
-    | 'range'
+    | 'value-range'
     | 'date-range'
     | 'size'
     | 'file-count'
@@ -260,8 +260,8 @@ export const getConstraintName = (
   switch (type) {
     case 'length':
       return prefix + LENGTH_CHECK_SUFFIX;
-    case 'range':
-      return prefix + RANGE_CHECK_SUFFIX;
+    case 'value-range':
+      return prefix + VALUE_RANGE_CHECK_SUFFIX;
     case 'date-range':
       return prefix + DATE_RANGE_CHECK_SUFFIX;
     case 'size':
@@ -329,7 +329,11 @@ export const addRangeCheck = (
   }
 
   const quotedColumn = `"${columnName}"`;
-  const constraintName = getConstraintName(tableName, columnName, 'range');
+  const constraintName = getConstraintName(
+    tableName,
+    columnName,
+    'value-range'
+  );
   const checks: string[] = [];
 
   if (typeof minValue === 'number') {
@@ -349,7 +353,11 @@ export const removeRangeCheck = (
   tableName: string,
   columnName: string
 ) => {
-  const constraintName = getConstraintName(tableName, columnName, 'range');
+  const constraintName = getConstraintName(
+    tableName,
+    columnName,
+    'value-range'
+  );
   tableBuilder.dropChecks(`"${constraintName}"`);
 };
 
