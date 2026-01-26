@@ -269,16 +269,52 @@ export const getTableSchema = async (
 
     if (cons.constraint_name.endsWith(LENGTH_CHECK_SUFFIX)) {
       const range = extractLengthRange(def);
-      if (range?.[0]) validationMap[colName].minLength = range[0].value;
-      if (range?.[1]) validationMap[colName].maxLength = range[1].value;
+      if (range?.[0]) {
+        if (range[0].operator === '<=') {
+          validationMap[colName].maxLength = range[0].value;
+        } else if (range[0].operator === '>=') {
+          validationMap[colName].minLength = range[0].value;
+        }
+      }
+      if (range?.[1]) {
+        if (range[1].operator === '<=') {
+          validationMap[colName].maxLength = range[1].value;
+        } else if (range[1].operator === '>=') {
+          validationMap[colName].minLength = range[1].value;
+        }
+      }
     } else if (cons.constraint_name.endsWith(RANGE_CHECK_SUFFIX)) {
       const range = extractValueRange(def);
-      if (range?.[0]) validationMap[colName].minValue = range[0].value;
-      if (range?.[1]) validationMap[colName].maxValue = range[1].value;
+      if (range?.[0]) {
+        if (range[0].operator === '<=') {
+          validationMap[colName].minValue = range[0].value;
+        } else if (range[0].operator === '>=') {
+          validationMap[colName].minValue = range[0].value;
+        }
+      }
+      if (range?.[1]) {
+        if (range[1].operator === '<=') {
+          validationMap[colName].maxValue = range[1].value;
+        } else if (range[1].operator === '>=') {
+          validationMap[colName].maxValue = range[1].value;
+        }
+      }
     } else if (cons.constraint_name.endsWith(DATE_RANGE_CHECK_SUFFIX)) {
       const range = extractDateRange(def);
-      if (range?.[0]) validationMap[colName].minDate = range[0].value;
-      if (range?.[1]) validationMap[colName].maxDate = range[1].value;
+      if (range?.[0]) {
+        if (range[0].operator === '<=') {
+          validationMap[colName].minDate = range[0].value;
+        } else if (range[0].operator === '>=') {
+          validationMap[colName].minDate = range[0].value;
+        }
+      }
+      if (range?.[1]) {
+        if (range[1].operator === '<=') {
+          validationMap[colName].maxDate = range[1].value;
+        } else if (range[1].operator === '>=') {
+          validationMap[colName].maxDate = range[1].value;
+        }
+      }
     } else if (cons.constraint_name.endsWith(SIZE_CHECK_SUFFIX)) {
       validationMap[colName].maxSize = extractMaxSize(def);
     } else if (cons.constraint_name.endsWith(FILE_COUNT_CHECK_SUFFIX)) {
