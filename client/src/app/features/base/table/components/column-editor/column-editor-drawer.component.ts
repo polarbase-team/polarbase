@@ -119,10 +119,10 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
   onSave = output<ColumnFormData>();
 
-  protected readonly DataType = DataType;
   protected columnForm = viewChild<NgForm>('columnForm');
   protected columnFormData: ColumnFormData;
   protected isSaving = signal(false);
+  protected readonly DataType = DataType;
   protected dataTypes = Object.keys(DataType).map((t) => ({
     name: t,
     value: DataType[t],
@@ -172,17 +172,23 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
     effect(() => {
       const column = { ...DEFAULT_VALUE, ...this.column() };
-      column.presentation = { ...column.presentation };
-      column.validation = { ...column.validation };
+      const { primary, metadata, ...rest } = column;
+      this.columnFormData = {
+        ...rest,
+        presentation: { ...DEFAULT_VALUE.presentation, ...rest.presentation },
+        validation: { ...DEFAULT_VALUE.validation, ...rest.validation },
+        foreignKey: { ...DEFAULT_VALUE.foreignKey, ...rest.foreignKey },
+      };
 
       this.selectedDataType.set(column.dataType);
-
-      const { primary, metadata, ...rest } = column;
-      this.columnFormData = rest;
     });
 
     effect(() => {
-      this.selectedDataType();
+      const selectedDataType = this.selectedDataType();
+      if (!selectedDataType) return;
+
+      this.initPresentation(selectedDataType);
+      this.initValidation(selectedDataType);
       this.internalField = this.tblService.buildField(this.columnFormData as ColumnDefinition);
     });
 
@@ -291,16 +297,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.columnFormData.presentation = { ...DEFAULT_VALUE.presentation };
     this.columnFormData.validation = { ...DEFAULT_VALUE.validation };
     this.columnFormData.foreignKey = { ...DEFAULT_VALUE.foreignKey };
-
-    switch (dataType) {
-      case DataType.Date:
-      case DataType.AutoDate:
-        this.columnFormData.presentation.format = {
-          dateFormat: environment.dateFormat,
-          showTime: true,
-        };
-        break;
-    }
   }
 
   protected addOption() {
@@ -336,6 +332,27 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
         break;
       case DataType.MultiSelect:
         (this.internalField as MultiSelectField).options = [...options];
+    }
+  }
+
+  private initValidation(dataType: DataType) {
+    switch (dataType) {
+      case DataType.Text:
+        this.columnFormData.validation.minLength = null;
+        this.columnFormData.validation.maxLength = 255;
+        break;
+    }
+  }
+
+  private initPresentation(dataType: DataType) {
+    switch (dataType) {
+      case DataType.Date:
+      case DataType.AutoDate:
+        this.columnFormData.presentation.format = {
+          dateFormat: environment.dateFormat,
+          showTime: true,
+        };
+        break;
     }
   }
 }

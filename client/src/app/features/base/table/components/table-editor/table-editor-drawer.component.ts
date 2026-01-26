@@ -68,10 +68,11 @@ export class TableEditorDrawerComponent extends DrawerComponent {
 
     effect(() => {
       const table = { ...DEFAULT_VALUE, ...this.table() };
-      table.presentation = { ...table.presentation };
-
       const { primaryKey, ...rest } = table;
-      this.tableFormData = rest;
+      this.tableFormData = {
+        ...rest,
+        presentation: { ...DEFAULT_VALUE.presentation, ...rest.presentation },
+      };
     });
   }
 
