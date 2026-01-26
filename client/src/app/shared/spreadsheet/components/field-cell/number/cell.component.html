@@ -11,6 +11,6 @@
 }
 @if (data !== undefined && data !== null) {
   <div class="w-full h-full text-right text-overflow-ellipsis">
-    {{ data }}
+    {{ data | numberFormat: field.params.presentation?.format?.numberFormat }}
   </div>
 }

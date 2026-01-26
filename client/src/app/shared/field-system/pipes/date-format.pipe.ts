@@ -9,10 +9,10 @@ import { DateData } from '../models/date/field.interface';
 export class DateFormatPipe implements PipeTransform {
   transform(value: DateData, format?: string, showTime: boolean = true) {
     if (showTime) {
-      format = format ?? environment.dateTimeFormat ?? 'YYYY-MM-DD HH:mm';
+      format = format ?? environment.defaultDateTimeFormat ?? 'YYYY-MM-DD HH:mm';
       return dayjs(value).format(format.includes('HH:mm') ? format : `${format} HH:mm`);
     }
 
-    return dayjs(value).format(format ?? environment.dateFormat ?? 'YYYY-MM-DD');
+    return dayjs(value).format(format ?? environment.defaultDateFormat ?? 'YYYY-MM-DD');
   }
 }

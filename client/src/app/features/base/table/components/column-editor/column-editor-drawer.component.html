@@ -409,6 +409,48 @@
               <p class="text-surface-500 text-xs">The display name for the column.</p>
             </div>
             @switch (selectedDataType()) {
+              @case (DataType.Number) {
+                <div class="flex flex-col gap-1">
+                  <label for="format" class="text-sm">Number Format</label>
+                  <p-select
+                    inputId="format"
+                    name="format"
+                    [(ngModel)]="columnFormData.presentation.format.numberFormat"
+                    [options]="numberFormats"
+                    [checkmark]="true"
+                    [showClear]="true"
+                    placeholder="Select here..."
+                  >
+                    <ng-template #item let-item>
+                      <div>
+                        {{ item.label }}
+                        <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
+                      </div>
+                    </ng-template>
+                  </p-select>
+                </div>
+                @if (columnFormData.presentation.format.numberFormat === NumberFormat.Currency) {
+                  <div class="flex flex-col gap-1">
+                    <label for="currency" class="text-sm">Currency</label>
+                    <p-select
+                      inputId="currency"
+                      name="currency"
+                      [(ngModel)]="columnFormData.presentation.format.currency"
+                      [options]="currencies"
+                      [checkmark]="true"
+                      [showClear]="true"
+                      placeholder="Select here..."
+                    >
+                      <ng-template #item let-item>
+                        <div>
+                          {{ item.label }}
+                          <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
+                        </div>
+                      </ng-template>
+                    </p-select>
+                  </div>
+                }
+              }
               @case (DataType.Date) {
                 <ng-container [ngTemplateOutlet]="dateFormatBuilder"></ng-container>
               }

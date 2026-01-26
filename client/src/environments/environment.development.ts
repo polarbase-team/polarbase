@@ -5,8 +5,9 @@ export const environment = {
   apiUrl: '/api',
   wsUrl: '/ws',
   uploadUrl: '/files/upload',
-  dateFormat: 'DD/MM/YYYY',
-  dateTimeFormat: 'DD/MM/YYYY HH:mm',
+  defaultCurrency: 'VND',
+  defaultDateFormat: 'DD/MM/YYYY',
+  defaultDateTimeFormat: 'DD/MM/YYYY HH:mm',
   openStreetMap: {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution:

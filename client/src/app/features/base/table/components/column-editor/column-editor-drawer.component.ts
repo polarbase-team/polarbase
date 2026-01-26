@@ -35,6 +35,7 @@ import { environment } from '@environments/environment';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyStrings } from '@app/core/utils';
+import { NumberFormat } from '@app/shared/field-system/pipes/number-format.pipe';
 import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
 import { SelectField } from '@app/shared/field-system/models/select/field.object';
@@ -131,7 +132,20 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   protected selectedDataType = signal<DataType>(null);
   protected internalField: Field;
 
-  // Date type
+  // Number type
+  protected readonly NumberFormat = NumberFormat;
+  protected numberFormats = [
+    { value: NumberFormat.Comma, label: 'Comma separated', example: '1,000' },
+    { value: NumberFormat.Percentage, label: 'Percentage', example: '100%' },
+    { value: NumberFormat.Currency, label: 'Currency', example: '$1,000' },
+  ];
+  protected currencies = [
+    { value: 'USD', label: 'USD', example: '$1,000' },
+    { value: 'EUR', label: 'EUR', example: '€1,000' },
+    { value: 'VND', label: 'VND', example: '₫1,000' },
+  ];
+
+  // Date & AutoDate types
   protected dateFormats = [
     { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
     { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
@@ -346,10 +360,16 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
   private initPresentation(dataType: DataType) {
     switch (dataType) {
+      case DataType.Number:
+        this.columnFormData.presentation.format = {
+          numberFormat: undefined,
+          currency: undefined,
+        };
+        break;
       case DataType.Date:
       case DataType.AutoDate:
         this.columnFormData.presentation.format = {
-          dateFormat: environment.dateFormat,
+          dateFormat: environment.defaultDateFormat,
           showTime: true,
         };
         break;

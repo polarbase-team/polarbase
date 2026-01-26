@@ -70,6 +70,6 @@ export class DateField extends Field<DateData> {
   }
 
   override toString(data: DateData = this.data) {
-    return data ? dayjs(data).format(environment.dateTimeFormat ?? 'YYYY-MM-DD HH:mm') : '';
+    return data ? dayjs(data).format(environment.defaultDateTimeFormat ?? 'YYYY-MM-DD HH:mm') : '';
   }
 }
