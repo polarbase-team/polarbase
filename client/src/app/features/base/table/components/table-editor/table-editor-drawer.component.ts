@@ -90,7 +90,7 @@ export class TableEditorDrawerComponent extends DrawerComponent {
         },
         acceptButtonProps: {
           label: 'Discard',
-          severity: 'primary',
+          severity: 'danger',
         },
         accept: () => {
           this.close();

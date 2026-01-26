@@ -141,7 +141,7 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
         },
         acceptButtonProps: {
           label: 'Discard',
-          severity: 'primary',
+          severity: 'danger',
         },
         accept: () => {
           this.close();

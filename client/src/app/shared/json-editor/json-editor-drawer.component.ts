@@ -43,7 +43,7 @@ export class JSONEditorDrawerComponent extends DrawerComponent {
         },
         acceptButtonProps: {
           label: 'Discard',
-          severity: 'primary',
+          severity: 'danger',
         },
         accept: () => {
           this.close();
