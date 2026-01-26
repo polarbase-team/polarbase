@@ -137,7 +137,7 @@ export class ReferencePickerDrawerComponent extends DrawerComponent {
         for (const c of columnDefs) {
           columns.push({
             id: c.name,
-            name: c.uiName || c.name,
+            name: c.presentation?.uiName || c.name,
             primary: c.primary,
             editable: !c.primary,
             field: buildField(c),

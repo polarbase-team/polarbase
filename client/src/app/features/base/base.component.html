@@ -25,7 +25,7 @@
           <p-tab [value]="table.name" class="group">
             <div class="flex items-center gap-2 mt-1 relative">
               <i class="icon icon-table-2"></i>
-              <span>{{ table.name }}</span>
+              <span>{{ table.presentation?.uiName || table.name }}</span>
               <i
                 class="icon icon-x cursor-pointer absolute right-[-15px] top-0.5 opacity-0 group-hover:opacity-100"
                 (click)="$event.stopPropagation(); tblService.removeTable(table.name)"

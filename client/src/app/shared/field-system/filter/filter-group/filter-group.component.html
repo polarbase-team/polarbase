@@ -63,13 +63,13 @@
             <ng-template let-item #item>
               <div class="flex items-center gap-2">
                 <i [class]="item.icon"></i>
-                <span>{{ item.params.uiName || item.name }}</span>
+                <span>{{ item.params.presentation?.uiName || item.name }}</span>
               </div>
             </ng-template>
             <ng-template let-selectedItem pTemplate="selectedItem">
               <div class="flex items-center gap-2">
                 <i [class]="selectedItem.icon"></i>
-                <span>{{ selectedItem.params.uiName || selectedItem.name }}</span>
+                <span>{{ selectedItem.params.presentation?.uiName || selectedItem.name }}</span>
               </div>
             </ng-template>
           </p-select>

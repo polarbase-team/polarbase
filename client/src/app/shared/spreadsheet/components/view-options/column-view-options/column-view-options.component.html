@@ -16,18 +16,18 @@
             </div>
 
             <!-- Field name -->
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1 overflow-hidden">
               @if (column.primary) {
                 <i class="icon icon-key rotate-45" style="color: var(--p-primary-color)"></i>
               } @else {
                 <i [class]="`${column.field.icon}`"></i>
               }
-              <span class="font-medium break-all">
+              <span class="font-medium white-space-nowrap truncate" [attr.title]="column.name">
                 {{ column.name }}
+                @if (column.field.required) {
+                  <i class="icon icon-asterisk text-red-500"></i>
+                }
               </span>
-              @if (column.field.required) {
-                <i class="icon icon-asterisk text-red-500"></i>
-              }
             </div>
           </div>
 

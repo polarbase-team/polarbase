@@ -100,12 +100,13 @@ export class DataViewComponent extends ViewBaseComponent {
     super.onColumnSave(savedColumn, mode, currentColumn);
 
     const columnName = savedColumn.name;
+    const columnUiName = savedColumn.presentation?.uiName || savedColumn.name;
     const currentColumnId = currentColumn?.name;
 
     if (mode === 'add') {
       const newColumn: TableColumn = {
         id: columnName,
-        name: savedColumn.presentation?.uiName || savedColumn.name,
+        name: columnUiName,
         field: this.tblService.buildField(savedColumn),
       };
       this.ssColumns.update((arr) => [...arr, newColumn]);
@@ -122,7 +123,7 @@ export class DataViewComponent extends ViewBaseComponent {
     } else if (mode === 'edit' && currentColumnId !== undefined) {
       const updatedColumn: TableColumn = {
         id: columnName,
-        name: savedColumn.presentation?.uiName || savedColumn.name,
+        name: columnUiName,
         field: this.tblService.buildField(savedColumn),
       };
 
