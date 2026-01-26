@@ -152,7 +152,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       .get('/tables', async () => {
         const tables = await tableService.getAll();
         return tables.filter(
-          (t) => !REST_BLACKLISTED_TABLES.includes(t.tableName)
+          (t) => !REST_BLACKLISTED_TABLES.includes(t.name)
         );
       })
 
@@ -180,18 +180,18 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       .post(
         '/tables',
         ({ body }) => {
-          return tableService.createTable(body);
+          return tableService.createTable({ table: body });
         },
         {
           body: t.Object({
-            tableName: t.String({
+            name: t.String({
               pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
               minLength: 1,
               maxLength: 63,
               error:
                 'Table name must start with a letter/_ and contain only alphanumeric characters (max 63).',
             }),
-            tableComment: t.Optional(
+            comment: t.Optional(
               t.String({
                 maxLength: 500,
                 error: 'Comment too long (max 500 chars)',
@@ -227,12 +227,12 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       .patch(
         '/tables/:table',
         ({ params: { table }, body }) => {
-          return tableService.updateTable({ tableName: table, data: body });
+          return tableService.updateTable({ tableName: table, table: body });
         },
         {
           body: t.Object(
             {
-              tableName: t.Optional(
+              name: t.Optional(
                 t.String({
                   pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
                   minLength: 1,
@@ -241,7 +241,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                     'Invalid format. Use letters, numbers, or _ (max 63 chars).',
                 })
               ),
-              tableComment: t.Optional(
+              comment: t.Optional(
                 t.Nullable(
                   t.String({
                     maxLength: 500,

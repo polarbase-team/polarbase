@@ -238,7 +238,7 @@ export class DataViewComponent extends ViewBaseComponent {
       case TableActionType.ViewReferenceDetail: {
         const { field, data } = action.payload as ReferenceViewDetailEvent;
         const tableName = field.referenceTo;
-        const table = this.tblService.tables().find((t) => t.tableName === tableName);
+        const table = this.tblService.tables().find((t) => t.name === tableName);
         if (!table) return;
 
         this.tblService
@@ -272,7 +272,7 @@ export class DataViewComponent extends ViewBaseComponent {
         const columns = action.payload as TableColumn[];
         const obs = {};
         for (const column of columns) {
-          obs[column.id] = this.tblService.deleteColumn(this.table.tableName, column.id as string);
+          obs[column.id] = this.tblService.deleteColumn(this.table.name, column.id as string);
         }
         forkJoin(obs).subscribe();
         break;
@@ -289,7 +289,7 @@ export class DataViewComponent extends ViewBaseComponent {
           records.push(row.data || {});
         }
         this.tblService
-          .createRecords(this.table.tableName, records)
+          .createRecords(this.table.name, records)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe(({ data }) => {
             for (let i = 0; i < rows.length; i++) {
@@ -303,7 +303,7 @@ export class DataViewComponent extends ViewBaseComponent {
       case TableRowActionType.Delete:
         const recordIds = (action.payload as TableRow[]).map((row) => row.id);
         this.tblService
-          .deleteRecords(this.table.tableName, recordIds)
+          .deleteRecords(this.table.name, recordIds)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;
@@ -331,7 +331,7 @@ export class DataViewComponent extends ViewBaseComponent {
           recordUpdates.push({ id: row.id, data: newData });
         }
         this.tblService
-          .updateRecords(this.table.tableName, recordUpdates)
+          .updateRecords(this.table.name, recordUpdates)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;

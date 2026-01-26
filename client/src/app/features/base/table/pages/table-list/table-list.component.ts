@@ -93,7 +93,7 @@ export class TableListComponent {
         this.searchQuery = '';
 
         if (tableNameWillSelect) {
-          const table = tables.find((t) => t.tableName === tableNameWillSelect);
+          const table = tables.find((t) => t.name === tableNameWillSelect);
           this.selectTable(table);
         }
       });
@@ -112,8 +112,8 @@ export class TableListComponent {
     this.filteredTables.set(
       tables.filter(
         (t) =>
-          t.tableName.toLowerCase().includes(query) ||
-          (t.tableComment || '').toLowerCase().includes(query),
+          t.name.toLowerCase().includes(query) ||
+          (t.presentation?.uiName || '').toLowerCase().includes(query),
       ),
     );
   }
@@ -122,7 +122,7 @@ export class TableListComponent {
     this.tblService.selectTable(table);
     this.router.navigate([], {
       relativeTo: this.activatedRoute,
-      queryParams: { table: table.tableName },
+      queryParams: { table: table.name },
       queryParamsHandling: 'merge',
     });
   }
@@ -139,12 +139,12 @@ export class TableListComponent {
   }
 
   protected deleteTable(table: TableDefinition) {
-    this.tableToConfirm = table.tableName;
+    this.tableToConfirm = table.name;
     this.tableToDelete = '';
     this.isCascadeDeleteEnabled = false;
     this.confirmationService.confirm({
       target: null,
-      message: `Are you sure you want to delete "${table.presentation?.uiName || table.tableName}"?`,
+      message: `Are you sure you want to delete "${table.presentation?.uiName || table.name}"?`,
       header: 'Delete table',
       rejectLabel: 'Cancel',
       rejectButtonProps: {
@@ -199,6 +199,6 @@ export class TableListComponent {
   }
 
   protected onTableEditorSave(savedTable: TableFormData) {
-    this.getTables(savedTable.tableName);
+    this.getTables(savedTable.name);
   }
 }

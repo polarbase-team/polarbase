@@ -175,7 +175,7 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
       return;
     }
 
-    const { tableName } = this.table();
+    const { name: tableName } = this.table();
     const id = this.record().id ?? undefined;
     const data = { ...this.updatedRecord };
 

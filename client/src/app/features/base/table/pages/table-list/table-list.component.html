@@ -87,25 +87,25 @@
   </div>
 } @else {
   <ul class="list-none p-0 m-0 overflow-y-auto max-h-full">
-    @for (table of filteredTables(); track table.tableName) {
+    @for (table of filteredTables(); track table.name) {
       <li (click)="selectTable(table)">
         <a
           pRipple
           class="group flex items-center cursor-pointer px-4 py-2 text-surface-700 hover:bg-gray-100 duration-150 transition-colors p-ripple"
-          [class.bg-gray-100]="table.tableName === tblService.activeTable()?.tableName"
+          [class.bg-gray-100]="table.name === tblService.activeTable()?.name"
         >
           <div class="flex flex-1">
             <i class="icon icon-table-2 text-surface-500 mr-2 mt-0.5"></i>
             <div class="flex-1">
               <div class="flex items-center gap-2">
-                <p class="font-medium">{{ table.presentation?.uiName || table.tableName }}</p>
+                <p class="font-medium">{{ table.presentation?.uiName || table.name }}</p>
                 @if (table.presentation?.uiName) {
-                  <p class="text-surface-500 text-xs">{{ table.tableName }}</p>
+                  <p class="text-surface-500 text-xs">{{ table.name }}</p>
                 }
               </div>
               <p class="text-surface-500 text-xs">
-                @if (table.tableComment) {
-                  {{ table.tableComment }}
+                @if (table.comment) {
+                  {{ table.comment }}
                 } @else {
                   <i>No description</i>
                 }

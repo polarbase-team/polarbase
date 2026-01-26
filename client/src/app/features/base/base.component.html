@@ -5,7 +5,7 @@
   <div class="base-table-detail w-full h-full">
     <p-tabs
       lazy
-      [value]="tblService.activeTable()?.tableName"
+      [value]="tblService.activeTable()?.name"
       class="w-full"
       [class.h-full]="!!tblService.selectedTables().length"
     >
@@ -21,22 +21,22 @@
             (click)="toggleSidebar()"
           />
         </div>
-        @for (table of tblService.selectedTables(); track table.tableName) {
-          <p-tab [value]="table.tableName" class="group">
+        @for (table of tblService.selectedTables(); track table.name) {
+          <p-tab [value]="table.name" class="group">
             <div class="flex items-center gap-2 mt-1 relative">
               <i class="icon icon-table-2"></i>
-              <span>{{ table.tableName }}</span>
+              <span>{{ table.name }}</span>
               <i
                 class="icon icon-x cursor-pointer absolute right-[-15px] top-0.5 opacity-0 group-hover:opacity-100"
-                (click)="$event.stopPropagation(); tblService.removeTable(table.tableName)"
+                (click)="$event.stopPropagation(); tblService.removeTable(table.name)"
               ></i>
             </div>
           </p-tab>
         }
       </p-tablist>
       <p-tabpanels class="flex-1 !p-0">
-        @for (table of tblService.selectedTables(); track table.tableName) {
-          <p-tabpanel [value]="table.tableName">
+        @for (table of tblService.selectedTables(); track table.name) {
+          <p-tabpanel [value]="table.name">
             <ng-template #content>
               <table-detail />
             </ng-template>

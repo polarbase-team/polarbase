@@ -3,7 +3,7 @@
 <p-drawer
   [visible]="visible()"
   position="right"
-  [header]="mode() === 'edit' ? `Edit table: ${table().tableName}` : 'New table'"
+  [header]="mode() === 'edit' ? `Edit table: ${table().name}` : 'New table'"
   styleClass="!w-150 custom-drawer"
   (onHide)="onHide()"
 >
@@ -27,7 +27,7 @@
                   name="tableName"
                   [pAutoFocus]="true"
                   [invalid]="tableName.invalid && (tableName.touched || tableForm.submitted)"
-                  [(ngModel)]="tableFormData.tableName"
+                  [(ngModel)]="tableFormData.name"
                   #tableName="ngModel"
                   placeholder="Input here..."
                   required
@@ -67,7 +67,7 @@
                   pTextarea
                   id="description"
                   name="description"
-                  [(ngModel)]="tableFormData.tableComment"
+                  [(ngModel)]="tableFormData.comment"
                   rows="5"
                   placeholder="Input here..."
                   maxlength="500"

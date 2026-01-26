@@ -46,30 +46,29 @@ export class TableService {
 
   async createTable({
     schemaName = 'public',
-    tableName,
-    tableComment,
-    idType = 'integer',
-    timestamps = true,
-    presentation,
+    table,
   }: {
     schemaName?: string;
-    tableName: string;
-    tableComment?: string | null;
-    idType?: 'integer' | 'biginteger' | 'uuid' | 'shortid';
-    timestamps?: boolean;
-    presentation?: {
-      uiName?: string;
-    } | null;
+    table: {
+      name: string;
+      comment?: string | null;
+      idType?: 'integer' | 'biginteger' | 'uuid' | 'shortid';
+      timestamps?: boolean;
+      presentation?: {
+        uiName?: string;
+      } | null;
+    };
   }) {
-    const fullTableName = `${schemaName}.${tableName}`;
+    const { name, comment, idType, timestamps, presentation } = table;
+    const fullTableName = `${schemaName}.${name}`;
     const schemaBuilder = pg.schema.withSchema(schemaName);
 
-    const exists = await schemaBuilder.hasTable(tableName);
+    const exists = await schemaBuilder.hasTable(name);
     if (exists) {
       throw new Error(`Table ${fullTableName} already exists`);
     }
 
-    await schemaBuilder.createTable(tableName, (table) => {
+    await schemaBuilder.createTable(name, (table) => {
       // Define the primary key column based on the selected primaryType
       switch (idType) {
         case 'integer':
@@ -129,13 +128,13 @@ export class TableService {
       }
 
       // Add a comment/description to the table if provided
-      if (tableComment) {
-        table.comment(tableComment);
+      if (comment) {
+        table.comment(comment);
       }
     });
 
     if (presentation !== undefined) {
-      setTableMetadata(schemaName, tableName, {
+      setTableMetadata(schemaName, name, {
         uiName: presentation?.uiName || null,
       });
     }
@@ -146,24 +145,19 @@ export class TableService {
   async updateTable({
     schemaName = 'public',
     tableName,
-    data,
+    table,
   }: {
     schemaName?: string;
     tableName: string;
-    data: {
-      tableName?: string;
-      tableUiName?: string | null;
-      tableComment?: string | null;
+    table: {
+      name?: string;
+      comment?: string | null;
       presentation?: {
         uiName?: string | null;
       } | null;
     };
   }) {
-    const {
-      tableName: newTableName,
-      tableComment: newTableComment,
-      presentation: newPresentation,
-    } = data;
+    const { name: newTableName, comment, presentation } = table;
     const fullTableName = `${schemaName}.${tableName}`;
     const schemaBuilder = pg.schema.withSchema(schemaName);
 
@@ -187,20 +181,20 @@ export class TableService {
       finalTableName = newTableName;
     }
 
-    if (newTableComment !== undefined) {
+    if (comment !== undefined) {
       await pg.schema
         .withSchema(schemaName)
         .alterTable(finalTableName, (table) => {
-          table.comment(newTableComment ?? '');
+          table.comment(comment ?? '');
         });
     }
 
-    if (newPresentation !== undefined) {
+    if (presentation !== undefined) {
       const metadata: { uiName?: string | null } = {};
-      if (newPresentation === null) {
+      if (presentation === null) {
         metadata.uiName = null;
       } else {
-        metadata.uiName = newPresentation.uiName;
+        metadata.uiName = presentation.uiName;
       }
       setTableMetadata(schemaName, finalTableName, metadata);
     }

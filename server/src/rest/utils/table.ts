@@ -15,9 +15,9 @@ import {
 } from './column';
 
 export interface Table {
-  tableName: string;
-  tableComment: string | null;
-  tablePrimaryKey: { name: string; type: string };
+  name: string;
+  comment: string | null;
+  primaryKey: { name: string; type: string };
   presentation?: {
     uiName?: string;
   } | null;
@@ -31,9 +31,9 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
   // Get table list from database
   const tables: Table[] = await pg('pg_class as c')
     .select({
-      tableName: 'c.relname',
-      tableComment: 'descr.description',
-      tablePrimaryKey: pg.raw(`
+      name: 'c.relname',
+      comment: 'descr.description',
+      primaryKey: pg.raw(`
         json_build_object(
           'name', pk.attname,
           'type', t.typname
@@ -67,7 +67,7 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
   const allTableMetadata = await getAllTableMetadata(schemaName);
   tables.forEach((table) => {
     const tableMetadata = allTableMetadata.find(
-      (metadata) => metadata.tableName === table.tableName
+      (metadata) => metadata.tableName === table.name
     );
     table.presentation = tableMetadata
       ? {

@@ -70,7 +70,7 @@ export class TableEditorDrawerComponent extends DrawerComponent {
       const table = { ...DEFAULT_VALUE, ...this.table() };
       table.presentation = { ...table.presentation };
 
-      const { tablePrimaryKey, ...rest } = table;
+      const { primaryKey, ...rest } = table;
       this.tableFormData = rest;
     });
   }
@@ -113,7 +113,7 @@ export class TableEditorDrawerComponent extends DrawerComponent {
 
     const formData = sanitizeEmptyStrings(this.tableFormData);
     if (this.mode() === 'edit') {
-      fn = this.tblService.updateTable(this.table().tableName, formData);
+      fn = this.tblService.updateTable(this.table().name, formData);
     } else {
       fn = this.tblService.createTable(formData);
     }

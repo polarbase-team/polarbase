@@ -19,15 +19,15 @@ import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/
 import { AttachmentFieldConfig } from '@app/shared/field-system/models/attachment/field.interface';
 
 export interface TableDefinition {
-  tableName: string;
-  tableComment: string;
-  tablePrimaryKey: { name: string; type: string };
+  name: string;
+  comment: string;
+  primaryKey: { name: string; type: string };
   presentation: {
     uiName?: string;
   } | null;
 }
 
-export interface TableFormData extends Omit<TableDefinition, 'tablePrimaryKey'> {
+export interface TableFormData extends Omit<TableDefinition, 'primaryKey'> {
   idType: 'integer' | 'biginteger' | 'uuid' | 'shortid';
   timestamps: boolean;
 }
@@ -109,12 +109,12 @@ export class TableService {
   }
 
   removeTable(tableName: string) {
-    this.selectedTables.update((tables) => [...tables.filter((t) => t.tableName !== tableName)]);
+    this.selectedTables.update((tables) => [...tables.filter((t) => t.name !== tableName)]);
 
     let activeTable = this.activeTable();
     this.activeTable.set(null);
     setTimeout(() => {
-      if (tableName === activeTable.tableName) {
+      if (tableName === activeTable.name) {
         activeTable = this.selectedTables().at(0);
       }
       if (activeTable) {
@@ -149,7 +149,7 @@ export class TableService {
     return this.http.post<ApiResponse<TableDefinition>>(`${this.apiUrl}/tables`, table);
   }
 
-  updateTable(tableName: string, table: Pick<TableFormData, 'tableName' | 'tableComment'>) {
+  updateTable(tableName: string, table: Pick<TableFormData, 'name' | 'comment'>) {
     return this.http.patch<ApiResponse<TableDefinition>>(
       `${this.apiUrl}/tables/${tableName}`,
       table,

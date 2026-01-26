@@ -173,7 +173,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     effect(() => {
       this.tableOptions = [];
       for (const table of this.tblService.tables()) {
-        this.tableOptions.push({ name: table.tableName, value: table.tableName });
+        this.tableOptions.push({ name: table.name, value: table.name });
       }
     });
   }
@@ -254,9 +254,9 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     }
 
     if (this.mode() === 'edit') {
-      fn = this.tblService.updateColumn(this.table().tableName, this.column().name, formData);
+      fn = this.tblService.updateColumn(this.table().name, this.column().name, formData);
     } else {
-      fn = this.tblService.createColumn(this.table().tableName, formData);
+      fn = this.tblService.createColumn(this.table().name, formData);
     }
 
     fn.pipe(
@@ -292,11 +292,11 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   }
 
   protected onTableSelect(tableName: string) {
-    const table = this.tblService.tables().find((t) => t.tableName === tableName);
+    const table = this.tblService.tables().find((t) => t.name === tableName);
     if (!table) return;
 
-    this.columnFormData.foreignKey.table = table.tableName;
-    this.columnFormData.foreignKey.column = table.tablePrimaryKey;
+    this.columnFormData.foreignKey.table = table.name;
+    this.columnFormData.foreignKey.column = table.primaryKey;
   }
 
   private onOptionsUpdate() {
