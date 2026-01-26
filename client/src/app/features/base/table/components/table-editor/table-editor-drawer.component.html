@@ -48,20 +48,6 @@
                 </p>
               </div>
               <div class="flex flex-col gap-1">
-                <label for="uiName" class="text-sm">UI Name</label>
-                <input
-                  pInputText
-                  id="uiName"
-                  name="uiName"
-                  [(ngModel)]="tableFormData.presentation.uiName"
-                  placeholder="Input here..."
-                  maxlength="63"
-                />
-                <p class="text-surface-500 text-xs">
-                  The display name for the table. This does not affect the database schema.
-                </p>
-              </div>
-              <div class="flex flex-col gap-1">
                 <label for="description" class="text-sm">Description</label>
                 <textarea
                   pTextarea
@@ -73,6 +59,29 @@
                   maxlength="500"
                 ></textarea>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Presentation</p>
+            <p class="text-surface-500 text-xs">This does not affect the database schema.</p>
+          </label>
+          <div class="flex flex-col gap-8 col-span-2">
+            <div class="flex flex-col gap-1">
+              <label for="uiName" class="text-sm">Display Name</label>
+              <input
+                pInputText
+                id="uiName"
+                name="uiName"
+                [(ngModel)]="tableFormData.presentation.uiName"
+                placeholder="Input here..."
+                maxlength="63"
+              />
+              <p class="text-surface-500 text-xs">The display name for the table.</p>
             </div>
           </div>
         </div>
