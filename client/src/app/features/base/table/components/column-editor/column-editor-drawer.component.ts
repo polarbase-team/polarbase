@@ -370,7 +370,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       case DataType.AutoDate:
         this.columnFormData.presentation.format ??= {
           dateFormat: environment.defaultDateFormat,
-          showTime: true,
+          showTime: false,
         };
         break;
       case DataType.Reference:
