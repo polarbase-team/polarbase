@@ -110,21 +110,33 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     this.isDataChanged = false;
 
     const fields = this.fields();
+    const requiredFields: Field[] = [];
+    const optionalFields: Field[] = [];
+    const updatedRecord: RecordData = { id: undefined };
+
     if (fields) {
-      const requiredFields = [];
-      const optionalFields = [];
+      const fieldsByNames = new Map<string, Field>();
+
       for (const field of fields) {
+        fieldsByNames.set(field.name, field);
         if (field.required) {
           requiredFields.push(field);
         } else {
           optionalFields.push(field);
         }
       }
-      this.requiredFields.set(requiredFields);
-      this.optionalFields.set(optionalFields);
+
+      Object.keys(this.record() || {}).reduce((acc: RecordData, key) => {
+        if (fieldsByNames.has(key)) {
+          acc[key] = this.record()[key];
+        }
+        return acc;
+      }, updatedRecord);
     }
 
-    this.updatedRecord = { ...(this.record() || { id: undefined }) };
+    this.requiredFields.set(requiredFields);
+    this.optionalFields.set(optionalFields);
+    this.updatedRecord = updatedRecord;
   }
 
   protected override onHide() {
