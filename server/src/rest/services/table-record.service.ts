@@ -64,6 +64,19 @@ export class TableRecordService {
 
     const countAllQb = qb.clone();
 
+    // SELECT
+    if (fields) {
+      const fieldList = fields
+        .split(',')
+        .map((f) => f.trim())
+        .map((f) => (validColumnNames.includes(f) ? `${tableName}.${f}` : null))
+        .filter(Boolean) as string[];
+
+      qb = qb.select(fieldList.length > 0 ? fieldList : `${tableName}.*`);
+    } else {
+      qb = qb.select(`${tableName}.*`);
+    }
+
     // EXPAND FIELDS
     if (expandFields) {
       const effectiveExpands: Record<string, string> = {};
@@ -73,7 +86,7 @@ export class TableRecordService {
       if (shouldExpandAll) {
         cols.forEach((col) => {
           if (col.foreignKey) {
-            effectiveExpands[col.name] = col.foreignKey.table;
+            effectiveExpands[col.name] = `${col.name}_${col.foreignKey.table}`;
           }
         });
       } else {
@@ -99,19 +112,6 @@ export class TableRecordService {
 
         qb = qb.select(pg.raw(`to_jsonb(??.*) as ??`, [safeAlias, safeAlias]));
       }
-    }
-
-    // SELECT
-    if (fields) {
-      const fieldList = fields
-        .split(',')
-        .map((f) => f.trim())
-        .map((f) => (validColumnNames.includes(f) ? `${tableName}.${f}` : null))
-        .filter(Boolean) as string[];
-
-      qb = qb.select(fieldList.length > 0 ? fieldList : `${tableName}.*`);
-    } else {
-      qb = qb.select(`${tableName}.*`);
     }
 
     // ORDER BY

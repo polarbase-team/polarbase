@@ -100,7 +100,10 @@ export class ReferencePickerDrawerComponent extends DrawerComponent {
         if (selectedRow) {
           const value = selectedRow.id;
           const data = selectedRow.data as ReferenceData;
-          const displayLabel = getReferenceDisplayLabel(data);
+          const displayLabel = getReferenceDisplayLabel(
+            data,
+            this.field().params.presentation?.format?.displayColumn,
+          );
           this.value.set(value);
           this.pickedEvent = { data, value, displayLabel };
         } else {

@@ -163,7 +163,7 @@
   </div>
 
   <p-table [value]="filteredKeys()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true">
-    <ng-template pTemplate="header">
+    <ng-template #header>
       <tr>
         <th>ID</th>
         <th>Name</th>
@@ -174,7 +174,7 @@
         <th>Actions</th>
       </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-key>
+    <ng-template #body let-key>
       <tr>
         <td>{{ key.id }}</td>
         <td>{{ key.name }}</td>
@@ -229,7 +229,7 @@
         </td>
       </tr>
     </ng-template>
-    <ng-template pTemplate="emptymessage">
+    <ng-template #emptymessage>
       <tr>
         <td colspan="7" class="!text-center py-5">No API Keys found</td>
       </tr>

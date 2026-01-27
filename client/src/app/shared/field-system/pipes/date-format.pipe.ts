@@ -1,18 +1,11 @@
-import dayjs from 'dayjs';
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { environment } from '@environments/environment';
-
 import { DateData } from '../models/date/field.interface';
+import { formatDateTime } from '../models/date/field.object';
 
 @Pipe({ name: 'dateFormat' })
 export class DateFormatPipe implements PipeTransform {
   transform(value: DateData, format?: string, showTime?: boolean) {
-    if (showTime) {
-      format = format ?? environment.defaultDateTimeFormat ?? 'YYYY-MM-DD HH:mm';
-      return dayjs(value).format(format.includes('HH:mm') ? format : `${format} HH:mm`);
-    }
-
-    return dayjs(value).format(format ?? environment.defaultDateFormat ?? 'YYYY-MM-DD');
+    return formatDateTime(value, format, showTime);
   }
 }

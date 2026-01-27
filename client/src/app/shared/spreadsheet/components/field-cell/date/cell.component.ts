@@ -38,7 +38,7 @@ export class DateFieldCellComponent extends FieldCellEditable<DateData> {
 
   protected onMenuOpen() {
     this.markAsEditStarted();
-    this.updatedDate = dayjs(this.data).toDate();
+    this.updatedDate = this.data ? dayjs(this.data).toDate() : null;
   }
 
   protected onMenuClose() {

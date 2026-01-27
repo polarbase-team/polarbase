@@ -2,27 +2,35 @@
 @let dateFormat = presentation?.dateFormat;
 @let showTime = presentation?.showTime;
 
-@if (data !== undefined && data !== null) {
-  <div class="field-cell__text-content">
-    {{ data | dateFormat: dateFormat : showTime }}
-  </div>
-}
-@if (selecting) {
-  <p-overlay
-    #calendar
-    appendTo="body"
-    [(visible)]="calendarVisible"
-    [target]="eleRef.nativeElement"
-    (onShow)="onMenuOpen()"
-    (onHide)="onMenuClose()"
-  >
-    <p-datepicker
-      [inline]="true"
-      [ngModel]="updatedDate"
-      (ngModelChange)="onDatePicked($event)"
-      [dateFormat]="dateFormat"
-      [showTime]="showTime"
-      [showClear]="true"
-    />
-  </p-overlay>
-}
+<div class="flex items-start justify-between w-full gap-1">
+  @if (data !== undefined && data !== null) {
+    <div class="field-cell__text-content">
+      {{ data | dateFormat: dateFormat : showTime }}
+    </div>
+  }
+  @if (selecting) {
+    <p-overlay
+      #calendar
+      appendTo="body"
+      [(visible)]="calendarVisible"
+      [target]="eleRef.nativeElement"
+      (onShow)="onMenuOpen()"
+      (onHide)="onMenuClose()"
+    >
+      <p-datepicker
+        [inline]="true"
+        [ngModel]="updatedDate"
+        (ngModelChange)="onDatePicked($event)"
+        [dateFormat]="dateFormat"
+        [showTime]="showTime"
+        [showClear]="true"
+      />
+    </p-overlay>
+    <div
+      class="hover:bg-surface-50 text-surface-500 cursor-pointer w-5 h-5 rounded-md flex items-center justify-center"
+      (click)="calendarVisible = true"
+    >
+      <i class="icon icon-calendar"></i>
+    </div>
+  }
+</div>
