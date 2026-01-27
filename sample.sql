@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS opportunities (
     title VARCHAR(255) NOT NULL,
     company_id VARCHAR(16) REFERENCES companies(id) ON DELETE CASCADE,
     contact_id VARCHAR(16) REFERENCES contacts(id) ON DELETE SET NULL,
-    amount DECIMAL(15,2) DEFAULT 0.00,
+    amount DOUBLE PRECISION DEFAULT 0.00,
     stage TEXT DEFAULT 'lead',
     probability INTEGER DEFAULT 10,
     expected_close_date DATE,
