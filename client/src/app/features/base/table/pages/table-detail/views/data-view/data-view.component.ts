@@ -170,7 +170,7 @@ export class DataViewComponent extends ViewBaseComponent {
         field: this.tblService.buildField(c),
       });
       if (c.dataType === DataType.Reference) {
-        this.references.set(c.name, c.foreignKey.table);
+        this.references.set(c.name, `${c.name}_${c.foreignKey.table}`);
       }
     }
     setTimeout(() => {

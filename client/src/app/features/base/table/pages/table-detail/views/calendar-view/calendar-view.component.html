@@ -58,7 +58,7 @@
             } @else {
               <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
               <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
-                <ng-template pTemplate="content">
+                <ng-template #content>
                   <i class="icon icon-calendar"></i>
                   <span class="p-button-label truncate max-w-3xs">
                     {{

@@ -36,9 +36,9 @@ import { environment } from '@environments/environment';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyValues } from '@app/core/utils';
-import { NumberFormat } from '@app/shared/field-system/pipes/number-format.pipe';
 import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
+import { NumberFormat } from '@app/shared/field-system/models/number/field.interface';
 import { SelectField } from '@app/shared/field-system/models/select/field.object';
 import { MultiSelectField } from '@app/shared/field-system/models/multi-select/field.object';
 import { TextFieldEditorComponent } from '@app/shared/field-system/editors/text/editor.component';
@@ -125,6 +125,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   protected columnFormData: ColumnFormData = { ...DEFAULT_VALUE };
   protected isSaving = signal(false);
   protected readonly DataType = DataType;
+  protected readonly FIELD_ICON_MAP = FIELD_ICON_MAP;
   protected dataTypes = Object.keys(DataType).map((t) => ({
     name: t,
     value: DataType[t],
@@ -177,7 +178,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       help: 'Automatically syncs updates and deletions.',
     },
   ];
-  protected referenceDisplayColumnOptions: { label: string; value: string; icon: string }[];
+  protected referenceDisplayColumnOptions: ColumnDefinition[];
 
   constructor(
     private destroyRef: DestroyRef,
@@ -329,11 +330,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.tblService
       .getTableSchema(this.columnFormData.foreignKey.table)
       .subscribe((columns: ColumnDefinition[]) => {
-        this.referenceDisplayColumnOptions = columns.map((col) => ({
-          label: col.presentation?.uiName || col.name,
-          value: col.name,
-          icon: FIELD_ICON_MAP[col.dataType],
-        }));
+        this.referenceDisplayColumnOptions = columns;
       });
   }
 
