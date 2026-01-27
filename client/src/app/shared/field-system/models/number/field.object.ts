@@ -1,8 +1,29 @@
 import _ from 'lodash';
 
+import { environment } from '@environments/environment';
+
 import { DataType, FIELD_ICON_MAP } from '../field.interface';
 import { Field, FieldValidationKey } from '../field.object';
-import { NumberData, NumberFieldConfig } from './field.interface';
+import { NumberData, NumberFieldConfig, NumberFormat } from './field.interface';
+
+export const formatNumber = (value: number, format?: NumberFormat, currency?: string) => {
+  if (format === NumberFormat.Comma) {
+    return value.toLocaleString();
+  }
+
+  if (format === NumberFormat.Percentage) {
+    return `${value * 100}%`;
+  }
+
+  if (format === NumberFormat.Currency) {
+    return value.toLocaleString('en-US', {
+      style: 'currency',
+      currency: currency || environment.defaultCurrency,
+    });
+  }
+
+  return value;
+};
 
 export class NumberField extends Field<NumberData> {
   static readonly dataType: DataType = DataType.Number;

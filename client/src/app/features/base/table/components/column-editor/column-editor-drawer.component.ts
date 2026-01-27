@@ -36,9 +36,9 @@ import { environment } from '@environments/environment';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyValues } from '@app/core/utils';
-import { NumberFormat } from '@app/shared/field-system/pipes/number-format.pipe';
 import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
+import { NumberFormat } from '@app/shared/field-system/models/number/field.interface';
 import { SelectField } from '@app/shared/field-system/models/select/field.object';
 import { MultiSelectField } from '@app/shared/field-system/models/multi-select/field.object';
 import { TextFieldEditorComponent } from '@app/shared/field-system/editors/text/editor.component';

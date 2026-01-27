@@ -1164,7 +1164,12 @@
           @if (tableService.isStreaming) {
             <span class="white-space-nowrap overflow-hidden truncate">Calculating...</span>
           } @else {
-            {{ calcResults | parseCalculatedResult: column.calculateType }}
+            {{
+              calcResults
+                | parseCalculatedResult
+                  : column.calculateType
+                  : column.field.params.presentation?.format
+            }}
           }
         </b>
       } @else {
@@ -1180,7 +1185,12 @@
         @if (tableService.isStreaming) {
           <span class="white-space-nowrap overflow-hidden truncate">Calculating...</span>
         } @else {
-          {{ calcResults | parseCalculatedResult: column.calculateType }}
+          {{
+            calcResults
+              | parseCalculatedResult
+                : column.calculateType
+                : column.field.params.presentation?.format
+          }}
         }
       </b>
     </div>
