@@ -86,11 +86,12 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
 
   onSave = output<RecordData>();
 
+  protected readonly DataType = DataType;
   protected viewOnly = computed(() => this.mode() === 'view');
+  protected fieldsByNames = new Map<string, Field>();
   protected requiredFields = signal<Field[]>([]);
   protected optionalFields = signal<Field[]>([]);
   protected isSaving = signal<boolean>(false);
-  protected DataType = DataType;
   protected updatedRecord: RecordData = { id: undefined };
   protected isDataChanged = false;
 
@@ -110,13 +111,11 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     this.isDataChanged = false;
 
     const fields = this.fields();
+    const fieldsByNames = new Map<string, Field>();
     const requiredFields: Field[] = [];
     const optionalFields: Field[] = [];
-    const updatedRecord: RecordData = { id: undefined };
 
     if (fields) {
-      const fieldsByNames = new Map<string, Field>();
-
       for (const field of fields) {
         fieldsByNames.set(field.name, field);
         if (field.required) {
@@ -125,18 +124,12 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
           optionalFields.push(field);
         }
       }
-
-      Object.keys(this.record() || {}).reduce((acc: RecordData, key) => {
-        if (fieldsByNames.has(key)) {
-          acc[key] = this.record()[key];
-        }
-        return acc;
-      }, updatedRecord);
     }
 
+    this.fieldsByNames = fieldsByNames;
     this.requiredFields.set(requiredFields);
     this.optionalFields.set(optionalFields);
-    this.updatedRecord = updatedRecord;
+    this.updatedRecord = { id: undefined, ...this.record() };
   }
 
   protected override onHide() {
@@ -190,7 +183,12 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
 
     const { name: tableName } = this.table();
     const id = this.record().id ?? undefined;
-    const data = { ...this.updatedRecord };
+    const data = Object.keys(this.updatedRecord).reduce((acc, key) => {
+      if (this.fieldsByNames.has(key)) {
+        acc[key] = this.updatedRecord[key];
+      }
+      return acc;
+    }, {} as RecordData);
 
     let fn: Observable<any>;
     switch (this.mode()) {
