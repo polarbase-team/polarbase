@@ -42,7 +42,10 @@ export class ReferenceFieldCellComponent extends FieldCellInputable<ReferenceDat
 
   override ngOnChanges(changes: SimpleChanges) {
     if ('data' in changes && this.data !== this.value) {
-      const { value, displayLabel } = parseReferenceData(this.data);
+      const { value, displayLabel } = parseReferenceData(
+        this.data,
+        this.field.params.presentation?.format?.displayColumn,
+      );
       this.value = value;
       this.displayLabel = displayLabel;
     }

@@ -47,8 +47,12 @@ export const sanitizeEmptyValues = <T>(data: T): T => {
   return data;
 };
 
-export const getRecordDisplayLabel = (data: Record<string, any>) => {
+export const getRecordDisplayLabel = (data: Record<string, any>, displayColumn?: string) => {
   if (!data || typeof data !== 'object') return data;
+
+  if (displayColumn) {
+    return data[displayColumn];
+  }
 
   const priorityKeys = ['name', 'display_name', 'title', 'label', 'full_name', 'username'];
 

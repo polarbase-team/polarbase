@@ -177,6 +177,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       help: 'Automatically syncs updates and deletions.',
     },
   ];
+  protected referenceDisplayColumnOptions: { label: string; value: string; icon: string }[];
 
   constructor(
     private destroyRef: DestroyRef,
@@ -319,6 +320,23 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.columnFormData.foreignKey.column = table.primaryKey;
   }
 
+  protected loadReferenceDisplayColumnOptions() {
+    if (!this.columnFormData.foreignKey.table) {
+      this.referenceDisplayColumnOptions = [];
+      return;
+    }
+
+    this.tblService
+      .getTableSchema(this.columnFormData.foreignKey.table)
+      .subscribe((columns: ColumnDefinition[]) => {
+        this.referenceDisplayColumnOptions = columns.map((col) => ({
+          label: col.presentation?.uiName || col.name,
+          value: col.name,
+          icon: FIELD_ICON_MAP[col.dataType],
+        }));
+      });
+  }
+
   private onOptionsUpdate() {
     const options = this.columnFormData.options;
     this.columnFormData.options = [...options];
@@ -354,6 +372,12 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
           dateFormat: environment.defaultDateFormat,
           showTime: true,
         };
+        break;
+      case DataType.Reference:
+        this.columnFormData.presentation.format ??= {
+          displayColumn: null,
+        };
+        this.loadReferenceDisplayColumnOptions();
         break;
     }
   }

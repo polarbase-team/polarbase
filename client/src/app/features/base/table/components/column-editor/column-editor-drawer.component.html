@@ -277,7 +277,6 @@
               @case (DataType.MultiSelect) {
                 <ng-container [ngTemplateOutlet]="optionsBuilder" />
               }
-              @case (DataType.Checkbox) {}
               @case (DataType.Email) {
                 <div class="flex flex-col gap-1">
                   <label for="allowedDomains" class="text-sm">Allowed domains</label>
@@ -305,7 +304,6 @@
                   />
                 </div>
               }
-              @case (DataType.GeoPoint) {}
               @case (DataType.Reference) {
                 <div class="flex flex-col gap-1">
                   <label for="table" class="text-sm">Reference to</label>
@@ -384,8 +382,6 @@
                   />
                 </div>
               }
-              @case (DataType.AutoNumber) {}
-              @case (DataType.AutoDate) {}
             }
           </div>
         </div>
@@ -457,6 +453,34 @@
               }
               @case (DataType.AutoDate) {
                 <ng-container [ngTemplateOutlet]="dateFormatBuilder"></ng-container>
+              }
+              @case (DataType.Reference) {
+                <div class="flex flex-col gap-1">
+                  <label for="displayReference" class="text-sm">Display Reference</label>
+                  <p-select
+                    inputId="displayReference"
+                    name="displayReference"
+                    [(ngModel)]="columnFormData.presentation.format.displayColumn"
+                    [options]="referenceDisplayColumnOptions"
+                    [checkmark]="true"
+                    [showClear]="true"
+                    placeholder="Select here..."
+                    (onShow)="loadReferenceDisplayColumnOptions()"
+                  >
+                    <ng-template #selectedItem let-selectedItem>
+                      <div class="flex items-center gap-2">
+                        <i [class]="selectedItem.icon"></i>
+                        {{ selectedItem.label }}
+                      </div>
+                    </ng-template>
+                    <ng-template #item let-item>
+                      <div class="flex items-center gap-2">
+                        <i [class]="item.icon"></i>
+                        {{ item.label }}
+                      </div>
+                    </ng-template>
+                  </p-select>
+                </div>
               }
             }
           </div>
