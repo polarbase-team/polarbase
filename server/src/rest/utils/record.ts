@@ -122,11 +122,11 @@ const buildWhereClauseRecursive = (
     if (andConditions) {
       if (andConditions.length === 0) return qb;
       if (andConditions.length === 1) {
-        return buildWhereClauseRecursive(qb, andConditions[0]);
+        return buildWhereClauseRecursive(qb, andConditions[0], tableName);
       }
       return qb.where(function (this: Knex.QueryBuilder) {
         for (const cond of andConditions) {
-          buildWhereClauseRecursive(this, cond);
+          buildWhereClauseRecursive(this, cond, tableName);
         }
       });
     }
@@ -134,15 +134,15 @@ const buildWhereClauseRecursive = (
     if (orConditions) {
       if (orConditions.length === 0) return qb;
       if (orConditions.length === 1) {
-        return buildWhereClauseRecursive(qb, orConditions[0]);
+        return buildWhereClauseRecursive(qb, orConditions[0], tableName);
       }
-      return qb
-        .orWhere(function (this: Knex.QueryBuilder) {
-          for (const cond of orConditions) {
-            this.orWhere((sub) => buildWhereClauseRecursive(sub, cond));
-          }
-        })
-        .where((sub) => buildWhereClauseRecursive(sub, orConditions[0])); // first one outside orWhere
+      return qb.where(function () {
+        for (const cond of orConditions) {
+          this.orWhere((sub) =>
+            buildWhereClauseRecursive(sub, cond, tableName)
+          );
+        }
+      });
     }
   } else if (typeof condition === 'object' && condition !== null) {
     return qb.where(function (this: Knex.QueryBuilder) {
