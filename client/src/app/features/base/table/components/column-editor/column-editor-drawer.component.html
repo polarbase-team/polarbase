@@ -130,8 +130,6 @@
                 id="type"
                 inputId="type"
                 name="type"
-                optionLabel="name"
-                optionValue="value"
                 [options]="dataTypes"
                 [(ngModel)]="selectedDataType"
                 (ngModelChange)="onDataTypeSelect($event)"
@@ -146,7 +144,7 @@
                     <span>{{ item.name }}</span>
                   </div>
                 </ng-template>
-                <ng-template let-selectedItem pTemplate="selectedItem">
+                <ng-template let-selectedItem #selectedItem>
                   <div class="flex items-center gap-2">
                     <i [class]="selectedItem.icon"></i>
                     <span>{{ selectedItem.name }}</span>
@@ -315,11 +313,33 @@
                     (ngModelChange)="onTableSelect($event)"
                     [checkmark]="true"
                     [showClear]="true"
-                    optionLabel="name"
                     optionValue="name"
                     placeholder="Select here..."
                     required
-                  />
+                  >
+                    <ng-template #selectedItem let-selectedItem>
+                      <div class="flex items-center gap-2">
+                        <i class="icon icon-table-2"></i>
+                        <p>
+                          {{ selectedItem.presentation?.uiName || selectedItem.name }}
+                          @if (selectedItem.presentation?.uiName) {
+                            <span class="text-xs text-surface-500">{{ selectedItem.name }}</span>
+                          }
+                        </p>
+                      </div>
+                    </ng-template>
+                    <ng-template #item let-item>
+                      <div class="flex items-center gap-2">
+                        <i class="icon icon-table-2"></i>
+                        <p>
+                          {{ item.presentation?.uiName || item.name }}
+                          @if (item.presentation?.uiName) {
+                            <span class="text-xs text-surface-500">{{ item.name }}</span>
+                          }
+                        </p>
+                      </div>
+                    </ng-template>
+                  </p-select>
                 </div>
                 <div class="flex flex-col gap-1">
                   <label for="onUpdate" class="text-sm">
@@ -331,8 +351,6 @@
                     name="onUpdate"
                     [options]="referentialActions"
                     [(ngModel)]="columnFormData.foreignKey.onUpdate"
-                    optionLabel="name"
-                    optionValue="value"
                     fluid
                   >
                     <ng-template #item let-item>
@@ -353,8 +371,6 @@
                     name="onDelete"
                     [options]="referentialActions"
                     [(ngModel)]="columnFormData.foreignKey.onDelete"
-                    optionLabel="name"
-                    optionValue="value"
                     fluid
                   >
                     <ng-template #item let-item>
@@ -464,19 +480,30 @@
                     [options]="referenceDisplayColumnOptions"
                     [checkmark]="true"
                     [showClear]="true"
+                    optionValue="name"
                     placeholder="Select here..."
                     (onShow)="loadReferenceDisplayColumnOptions()"
                   >
                     <ng-template #selectedItem let-selectedItem>
                       <div class="flex items-center gap-2">
-                        <i [class]="selectedItem.icon"></i>
-                        {{ selectedItem.label }}
+                        <i [class]="FIELD_ICON_MAP[selectedItem.dataType]"></i>
+                        <p>
+                          {{ selectedItem.presentation?.uiName || selectedItem.name }}
+                          @if (selectedItem.presentation?.uiName) {
+                            <span class="text-xs text-surface-500">{{ selectedItem.name }}</span>
+                          }
+                        </p>
                       </div>
                     </ng-template>
                     <ng-template #item let-item>
                       <div class="flex items-center gap-2">
-                        <i [class]="item.icon"></i>
-                        {{ item.label }}
+                        <i [class]="FIELD_ICON_MAP[item.dataType]"></i>
+                        <p>
+                          {{ item.presentation?.uiName || item.name }}
+                          @if (item.presentation?.uiName) {
+                            <span class="text-xs text-surface-500">{{ item.name }}</span>
+                          }
+                        </p>
                       </div>
                     </ng-template>
                   </p-select>

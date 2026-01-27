@@ -9,8 +9,6 @@
       <p-selectbutton
         [options]="conjunctionOptions"
         [(ngModel)]="group().conjunction"
-        optionLabel="label"
-        optionValue="value"
         size="small"
       />
     </div>
@@ -52,7 +50,6 @@
             #fieldSelect
             [options]="fields()"
             [(ngModel)]="it.field"
-            optionLabel="name"
             optionValue="name"
             (onChange)="onFieldChange(it)"
             [checkmark]="true"
@@ -66,7 +63,7 @@
                 <span>{{ item.params.presentation?.uiName || item.name }}</span>
               </div>
             </ng-template>
-            <ng-template let-selectedItem pTemplate="selectedItem">
+            <ng-template let-selectedItem #selectedItem>
               <div class="flex items-center gap-2">
                 <i [class]="selectedItem.icon"></i>
                 <span>{{ selectedItem.params.presentation?.uiName || selectedItem.name }}</span>
@@ -77,8 +74,6 @@
             <p-select
               [options]="getOps(it.field)"
               [(ngModel)]="it.operator"
-              optionLabel="label"
-              optionValue="value"
               (onChange)="onOperatorChange(it)"
               [checkmark]="true"
               placeholder="Select operator"

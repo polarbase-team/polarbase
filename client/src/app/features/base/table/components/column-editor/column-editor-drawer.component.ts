@@ -125,6 +125,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   protected columnFormData: ColumnFormData = { ...DEFAULT_VALUE };
   protected isSaving = signal(false);
   protected readonly DataType = DataType;
+  protected readonly FIELD_ICON_MAP = FIELD_ICON_MAP;
   protected dataTypes = Object.keys(DataType).map((t) => ({
     name: t,
     value: DataType[t],
@@ -177,7 +178,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       help: 'Automatically syncs updates and deletions.',
     },
   ];
-  protected referenceDisplayColumnOptions: { label: string; value: string; icon: string }[];
+  protected referenceDisplayColumnOptions: ColumnDefinition[];
 
   constructor(
     private destroyRef: DestroyRef,
@@ -329,11 +330,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.tblService
       .getTableSchema(this.columnFormData.foreignKey.table)
       .subscribe((columns: ColumnDefinition[]) => {
-        this.referenceDisplayColumnOptions = columns.map((col) => ({
-          label: col.presentation?.uiName || col.name,
-          value: col.name,
-          icon: FIELD_ICON_MAP[col.dataType],
-        }));
+        this.referenceDisplayColumnOptions = columns;
       });
   }
 

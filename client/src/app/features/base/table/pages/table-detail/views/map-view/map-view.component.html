@@ -40,7 +40,7 @@
           } @else {
             <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
             <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
-              <ng-template pTemplate="content">
+              <ng-template #content>
                 <i class="icon icon-map-pin"></i>
                 <span class="p-button-label truncate max-w-3xs">
                   {{ selectedGeoPointField || 'Select GeoPoint Field' }}
