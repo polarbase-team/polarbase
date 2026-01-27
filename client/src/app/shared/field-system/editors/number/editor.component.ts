@@ -6,6 +6,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
+import { NumberFormat } from '../../pipes/number-format.pipe';
 import { NumberField } from '../../models/number/field.object';
 import { NumberData } from '../../models/number/field.interface';
 import { FieldEditorComponent } from '../editor.component';
@@ -16,4 +17,6 @@ import { FieldEditorComponent } from '../editor.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, AutoFocusModule, InputNumberModule, FluidModule, MessageModule],
 })
-export class NumberFieldEditorComponent extends FieldEditorComponent<NumberField, NumberData> {}
+export class NumberFieldEditorComponent extends FieldEditorComponent<NumberField, NumberData> {
+  protected readonly NumberFormat = NumberFormat;
+}

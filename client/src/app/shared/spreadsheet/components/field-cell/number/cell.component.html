@@ -11,6 +11,9 @@
 }
 @if (data !== undefined && data !== null) {
   <div class="w-full h-full text-right text-overflow-ellipsis">
-    {{ data }}
+    @let presentation = field.params.presentation;
+    @let numberFormat = presentation?.format?.numberFormat;
+    @let currency = presentation?.format?.currency;
+    {{ data | numberFormat: numberFormat : currency }}
   </div>
 }

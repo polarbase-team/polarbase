@@ -71,7 +71,7 @@ export class TableRealtimeService {
             timestamp: string;
           }>) =>
             data.event === REALTIME_EVENT_NAME &&
-            data.payload.relation.name === this.tableService.activeTable()?.tableName,
+            data.payload.relation.name === this.tableService.activeTable()?.name,
         ),
         takeUntilDestroyed(this.destroyRef),
       )
@@ -108,7 +108,7 @@ export class TableRealtimeService {
 
     sseStream$
       .pipe(
-        filter((data) => data.relation.name === this.tableService.activeTable()?.tableName),
+        filter((data) => data.relation.name === this.tableService.activeTable()?.name),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({

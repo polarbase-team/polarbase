@@ -151,9 +151,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
        */
       .get('/tables', async () => {
         const tables = await tableService.getAll();
-        return tables.filter(
-          (t) => !REST_BLACKLISTED_TABLES.includes(t.tableName)
-        );
+        return tables.filter((t) => !REST_BLACKLISTED_TABLES.includes(t.name));
       })
 
       /**
@@ -180,22 +178,24 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       .post(
         '/tables',
         ({ body }) => {
-          return tableService.createTable(body);
+          return tableService.createTable({ table: body });
         },
         {
           body: t.Object({
-            tableName: t.String({
+            name: t.String({
               pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
               minLength: 1,
               maxLength: 63,
               error:
                 'Table name must start with a letter/_ and contain only alphanumeric characters (max 63).',
             }),
-            tableComment: t.Optional(
-              t.String({
-                maxLength: 500,
-                error: 'Comment too long (max 500 chars)',
-              })
+            comment: t.Optional(
+              t.Nullable(
+                t.String({
+                  maxLength: 500,
+                  error: 'Comment too long (max 500 chars)',
+                })
+              )
             ),
             idType: t.Optional(
               t.Union(
@@ -212,6 +212,16 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
               )
             ),
             timestamps: t.Optional(t.Boolean()),
+            presentation: t.Optional(
+              t.Nullable(
+                t.Object(
+                  {
+                    uiName: t.Optional(t.Nullable(t.String())),
+                  },
+                  { minProperties: 1 }
+                )
+              )
+            ),
           }),
         }
       )
@@ -222,12 +232,12 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       .patch(
         '/tables/:table',
         ({ params: { table }, body }) => {
-          return tableService.updateTable({ tableName: table, data: body });
+          return tableService.updateTable({ tableName: table, table: body });
         },
         {
           body: t.Object(
             {
-              tableName: t.Optional(
+              name: t.Optional(
                 t.String({
                   pattern: '^[a-zA-Z_][a-zA-Z0-9_]*$',
                   minLength: 1,
@@ -236,12 +246,22 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                     'Invalid format. Use letters, numbers, or _ (max 63 chars).',
                 })
               ),
-              tableComment: t.Optional(
+              comment: t.Optional(
                 t.Nullable(
                   t.String({
                     maxLength: 500,
                     error: 'Comment too long (max 500 chars)',
                   })
+                )
+              ),
+              presentation: t.Optional(
+                t.Nullable(
+                  t.Object(
+                    {
+                      uiName: t.Optional(t.Nullable(t.String())),
+                    },
+                    { minProperties: 1 }
+                  )
                 )
               ),
             },
@@ -292,8 +312,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
               dataType: t.Enum(DataType, {
                 error: 'Unsupported dataType provided.',
               }),
-              nullable: t.Optional(t.Nullable(t.Boolean())),
-              unique: t.Optional(t.Nullable(t.Boolean())),
+              nullable: t.Optional(t.Boolean()),
+              unique: t.Optional(t.Boolean()),
               defaultValue: t.Optional(t.Nullable(t.Any())),
               comment: t.Optional(
                 t.Nullable(
@@ -303,6 +323,17 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                   })
                 )
               ),
+              presentation: t.Optional(
+                t.Nullable(
+                  t.Object(
+                    {
+                      uiName: t.Optional(t.Nullable(t.String())),
+                      format: t.Optional(t.Nullable(t.Any())),
+                    },
+                    { minProperties: 1 }
+                  )
+                )
+              ),
               validation: t.Optional(
                 t.Nullable(
                   t.Object({
@@ -310,12 +341,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                     maxLength: t.Optional(t.Nullable(t.Number())),
                     minValue: t.Optional(t.Nullable(t.Number())),
                     maxValue: t.Optional(t.Nullable(t.Number())),
-                    minDate: t.Optional(
-                      t.Nullable(t.String({ format: 'date-time' }))
-                    ),
-                    maxDate: t.Optional(
-                      t.Nullable(t.String({ format: 'date-time' }))
-                    ),
+                    minDate: t.Optional(t.Nullable(t.String())),
+                    maxDate: t.Optional(t.Nullable(t.String())),
                     maxSize: t.Optional(t.Nullable(t.Number())),
                     maxFiles: t.Optional(t.Nullable(t.Number())),
                     allowedDomains: t.Optional(t.Nullable(t.String())),
@@ -378,8 +405,8 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                   'Invalid format. Use letters, numbers, or _ (max 63 chars).',
               }),
               dataType: t.Enum(DataType, { error: 'Invalid dataType.' }),
-              nullable: t.Nullable(t.Boolean()),
-              unique: t.Nullable(t.Boolean()),
+              nullable: t.Boolean(),
+              unique: t.Boolean(),
               defaultValue: t.Nullable(t.Any()),
               comment: t.Nullable(
                 t.String({
@@ -387,18 +414,23 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                   error: 'Comment too long (max 500 chars)',
                 })
               ),
+              presentation: t.Nullable(
+                t.Object(
+                  {
+                    uiName: t.Optional(t.Nullable(t.String())),
+                    format: t.Optional(t.Nullable(t.Any())),
+                  },
+                  { minProperties: 1 }
+                )
+              ),
               validation: t.Nullable(
                 t.Object({
                   minLength: t.Optional(t.Nullable(t.Number())),
                   maxLength: t.Optional(t.Nullable(t.Number())),
                   minValue: t.Optional(t.Nullable(t.Number())),
                   maxValue: t.Optional(t.Nullable(t.Number())),
-                  minDate: t.Optional(
-                    t.Nullable(t.String({ format: 'date-time' }))
-                  ),
-                  maxDate: t.Optional(
-                    t.Nullable(t.String({ format: 'date-time' }))
-                  ),
+                  minDate: t.Optional(t.Nullable(t.String())),
+                  maxDate: t.Optional(t.Nullable(t.String())),
                   maxSize: t.Optional(t.Nullable(t.Number())),
                   maxFiles: t.Optional(t.Nullable(t.Number())),
                   allowedDomains: t.Optional(t.Nullable(t.String())),

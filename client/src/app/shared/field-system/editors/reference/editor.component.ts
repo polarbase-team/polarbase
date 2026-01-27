@@ -44,7 +44,10 @@ export class ReferenceFieldEditorComponent extends FieldEditorComponent<
     super();
 
     effect(() => {
-      const { value, displayLabel } = parseReferenceData(this.data());
+      const { value, displayLabel } = parseReferenceData(
+        this.data(),
+        this.field().params.presentation?.format?.displayColumn,
+      );
       this.value = value;
       this.displayLabel = displayLabel;
     });

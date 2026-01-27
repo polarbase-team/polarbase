@@ -1,11 +1,13 @@
 import { Knex } from 'knex';
 import { LRUCache } from 'lru-cache';
+import { getAllTableMetadata, getTableMetadata } from '../db/table-metadata';
+import { getAllColumnMetadata, getColumnMetadata } from '../db/column-metadata';
 import {
   Column,
   LENGTH_CHECK_SUFFIX,
   mapDataType,
   SIZE_CHECK_SUFFIX,
-  RANGE_CHECK_SUFFIX,
+  VALUE_RANGE_CHECK_SUFFIX,
   DATE_RANGE_CHECK_SUFFIX,
   FILE_COUNT_CHECK_SUFFIX,
   OPTIONS_CHECK_SUFFIX,
@@ -13,21 +15,20 @@ import {
 } from './column';
 
 export interface Table {
-  tableName: string;
-  tableComment: string;
-  tablePrimaryKey: { name: string; type: string };
+  name: string;
+  comment: string | null;
+  primaryKey: { name: string; type: string };
+  presentation?: {
+    uiName?: string;
+  } | null;
 }
 
-/**
- * Retrieves the list of tables in the public schema
- * along with their comments.
- */
-export const getTableList = async (pg: Knex, schemaName: string) => {
-  const tables: Table[] = await pg('pg_class as c')
+const fetchTables = (pg: Knex, schemaName: string, tableName?: string): Promise<Table[]> => {
+  return pg('pg_class as c')
     .select({
-      tableName: 'c.relname',
-      tableComment: 'descr.description',
-      tablePrimaryKey: pg.raw(`
+      name: 'c.relname',
+      comment: 'descr.description',
+      primaryKey: pg.raw(`
         json_build_object(
           'name', pk.attname,
           'type', t.typname
@@ -52,18 +53,63 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
     )
     .leftJoin('pg_type as t', 'pk.atttypid', 't.oid')
     .where({
-      'ns.nspname': schemaName,
       'c.relkind': 'r',
+      'ns.nspname': schemaName,
+      ...(tableName ? { 'c.relname': tableName } : {}),
     })
     .orderBy('c.relname');
+};
+
+/**
+ * Retrieves the list of tables in the public schema
+ * along with their presentation metadata.
+ */
+export const getTableList = async (pg: Knex, schemaName: string) => {
+  // Get table list from database
+  const tables = await fetchTables(pg, schemaName);
+
+  // Get table presentation metadata
+  const allTableMetadata = getAllTableMetadata(schemaName);
+  tables.forEach((table) => {
+    const tableMetadata = allTableMetadata.find(
+      (metadata) => metadata.tableName === table.name
+    );
+    table.presentation = tableMetadata
+      ? {
+          uiName: tableMetadata.uiName,
+        }
+      : null;
+  });
 
   return tables;
 };
 
 /**
- * Retrieves and constructs a comprehensive schema for a specific table,
- * including column metadata, primary key identification, column comments,
- * and additional validation and foreign key details.
+ * Retrieves a specific table from the database
+ * along with its presentation metadata.
+ */
+export const getTable = async (pg: Knex, schemaName: string, tableName: string) => {
+  // Get table from database
+  const table = (await fetchTables(pg, schemaName, tableName))?.[0];
+  if (!table) {
+    throw new Error(`Table ${tableName} not found in schema ${schemaName}`);
+  }
+
+  // Get table presentation metadata
+  const tableMetadata = getTableMetadata(schemaName, tableName);
+  table.presentation = tableMetadata
+    ? {
+        uiName: tableMetadata.uiName,
+      }
+    : null;
+
+  return table;
+};
+
+/**
+ * Retrieves the schema of a specific table,
+ * including column metadata, primary key identification,
+ * column comments, and additional validation and foreign key details.
  */
 export const getTableSchema = async (
   pg: Knex,
@@ -82,6 +128,7 @@ export const getTableSchema = async (
     foreignKeys,
     uniqueConstraints,
     checkConstraints,
+    columnMetadata,
   ] = await Promise.all([
     // Basic column properties (type, nullability, default values)
     pg('information_schema.columns')
@@ -208,6 +255,11 @@ export const getTableSchema = async (
     `,
       columnName ? [schemaName, tableName, columnName] : [schemaName, tableName]
     ),
+
+    // Get column metadata
+    columnName
+      ? getColumnMetadata(schemaName, tableName, columnName)
+      : getAllColumnMetadata(schemaName, tableName),
   ]);
 
   /**
@@ -244,16 +296,52 @@ export const getTableSchema = async (
 
     if (cons.constraint_name.endsWith(LENGTH_CHECK_SUFFIX)) {
       const range = extractLengthRange(def);
-      if (range?.[0]) validationMap[colName].minLength = range[0].value;
-      if (range?.[1]) validationMap[colName].maxLength = range[1].value;
-    } else if (cons.constraint_name.endsWith(RANGE_CHECK_SUFFIX)) {
+      if (range?.[0]) {
+        if (range[0].operator === '<=') {
+          validationMap[colName].maxLength = range[0].value;
+        } else if (range[0].operator === '>=') {
+          validationMap[colName].minLength = range[0].value;
+        }
+      }
+      if (range?.[1]) {
+        if (range[1].operator === '<=') {
+          validationMap[colName].maxLength = range[1].value;
+        } else if (range[1].operator === '>=') {
+          validationMap[colName].minLength = range[1].value;
+        }
+      }
+    } else if (cons.constraint_name.endsWith(VALUE_RANGE_CHECK_SUFFIX)) {
       const range = extractValueRange(def);
-      if (range?.[0]) validationMap[colName].minValue = range[0].value;
-      if (range?.[1]) validationMap[colName].maxValue = range[1].value;
+      if (range?.[0]) {
+        if (range[0].operator === '<=') {
+          validationMap[colName].minValue = range[0].value;
+        } else if (range[0].operator === '>=') {
+          validationMap[colName].minValue = range[0].value;
+        }
+      }
+      if (range?.[1]) {
+        if (range[1].operator === '<=') {
+          validationMap[colName].maxValue = range[1].value;
+        } else if (range[1].operator === '>=') {
+          validationMap[colName].maxValue = range[1].value;
+        }
+      }
     } else if (cons.constraint_name.endsWith(DATE_RANGE_CHECK_SUFFIX)) {
       const range = extractDateRange(def);
-      if (range?.[0]) validationMap[colName].minDate = range[0].value;
-      if (range?.[1]) validationMap[colName].maxDate = range[1].value;
+      if (range?.[0]) {
+        if (range[0].operator === '<=') {
+          validationMap[colName].minDate = range[0].value;
+        } else if (range[0].operator === '>=') {
+          validationMap[colName].minDate = range[0].value;
+        }
+      }
+      if (range?.[1]) {
+        if (range[1].operator === '<=') {
+          validationMap[colName].maxDate = range[1].value;
+        } else if (range[1].operator === '>=') {
+          validationMap[colName].maxDate = range[1].value;
+        }
+      }
     } else if (cons.constraint_name.endsWith(SIZE_CHECK_SUFFIX)) {
       validationMap[colName].maxSize = extractMaxSize(def);
     } else if (cons.constraint_name.endsWith(FILE_COUNT_CHECK_SUFFIX)) {
@@ -262,6 +350,22 @@ export const getTableSchema = async (
       validationMap[colName].allowedDomains = extractEmailDomains(def);
     } else if (cons.constraint_name.endsWith(OPTIONS_CHECK_SUFFIX)) {
       optionsMap[colName] = extractOptions(def);
+    }
+  }
+
+  /**
+   * 4. Get column presentation metadata
+   * columnMetadata is either a single object or an array of objects
+   */
+  const presentationMap: Record<string, { uiName: string; format: any }> = {};
+  if (columnMetadata) {
+    for (const m of Array.isArray(columnMetadata)
+      ? columnMetadata
+      : [columnMetadata]) {
+      presentationMap[m.columnName] = {
+        uiName: m.uiName,
+        format: m.format,
+      };
     }
   }
 
@@ -287,6 +391,7 @@ export const getTableSchema = async (
       options: optionsMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
       validation: Object.keys(validation).length ? validation : null,
+      presentation: presentationMap[col.column_name] ?? null,
       metadata: {
         pgDataType: col.data_type,
         pgRawType: col.udt_name,

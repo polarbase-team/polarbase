@@ -1,5 +1,11 @@
 @let fieldName = field().name;
 @let fieldDescription = field().description;
+@let numberFormat = field().params.presentation?.format?.numberFormat;
+@let mode = numberFormat === NumberFormat.Currency ? 'currency' : 'decimal';
+@let useGrouping = numberFormat === NumberFormat.Comma || numberFormat === NumberFormat.Currency;
+@let currency = field().params.presentation?.format?.currency;
+@let minFractionDigits = numberFormat === NumberFormat.Currency ? 2 : 0;
+@let maxFractionDigits = 5;
 
 <div class="flex flex-col gap-1 w-full">
   @if (label() !== false) {
@@ -26,10 +32,12 @@
     [pAutoFocus]="autoFocus()"
     [readonly]="viewOnly()"
     [(ngModel)]="data"
-    [useGrouping]="false"
-    mode="decimal"
-    [minFractionDigits]="0"
-    [maxFractionDigits]="5"
+    [mode]="mode"
+    locale="en-US"
+    [useGrouping]="useGrouping"
+    [minFractionDigits]="minFractionDigits"
+    [maxFractionDigits]="maxFractionDigits"
+    [currency]="currency"
     fluid
   />
   @if (input.invalid && input.touched) {

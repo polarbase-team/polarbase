@@ -7,13 +7,13 @@ export const getReferenceValue = (data: ReferenceData) => {
   return typeof data === 'object' ? data?.id : data;
 };
 
-export const getReferenceDisplayLabel = (data: ReferenceData) => {
-  return getRecordDisplayLabel(data as Record<string, any>);
+export const getReferenceDisplayLabel = (data: ReferenceData, displayColumn?: string) => {
+  return getRecordDisplayLabel(data as Record<string, any>, displayColumn);
 };
 
-export const parseReferenceData = (data: ReferenceData) => {
+export const parseReferenceData = (data: ReferenceData, displayColumn?: string) => {
   const value = getReferenceValue(data);
-  const displayLabel = getReferenceDisplayLabel(data);
+  const displayLabel = getReferenceDisplayLabel(data, displayColumn);
 
   return { value, displayLabel };
 };

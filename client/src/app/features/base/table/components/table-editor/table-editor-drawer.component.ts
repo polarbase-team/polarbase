@@ -2,9 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  effect,
   input,
-  model,
   output,
   signal,
   viewChild,
@@ -26,10 +24,10 @@ import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
-import { sanitizeEmptyStrings } from '@app/core/utils';
+import { sanitizeEmptyValues } from '@app/core/utils';
 import { TableFormData, TableDefinition, TableService } from '../../services/table.service';
 
-const DEFAULT_VALUE = { idType: 'integer', timestamps: true } as TableFormData;
+const DEFAULT_VALUE = { idType: 'integer', timestamps: true, presentation: {} } as TableFormData;
 
 @Component({
   selector: 'table-editor-drawer',
@@ -57,7 +55,7 @@ export class TableEditorDrawerComponent extends DrawerComponent {
   onSave = output<TableFormData>();
 
   protected tableForm = viewChild<NgForm>('tableForm');
-  protected tableFormData: TableFormData;
+  protected tableFormData: TableFormData = { ...DEFAULT_VALUE };
   protected isSaving = signal(false);
 
   constructor(
@@ -66,10 +64,19 @@ export class TableEditorDrawerComponent extends DrawerComponent {
     private tblService: TableService,
   ) {
     super();
+  }
 
-    effect(() => {
-      this.tableFormData = { ...DEFAULT_VALUE, ...this.table() };
-    });
+  protected override onShow() {
+    super.onShow();
+
+    this.isSaving.set(false);
+
+    const table = { ...DEFAULT_VALUE, ...this.table() };
+    const { primaryKey, ...rest } = table;
+    this.tableFormData = {
+      ...rest,
+      presentation: { ...DEFAULT_VALUE.presentation, ...rest.presentation },
+    };
   }
 
   protected override onHide() {
@@ -87,18 +94,16 @@ export class TableEditorDrawerComponent extends DrawerComponent {
         },
         acceptButtonProps: {
           label: 'Discard',
-          severity: 'primary',
+          severity: 'danger',
         },
         accept: () => {
           this.close();
-          this.reset();
         },
       });
       return;
     }
 
     this.close();
-    this.reset();
   }
 
   protected async onSubmit() {
@@ -106,11 +111,12 @@ export class TableEditorDrawerComponent extends DrawerComponent {
 
     this.isSaving.set(true);
 
-    let fn: Observable<any>;
+    // Sanitize the table form data by removing empty values
+    const formData = sanitizeEmptyValues(this.tableFormData);
 
-    const formData = sanitizeEmptyStrings(this.tableFormData);
+    let fn: Observable<any>;
     if (this.mode() === 'edit') {
-      fn = this.tblService.updateTable(this.table().tableName, formData);
+      fn = this.tblService.updateTable(this.table().name, formData);
     } else {
       fn = this.tblService.createTable(formData);
     }
@@ -118,9 +124,8 @@ export class TableEditorDrawerComponent extends DrawerComponent {
     fn.pipe(
       finalize(() => this.isSaving.set(false)),
       takeUntilDestroyed(this.destroyRef),
-    ).subscribe(() => {
-      this.onSave.emit(this.tableFormData);
-      this.reset();
+    ).subscribe(({ data: table }) => {
+      this.onSave.emit(table);
       this.close();
     });
   }
@@ -131,11 +136,5 @@ export class TableEditorDrawerComponent extends DrawerComponent {
 
   protected cancel() {
     this.close();
-  }
-
-  protected reset() {
-    this.tableForm().reset();
-    this.tableFormData = { ...DEFAULT_VALUE };
-    this.isSaving.set(false);
   }
 }

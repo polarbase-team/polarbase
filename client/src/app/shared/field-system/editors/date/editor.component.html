@@ -1,5 +1,8 @@
 @let fieldName = field().name;
 @let fieldDescription = field().description;
+@let presentation = field().params.presentation;
+@let dateFormat = presentation?.format?.dateFormat?.toLowerCase().replace('yyyy', 'yy');
+@let showTime = presentation?.format?.showTime;
 
 <div class="flex flex-col gap-1 w-full">
   @if (label() !== false) {
@@ -21,6 +24,7 @@
     [required]="field().required"
     [minDate]="field().minDate"
     [maxDate]="field().maxDate"
+    [dateFormat]="dateFormat"
     [invalid]="input.invalid && input.touched"
     [inputId]="fieldName"
     [placeholder]="placeholder() ?? 'Select date and time'"
@@ -29,7 +33,7 @@
     [disabled]="viewOnly()"
     [ngModel]="date()"
     (ngModelChange)="onDateChange($event)"
-    [showTime]="true"
+    [showTime]="showTime"
     [showClear]="true"
     [showIcon]="true"
     iconDisplay="input"
