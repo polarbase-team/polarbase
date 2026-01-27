@@ -525,11 +525,16 @@ export class TableService {
     await pg.schema
       .withSchema(schemaName)
       .alterTable(tableName, (tableBuilder) => {
-        const columnBuilder = specificType(pg, tableBuilder, {
-          name: columnName,
-          dataType: dataType || oldSchema.dataType,
-          foreignKey,
-        }).alter();
+        const columnBuilder = specificType(
+          pg,
+          tableBuilder,
+          {
+            name: columnName,
+            dataType: dataType || oldSchema.dataType,
+            foreignKey,
+          },
+          dataType === oldSchema.dataType
+        ).alter();
 
         if (newName !== oldSchema.name) {
           tableBuilder.renameColumn(columnName, newName);

@@ -188,7 +188,8 @@ export const specificType = (
       onUpdate: ReferentialAction;
       onDelete: ReferentialAction;
     } | null;
-  }
+  },
+  typeDefinitionOnly?: boolean
 ) => {
   switch (dataType) {
     case DataType.Text:
@@ -219,12 +220,15 @@ export const specificType = (
       if (!foreignKey) {
         throw new Error(`Foreign key metadata is required for column: ${name}`);
       }
-      return tableBuilder
-        .specificType(name, foreignKey.column.type)
-        .references(foreignKey.column.name)
-        .inTable(foreignKey.table)
-        .onUpdate(foreignKey.onUpdate)
-        .onDelete(foreignKey.onDelete);
+      const column = tableBuilder.specificType(name, foreignKey.column.type);
+      if (!typeDefinitionOnly) {
+        column
+          .references(foreignKey.column.name)
+          .inTable(foreignKey.table)
+          .onUpdate(foreignKey.onUpdate)
+          .onDelete(foreignKey.onDelete);
+      }
+      return column;
     case DataType.Attachment:
       return tableBuilder.specificType(name, 'attachment[]');
     case DataType.AutoNumber:
