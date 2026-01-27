@@ -108,7 +108,8 @@ const applySimpleFilter = (
 
 const buildWhereClauseRecursive = (
   qb: Knex.QueryBuilder,
-  condition: Condition
+  condition: Condition,
+  tableName?: string
 ): Knex.QueryBuilder => {
   if ('and' in condition || 'or' in condition) {
     const andConditions = (condition as LogicGroup).and;
@@ -146,7 +147,11 @@ const buildWhereClauseRecursive = (
   } else if (typeof condition === 'object' && condition !== null) {
     return qb.where(function (this: Knex.QueryBuilder) {
       for (const [column, value] of Object.entries(condition)) {
-        applySimpleFilter(this, column, value);
+        const safeColumn =
+          tableName && !column.includes('.')
+            ? `${tableName}.${column}`
+            : column;
+        applySimpleFilter(this, safeColumn, value);
       }
     });
   }
@@ -156,10 +161,11 @@ const buildWhereClauseRecursive = (
 
 export const buildWhereClause = (
   qb: Knex.QueryBuilder,
-  where?: WhereFilter
+  where?: WhereFilter,
+  tableName?: string
 ) => {
   if (!where || Object.keys(where).length === 0) {
     return qb;
   }
-  return buildWhereClauseRecursive(qb, where);
+  return buildWhereClauseRecursive(qb, where, tableName);
 };

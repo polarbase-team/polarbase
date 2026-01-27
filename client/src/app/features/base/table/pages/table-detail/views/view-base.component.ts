@@ -51,23 +51,22 @@ export class ViewBaseComponent {
       .subscribe({
         next: (event) => {
           const { action, record } = event;
-          const recordId = record.new.id;
 
           switch (action) {
             case 'insert':
               this.records.update((arr) =>
-                arr.some((r) => r.id === recordId) ? arr : [...arr, record.new],
+                arr.some((r) => r.id === record.new.id) ? arr : [...arr, record.new],
               );
               break;
 
             case 'update':
               this.records.update((records) =>
-                records.map((r) => (r.id === recordId ? record.new : r)),
+                records.map((r) => (r.id === record.new.id ? record.new : r)),
               );
               break;
 
             case 'delete':
-              this.records.update((records) => records.filter((r) => r.id !== recordId));
+              this.records.update((records) => records.filter((r) => r.id !== record.key.id));
               break;
           }
 

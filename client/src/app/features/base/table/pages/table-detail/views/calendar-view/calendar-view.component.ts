@@ -129,17 +129,16 @@ export class CalendarViewComponent extends ViewBaseComponent {
 
   protected override onRealtimeMessage(message: TableRealtimeMessage) {
     const { action, record } = message;
-    const recordId = record.new.id;
 
     switch (action) {
       case 'insert':
         this.events.update((events) => {
-          if (events.some((e) => e.id === recordId)) return events;
+          if (events.some((e) => e.id === record.new.id)) return events;
 
           return [
             ...events,
             {
-              id: String(recordId),
+              id: String(record.new.id),
               title: getRecordDisplayLabel(record.new),
               start: record.new[this.selectedStartField],
               end: record.new[this.selectedEndField],
@@ -152,7 +151,7 @@ export class CalendarViewComponent extends ViewBaseComponent {
         if (record.new[this.selectedStartField]) {
           this.events.update((events) =>
             events.map((e) =>
-              e.id === recordId
+              e.id === record.new.id
                 ? {
                     ...e,
                     title: getRecordDisplayLabel(record.new),
@@ -163,12 +162,12 @@ export class CalendarViewComponent extends ViewBaseComponent {
             ),
           );
         } else {
-          this.events.update((events) => events.filter((e) => e.id !== recordId));
+          this.events.update((events) => events.filter((e) => e.id !== record.new.id));
         }
         break;
 
       case 'delete':
-        this.events.update((events) => events.filter((e) => e.id !== recordId));
+        this.events.update((events) => events.filter((e) => e.id !== record.key.id));
         break;
     }
   }
