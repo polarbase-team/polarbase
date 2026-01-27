@@ -40,7 +40,7 @@ export class TableRecordService {
 
     // WHERE
     if (where) {
-      qb = buildWhereClause(qb, where);
+      qb = buildWhereClause(qb, where, tableName);
     }
 
     // Global SEARCH across text columns
@@ -101,6 +101,7 @@ export class TableRecordService {
       for (const [fkField, alias] of Object.entries(effectiveExpands)) {
         const colInfo = cols.find((c) => c.name === fkField);
         if (!colInfo?.foreignKey) continue;
+
         const { table: refTable, column: refColObj } = colInfo.foreignKey;
         const safeAlias = alias.replace(/[^a-zA-Z0-9_]/g, '');
 
@@ -198,7 +199,7 @@ export class TableRecordService {
     qb = qb.select(safeSelect);
 
     // WHERE
-    if (where) qb = buildWhereClause(qb, where);
+    if (where) qb = buildWhereClause(qb, where, tableName);
 
     // GROUP BY
     if (group) {
@@ -307,7 +308,7 @@ export class TableRecordService {
         }
 
         const qb = trx(tableName).withSchema(schemaName);
-        const affected = await buildWhereClause(qb, where)
+        const affected = await buildWhereClause(qb, where, tableName)
           .update(data)
           .returning('*');
         affectedRows.push(...affected);
@@ -335,7 +336,7 @@ export class TableRecordService {
     const { where } = condition;
     if (where && Object.keys(where).length) {
       const qb = pg(tableName).withSchema(schemaName);
-      deleted = await buildWhereClause(qb, where).delete();
+      deleted = await buildWhereClause(qb, where, tableName).delete();
     } else {
       throw new Error('Missing where conditions');
     }

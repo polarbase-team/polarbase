@@ -89,7 +89,6 @@ export class MapViewComponent extends ViewBaseComponent {
 
   protected override onRealtimeMessage(message: TableRealtimeMessage) {
     const { action, record } = message;
-    const recordId = record.new.id;
 
     switch (action) {
       case 'insert':
@@ -108,7 +107,7 @@ export class MapViewComponent extends ViewBaseComponent {
         if (record.new[this.selectedGeoPointField]) {
           this.locations.update((l) =>
             l.map((l) =>
-              l.id === recordId
+              l.id === record.new.id
                 ? {
                     id: record.new.id,
                     title: getRecordDisplayLabel(record.new),
@@ -119,12 +118,12 @@ export class MapViewComponent extends ViewBaseComponent {
             ),
           );
         } else {
-          this.locations.update((l) => l.filter((l) => l.id !== recordId));
+          this.locations.update((l) => l.filter((l) => l.id !== record.new.id));
         }
         break;
 
       case 'delete':
-        this.locations.update((l) => l.filter((l) => l.id !== recordId));
+        this.locations.update((l) => l.filter((l) => l.id !== record.key.id));
         break;
     }
   }
