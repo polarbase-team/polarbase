@@ -86,7 +86,8 @@ export class TableRecordService {
       }
 
       for (const [fkField, alias] of Object.entries(effectiveExpands)) {
-        const colInfo = cols.find((c) => c.name === fkField)!;
+        const colInfo = cols.find((c) => c.name === fkField);
+        if (!colInfo?.foreignKey) continue;
         const { table: refTable, column: refColObj } = colInfo.foreignKey;
         const safeAlias = alias.replace(/[^a-zA-Z0-9_]/g, '');
 

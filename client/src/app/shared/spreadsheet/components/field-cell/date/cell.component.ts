@@ -23,19 +23,22 @@ export class DateFieldCellComponent extends FieldCellEditable<DateData> {
 
   @ViewChild('calendar') calendar: Overlay;
 
+  protected updatedDate: Date;
+
   protected calendarVisible: boolean;
 
   protected override onTouch(e: CellTouchEvent) {
     this.calendarVisible = true;
   }
 
-  protected onDatePicked(date) {
+  protected onDatePicked(date: Date) {
     this.data = dayjs(date).toISOString();
     this.save();
   }
 
   protected onMenuOpen() {
     this.markAsEditStarted();
+    this.updatedDate = dayjs(this.data).toDate();
   }
 
   protected onMenuClose() {

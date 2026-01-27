@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   effect,
   input,
@@ -29,9 +30,13 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+
+import { environment } from '@environments/environment';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
-import { sanitizeEmptyStrings } from '@app/core/utils';
+import { sanitizeEmptyValues } from '@app/core/utils';
+import { NumberFormat } from '@app/shared/field-system/pipes/number-format.pipe';
 import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
 import { SelectField } from '@app/shared/field-system/models/select/field.object';
@@ -60,14 +65,15 @@ const DEFAULT_VALUE = {
   unique: false,
   defaultValue: null,
   comment: null,
+  presentation: {},
+  validation: {},
+  options: [],
   foreignKey: {
     table: null,
     column: null,
     onUpdate: 'NO ACTION',
     onDelete: 'NO ACTION',
   },
-  options: [],
-  validation: {},
 } as ColumnFormData;
 
 @Component({
@@ -92,6 +98,7 @@ const DEFAULT_VALUE = {
     SelectButtonModule,
     TooltipModule,
     ConfirmDialogModule,
+    ToggleSwitchModule,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -114,10 +121,10 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
   onSave = output<ColumnFormData>();
 
-  protected readonly DataType = DataType;
   protected columnForm = viewChild<NgForm>('columnForm');
-  protected columnFormData: ColumnFormData;
+  protected columnFormData: ColumnFormData = { ...DEFAULT_VALUE };
   protected isSaving = signal(false);
+  protected readonly DataType = DataType;
   protected dataTypes = Object.keys(DataType).map((t) => ({
     name: t,
     value: DataType[t],
@@ -126,8 +133,33 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   protected selectedDataType = signal<DataType>(null);
   protected internalField: Field;
 
+  // Number type
+  protected readonly NumberFormat = NumberFormat;
+  protected numberFormats = [
+    { value: NumberFormat.Comma, label: 'Comma separated', example: '1,000' },
+    { value: NumberFormat.Percentage, label: 'Percentage', example: '100%' },
+    { value: NumberFormat.Currency, label: 'Currency', example: '$1,000' },
+  ];
+  protected currencies = [
+    { value: 'USD', label: 'USD', example: '$1,000' },
+    { value: 'EUR', label: 'EUR', example: '€1,000' },
+    { value: 'VND', label: 'VND', example: '₫1,000' },
+  ];
+
+  // Date & AutoDate types
+  protected dateFormats = [
+    { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
+    { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
+    { value: 'YYYY/MM/DD', label: 'YYYY/MM/DD' },
+    { value: 'YYYY/DD/MM', label: 'YYYY/DD/MM' },
+    { value: 'DD-MM-YYYY', label: 'DD-MM-YYYY' },
+    { value: 'MM-DD-YYYY', label: 'MM-DD-YYYY' },
+    { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' },
+    { value: 'YYYY-DD-MM', label: 'YYYY-DD-MM' },
+  ];
+
   // Reference type
-  protected tableOptions: { name: string; value: string }[] | undefined;
+  protected tableOptions = computed(() => this.tblService.tables());
   protected referentialActions: { name: string; value: string; help: string }[] = [
     {
       name: 'No Action',
@@ -145,6 +177,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       help: 'Automatically syncs updates and deletions.',
     },
   ];
+  protected referenceDisplayColumnOptions: { label: string; value: string; icon: string }[];
 
   constructor(
     private destroyRef: DestroyRef,
@@ -154,26 +187,30 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     super();
 
     effect(() => {
-      const column = { ...DEFAULT_VALUE, ...this.column() };
-      column.validation ??= {};
+      const selectedDataType = this.selectedDataType();
+      if (!selectedDataType) return;
 
-      this.selectedDataType.set(column.dataType);
-
-      const { primary, metadata, ...remain } = column;
-      this.columnFormData = remain;
-    });
-
-    effect(() => {
-      this.selectedDataType();
+      this.initPresentation(selectedDataType);
+      this.initValidation(selectedDataType);
       this.internalField = this.tblService.buildField(this.columnFormData as ColumnDefinition);
     });
+  }
 
-    effect(() => {
-      this.tableOptions = [];
-      for (const table of this.tblService.tables()) {
-        this.tableOptions.push({ name: table.tableName, value: table.tableName });
-      }
-    });
+  protected override onShow() {
+    super.onShow();
+
+    this.isSaving.set(false);
+
+    const column = { ...DEFAULT_VALUE, ...this.column() };
+    const { primary, metadata, ...rest } = column;
+    this.columnFormData = {
+      ...rest,
+      presentation: { ...DEFAULT_VALUE.presentation, ...rest.presentation },
+      validation: { ...DEFAULT_VALUE.validation, ...rest.validation },
+      foreignKey: { ...DEFAULT_VALUE.foreignKey, ...rest.foreignKey },
+    };
+
+    this.selectedDataType.set(column.dataType);
   }
 
   protected override onHide() {
@@ -191,18 +228,16 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
         },
         acceptButtonProps: {
           label: 'Discard',
-          severity: 'primary',
+          severity: 'danger',
         },
         accept: () => {
           this.close();
-          this.reset();
         },
       });
       return;
     }
 
     this.close();
-    this.reset();
   }
 
   protected save() {
@@ -213,21 +248,13 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.close();
   }
 
-  protected reset() {
-    this.columnForm().reset();
-    this.columnFormData = { ...DEFAULT_VALUE };
-    this.isSaving.set(false);
-  }
-
   protected async onSubmit() {
     if (!this.columnForm().valid) return;
 
     this.isSaving.set(true);
 
-    let fn: Observable<any>;
-
-    // Sanitize the column form data by removing empty strings
-    const formData = sanitizeEmptyStrings(this.columnFormData);
+    // Sanitize the column form data by removing empty values
+    const formData = sanitizeEmptyValues(this.columnFormData);
 
     // Handle option and foreign key field removal depending on selected data type
     switch (this.selectedDataType()) {
@@ -246,15 +273,11 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
         delete formData.foreignKey;
     }
 
-    // Remove empty 'validation' object if no validation rules are present
-    if (!Object.keys(formData.validation).length) {
-      formData.validation = null;
-    }
-
+    let fn: Observable<any>;
     if (this.mode() === 'edit') {
-      fn = this.tblService.updateColumn(this.table().tableName, this.column().name, formData);
+      fn = this.tblService.updateColumn(this.table().name, this.column().name, formData);
     } else {
-      fn = this.tblService.createColumn(this.table().tableName, formData);
+      fn = this.tblService.createColumn(this.table().name, formData);
     }
 
     fn.pipe(
@@ -262,7 +285,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(({ data: column }) => {
       this.onSave.emit(column);
-      this.reset();
       this.close();
     });
   }
@@ -270,6 +292,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   protected onDataTypeSelect(dataType: DataType) {
     this.columnFormData.dataType = dataType;
     this.columnFormData.defaultValue = null;
+    this.columnFormData.presentation = { ...DEFAULT_VALUE.presentation };
     this.columnFormData.validation = { ...DEFAULT_VALUE.validation };
     this.columnFormData.foreignKey = { ...DEFAULT_VALUE.foreignKey };
   }
@@ -290,11 +313,28 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   }
 
   protected onTableSelect(tableName: string) {
-    const table = this.tblService.tables().find((t) => t.tableName === tableName);
+    const table = this.tblService.tables().find((t) => t.name === tableName);
     if (!table) return;
 
-    this.columnFormData.foreignKey.table = table.tableName;
-    this.columnFormData.foreignKey.column = table.tablePrimaryKey;
+    this.columnFormData.foreignKey.table = table.name;
+    this.columnFormData.foreignKey.column = table.primaryKey;
+  }
+
+  protected loadReferenceDisplayColumnOptions() {
+    if (!this.columnFormData.foreignKey.table) {
+      this.referenceDisplayColumnOptions = [];
+      return;
+    }
+
+    this.tblService
+      .getTableSchema(this.columnFormData.foreignKey.table)
+      .subscribe((columns: ColumnDefinition[]) => {
+        this.referenceDisplayColumnOptions = columns.map((col) => ({
+          label: col.presentation?.uiName || col.name,
+          value: col.name,
+          icon: FIELD_ICON_MAP[col.dataType],
+        }));
+      });
   }
 
   private onOptionsUpdate() {
@@ -307,6 +347,38 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
         break;
       case DataType.MultiSelect:
         (this.internalField as MultiSelectField).options = [...options];
+    }
+  }
+
+  private initValidation(dataType: DataType) {
+    switch (dataType) {
+      case DataType.Text:
+        this.columnFormData.validation.minLength = null;
+        this.columnFormData.validation.maxLength = 255;
+        break;
+    }
+  }
+
+  private initPresentation(dataType: DataType) {
+    switch (dataType) {
+      case DataType.Number:
+        this.columnFormData.presentation.format ??= {
+          numberFormat: NumberFormat.Comma,
+        };
+        break;
+      case DataType.Date:
+      case DataType.AutoDate:
+        this.columnFormData.presentation.format ??= {
+          dateFormat: environment.defaultDateFormat,
+          showTime: false,
+        };
+        break;
+      case DataType.Reference:
+        this.columnFormData.presentation.format ??= {
+          displayColumn: null,
+        };
+        this.loadReferenceDisplayColumnOptions();
+        break;
     }
   }
 }

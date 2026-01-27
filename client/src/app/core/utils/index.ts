@@ -13,25 +13,46 @@ export const convertToHtmlPattern = (regex: RegExp) => {
   return pattern;
 };
 
-export const sanitizeEmptyStrings = (data: any): any => {
+export const sanitizeEmptyValues = <T>(data: T): T => {
+  // Sanitize empty strings
   if (data === '') return null;
 
+  // Handle arrays - recursively sanitize each item
   if (Array.isArray(data)) {
-    return data.map((item) => sanitizeEmptyStrings(item));
+    return data.map((item) => sanitizeEmptyValues(item)) as T;
   }
 
+  // Handle objects
   if (typeof data === 'object' && data !== null) {
-    return Object.keys(data).reduce((acc, key) => {
-      acc[key] = sanitizeEmptyStrings(data[key]);
+    const keys = Object.keys(data);
+
+    // Sanitize empty objects
+    if (keys.length === 0) return null;
+
+    // Recursively sanitize object properties, skip undefined values
+    const result = keys.reduce((acc, key) => {
+      const value = data[key];
+      // Skip undefined properties
+      if (value === undefined) return acc;
+      acc[key] = sanitizeEmptyValues(value);
       return acc;
-    }, {} as any);
+    }, {} as T);
+
+    // Check if result became empty after filtering
+    if (Object.keys(result).length === 0) return null;
+
+    return result;
   }
 
   return data;
 };
 
-export const getRecordDisplayLabel = (data: Record<string, any>) => {
+export const getRecordDisplayLabel = (data: Record<string, any>, displayColumn?: string) => {
   if (!data || typeof data !== 'object') return data;
+
+  if (displayColumn) {
+    return data[displayColumn];
+  }
 
   const priorityKeys = ['name', 'display_name', 'title', 'label', 'full_name', 'username'];
 

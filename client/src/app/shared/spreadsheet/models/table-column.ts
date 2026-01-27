@@ -4,6 +4,7 @@ import { SortType } from '../utils/sort';
 
 export interface TableColumn {
   id: string | number;
+  name: string;
   field: Field;
   width?: number;
   primary?: boolean;

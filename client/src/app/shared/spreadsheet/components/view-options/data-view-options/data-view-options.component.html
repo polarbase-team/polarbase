@@ -19,12 +19,12 @@
               </div>
 
               <!-- Field name -->
-              <span class="break-all">
+              <div>
                 {{ first ? (isGroupType() ? 'group by' : 'sort by') : 'then by' }}
                 <span class="font-medium">
-                  {{ item.column.field.name }}
+                  {{ item.column.name }}
                 </span>
-              </span>
+              </div>
             </div>
 
             <div class="flex items-center gap-2">

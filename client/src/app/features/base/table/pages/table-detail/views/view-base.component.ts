@@ -124,7 +124,7 @@ export class ViewBaseComponent {
     return new Promise((resolve, reject) => {
       this.isColumnsLoading.set(true);
       this.tblService
-        .getTableSchema(table.tableName)
+        .getTableSchema(table.name)
         .pipe(
           finalize(() => this.isColumnsLoading.set(false)),
           takeUntilDestroyed(this.destroyRef),
@@ -146,7 +146,7 @@ export class ViewBaseComponent {
     return new Promise((resolve, reject) => {
       this.isRecordsLoading.set(true);
       this.tblService
-        .getRecords(table.tableName, filter)
+        .getRecords(table.name, filter)
         .pipe(
           finalize(() => this.isRecordsLoading.set(false)),
           takeUntilDestroyed(this.destroyRef),
