@@ -246,12 +246,13 @@ export class DataViewComponent extends ViewBaseComponent {
           .getTableSchema(tableName)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe((columns) => {
+            const fields = columns.map((c) => this.tblService.buildField(c));
             this.tblService
               .getRecord(tableName, getReferenceValue(data))
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe((record) => {
                 this.onUpdateRecord.emit({
-                  record: { table, fields: this.fields(), data: record },
+                  record: { table, fields, data: record },
                   mode: 'edit',
                 });
               });

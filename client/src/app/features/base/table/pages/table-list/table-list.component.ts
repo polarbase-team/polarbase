@@ -128,6 +128,7 @@ export class TableListComponent {
   }
 
   protected addNewTable() {
+    this.updatedTable = null;
     this.updatedTableMode = 'add';
     this.visibleTableEditorDrawer = true;
   }

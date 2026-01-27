@@ -5,6 +5,7 @@
   position="right"
   [header]="mode() === 'edit' ? `Edit table: ${table().name}` : 'New table'"
   styleClass="!w-150 custom-drawer"
+  (onShow)="onShow()"
   (onHide)="onHide()"
 >
   <ng-template #content>

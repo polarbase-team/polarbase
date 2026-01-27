@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   effect,
   input,
@@ -34,7 +35,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { environment } from '@environments/environment';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
-import { sanitizeEmptyStrings } from '@app/core/utils';
+import { sanitizeEmptyValues } from '@app/core/utils';
 import { NumberFormat } from '@app/shared/field-system/pipes/number-format.pipe';
 import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
@@ -121,7 +122,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   onSave = output<ColumnFormData>();
 
   protected columnForm = viewChild<NgForm>('columnForm');
-  protected columnFormData: ColumnFormData;
+  protected columnFormData: ColumnFormData = { ...DEFAULT_VALUE };
   protected isSaving = signal(false);
   protected readonly DataType = DataType;
   protected dataTypes = Object.keys(DataType).map((t) => ({
@@ -158,7 +159,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   ];
 
   // Reference type
-  protected tableOptions: { name: string; value: string }[] | undefined;
+  protected tableOptions = computed(() => this.tblService.tables());
   protected referentialActions: { name: string; value: string; help: string }[] = [
     {
       name: 'No Action',
@@ -185,19 +186,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     super();
 
     effect(() => {
-      const column = { ...DEFAULT_VALUE, ...this.column() };
-      const { primary, metadata, ...rest } = column;
-      this.columnFormData = {
-        ...rest,
-        presentation: { ...DEFAULT_VALUE.presentation, ...rest.presentation },
-        validation: { ...DEFAULT_VALUE.validation, ...rest.validation },
-        foreignKey: { ...DEFAULT_VALUE.foreignKey, ...rest.foreignKey },
-      };
-
-      this.selectedDataType.set(column.dataType);
-    });
-
-    effect(() => {
       const selectedDataType = this.selectedDataType();
       if (!selectedDataType) return;
 
@@ -205,13 +193,23 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       this.initValidation(selectedDataType);
       this.internalField = this.tblService.buildField(this.columnFormData as ColumnDefinition);
     });
+  }
 
-    effect(() => {
-      this.tableOptions = [];
-      for (const table of this.tblService.tables()) {
-        this.tableOptions.push({ name: table.name, value: table.name });
-      }
-    });
+  protected override onShow() {
+    super.onShow();
+
+    this.isSaving.set(false);
+
+    const column = { ...DEFAULT_VALUE, ...this.column() };
+    const { primary, metadata, ...rest } = column;
+    this.columnFormData = {
+      ...rest,
+      presentation: { ...DEFAULT_VALUE.presentation, ...rest.presentation },
+      validation: { ...DEFAULT_VALUE.validation, ...rest.validation },
+      foreignKey: { ...DEFAULT_VALUE.foreignKey, ...rest.foreignKey },
+    };
+
+    this.selectedDataType.set(column.dataType);
   }
 
   protected override onHide() {
@@ -233,14 +231,12 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
         },
         accept: () => {
           this.close();
-          this.reset();
         },
       });
       return;
     }
 
     this.close();
-    this.reset();
   }
 
   protected save() {
@@ -251,21 +247,13 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.close();
   }
 
-  protected reset() {
-    this.columnForm().reset();
-    this.columnFormData = { ...DEFAULT_VALUE };
-    this.isSaving.set(false);
-  }
-
   protected async onSubmit() {
     if (!this.columnForm().valid) return;
 
     this.isSaving.set(true);
 
-    let fn: Observable<any>;
-
-    // Sanitize the column form data by removing empty strings
-    const formData = sanitizeEmptyStrings(this.columnFormData);
+    // Sanitize the column form data by removing empty values
+    const formData = sanitizeEmptyValues(this.columnFormData);
 
     // Handle option and foreign key field removal depending on selected data type
     switch (this.selectedDataType()) {
@@ -284,11 +272,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
         delete formData.foreignKey;
     }
 
-    // Remove empty 'validation' object if no validation rules are present
-    if (!Object.keys(formData.validation).length) {
-      formData.validation = null;
-    }
-
+    let fn: Observable<any>;
     if (this.mode() === 'edit') {
       fn = this.tblService.updateColumn(this.table().name, this.column().name, formData);
     } else {
@@ -300,7 +284,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(({ data: column }) => {
       this.onSave.emit(column);
-      this.reset();
       this.close();
     });
   }
@@ -361,14 +344,13 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   private initPresentation(dataType: DataType) {
     switch (dataType) {
       case DataType.Number:
-        this.columnFormData.presentation.format = {
-          numberFormat: undefined,
-          currency: undefined,
+        this.columnFormData.presentation.format ??= {
+          numberFormat: NumberFormat.Comma,
         };
         break;
       case DataType.Date:
       case DataType.AutoDate:
-        this.columnFormData.presentation.format = {
+        this.columnFormData.presentation.format ??= {
           dateFormat: environment.defaultDateFormat,
           showTime: true,
         };

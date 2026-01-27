@@ -5,9 +5,7 @@ import {
   Component,
   computed,
   DestroyRef,
-  effect,
   input,
-  model,
   output,
   signal,
 } from '@angular/core';
@@ -103,15 +101,16 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     private tblService: TableService,
   ) {
     super();
+  }
 
-    effect(() => {
-      this.updatedRecord = { ...(this.record() || { id: undefined }) };
-    });
+  protected override onShow() {
+    super.onShow();
 
-    effect(() => {
-      const fields = this.fields();
-      if (!fields) return;
+    this.isSaving.set(false);
+    this.isDataChanged = false;
 
+    const fields = this.fields();
+    if (fields) {
       const requiredFields = [];
       const optionalFields = [];
       for (const field of fields) {
@@ -123,7 +122,9 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
       }
       this.requiredFields.set(requiredFields);
       this.optionalFields.set(optionalFields);
-    });
+    }
+
+    this.updatedRecord = { ...(this.record() || { id: undefined }) };
   }
 
   protected override onHide() {
@@ -197,16 +198,10 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     ).subscribe((record) => {
       this.visible.set(false);
       this.onSave.emit(record);
-      this.reset();
     });
   }
 
   protected cancel() {
-    this.close();
-  }
-
-  protected reset() {
-    this.updatedRecord = { id: undefined };
     this.close();
   }
 }

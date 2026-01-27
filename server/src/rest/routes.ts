@@ -211,9 +211,12 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
             ),
             timestamps: t.Optional(t.Boolean()),
             presentation: t.Optional(
-              t.Object({
-                uiName: t.Optional(t.String()),
-              })
+              t.Object(
+                {
+                  uiName: t.Optional(t.Nullable(t.String())),
+                },
+                { minProperties: 1 }
+              )
             ),
           }),
         }
@@ -248,9 +251,12 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                 )
               ),
               presentation: t.Optional(
-                t.Object({
-                  uiName: t.Optional(t.String()),
-                })
+                t.Object(
+                  {
+                    uiName: t.Optional(t.Nullable(t.String())),
+                  },
+                  { minProperties: 1 }
+                )
               ),
             },
             {
@@ -313,10 +319,13 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
               ),
               presentation: t.Optional(
                 t.Nullable(
-                  t.Object({
-                    uiName: t.Optional(t.Nullable(t.String())),
-                    format: t.Optional(t.Nullable(t.Any())),
-                  })
+                  t.Object(
+                    {
+                      uiName: t.Optional(t.Nullable(t.String())),
+                      format: t.Optional(t.Nullable(t.Any())),
+                    },
+                    { minProperties: 1 }
+                  )
                 )
               ),
               validation: t.Optional(
@@ -400,10 +409,13 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                 })
               ),
               presentation: t.Nullable(
-                t.Object({
-                  uiName: t.Optional(t.Nullable(t.String())),
-                  format: t.Optional(t.Nullable(t.Any())),
-                })
+                t.Object(
+                  {
+                    uiName: t.Optional(t.Nullable(t.String())),
+                    format: t.Optional(t.Nullable(t.Any())),
+                  },
+                  { minProperties: 1 }
+                )
               ),
               validation: t.Nullable(
                 t.Object({

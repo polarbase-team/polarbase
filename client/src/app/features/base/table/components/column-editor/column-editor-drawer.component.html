@@ -56,6 +56,7 @@
   position="right"
   [header]="mode() === 'edit' ? `Edit column: ${column().name}` : 'Add column'"
   styleClass="!w-150 custom-drawer"
+  (onShow)="onShow()"
   (onHide)="onHide()"
 >
   <ng-template #content>
@@ -311,13 +312,13 @@
                   <p-select
                     inputId="table"
                     name="table"
-                    [options]="tableOptions"
+                    [options]="tableOptions()"
                     [(ngModel)]="columnFormData.foreignKey.table"
                     (ngModelChange)="onTableSelect($event)"
                     [checkmark]="true"
                     [showClear]="true"
                     optionLabel="name"
-                    optionValue="value"
+                    optionValue="name"
                     placeholder="Select here..."
                     required
                   />

@@ -1,5 +1,10 @@
 import pg from '../../plugins/pg';
-import { getTableList, getTableSchema, toPgArray } from '../utils/table';
+import {
+  getTable,
+  getTableList,
+  getTableSchema,
+  toPgArray,
+} from '../utils/table';
 import {
   addLengthCheck,
   addSizeCheck,
@@ -55,7 +60,7 @@ export class TableService {
       idType?: 'integer' | 'biginteger' | 'uuid' | 'shortid';
       timestamps?: boolean;
       presentation?: {
-        uiName?: string;
+        uiName?: string | null;
       } | null;
     };
   }) {
@@ -139,7 +144,7 @@ export class TableService {
       });
     }
 
-    return { message: `Table ${fullTableName} created successfully` };
+    return getTable(pg, schemaName, name);
   }
 
   async updateTable({
@@ -199,7 +204,7 @@ export class TableService {
       setTableMetadata(schemaName, finalTableName, metadata);
     }
 
-    return { message: `Table ${fullTableName} updated successfully` };
+    return getTable(pg, schemaName, finalTableName);
   }
 
   async deleteTable({
@@ -226,8 +231,6 @@ export class TableService {
     } else {
       await schemaBuilder.dropTable(tableName);
     }
-
-    return { message: `Table ${fullTableName} deleted successfully` };
   }
 
   async createColumn({
@@ -570,7 +573,7 @@ export class TableService {
             const constraintName = getConstraintName(
               tableName,
               columnName,
-              'range'
+              'length'
             );
             if (
               oldSchema.metadata.constraints?.find(
@@ -599,7 +602,7 @@ export class TableService {
             const constraintName = getConstraintName(
               tableName,
               columnName,
-              'range'
+              'value-range'
             );
             if (
               oldSchema.metadata.constraints?.find(
@@ -622,7 +625,7 @@ export class TableService {
             const constraintName = getConstraintName(
               tableName,
               columnName,
-              'range'
+              'date-range'
             );
             if (
               oldSchema.metadata.constraints?.find(
@@ -750,7 +753,7 @@ export class TableService {
             DROP CONSTRAINT IF EXISTS "${getConstraintName(
               tableName,
               columnName,
-              'range'
+              'value-range'
             )}",
             DROP CONSTRAINT IF EXISTS "${getConstraintName(
               tableName,

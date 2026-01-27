@@ -190,6 +190,7 @@
   position="right"
   [header]="mode() === 'view' ? 'View Record' : mode() === 'edit' ? 'Edit Record' : 'Add Record'"
   styleClass="!w-150 custom-drawer"
+  (onShow)="onShow()"
   (onHide)="onHide()"
 >
   <ng-template #content>

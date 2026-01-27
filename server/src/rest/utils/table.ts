@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
 import { LRUCache } from 'lru-cache';
-import { getAllTableMetadata } from '../db/table-metadata';
+import { getAllTableMetadata, getTableMetadata } from '../db/table-metadata';
 import { getAllColumnMetadata, getColumnMetadata } from '../db/column-metadata';
 import {
   Column,
@@ -23,13 +23,8 @@ export interface Table {
   } | null;
 }
 
-/**
- * Retrieves the list of tables in the public schema
- * along with their comments.
- */
-export const getTableList = async (pg: Knex, schemaName: string) => {
-  // Get table list from database
-  const tables: Table[] = await pg('pg_class as c')
+const fetchTables = (pg: Knex, schemaName: string, tableName?: string): Promise<Table[]> => {
+  return pg('pg_class as c')
     .select({
       name: 'c.relname',
       comment: 'descr.description',
@@ -58,13 +53,23 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
     )
     .leftJoin('pg_type as t', 'pk.atttypid', 't.oid')
     .where({
-      'ns.nspname': schemaName,
       'c.relkind': 'r',
+      'ns.nspname': schemaName,
+      ...(tableName ? { 'c.relname': tableName } : {}),
     })
     .orderBy('c.relname');
+};
+
+/**
+ * Retrieves the list of tables in the public schema
+ * along with their presentation metadata.
+ */
+export const getTableList = async (pg: Knex, schemaName: string) => {
+  // Get table list from database
+  const tables = await fetchTables(pg, schemaName);
 
   // Get table presentation metadata
-  const allTableMetadata = await getAllTableMetadata(schemaName);
+  const allTableMetadata = getAllTableMetadata(schemaName);
   tables.forEach((table) => {
     const tableMetadata = allTableMetadata.find(
       (metadata) => metadata.tableName === table.name
@@ -80,9 +85,31 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
 };
 
 /**
- * Retrieves and constructs a comprehensive schema for a specific table,
- * including column metadata, primary key identification, column comments,
- * and additional validation and foreign key details.
+ * Retrieves a specific table from the database
+ * along with its presentation metadata.
+ */
+export const getTable = async (pg: Knex, schemaName: string, tableName: string) => {
+  // Get table from database
+  const table = (await fetchTables(pg, schemaName, tableName))?.[0];
+  if (!table) {
+    throw new Error(`Table ${tableName} not found in schema ${schemaName}`);
+  }
+
+  // Get table presentation metadata
+  const tableMetadata = getTableMetadata(schemaName, tableName);
+  table.presentation = tableMetadata
+    ? {
+        uiName: tableMetadata.uiName,
+      }
+    : null;
+
+  return table;
+};
+
+/**
+ * Retrieves the schema of a specific table,
+ * including column metadata, primary key identification,
+ * column comments, and additional validation and foreign key details.
  */
 export const getTableSchema = async (
   pg: Knex,
