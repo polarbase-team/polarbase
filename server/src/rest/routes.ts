@@ -190,10 +190,12 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                 'Table name must start with a letter/_ and contain only alphanumeric characters (max 63).',
             }),
             comment: t.Optional(
-              t.String({
-                maxLength: 500,
-                error: 'Comment too long (max 500 chars)',
-              })
+              t.Nullable(
+                t.String({
+                  maxLength: 500,
+                  error: 'Comment too long (max 500 chars)',
+                })
+              )
             ),
             idType: t.Optional(
               t.Union(
@@ -211,11 +213,13 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
             ),
             timestamps: t.Optional(t.Boolean()),
             presentation: t.Optional(
-              t.Object(
-                {
-                  uiName: t.Optional(t.Nullable(t.String())),
-                },
-                { minProperties: 1 }
+              t.Nullable(
+                t.Object(
+                  {
+                    uiName: t.Optional(t.Nullable(t.String())),
+                  },
+                  { minProperties: 1 }
+                )
               )
             ),
           }),
@@ -251,11 +255,13 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                 )
               ),
               presentation: t.Optional(
-                t.Object(
-                  {
-                    uiName: t.Optional(t.Nullable(t.String())),
-                  },
-                  { minProperties: 1 }
+                t.Nullable(
+                  t.Object(
+                    {
+                      uiName: t.Optional(t.Nullable(t.String())),
+                    },
+                    { minProperties: 1 }
+                  )
                 )
               ),
             },
