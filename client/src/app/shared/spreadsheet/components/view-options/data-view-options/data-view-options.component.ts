@@ -66,7 +66,7 @@ export class DataViewOptionsComponent {
     const columns = sourceColumns.filter((f) => !currentItems.includes(f.id));
 
     return columns.map((column) => ({
-      label: column.field.name,
+      label: column.name,
       icon: column.field.icon,
       command: () => {
         this.addColumn(column);

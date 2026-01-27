@@ -1,13 +1,19 @@
 <ng-template #fieldTmpl let-field="field">
   <div class="grid grid-cols-3 w-full gap-12">
-    <label [attr.for]="field.name" class="col-span-1">
-      <div class="flex items-center gap-2">
+    @let uiName = field.params.presentation?.uiName || field.name;
+    <label [attr.for]="uiName" class="col-span-1">
+      <div class="flex items-center gap-2 overflow-hidden">
         @if (field.params.primary) {
           <i class="icon icon-key rotate-45" style="color: var(--p-primary-color)"></i>
         } @else {
           <i [class]="`${field.icon}`"></i>
         }
-        <p class="font-medium text-sm">{{ field.name }}</p>
+        <span class="font-medium text-sm white-space-nowrap truncate" [attr.title]="uiName">
+          {{ uiName }}
+          @if (field.params.presentation?.uiName) {
+            <span class="text-xs text-surface-500">{{ field.name }}</span>
+          }
+        </span>
       </div>
       <p class="text-surface-500 text-xs">
         @if (field.description) {
@@ -184,6 +190,7 @@
   position="right"
   [header]="mode() === 'view' ? 'View Record' : mode() === 'edit' ? 'Edit Record' : 'Add Record'"
   styleClass="!w-150 custom-drawer"
+  (onShow)="onShow()"
   (onHide)="onHide()"
 >
   <ng-template #content>

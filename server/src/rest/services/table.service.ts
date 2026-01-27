@@ -1,5 +1,10 @@
 import pg from '../../plugins/pg';
-import { getTableList, getTableSchema, toPgArray } from '../utils/table';
+import {
+  getTable,
+  getTableList,
+  getTableSchema,
+  toPgArray,
+} from '../utils/table';
 import {
   addLengthCheck,
   addSizeCheck,
@@ -21,6 +26,8 @@ import {
   addEmailDomainCheck,
   removeEmailDomainCheck,
 } from '../utils/column';
+import { setTableMetadata } from '../db/table-metadata';
+import { setColumnMetadata } from '../db/column-metadata';
 
 export class TableService {
   async getAll({ schemaName = 'public' }: { schemaName?: string } = {}) {
@@ -44,26 +51,29 @@ export class TableService {
 
   async createTable({
     schemaName = 'public',
-    tableName,
-    tableComment,
-    idType = 'integer',
-    timestamps = true,
+    table,
   }: {
     schemaName?: string;
-    tableName: string;
-    tableComment?: string;
-    idType?: 'integer' | 'biginteger' | 'uuid' | 'shortid';
-    timestamps?: boolean;
+    table: {
+      name: string;
+      comment?: string | null;
+      idType?: 'integer' | 'biginteger' | 'uuid' | 'shortid';
+      timestamps?: boolean;
+      presentation?: {
+        uiName?: string | null;
+      } | null;
+    };
   }) {
-    const fullTableName = `${schemaName}.${tableName}`;
+    const { name, comment, idType, timestamps, presentation } = table;
+    const fullTableName = `${schemaName}.${name}`;
     const schemaBuilder = pg.schema.withSchema(schemaName);
 
-    const exists = await schemaBuilder.hasTable(tableName);
+    const exists = await schemaBuilder.hasTable(name);
     if (exists) {
       throw new Error(`Table ${fullTableName} already exists`);
     }
 
-    await schemaBuilder.createTable(tableName, (table) => {
+    await schemaBuilder.createTable(name, (table) => {
       // Define the primary key column based on the selected primaryType
       switch (idType) {
         case 'integer':
@@ -123,27 +133,36 @@ export class TableService {
       }
 
       // Add a comment/description to the table if provided
-      if (tableComment) {
-        table.comment(tableComment);
+      if (comment) {
+        table.comment(comment);
       }
     });
 
-    return { message: `Table ${fullTableName} created successfully` };
+    if (presentation !== undefined) {
+      setTableMetadata(schemaName, name, {
+        uiName: presentation?.uiName || null,
+      });
+    }
+
+    return getTable(pg, schemaName, name);
   }
 
   async updateTable({
     schemaName = 'public',
     tableName,
-    data,
+    table,
   }: {
     schemaName?: string;
     tableName: string;
-    data: {
-      tableName?: string;
-      tableComment?: string | null;
+    table: {
+      name?: string;
+      comment?: string | null;
+      presentation?: {
+        uiName?: string | null;
+      } | null;
     };
   }) {
-    const { tableName: newTableName, tableComment: newTableComment } = data;
+    const { name: newTableName, comment, presentation } = table;
     const fullTableName = `${schemaName}.${tableName}`;
     const schemaBuilder = pg.schema.withSchema(schemaName);
 
@@ -167,15 +186,25 @@ export class TableService {
       finalTableName = newTableName;
     }
 
-    if (newTableComment !== undefined) {
+    if (comment !== undefined) {
       await pg.schema
         .withSchema(schemaName)
         .alterTable(finalTableName, (table) => {
-          table.comment(newTableComment ?? '');
+          table.comment(comment ?? '');
         });
     }
 
-    return { message: `Table ${fullTableName} updated successfully` };
+    if (presentation !== undefined) {
+      const metadata: { uiName?: string | null } = {};
+      if (presentation === null) {
+        metadata.uiName = null;
+      } else {
+        metadata.uiName = presentation.uiName;
+      }
+      setTableMetadata(schemaName, finalTableName, metadata);
+    }
+
+    return getTable(pg, schemaName, finalTableName);
   }
 
   async deleteTable({
@@ -202,8 +231,6 @@ export class TableService {
     } else {
       await schemaBuilder.dropTable(tableName);
     }
-
-    return { message: `Table ${fullTableName} deleted successfully` };
   }
 
   async createColumn({
@@ -215,10 +242,14 @@ export class TableService {
     tableName: string;
     column: {
       name: string;
-      nullable?: boolean | null;
-      unique?: boolean | null;
+      nullable?: boolean;
+      unique?: boolean;
       defaultValue?: any | null;
       comment?: string | null;
+      presentation?: {
+        uiName?: string;
+        format?: string;
+      } | null;
       validation?: {
         minLength?: number | null;
         maxLength?: number | null;
@@ -265,9 +296,10 @@ export class TableService {
       unique,
       defaultValue,
       comment,
+      presentation,
+      validation,
       options,
       foreignKey,
-      validation,
     } = column;
     const {
       minLength,
@@ -365,6 +397,13 @@ export class TableService {
           );
         }
       });
+
+      if (presentation !== undefined) {
+        setColumnMetadata(schemaName, tableName, name, {
+          uiName: presentation?.uiName || null,
+          format: presentation?.format || null,
+        });
+      }
     } catch (error) {
       // Drop column
       await pg.raw(`ALTER TABLE ?? DROP COLUMN IF EXISTS ??`, [
@@ -390,10 +429,14 @@ export class TableService {
     column: {
       name: string;
       dataType: DataType;
-      nullable: boolean | null;
-      unique: boolean | null;
+      nullable: boolean;
+      unique: boolean;
       defaultValue: any | null;
       comment: string | null;
+      presentation?: {
+        uiName?: string | null;
+        format?: string | null;
+      } | null;
       validation: {
         minLength?: number | null;
         maxLength?: number | null;
@@ -440,9 +483,10 @@ export class TableService {
       unique,
       defaultValue,
       comment,
+      presentation,
+      validation,
       options,
       foreignKey,
-      validation,
     } = column;
     const {
       minLength,
@@ -481,11 +525,16 @@ export class TableService {
     await pg.schema
       .withSchema(schemaName)
       .alterTable(tableName, (tableBuilder) => {
-        const columnBuilder = specificType(pg, tableBuilder, {
-          name: columnName,
-          dataType: dataType || oldSchema.dataType,
-          foreignKey,
-        }).alter();
+        const columnBuilder = specificType(
+          pg,
+          tableBuilder,
+          {
+            name: columnName,
+            dataType: dataType || oldSchema.dataType,
+            foreignKey,
+          },
+          dataType === oldSchema.dataType
+        ).alter();
 
         if (newName !== oldSchema.name) {
           tableBuilder.renameColumn(columnName, newName);
@@ -529,7 +578,7 @@ export class TableService {
             const constraintName = getConstraintName(
               tableName,
               columnName,
-              'range'
+              'length'
             );
             if (
               oldSchema.metadata.constraints?.find(
@@ -558,10 +607,10 @@ export class TableService {
             const constraintName = getConstraintName(
               tableName,
               columnName,
-              'range'
+              'value-range'
             );
             if (
-              oldSchema.metadata.constraints.find(
+              oldSchema.metadata.constraints?.find(
                 (c: any) => c.constraint_name === constraintName
               )
             ) {
@@ -581,10 +630,10 @@ export class TableService {
             const constraintName = getConstraintName(
               tableName,
               columnName,
-              'range'
+              'date-range'
             );
             if (
-              oldSchema.metadata.constraints.find(
+              oldSchema.metadata.constraints?.find(
                 (c: any) => c.constraint_name === constraintName
               )
             ) {
@@ -709,7 +758,7 @@ export class TableService {
             DROP CONSTRAINT IF EXISTS "${getConstraintName(
               tableName,
               columnName,
-              'range'
+              'value-range'
             )}",
             DROP CONSTRAINT IF EXISTS "${getConstraintName(
               tableName,
@@ -740,6 +789,18 @@ export class TableService {
           );
         }
       });
+
+    if (presentation !== undefined) {
+      const metadata: { uiName?: string | null; format?: any | null } = {};
+      if (presentation === null) {
+        metadata.uiName = null;
+        metadata.format = null;
+      } else {
+        metadata.uiName = presentation.uiName;
+        metadata.format = presentation.format;
+      }
+      setColumnMetadata(schemaName, tableName, newName, metadata);
+    }
 
     return (await getTableSchema(pg, schemaName, tableName, newName))[0];
   }

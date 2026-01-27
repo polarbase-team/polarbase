@@ -1,12 +1,13 @@
 export const environment = {
   production: true,
-  version: 'v0.6.1-beta',
+  version: 'v0.6.2-beta',
   assetUrl: '/static',
   apiUrl: '/api',
   wsUrl: '/ws',
   uploadUrl: '/files/upload',
-  dateFormat: 'DD/MM/YYYY',
-  dateTimeFormat: 'DD/MM/YYYY HH:mm',
+  defaultCurrency: 'VND',
+  defaultDateFormat: 'DD/MM/YYYY',
+  defaultDateTimeFormat: 'DD/MM/YYYY HH:mm',
   openStreetMap: {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution:

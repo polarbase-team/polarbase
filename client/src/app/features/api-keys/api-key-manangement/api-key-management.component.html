@@ -12,11 +12,11 @@
     <form id="apiKeyForm" #apiKeyForm="ngForm" (ngSubmit)="onApiKeyFormSubmit()">
       <div class="p-5">
         <div class="grid grid-cols-3 w-full gap-12">
-          <label for="name" class="col-span-1">
+          <label class="col-span-1">
             <p class="font-medium text-sm">General</p>
           </label>
           <div class="flex flex-col gap-1 col-span-2">
-            <label class="text-sm">
+            <label for="name" class="text-sm">
               Name
               <i class="icon icon-asterisk text-red-500"></i>
             </label>
@@ -44,73 +44,77 @@
       <p-divider />
       <div class="p-5">
         <div class="grid grid-cols-3 w-full gap-12">
-          <label for="description" class="col-span-1">
+          <label class="col-span-1">
             <p class="font-medium text-sm">Permissions</p>
           </label>
           <div class="flex flex-col gap-8 col-span-2">
             <div class="flex gap-4">
               <p-checkbox
-                id="restApiPermission"
+                inputId="restApiPermission"
+                name="restApiPermission"
                 [(ngModel)]="newApiKey.scopes.rest"
                 [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
               />
-              <div>
-                <label for="restApiPermission" class="text-sm">REST API Access</label>
+              <label for="restApiPermission" class="text-sm">
+                REST API Access
                 <p class="text-surface-500 text-xs">
                   Enable this to allow the API key to access and manage data via the system’s
                   RESTful API.
                 </p>
-              </div>
+              </label>
             </div>
             <div class="flex gap-4">
               <p-checkbox
-                id="agentApiPermission"
+                inputId="agentApiPermission"
+                name="agentApiPermission"
                 [(ngModel)]="newApiKey.scopes.agent"
                 [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
               />
-              <div>
-                <label for="agentApiPermission" class="text-sm">Agent API Access</label>
+              <label for="agentApiPermission" class="text-sm">
+                Agent API Access
                 <p class="text-surface-500 text-xs">
                   Enable this to allow the API key to access and manage data via the system’s Agent
                   API.
                 </p>
-              </div>
+              </label>
             </div>
             <div class="flex gap-4">
               <p-checkbox
-                id="mcpServerPermission"
+                inputId="mcpServerPermission"
+                name="mcpServerPermission"
                 [(ngModel)]="newApiKey.scopes.mcp"
                 [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
               />
-              <div>
-                <label for="mcpServerPermission" class="text-sm">MCP Server Access</label>
+              <label for="mcpServerPermission" class="text-sm">
+                MCP Server Access
                 <p class="text-surface-500 text-xs">
                   Enable this to allow the API key to access and manage data via the system’s MCP
                   Server.
                 </p>
-              </div>
+              </label>
             </div>
             <div class="flex gap-4">
               <p-checkbox
-                id="realtimeServerPermission"
+                inputId="realtimeServerPermission"
+                name="realtimeServerPermission"
                 [(ngModel)]="newApiKey.scopes.realtime"
                 [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
               />
-              <div>
-                <label for="realtimeServerPermission" class="text-sm">Realtime Server Access</label>
+              <label for="realtimeServerPermission" class="text-sm">
+                Realtime Server Access
                 <p class="text-surface-500 text-xs">
                   Enable this to allow the API key to access and manage data via the system’s
                   Realtime Server.
                 </p>
-              </div>
+              </label>
             </div>
           </div>
         </div>

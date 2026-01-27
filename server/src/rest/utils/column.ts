@@ -34,15 +34,12 @@ export interface Column {
   primary: boolean;
   nullable: boolean;
   unique: boolean;
-  defaultValue: string;
-  comment: string;
-  options: string[];
-  foreignKey: {
-    table: string;
-    column: { name: string; type: string };
-    onUpdate: ReferentialAction;
-    onDelete: ReferentialAction;
-  };
+  defaultValue: string | null;
+  comment: string | null;
+  presentation: {
+    uiName?: string;
+    format?: any;
+  } | null;
   validation: {
     minLength?: number;
     maxLength?: number;
@@ -53,8 +50,25 @@ export interface Column {
     maxSize?: number;
     maxFiles?: number;
     allowedDomains?: string;
+  } | null;
+  options: string[] | null;
+  foreignKey: {
+    table: string;
+    column: { name: string; type: string };
+    onUpdate: ReferentialAction;
+    onDelete: ReferentialAction;
+  } | null;
+  metadata: {
+    pgDataType?: string;
+    pgRawType?: string;
+    pgDomainName?: string;
+    pgDefaultValue?: string;
+    constraints?: {
+      constraint_name: string;
+      constraint_type: string;
+      constraint_definition: string;
+    }[];
   };
-  metadata: any;
 }
 
 const PG_TYPE_MAPPING: Record<string, DataType> = {
@@ -149,7 +163,7 @@ export const mapDataType = (column: Column) => {
     return DataType.Attachment;
   }
 
-  const normalizedType = pgDataType
+  const normalizedType = pgDataType!
     .toLowerCase()
     .split('(')[0]
     .trim()
@@ -174,7 +188,8 @@ export const specificType = (
       onUpdate: ReferentialAction;
       onDelete: ReferentialAction;
     } | null;
-  }
+  },
+  typeDefinitionOnly?: boolean
 ) => {
   switch (dataType) {
     case DataType.Text:
@@ -184,7 +199,7 @@ export const specificType = (
     case DataType.Integer:
       return tableBuilder.integer(name);
     case DataType.Number:
-      return tableBuilder.decimal(name);
+      return tableBuilder.double(name);
     case DataType.Checkbox:
       return tableBuilder.boolean(name);
     case DataType.Date:
@@ -205,12 +220,15 @@ export const specificType = (
       if (!foreignKey) {
         throw new Error(`Foreign key metadata is required for column: ${name}`);
       }
-      return tableBuilder
-        .specificType(name, foreignKey.column.type)
-        .references(foreignKey.column.name)
-        .inTable(foreignKey.table)
-        .onUpdate(foreignKey.onUpdate)
-        .onDelete(foreignKey.onDelete);
+      const column = tableBuilder.specificType(name, foreignKey.column.type);
+      if (!typeDefinitionOnly) {
+        column
+          .references(foreignKey.column.name)
+          .inTable(foreignKey.table)
+          .onUpdate(foreignKey.onUpdate)
+          .onDelete(foreignKey.onDelete);
+      }
+      return column;
     case DataType.Attachment:
       return tableBuilder.specificType(name, 'attachment[]');
     case DataType.AutoNumber:
@@ -223,7 +241,7 @@ export const specificType = (
 };
 
 export const LENGTH_CHECK_SUFFIX = '_length_check';
-export const RANGE_CHECK_SUFFIX = '_range_check';
+export const VALUE_RANGE_CHECK_SUFFIX = '_value_range_check';
 export const DATE_RANGE_CHECK_SUFFIX = '_date_range_check';
 export const SIZE_CHECK_SUFFIX = '_size_check';
 export const EMAIL_DOMAIN_CHECK_SUFFIX = '_email_domain_check';
@@ -235,7 +253,7 @@ export const getConstraintName = (
   columnName: string,
   type:
     | 'length'
-    | 'range'
+    | 'value-range'
     | 'date-range'
     | 'size'
     | 'file-count'
@@ -246,8 +264,8 @@ export const getConstraintName = (
   switch (type) {
     case 'length':
       return prefix + LENGTH_CHECK_SUFFIX;
-    case 'range':
-      return prefix + RANGE_CHECK_SUFFIX;
+    case 'value-range':
+      return prefix + VALUE_RANGE_CHECK_SUFFIX;
     case 'date-range':
       return prefix + DATE_RANGE_CHECK_SUFFIX;
     case 'size':
@@ -315,7 +333,11 @@ export const addRangeCheck = (
   }
 
   const quotedColumn = `"${columnName}"`;
-  const constraintName = getConstraintName(tableName, columnName, 'range');
+  const constraintName = getConstraintName(
+    tableName,
+    columnName,
+    'value-range'
+  );
   const checks: string[] = [];
 
   if (typeof minValue === 'number') {
@@ -335,7 +357,11 @@ export const removeRangeCheck = (
   tableName: string,
   columnName: string
 ) => {
-  const constraintName = getConstraintName(tableName, columnName, 'range');
+  const constraintName = getConstraintName(
+    tableName,
+    columnName,
+    'value-range'
+  );
   tableBuilder.dropChecks(`"${constraintName}"`);
 };
 
