@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, shareReplay } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -100,6 +100,7 @@ export class TableService {
   selectedTables = signal<TableDefinition[]>([]);
 
   private apiUrl = `${environment.apiUrl}/rest/db`;
+  private schemaCache = new Map<string, Observable<ColumnDefinition[]>>();
 
   constructor(private http: HttpClient) {}
 
@@ -123,12 +124,6 @@ export class TableService {
     }, 0);
   }
 
-  getEnumTypes() {
-    return this.http
-      .get<ApiResponse<ColumnDefinition[]>>(`${this.apiUrl}/enum-types`)
-      .pipe(map((res) => res.data));
-  }
-
   getTables() {
     return this.http.get<ApiResponse<TableDefinition[]>>(`${this.apiUrl}/tables`).pipe(
       map((res) => {
@@ -140,9 +135,18 @@ export class TableService {
   }
 
   getTableSchema(tableName: string) {
-    return this.http
-      .get<ApiResponse<ColumnDefinition[]>>(`${this.apiUrl}/tables/${tableName}/schema`)
-      .pipe(map((res) => res.data));
+    if (!this.schemaCache.has(tableName)) {
+      const request$ = this.http
+        .get<ApiResponse<ColumnDefinition[]>>(`${this.apiUrl}/tables/${tableName}/schema`)
+        .pipe(
+          map((res) => res.data),
+          shareReplay(1, 60 * 60 * 1000), // 1 hour
+        );
+
+      this.schemaCache.set(tableName, request$);
+    }
+
+    return this.schemaCache.get(tableName)!;
   }
 
   createTable(table: TableFormData) {
