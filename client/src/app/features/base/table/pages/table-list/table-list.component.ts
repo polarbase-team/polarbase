@@ -1,9 +1,9 @@
 import _ from 'lodash';
 
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
@@ -61,7 +61,6 @@ export class TableListComponent {
 
   constructor(
     private destroyRef: DestroyRef,
-    private router: Router,
     private activatedRoute: ActivatedRoute,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
@@ -119,12 +118,7 @@ export class TableListComponent {
   }
 
   protected selectTable(table: TableDefinition) {
-    this.tblService.selectTable(table);
-    this.router.navigate([], {
-      relativeTo: this.activatedRoute,
-      queryParams: { table: table.name },
-      queryParamsHandling: 'merge',
-    });
+    this.tblService.selectTable(table.name);
   }
 
   protected addNewTable() {

@@ -6,6 +6,7 @@
     <p-tabs
       lazy
       [value]="tblService.activeTable()?.name"
+      (valueChange)="onTabChange($any($event))"
       class="w-full"
       [class.h-full]="!!tblService.selectedTables().length"
     >
