@@ -441,6 +441,9 @@
                       </div>
                     </ng-template>
                   </p-select>
+                  <p class="text-surface-500 text-xs">
+                    The number format to display the column values.
+                  </p>
                 </div>
                 @if (columnFormData.presentation.format.numberFormat === NumberFormat.Currency) {
                   <div class="flex flex-col gap-1">
@@ -461,6 +464,9 @@
                         </div>
                       </ng-template>
                     </p-select>
+                    <p class="text-surface-500 text-xs">
+                      The currency symbol to display for the column values.
+                    </p>
                   </div>
                 }
               }
@@ -507,6 +513,9 @@
                       </div>
                     </ng-template>
                   </p-select>
+                  <p class="text-surface-500 text-xs">
+                    The selected column will be shown as the display value for this reference.
+                  </p>
                 </div>
               }
             }
