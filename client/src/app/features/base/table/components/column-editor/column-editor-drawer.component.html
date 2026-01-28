@@ -10,6 +10,7 @@
         [checkmark]="true"
         [showClear]="true"
         placeholder="Select here..."
+        appendTo="body"
       />
     </div>
     <div class="flex items-center gap-2">
@@ -49,7 +50,7 @@
   </div>
 </ng-template>
 
-<p-confirmdialog appendTo="body" styleClass="max-w-100" />
+<p-confirmdialog appendTo="body" styleClass="max-w-md" />
 
 <p-drawer
   [visible]="visible()"
@@ -316,6 +317,7 @@
                     optionValue="name"
                     placeholder="Select here..."
                     required
+                    appendTo="body"
                   >
                     <ng-template #selectedItem let-selectedItem>
                       <div class="flex items-center gap-2">
@@ -433,6 +435,7 @@
                     [checkmark]="true"
                     [showClear]="true"
                     placeholder="Select here..."
+                    appendTo="body"
                   >
                     <ng-template #item let-item>
                       <div>
@@ -456,6 +459,7 @@
                       [checkmark]="true"
                       [showClear]="true"
                       placeholder="Select here..."
+                      appendTo="body"
                     >
                       <ng-template #item let-item>
                         <div>
@@ -489,6 +493,7 @@
                     optionValue="name"
                     placeholder="Select here..."
                     (onShow)="loadReferenceDisplayColumnOptions()"
+                    appendTo="body"
                   >
                     <ng-template #selectedItem let-selectedItem>
                       <div class="flex items-center gap-2">
