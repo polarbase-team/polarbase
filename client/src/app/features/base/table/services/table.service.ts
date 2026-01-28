@@ -104,12 +104,8 @@ export class TableService {
 
   constructor(private http: HttpClient) {
     this.selectedTables.set(JSON.parse(localStorage.getItem('selectedTables') || '[]'));
-    this.activeTable.set(JSON.parse(localStorage.getItem('activeTable') || 'null'));
     effect(() => {
       localStorage.setItem('selectedTables', JSON.stringify(this.selectedTables()));
-    });
-    effect(() => {
-      localStorage.setItem('activeTable', JSON.stringify(this.activeTable()));
     });
   }
 
