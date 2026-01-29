@@ -141,13 +141,13 @@
               >
                 <ng-template let-item #item>
                   <div class="flex items-center gap-2">
-                    <i [class]="item.icon"></i>
+                    <i [class]="item.value | fieldIcon"></i>
                     <span>{{ item.name }}</span>
                   </div>
                 </ng-template>
                 <ng-template let-selectedItem #selectedItem>
                   <div class="flex items-center gap-2">
-                    <i [class]="selectedItem.icon"></i>
+                    <i [class]="selectedItem.value | fieldIcon"></i>
                     <span>{{ selectedItem.name }}</span>
                   </div>
                 </ng-template>
@@ -497,7 +497,7 @@
                   >
                     <ng-template #selectedItem let-selectedItem>
                       <div class="flex items-center gap-2">
-                        <i [class]="FIELD_ICON_MAP[selectedItem.dataType]"></i>
+                        <i [class]="selectedItem.dataType | fieldIcon"></i>
                         <p>
                           {{ selectedItem.presentation?.uiName || selectedItem.name }}
                           @if (selectedItem.presentation?.uiName) {
@@ -508,7 +508,7 @@
                     </ng-template>
                     <ng-template #item let-item>
                       <div class="flex items-center gap-2">
-                        <i [class]="FIELD_ICON_MAP[item.dataType]"></i>
+                        <i [class]="item.dataType | fieldIcon"></i>
                         <p>
                           {{ item.presentation?.uiName || item.name }}
                           @if (item.presentation?.uiName) {

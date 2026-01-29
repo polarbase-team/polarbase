@@ -11,6 +11,7 @@ import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SkeletonModule } from 'primeng/skeleton';
+import { FluidModule } from 'primeng/fluid';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
 import {
@@ -22,6 +23,7 @@ import {
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { FilterGroup } from '@app/shared/field-system/filter/models';
+import { FieldIconPipe } from '@app/shared/field-system/pipes/field-icon.pipe';
 import { ColumnDefinition, RecordData } from '../../../../services/table.service';
 import { TableRealtimeMessage } from '../../../../services/table-realtime.service';
 import { ViewLayoutService } from '../../../../services/view-layout.service';
@@ -31,6 +33,7 @@ import { ViewBaseComponent } from '../view-base.component';
 interface CalendarViewConfiguration {
   selectedStartField?: string;
   selectedEndField?: string;
+  selectedDisplayField?: string;
   filterQuery?: FilterGroup;
 }
 
@@ -47,8 +50,10 @@ interface CalendarViewConfiguration {
     DividerModule,
     ProgressSpinnerModule,
     SkeletonModule,
+    FluidModule,
     CalendarComponent,
     FilterOptionComponent,
+    FieldIconPipe,
   ],
   providers: [ViewLayoutService],
 })
@@ -60,6 +65,7 @@ export class CalendarViewComponent extends ViewBaseComponent<CalendarViewConfigu
   protected events = signal<CalendarEvent[]>([]);
   protected selectedStartField: string;
   protected selectedEndField: string;
+  protected selectedDisplayField: string;
   protected filterQuery: FilterGroup;
 
   constructor() {
@@ -68,6 +74,7 @@ export class CalendarViewComponent extends ViewBaseComponent<CalendarViewConfigu
     const configuration = this.getViewConfiguration();
     this.selectedStartField = configuration.selectedStartField;
     this.selectedEndField = configuration.selectedEndField;
+    this.selectedDisplayField = configuration.selectedDisplayField;
     this.filterQuery = configuration.filterQuery;
 
     this.loadTable();
@@ -87,7 +94,7 @@ export class CalendarViewComponent extends ViewBaseComponent<CalendarViewConfigu
         ...events,
         {
           id: String(savedRecord.id),
-          title: getRecordDisplayLabel(savedRecord),
+          title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
           start: savedRecord[this.selectedStartField],
           end: savedRecord[this.selectedEndField],
         },
@@ -98,7 +105,7 @@ export class CalendarViewComponent extends ViewBaseComponent<CalendarViewConfigu
           e.id === recordId
             ? {
                 ...e,
-                title: getRecordDisplayLabel(savedRecord),
+                title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
                 start: savedRecord[this.selectedStartField],
                 end: savedRecord[this.selectedEndField],
               }
@@ -177,7 +184,7 @@ export class CalendarViewComponent extends ViewBaseComponent<CalendarViewConfigu
             ...events,
             {
               id: String(record.new.id),
-              title: getRecordDisplayLabel(record.new),
+              title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
               start: record.new[this.selectedStartField],
               end: record.new[this.selectedEndField],
             },
@@ -192,7 +199,7 @@ export class CalendarViewComponent extends ViewBaseComponent<CalendarViewConfigu
               e.id === record.new.id
                 ? {
                     ...e,
-                    title: getRecordDisplayLabel(record.new),
+                    title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
                     start: record.new[this.selectedStartField],
                     end: record.new[this.selectedEndField],
                   }
@@ -214,6 +221,7 @@ export class CalendarViewComponent extends ViewBaseComponent<CalendarViewConfigu
     super.saveViewConfiguration({
       selectedStartField: this.selectedStartField,
       selectedEndField: this.selectedEndField,
+      selectedDisplayField: this.selectedDisplayField,
       filterQuery: this.filterQuery,
     });
   }
@@ -271,7 +279,7 @@ export class CalendarViewComponent extends ViewBaseComponent<CalendarViewConfigu
 
         events.push({
           id: String(record.id),
-          title: getRecordDisplayLabel(record),
+          title: getRecordDisplayLabel(record, this.selectedDisplayField),
           start,
           end,
         });

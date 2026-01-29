@@ -8,12 +8,14 @@ import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SkeletonModule } from 'primeng/skeleton';
+import { FluidModule } from 'primeng/fluid';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { OpenMapComponent, Location } from '@app/shared/open-map/open-map.component';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { FilterGroup } from '@app/shared/field-system/filter/models';
+import { FieldIconPipe } from '@app/shared/field-system/pipes/field-icon.pipe';
 import { ColumnDefinition, RecordData } from '../../../../services/table.service';
 import { TableRealtimeMessage } from '../../../../services/table-realtime.service';
 import { ViewLayoutService } from '../../../../services/view-layout.service';
@@ -21,6 +23,7 @@ import { ViewBaseComponent } from '../view-base.component';
 
 interface MapViewConfiguration {
   selectedGeoPointField?: string;
+  selectedDisplayField?: string;
   filterQuery?: FilterGroup;
 }
 
@@ -37,8 +40,10 @@ interface MapViewConfiguration {
     DividerModule,
     ProgressSpinnerModule,
     SkeletonModule,
+    FluidModule,
     OpenMapComponent,
     FilterOptionComponent,
+    FieldIconPipe,
   ],
   providers: [ViewLayoutService],
 })
@@ -48,6 +53,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> {
   protected geoPointColumns: ColumnDefinition[] = [];
   protected locations = signal<Location[]>([]);
   protected selectedGeoPointField: string;
+  protected selectedDisplayField: string;
   protected filterQuery: FilterGroup;
 
   constructor() {
@@ -55,6 +61,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> {
 
     const configuration = this.getViewConfiguration();
     this.selectedGeoPointField = configuration.selectedGeoPointField;
+    this.selectedDisplayField = configuration.selectedDisplayField;
     this.filterQuery = configuration.filterQuery;
 
     this.loadTable();
@@ -94,7 +101,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> {
           ...l,
           {
             id: record.new.id,
-            title: getRecordDisplayLabel(record.new),
+            title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
             lng: record.new[this.selectedGeoPointField].x,
             lat: record.new[this.selectedGeoPointField].y,
           },
@@ -108,7 +115,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> {
               l.id === record.new.id
                 ? {
                     id: record.new.id,
-                    title: getRecordDisplayLabel(record.new),
+                    title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
                     lng: record.new[this.selectedGeoPointField].x,
                     lat: record.new[this.selectedGeoPointField].y,
                   }
@@ -129,6 +136,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> {
   protected override saveViewConfiguration() {
     super.saveViewConfiguration({
       selectedGeoPointField: this.selectedGeoPointField,
+      selectedDisplayField: this.selectedDisplayField,
       filterQuery: this.filterQuery,
     });
   }
@@ -169,7 +177,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> {
         if (r[this.selectedGeoPointField]) {
           acc.push({
             id: r.id,
-            title: getRecordDisplayLabel(r),
+            title: getRecordDisplayLabel(r, this.selectedDisplayField),
             lng: r[this.selectedGeoPointField].x,
             lat: r[this.selectedGeoPointField].y,
           });
