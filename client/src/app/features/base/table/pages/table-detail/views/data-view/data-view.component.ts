@@ -75,21 +75,12 @@ export class DataViewComponent extends ViewBaseComponent {
     },
   ];
 
-  private table: TableDefinition;
   private references = new Map<string, string>();
 
   constructor() {
     super();
 
-    this.table = this.tblService.activeTable();
-    this.loadTable(this.table);
-  }
-
-  override reset() {
-    super.reset();
-
-    this.ssRows.set(null);
-    this.ssColumns.set(null);
+    this.loadTable();
   }
 
   override onColumnSave(
@@ -311,7 +302,7 @@ export class DataViewComponent extends ViewBaseComponent {
       case TableRowActionType.Expand:
         this.onUpdateRecord.emit({
           record: {
-            table: this.table,
+            table: this.table(),
             fields: this.fields(),
             data: action.payload['data'],
           },
@@ -356,7 +347,7 @@ export class DataViewComponent extends ViewBaseComponent {
   protected addNewRecord() {
     this.onUpdateRecord.emit({
       record: {
-        table: this.table,
+        table: this.table(),
         fields: this.fields(),
         data: { id: undefined },
       },

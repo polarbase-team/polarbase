@@ -3,7 +3,7 @@
 @let numberFormat = field().params.presentation?.format?.numberFormat;
 @let mode = numberFormat === NumberFormat.Currency ? 'currency' : 'decimal';
 @let useGrouping = numberFormat === NumberFormat.Comma || numberFormat === NumberFormat.Currency;
-@let currency = field().params.presentation?.format?.currency || undefined;
+@let currency = field().params.presentation?.format?.currency || 'VND';
 @let minFractionDigits = numberFormat === NumberFormat.Currency ? 2 : 0;
 @let maxFractionDigits = 5;
 

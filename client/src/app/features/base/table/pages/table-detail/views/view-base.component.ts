@@ -11,16 +11,12 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, finalize } from 'rxjs';
 
-import {
-  ColumnDefinition,
-  RecordData,
-  TableDefinition,
-  TableService,
-} from '../../../services/table.service';
+import { ColumnDefinition, RecordData, TableService } from '../../../services/table.service';
 import {
   TableRealtimeMessage,
   TableRealtimeService,
 } from '../../../services/table-realtime.service';
+import { ViewLayoutService } from '../../../services/view-layout.service';
 import type {
   UpdateColumnEvent,
   UpdatedColumnMode,
@@ -29,7 +25,7 @@ import type {
 } from '../table-detail.component';
 
 @Directive()
-export class ViewBaseComponent {
+export class ViewBaseComponent<T = any> {
   displayModeTmpl = input<TemplateRef<any>>();
 
   onUpdateColumn = output<UpdateColumnEvent>();
@@ -38,10 +34,13 @@ export class ViewBaseComponent {
   protected destroyRef = inject(DestroyRef);
   protected tblService = inject(TableService);
   protected tblRealtimeService = inject(TableRealtimeService);
-  protected isColumnsLoading = signal(false);
-  protected isRecordsLoading = signal(false);
+  protected viewLayoutService = inject(ViewLayoutService);
+
+  protected table = computed(() => this.tblService.activeTable());
   protected columns = signal<ColumnDefinition[]>([]);
+  protected isColumnsLoading = signal(false);
   protected records = signal<RecordData[]>([]);
+  protected isRecordsLoading = signal(false);
   protected fields = computed(() => this.columns().map((c) => this.tblService.buildField(c)));
 
   constructor() {
@@ -73,13 +72,6 @@ export class ViewBaseComponent {
           this.onRealtimeMessage(event);
         },
       });
-  }
-
-  reset() {
-    this.isColumnsLoading.set(false);
-    this.isRecordsLoading.set(false);
-    this.columns.set([]);
-    this.records.set([]);
   }
 
   onColumnSave(
@@ -114,16 +106,16 @@ export class ViewBaseComponent {
 
   protected onRealtimeMessage(message: TableRealtimeMessage) {}
 
-  protected async loadTable(table: TableDefinition, filter?: Record<string, any>) {
-    await this.loadTableSchema(table);
-    await this.loadTableData(table, filter);
+  protected async loadTable() {
+    await this.loadTableSchema();
+    await this.loadTableData();
   }
 
-  protected loadTableSchema(table: TableDefinition) {
+  protected loadTableSchema() {
     return new Promise((resolve, reject) => {
       this.isColumnsLoading.set(true);
       this.tblService
-        .getTableSchema(table.name)
+        .getTableSchema(this.table().name)
         .pipe(
           finalize(() => this.isColumnsLoading.set(false)),
           takeUntilDestroyed(this.destroyRef),
@@ -141,11 +133,11 @@ export class ViewBaseComponent {
     });
   }
 
-  protected loadTableData(table: TableDefinition, filter?: Record<string, any>) {
+  protected loadTableData(filter?: Record<string, any>) {
     return new Promise((resolve, reject) => {
       this.isRecordsLoading.set(true);
       this.tblService
-        .getRecords(table.name, filter)
+        .getRecords(this.table().name, filter)
         .pipe(
           finalize(() => this.isRecordsLoading.set(false)),
           takeUntilDestroyed(this.destroyRef),
@@ -161,5 +153,13 @@ export class ViewBaseComponent {
           },
         });
     });
+  }
+
+  protected getViewConfiguration() {
+    return this.viewLayoutService.load()?.configuration || {};
+  }
+
+  protected saveViewConfiguration(configuration: T) {
+    this.viewLayoutService.save({ configuration });
   }
 }

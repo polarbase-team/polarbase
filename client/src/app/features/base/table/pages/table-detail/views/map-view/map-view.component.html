@@ -19,7 +19,7 @@
     <p-button
       label="Apply changes"
       [disabled]="!selectedGeoPointField"
-      (click)="onChangeGeoPointField(); popover.hide()"
+      (click)="loadTable(); popover.hide()"
     />
   </div>
 </p-popover>
@@ -64,6 +64,8 @@
         <p-skeleton width="90px" height="33px" />
       } @else {
         <filter-option
+          #filterOption
+          [(query)]="filterQuery"
           [fields]="fields()"
           [items]="records()"
           (onFilter)="onRecordsFiltered($event)"

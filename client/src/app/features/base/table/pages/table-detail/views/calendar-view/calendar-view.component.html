@@ -34,7 +34,7 @@
     <p-button
       label="Apply changes"
       [disabled]="!selectedStartField || !selectedEndField"
-      (click)="onChangeDateRange(); popover.hide()"
+      (click)="loadTable(); popover.hide()"
     />
   </div>
 </p-popover>
@@ -85,6 +85,8 @@
           <p-skeleton width="90px" height="33px" />
         } @else {
           <filter-option
+            #filterOption
+            [(query)]="filterQuery"
             [fields]="fields()"
             [items]="records()"
             (onFilter)="onRecordsFiltered($event)"
