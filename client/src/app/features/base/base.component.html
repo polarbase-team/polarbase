@@ -39,7 +39,7 @@
         @for (table of tblService.selectedTables(); track table.name) {
           <p-tabpanel [value]="table.name">
             <ng-template #content>
-              <table-detail />
+              <table-detail [table]="table" />
             </ng-template>
           </p-tabpanel>
         }

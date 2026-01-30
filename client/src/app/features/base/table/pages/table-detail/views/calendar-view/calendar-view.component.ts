@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import dayjs, { Dayjs } from 'dayjs';
@@ -57,7 +57,10 @@ interface CalendarViewConfiguration {
   ],
   providers: [ViewLayoutService],
 })
-export class CalendarViewComponent extends ViewBaseComponent<CalendarViewConfiguration> {
+export class CalendarViewComponent
+  extends ViewBaseComponent<CalendarViewConfiguration>
+  implements OnInit
+{
   calendar = viewChild<CalendarComponent>('calendar');
   filterOption = viewChild<FilterOptionComponent>('filterOption');
 
@@ -68,9 +71,7 @@ export class CalendarViewComponent extends ViewBaseComponent<CalendarViewConfigu
   protected selectedDisplayField: string;
   protected filterQuery: FilterGroup;
 
-  constructor() {
-    super();
-
+  ngOnInit() {
     const configuration = this.getViewConfiguration();
     this.selectedStartField = configuration.selectedStartField;
     this.selectedEndField = configuration.selectedEndField;

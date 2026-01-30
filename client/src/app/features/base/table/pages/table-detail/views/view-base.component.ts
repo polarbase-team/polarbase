@@ -11,7 +11,12 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, finalize } from 'rxjs';
 
-import { ColumnDefinition, RecordData, TableService } from '../../../services/table.service';
+import {
+  ColumnDefinition,
+  RecordData,
+  TableDefinition,
+  TableService,
+} from '../../../services/table.service';
 import {
   TableRealtimeMessage,
   TableRealtimeService,
@@ -26,6 +31,7 @@ import type {
 
 @Directive()
 export class ViewBaseComponent<T = any> {
+  table = input<TableDefinition>();
   displayModeTmpl = input<TemplateRef<any>>();
 
   onUpdateColumn = output<UpdateColumnEvent>();
@@ -36,7 +42,6 @@ export class ViewBaseComponent<T = any> {
   protected tblRealtimeService = inject(TableRealtimeService);
   protected viewLayoutService = inject(ViewLayoutService);
 
-  protected table = computed(() => this.tblService.activeTable());
   protected columns = signal<ColumnDefinition[]>([]);
   protected isColumnsLoading = signal(false);
   protected records = signal<RecordData[]>([]);
@@ -156,10 +161,10 @@ export class ViewBaseComponent<T = any> {
   }
 
   protected getViewConfiguration() {
-    return (this.viewLayoutService.load()?.configuration || {}) as T;
+    return (this.viewLayoutService.load(this.table().name)?.configuration || {}) as T;
   }
 
   protected saveViewConfiguration(configuration: T) {
-    this.viewLayoutService.save({ configuration });
+    this.viewLayoutService.save(this.table().name, { configuration });
   }
 }
