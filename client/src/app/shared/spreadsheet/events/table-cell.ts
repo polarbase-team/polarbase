@@ -1,5 +1,6 @@
 import { TableCell } from '../models/table-cell';
 import { TableRow, TableRowCellData } from '../models/table-row';
+import { ReferenceViewDetailEvent } from '../components/field-cell/reference/cell.component';
 
 export interface TableCellEditedEvent {
   row: TableRow;
@@ -12,6 +13,7 @@ export const TableCellActionType = {
   Clear: 'clear',
   Fill: 'fill',
   Select: 'select',
+  ViewReferenceDetail: 'viewReferenceDetail',
 } as const;
 export type TableCellActionType = (typeof TableCellActionType)[keyof typeof TableCellActionType];
 
@@ -21,6 +23,7 @@ export interface TableCellActionPayload {
   [TableCellActionType.Clear]: TableCellEditedEvent[];
   [TableCellActionType.Fill]: TableCellEditedEvent[];
   [TableCellActionType.Select]: TableCell[] | null;
+  [TableCellActionType.ViewReferenceDetail]: ReferenceViewDetailEvent;
 }
 export interface TableCellAction<T extends TableCellActionType = TableCellActionType> {
   type: T;

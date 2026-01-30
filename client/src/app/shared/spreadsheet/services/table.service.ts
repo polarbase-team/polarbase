@@ -19,8 +19,6 @@ import { TableRow } from '../models/table-row';
 import { TableColumn } from '../models/table-column';
 import { TableCell } from '../models/table-cell';
 import { TableActionType } from '../events/table';
-import { ReferenceData } from '@app/shared/field-system/models/reference/field.interface';
-import { ReferenceViewDetailEvent } from '../components/field-cell/reference/cell.component';
 
 export const Dimension = {
   HeaderHeight: 36,
@@ -85,9 +83,8 @@ export type Layout = Partial<{
 }>;
 
 const DEFAULT_CONFIG: TableConfig = {
-  dataStream: false,
   sideSpacing: 0,
-  allowSelectAllRows: true,
+  streaming: false,
   toolbar: {
     filter: true,
     customize: true,
@@ -121,6 +118,7 @@ const DEFAULT_CONFIG: TableConfig = {
     addable: true,
     insertable: true,
     deletable: true,
+    allowSelectAll: true,
   },
   cell: {
     fillable: true,
@@ -167,8 +165,8 @@ function calculateFrozenDividerDragPlaceholderIndex(
 @Injectable()
 export class TableService extends TableBaseService {
   config = computed<TableConfig>(() => {
-    const config = _.defaultsDeep(this.host.sourceConfig(), DEFAULT_CONFIG);
-    this.isStreaming ??= config.dataStream;
+    const config: TableConfig = _.defaultsDeep(this.host.sourceConfig(), DEFAULT_CONFIG);
+    this.isStreaming ??= config.streaming;
     return config;
   });
 
@@ -188,7 +186,7 @@ export class TableService extends TableBaseService {
     row: {},
     cell: {},
   };
-  dataStream$: Subject<TableRow[]>;
+  stream$: Subject<TableRow[]>;
   isStreaming: boolean;
   isFiltering: boolean;
   searchResults: [TableRow, TableColumn][];
@@ -201,8 +199,8 @@ export class TableService extends TableBaseService {
   override onInit() {
     if (!this.isStreaming) return;
 
-    this.dataStream$ = new Subject();
-    this.dataStream$
+    this.stream$ = new Subject();
+    this.stream$
       .pipe(
         throttleTime(200),
         mergeMap((rows) => of(rows)),
@@ -408,10 +406,15 @@ export class TableService extends TableBaseService {
 
       const groupedColumns: TableColumn[] = [];
       for (const column of columns) {
-        if (!column.groupSortType) continue;
-        groupedColumns.push(column);
+        if (!column.groupRule) continue;
+        groupedColumns.splice(column.groupRule.priority, 0, column);
       }
       this.tableColumnService.groupedColumns.set(groupedColumns);
+
+      this.host.action.emit({
+        type: TableActionType.Group,
+        payload: columns,
+      });
     } else if (this.tableColumnService.groupedColumns().length) {
       columns = [...this.tableColumnService.groupedColumns()];
     }
@@ -432,17 +435,22 @@ export class TableService extends TableBaseService {
     this.tableGroupService.collapsedGroupIds.clear();
 
     for (const column of this.tableColumnService.groupedColumns()) {
-      delete column.groupSortType;
+      delete column.groupRule;
     }
     this.tableColumnService.groupedColumns.set([]);
+
+    this.host.action.emit({
+      type: TableActionType.Group,
+      payload: null,
+    });
   }
 
   sort(columns?: TableColumn[]) {
     if (columns) {
       const sortedColumns: TableColumn[] = [];
       for (const column of columns) {
-        if (!column.sortType) continue;
-        sortedColumns.push(column);
+        if (!column.sortRule) continue;
+        sortedColumns.splice(column.sortRule.priority, 0, column);
       }
       this.tableColumnService.sortedColumns.set(sortedColumns);
     } else if (this.tableColumnService.sortedColumns().length) {
@@ -456,6 +464,11 @@ export class TableService extends TableBaseService {
     } else {
       this.tableRowService.rows.set(sortBy(this.getCurrentRows(), columns));
     }
+
+    this.host.action.emit({
+      type: TableActionType.Sort,
+      payload: columns,
+    });
   }
 
   unsort() {
@@ -466,9 +479,14 @@ export class TableService extends TableBaseService {
     }
 
     for (const column of this.tableColumnService.sortedColumns()) {
-      delete column.sortType;
+      delete column.sortRule;
     }
     this.tableColumnService.sortedColumns.set([]);
+
+    this.host.action.emit({
+      type: TableActionType.Sort,
+      payload: null,
+    });
   }
 
   onApplyFilter(rows: TableRow[]) {
@@ -484,8 +502,8 @@ export class TableService extends TableBaseService {
     }
 
     const columns: TableColumn[] = [];
-    for (const rule of rules) {
-      rule.column.groupSortType = rule.asc ? 'asc' : 'desc';
+    for (const [index, rule] of rules.entries()) {
+      rule.column.groupRule = { direction: rule.asc ? 'asc' : 'desc', priority: index };
       columns.push(rule.column);
     }
     this.group(columns);
@@ -498,8 +516,8 @@ export class TableService extends TableBaseService {
     }
 
     const columns: TableColumn[] = [];
-    for (const rule of rules) {
-      rule.column.sortType = rule.asc ? 'asc' : 'desc';
+    for (const [index, rule] of rules.entries()) {
+      rule.column.sortRule = { direction: rule.asc ? 'asc' : 'desc', priority: index };
       columns.push(rule.column);
     }
     this.sort(columns);
@@ -552,13 +570,9 @@ export class TableService extends TableBaseService {
     this.config().column.frozenCount = index;
     this.tableColumnService.columns.update((arr) => [...arr]);
     this.host.action.emit({
-      type: TableActionType.Freeze,
+      type: TableActionType.FreezeColumns,
       payload: index,
     });
-  }
-
-  viewReferenceDetail(event: ReferenceViewDetailEvent) {
-    this.host.action.emit({ type: TableActionType.ViewReferenceDetail, payload: event });
   }
 
   positionFillHandle(index = this.layout.cell.selection?.end, retryIfNotRendered?: boolean) {

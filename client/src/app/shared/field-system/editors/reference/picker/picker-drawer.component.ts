@@ -40,7 +40,6 @@ export class ReferencePickerDrawerComponent extends DrawerComponent {
 
   protected config = signal<TableConfig>({
     sideSpacing: 20,
-    allowSelectAllRows: false,
     toolbar: {
       customize: false,
       group: false,
@@ -64,6 +63,7 @@ export class ReferencePickerDrawerComponent extends DrawerComponent {
       addable: false,
       insertable: false,
       deletable: false,
+      allowSelectAll: false,
     },
     cell: { fillable: false, editable: false, clearable: false },
   });

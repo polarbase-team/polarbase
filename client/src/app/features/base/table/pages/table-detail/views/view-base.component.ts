@@ -156,7 +156,7 @@ export class ViewBaseComponent<T = any> {
   }
 
   protected getViewConfiguration() {
-    return this.viewLayoutService.load()?.configuration || {};
+    return (this.viewLayoutService.load()?.configuration || {}) as T;
   }
 
   protected saveViewConfiguration(configuration: T) {

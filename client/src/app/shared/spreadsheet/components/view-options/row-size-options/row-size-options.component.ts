@@ -4,7 +4,7 @@ import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 
-import { RowSize } from '../../../services/table-row.service';
+import { TableRowSize } from '../../../models/table-row';
 
 @Component({
   selector: 'row-size-options',
@@ -13,7 +13,7 @@ import { RowSize } from '../../../services/table-row.service';
   imports: [MenuModule, ButtonModule],
 })
 export class RowSizeOptionsComponent {
-  rowSize = model<RowSize>();
+  rowSize = model<TableRowSize>();
 
   protected menuItems: MenuItem[] = [
     {

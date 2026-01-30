@@ -11,6 +11,7 @@ import { Dimension } from './table.service';
 import { FieldCellService } from '../components/field-cell/field-cell.service';
 import { FieldValidationErrors, FieldValidationKey } from '../../field-system/models/field.object';
 import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
+import { ReferenceViewDetailEvent } from '../components/field-cell/reference/cell.component';
 import { TableBaseService } from './table-base.service';
 import { TableCell } from '../models/table-cell';
 import { TableCellActionType, TableCellEditedEvent } from '../events/table-cell';
@@ -162,10 +163,10 @@ export class TableCellService extends TableBaseService {
           if (column.calculateType) {
             shouldReCalculate = true;
           }
-          if (column.groupSortType) {
+          if (column.groupRule) {
             shouldReGroup = true;
           }
-          if (column.sortType) {
+          if (column.sortRule) {
             shouldReSort = true;
           }
         }
@@ -994,6 +995,10 @@ export class TableCellService extends TableBaseService {
     }
 
     this.emitCellDataAsEdited();
+  }
+
+  viewReferenceDetail(event: ReferenceViewDetailEvent) {
+    this.host.cellAction.emit({ type: TableCellActionType.ViewReferenceDetail, payload: event });
   }
 
   private clearMatrixCell(matrixCell: MatrixCell) {

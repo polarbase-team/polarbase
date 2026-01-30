@@ -8,8 +8,7 @@ export type TableRowSize = keyof typeof TableRowSize;
 
 export interface TableConfig {
   sideSpacing?: number;
-  dataStream?: boolean;
-  allowSelectAllRows?: boolean;
+  streaming?: boolean;
   toolbar?:
     | {
         filter?: boolean;
@@ -45,6 +44,7 @@ export interface TableConfig {
     addable?: boolean;
     insertable?: boolean;
     deletable?: boolean;
+    allowSelectAll?: boolean;
   };
   cell?: {
     fillable?: boolean;
