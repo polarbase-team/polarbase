@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { effect, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, shareReplay } from 'rxjs';
 
@@ -96,16 +96,26 @@ const DATA_TYPE_MAPPING = {
 })
 export class TableService {
   tables = signal<TableDefinition[]>([]);
-  activeTable = signal<TableDefinition>(null);
   selectedTables = signal<TableDefinition[]>([]);
+  activeTable = signal<TableDefinition>(null);
 
   private apiUrl = `${environment.apiUrl}/rest/db`;
   private schemaCache = new Map<string, Observable<ColumnDefinition[]>>();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    this.selectedTables.set(JSON.parse(localStorage.getItem('selectedTables') || '[]'));
+    effect(() => {
+      localStorage.setItem('selectedTables', JSON.stringify(this.selectedTables()));
+    });
+  }
 
-  selectTable(table: TableDefinition) {
-    this.selectedTables.update((tables) => (tables.includes(table) ? tables : [...tables, table]));
+  selectTable(tableName: string) {
+    const table = this.tables().find((t) => t.name === tableName);
+    if (!table) return;
+
+    this.selectedTables.update((tables) =>
+      tables.find((t) => t.name === table.name) ? tables : [...tables, table],
+    );
     this.activeTable.set(table);
   }
 

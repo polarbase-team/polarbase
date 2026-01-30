@@ -2,6 +2,11 @@ import { Field } from '../../field-system/models/field.object';
 import { CalculateType } from '../utils/calculate';
 import { SortType } from '../utils/sort';
 
+export interface SortingRule {
+  direction: SortType;
+  priority: number; // or order
+}
+
 export interface TableColumn {
   id: string | number;
   name: string;
@@ -12,6 +17,6 @@ export interface TableColumn {
   deletable?: boolean;
   hidden?: boolean;
   calculateType?: CalculateType;
-  groupSortType?: SortType;
-  sortType?: SortType;
+  groupRule?: SortingRule;
+  sortRule?: SortingRule;
 }

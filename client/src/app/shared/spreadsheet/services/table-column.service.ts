@@ -137,11 +137,11 @@ export class TableColumnService extends TableBaseService {
         if (column.calculateType) {
           calculatedColumns.push(column);
         }
-        if (column.groupSortType) {
-          groupedColumns.push(column);
+        if (column.groupRule) {
+          groupedColumns.splice(column.groupRule.priority, 0, column);
         }
-        if (column.sortType) {
-          sortedColumns.push(column);
+        if (column.sortRule) {
+          sortedColumns.splice(column.sortRule.priority, 0, column);
         }
       }
       this.columns.set(_.filter(columns, (c) => !c.hidden));
@@ -224,57 +224,41 @@ export class TableColumnService extends TableBaseService {
   }
 
   groupByColumn(column: TableColumn, sortType: SortType = 'asc') {
-    if (column.groupSortType === sortType) return;
+    if (column.groupRule?.[0] === sortType) return;
 
-    column.groupSortType = sortType;
+    column.groupRule = { direction: sortType, priority: this.groupedColumns().length + 1 };
     if (!this.groupedColumns().find((c) => c.id === column.id)) {
       this.groupedColumns.update((arr) => [...arr, column]);
     }
     this.tableService.group();
-    this.host.columnAction.emit({
-      type: TableColumnActionType.Group,
-      payload: column,
-    });
   }
 
   ungroupByColumn(column: TableColumn) {
-    if (!column.groupSortType) return;
+    if (!column.groupRule) return;
 
-    delete column.groupSortType;
+    delete column.groupRule;
     const newArr = _.without(this.groupedColumns(), column);
     this.groupedColumns.set(newArr);
     newArr.length ? this.tableService.group() : this.tableService.ungroup();
-    this.host.columnAction.emit({
-      type: TableColumnActionType.Ungroup,
-      payload: column,
-    });
   }
 
   sortByColumn(column: TableColumn, sortType: SortType = 'asc') {
-    if (column.sortType === sortType) return;
+    if (column.sortRule?.[0] === sortType) return;
 
-    column.sortType = sortType;
+    column.sortRule = { direction: sortType, priority: this.sortedColumns().length + 1 };
     if (!this.sortedColumns().find((c) => c.id === column.id)) {
       this.sortedColumns.update((arr) => [...arr, column]);
     }
     this.tableService.sort();
-    this.host.columnAction.emit({
-      type: TableColumnActionType.Sort,
-      payload: column,
-    });
   }
 
   unsortByColumn(column: TableColumn) {
-    if (!column.sortType) return;
+    if (!column.sortRule) return;
 
-    delete column.sortType;
+    delete column.sortRule;
     const newArr = _.without(this.sortedColumns(), column);
     this.sortedColumns.set(newArr);
     newArr.length ? this.tableService.sort() : this.tableService.unsort();
-    this.host.columnAction.emit({
-      type: TableColumnActionType.Unsort,
-      payload: column,
-    });
   }
 
   clearColumn(column: TableColumn) {
@@ -283,14 +267,14 @@ export class TableColumnService extends TableBaseService {
       row.data[column.id] = null;
     }
     if (this.groupedColumns().length > 0) {
-      if (column.groupSortType) {
+      if (column.groupRule) {
         this.tableService.group();
       }
     } else {
       if (column.calculateType) {
         this.tableService.calculate();
       }
-      if (column.sortType) {
+      if (column.sortRule) {
         this.tableService.sort();
       }
     }
@@ -574,7 +558,7 @@ export class TableColumnService extends TableBaseService {
             },
           },
         );
-        if (column.sortType) {
+        if (column.sortRule) {
           items.push({
             label: 'Clear sorting',
             icon: 'icon icon-x',
@@ -595,7 +579,7 @@ export class TableColumnService extends TableBaseService {
             },
           },
         );
-        if (column.groupSortType) {
+        if (column.groupRule) {
           items.push({
             label: 'Clear grouping',
             icon: 'icon icon-x',

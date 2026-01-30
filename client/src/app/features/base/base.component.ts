@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { TabsModule } from 'primeng/tabs';
 import { ButtonModule } from 'primeng/button';
@@ -30,11 +31,26 @@ export class BaseComponent {
   constructor(
     protected tblService: TableService,
     protected tblRealtimeService: TableRealtimeService,
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
   ) {
+    effect(() => {
+      const activeTable = this.tblService.activeTable();
+      this.router.navigate([], {
+        relativeTo: this.activatedRoute,
+        queryParams: { table: activeTable?.name },
+        queryParamsHandling: 'merge',
+      });
+    });
+
     this.tblRealtimeService.enableSSE();
   }
 
   protected toggleSidebar() {
     this.sidebarVisible.update((v) => !v);
+  }
+
+  protected onTabChange(tableName: string) {
+    this.tblService.selectTable(tableName);
   }
 }

@@ -1,10 +1,10 @@
 import _ from 'lodash';
 
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { finalize, take } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -61,7 +61,6 @@ export class TableListComponent {
 
   constructor(
     private destroyRef: DestroyRef,
-    private router: Router,
     private activatedRoute: ActivatedRoute,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
@@ -70,7 +69,7 @@ export class TableListComponent {
     let tableFromQueryParam: string;
 
     this.activatedRoute.queryParams
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe((params) => {
         tableFromQueryParam = params['table'];
         if (!this.tables().length) {
@@ -92,10 +91,11 @@ export class TableListComponent {
         this.filteredTables.set(tables);
         this.searchQuery = '';
 
-        if (tableNameWillSelect) {
-          const table = tables.find((t) => t.name === tableNameWillSelect);
-          this.selectTable(table);
-        }
+        this.selectTable(
+          tableNameWillSelect ||
+            this.tblService.selectedTables()[0]?.name ||
+            this.tables()[0]?.name,
+        );
       });
   }
 
@@ -118,13 +118,8 @@ export class TableListComponent {
     );
   }
 
-  protected selectTable(table: TableDefinition) {
-    this.tblService.selectTable(table);
-    this.router.navigate([], {
-      relativeTo: this.activatedRoute,
-      queryParams: { table: table.name },
-      queryParamsHandling: 'merge',
-    });
+  protected selectTable(tableName: string) {
+    this.tblService.selectTable(tableName);
   }
 
   protected addNewTable() {

@@ -16,10 +16,6 @@ export const TableColumnActionType = {
   Unhide: 'unhide',
   Calculate: 'calculate',
   Uncalculate: 'uncalculate',
-  Group: 'group',
-  Ungroup: 'ungroup',
-  Sort: 'sort',
-  Unsort: 'unsort',
   Select: 'select',
 } as const;
 export type TableColumnActionType =
@@ -36,10 +32,6 @@ export interface TableColumnActionPayload {
   [TableColumnActionType.Unhide]: TableColumn[];
   [TableColumnActionType.Calculate]: TableColumn;
   [TableColumnActionType.Uncalculate]: TableColumn;
-  [TableColumnActionType.Group]: TableColumn;
-  [TableColumnActionType.Ungroup]: TableColumn;
-  [TableColumnActionType.Sort]: TableColumn;
-  [TableColumnActionType.Unsort]: TableColumn;
   [TableColumnActionType.Select]: TableColumn[] | null;
 }
 

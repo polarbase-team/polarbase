@@ -100,7 +100,7 @@ export class InputBoxComponent {
   }
 
   focus() {
-    this.editor.focus({ preventScroll: false });
+    this.editor.focus({ preventScroll: true });
     this.setCaretAtEnd();
   }
 
