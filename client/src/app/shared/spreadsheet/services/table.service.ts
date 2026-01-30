@@ -4,6 +4,7 @@ import { CdkDragEnd, CdkDragMove } from '@angular/cdk/drag-drop';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { delay, mergeMap, of, Subject, take, throttleTime } from 'rxjs';
 
+import { FilterGroup } from '@app/shared/field-system/filter/models';
 import { getColumnOffset } from '../components/virtual-scroll/virtual-scroll-column-repeater.directive';
 import { OrderingRule } from '../components/view-options/data-view-options/data-view-options.component';
 import { calculateBy, makeUpCalculatedData } from '../utils/calculate';
@@ -167,6 +168,8 @@ export class TableService extends TableBaseService {
   config = computed<TableConfig>(() => {
     const config: TableConfig = _.defaultsDeep(this.host.sourceConfig(), DEFAULT_CONFIG);
     this.isStreaming ??= config.streaming;
+    this.filterQuery ??= config.filterQuery;
+    this.isFiltering = false;
     return config;
   });
 
@@ -188,6 +191,7 @@ export class TableService extends TableBaseService {
   };
   stream$: Subject<TableRow[]>;
   isStreaming: boolean;
+  filterQuery: FilterGroup;
   isFiltering: boolean;
   searchResults: [TableRow, TableColumn][];
   calcResults: Map<TableColumn['id'], any>;
@@ -222,6 +226,11 @@ export class TableService extends TableBaseService {
 
   refreshView = _.throttle(() => {
     if (this.isStreaming) return;
+
+    if (!this.isFiltering && this.filterQuery) {
+      this.host.dataFilterOptions()?.applyChanges(this.tableRowService.rows());
+      return;
+    }
 
     if (this.tableColumnService.groupedColumns().length > 0) {
       this.group();
@@ -493,6 +502,11 @@ export class TableService extends TableBaseService {
     this.isFiltering = true;
     this.tableRowService.rows.set(rows);
     this.refreshView();
+
+    this.host.action.emit({
+      type: TableActionType.Filter,
+      payload: { rows, filterQuery: this.filterQuery },
+    });
   }
 
   onApplyGroup(rules: OrderingRule[]) {

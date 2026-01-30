@@ -21,6 +21,7 @@ import {
   Renderer2,
   SimpleChanges,
   TemplateRef,
+  viewChild,
   ViewChild,
 } from '@angular/core';
 
@@ -176,6 +177,8 @@ export class SpreadsheetComponent
   cellAction = output<TableCellAction>();
 
   toolbarTmpl = contentChild<TemplateRef<any>>('toolbar');
+
+  dataFilterOptions = viewChild<DataFilterOptionsComponent>('dataFilterOptions');
 
   @ViewChild('menu', { static: true }) menu: Menu;
   @ViewChild('contextMenu', { static: true }) contextMenu: ContextMenu;

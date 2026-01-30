@@ -45,6 +45,8 @@
       <div class="flex flex-wrap gap-2 flex-1 justify-end min-w-[400px]">
         @if ($any(tableService.config().toolbar).filter) {
           <data-filter-options
+            #dataFilterOptions
+            [(query)]="tableService.filterQuery"
             [columns]="sourceColumns()"
             [rows]="sourceRows()"
             (onFilter)="tableService.onApplyFilter($event)"
@@ -280,7 +282,7 @@
       >
         <div class="header-cell cell index-cell">
           <div class="index-block">
-            @if (tableService.config().allowSelectAllRows) {
+            @if (tableService.config().row.allowSelectAll) {
               @let rowLength = tableRowService.rows().length;
               @let selectedRowLength = tableRowService.selectedRows.size;
               <p-checkbox

@@ -1,5 +1,11 @@
+import { FilterGroup } from '@app/shared/field-system/filter/models';
 import { TableColumn } from '../models/table-column';
 import { TableRow, TableRowSize } from '../models/table-row';
+
+export interface TableFilterInfo {
+  rows: TableRow[];
+  filterQuery: FilterGroup;
+}
 
 export interface TableSearchInfo {
   results: [TableRow, TableColumn][];
@@ -7,6 +13,7 @@ export interface TableSearchInfo {
 }
 
 export const TableActionType = {
+  Filter: 'filter',
   Group: 'group',
   Sort: 'sort',
   Search: 'search',
@@ -16,6 +23,7 @@ export const TableActionType = {
 export type TableActionType = (typeof TableActionType)[keyof typeof TableActionType];
 
 export interface TableActionPayload {
+  [TableActionType.Filter]: TableFilterInfo;
   [TableActionType.Group]: TableColumn[] | null;
   [TableActionType.Sort]: TableColumn[] | null;
   [TableActionType.Search]: TableSearchInfo;

@@ -1,5 +1,6 @@
 <filter-option
-  [query]="query()"
+  #filterOption
+  [(query)]="query"
   [fields]="fields()"
   [items]="rows()"
   itemValue="data"

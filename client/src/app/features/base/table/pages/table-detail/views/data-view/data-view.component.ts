@@ -11,11 +11,16 @@ import { DividerModule } from 'primeng/divider';
 
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { getReferenceValue } from '@app/shared/field-system/models/reference/field.object';
+import { FilterGroup } from '@app/shared/field-system/filter/models';
 import { TableColumn } from '@app/shared/spreadsheet/models/table-column';
 import { TableRow, TableRowSize } from '@app/shared/spreadsheet/models/table-row';
 import { TableConfig } from '@app/shared/spreadsheet/models/table';
 import { SpreadsheetComponent } from '@app/shared/spreadsheet/spreadsheet.component';
-import { TableAction, TableActionType } from '@app/shared/spreadsheet/events/table';
+import {
+  TableAction,
+  TableActionType,
+  TableFilterInfo,
+} from '@app/shared/spreadsheet/events/table';
 import {
   TableRowAction,
   TableRowActionType,
@@ -47,6 +52,7 @@ interface ColumnLayout {
 }
 
 interface DataViewConfiguration {
+  filterQuery?: FilterGroup | null;
   rowSize?: TableRowSize;
   frozenCount?: number;
   columnLayoutMap?: Record<string, Partial<ColumnLayout>>;
@@ -99,6 +105,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
     const configuration = this.getViewConfiguration();
     this.ssConfig.set({
       sideSpacing: 20,
+      filterQuery: configuration.filterQuery,
       column: { frozenCount: configuration.frozenCount },
       row: { size: configuration.rowSize, insertable: false, reorderable: false },
     });
@@ -267,6 +274,12 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
 
   protected onTableAction(action: TableAction) {
     switch (action.type) {
+      case TableActionType.Filter: {
+        const configuration = this.getViewConfiguration();
+        const filterQuery = (action.payload as TableFilterInfo).filterQuery;
+        this.saveViewConfiguration({ ...configuration, filterQuery });
+        break;
+      }
       case TableActionType.Group: {
         const configuration = this.getViewConfiguration();
         const columns = action.payload as TableColumn[] | null;
