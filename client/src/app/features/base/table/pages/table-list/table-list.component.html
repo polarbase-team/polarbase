@@ -86,9 +86,19 @@
     <p-skeleton height="3rem" />
   </div>
 } @else {
-  <ul class="list-none p-0 m-0 overflow-y-auto max-h-full">
+  <ul
+    cdkDropList
+    cdkDropListOrientation="vertical"
+    (cdkDropListDropped)="arrangeTableList($event)"
+    class="list-none p-0 m-0 overflow-y-auto max-h-full"
+  >
     @for (table of filteredTables(); track table.name) {
-      <li (click)="selectTable(table.name)">
+      <li
+        cdkDrag
+        cdkDragLockAxis="y"
+        [cdkDragDisabled]="searchQuery.length > 0"
+        (click)="selectTable(table.name)"
+      >
         <a
           pRipple
           class="group flex items-center cursor-pointer px-4 py-2 text-surface-700 hover:bg-gray-100 duration-150 transition-colors p-ripple"
