@@ -1,9 +1,18 @@
-<p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
+<p-menu #menu [model]="menuItems" [popup]="true" appendTo="body">
+  <ng-template #item let-item>
+    <div class="p-menu-item-link flex justify-content-between">
+      <div class="w-[14px] h-[14px]">
+        @if (rowSize() === item.value) {
+          <i class="pi pi-check"></i>
+        }
+      </div>
+      <span>{{ item.label }}</span>
+    </div>
+  </ng-template>
+</p-menu>
 
-<p-button
-  label="Row height"
-  icon="icon icon-ruler"
-  variant="text"
-  severity="secondary"
-  (click)="menu.show($event)"
-/>
+<p-button label="Row height" variant="text" severity="secondary" (click)="menu.show($event)">
+  <ng-template #icon>
+    <i class="icon icon-ruler-dimension-line rotate-90"></i>
+  </ng-template>
+</p-button>

@@ -1,10 +1,11 @@
 import _ from 'lodash';
 
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { finalize, take } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -22,6 +23,8 @@ import { ToastModule } from 'primeng/toast';
 import { TableService, TableDefinition, TableFormData } from '../../services/table.service';
 import { TableEditorDrawerComponent } from '../../components/table-editor/table-editor-drawer.component';
 
+const TABLE_ORDER_KEY = 'table-list-order';
+
 @Component({
   selector: 'table-list',
   templateUrl: './table-list.component.html',
@@ -29,6 +32,7 @@ import { TableEditorDrawerComponent } from '../../components/table-editor/table-
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
+    DragDropModule,
     ButtonModule,
     IconFieldModule,
     InputIconModule,
@@ -61,7 +65,6 @@ export class TableListComponent {
 
   constructor(
     private destroyRef: DestroyRef,
-    private router: Router,
     private activatedRoute: ActivatedRoute,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
@@ -70,7 +73,7 @@ export class TableListComponent {
     let tableFromQueryParam: string;
 
     this.activatedRoute.queryParams
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe((params) => {
         tableFromQueryParam = params['table'];
         if (!this.tables().length) {
@@ -79,24 +82,13 @@ export class TableListComponent {
       });
   }
 
-  private getTables(tableNameWillSelect?: string) {
-    this.isLoading.set(true);
-    this.tblService
-      .getTables()
-      .pipe(
-        finalize(() => this.isLoading.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((tables) => {
-        this.tables.set(tables);
-        this.filteredTables.set(tables);
-        this.searchQuery = '';
-
-        if (tableNameWillSelect) {
-          const table = tables.find((t) => t.name === tableNameWillSelect);
-          this.selectTable(table);
-        }
-      });
+  protected arrangeTableList(event: CdkDragDrop<any>) {
+    this.tables.update((tables) => {
+      moveItemInArray(tables, event.previousIndex, event.currentIndex);
+      return [...tables];
+    });
+    this.filteredTables.set([...this.tables()]);
+    localStorage.setItem(TABLE_ORDER_KEY, JSON.stringify(this.tables().map((t) => t.name)));
   }
 
   protected searchTable() {
@@ -118,13 +110,8 @@ export class TableListComponent {
     );
   }
 
-  protected selectTable(table: TableDefinition) {
-    this.tblService.selectTable(table);
-    this.router.navigate([], {
-      relativeTo: this.activatedRoute,
-      queryParams: { table: table.name },
-      queryParamsHandling: 'merge',
-    });
+  protected selectTable(tableName: string) {
+    this.tblService.selectTable(tableName);
   }
 
   protected addNewTable() {
@@ -201,5 +188,34 @@ export class TableListComponent {
 
   protected onTableEditorSave(savedTable: TableFormData) {
     this.getTables(savedTable.name);
+  }
+
+  private getTables(tableNameWillSelect?: string) {
+    this.isLoading.set(true);
+    this.tblService
+      .getTables()
+      .pipe(
+        finalize(() => this.isLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((tables) => {
+        const tableOrder = localStorage.getItem(TABLE_ORDER_KEY);
+        if (tableOrder) {
+          tables = tables.sort((a, b) => {
+            const aIndex = tableOrder.indexOf(a.name);
+            const bIndex = tableOrder.indexOf(b.name);
+            return aIndex - bIndex;
+          });
+        }
+        this.tables.set(tables);
+        this.filteredTables.set(tables);
+        this.searchQuery = '';
+
+        this.selectTable(
+          tableNameWillSelect ||
+            this.tblService.selectedTables()[0]?.name ||
+            this.tables()[0]?.name,
+        );
+      });
   }
 }

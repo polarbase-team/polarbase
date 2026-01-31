@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  version: 'v0.6.2-beta',
+  version: 'v0.6.3-beta',
   assetUrl: '/static',
   apiUrl: '/api',
   wsUrl: '/ws',

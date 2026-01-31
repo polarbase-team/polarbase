@@ -10,6 +10,7 @@
         [checkmark]="true"
         [showClear]="true"
         placeholder="Select here..."
+        appendTo="body"
       />
     </div>
     <div class="flex items-center gap-2">
@@ -49,7 +50,7 @@
   </div>
 </ng-template>
 
-<p-confirmdialog appendTo="body" styleClass="max-w-100" />
+<p-confirmdialog appendTo="body" styleClass="max-w-md" />
 
 <p-drawer
   [visible]="visible()"
@@ -140,13 +141,13 @@
               >
                 <ng-template let-item #item>
                   <div class="flex items-center gap-2">
-                    <i [class]="item.icon"></i>
+                    <i [class]="item.value | fieldIcon"></i>
                     <span>{{ item.name }}</span>
                   </div>
                 </ng-template>
                 <ng-template let-selectedItem #selectedItem>
                   <div class="flex items-center gap-2">
-                    <i [class]="selectedItem.icon"></i>
+                    <i [class]="selectedItem.value | fieldIcon"></i>
                     <span>{{ selectedItem.name }}</span>
                   </div>
                 </ng-template>
@@ -316,6 +317,7 @@
                     optionValue="name"
                     placeholder="Select here..."
                     required
+                    appendTo="body"
                   >
                     <ng-template #selectedItem let-selectedItem>
                       <div class="flex items-center gap-2">
@@ -433,6 +435,7 @@
                     [checkmark]="true"
                     [showClear]="true"
                     placeholder="Select here..."
+                    appendTo="body"
                   >
                     <ng-template #item let-item>
                       <div>
@@ -441,6 +444,9 @@
                       </div>
                     </ng-template>
                   </p-select>
+                  <p class="text-surface-500 text-xs">
+                    The number format to display the column values.
+                  </p>
                 </div>
                 @if (columnFormData.presentation.format.numberFormat === NumberFormat.Currency) {
                   <div class="flex flex-col gap-1">
@@ -453,6 +459,7 @@
                       [checkmark]="true"
                       [showClear]="true"
                       placeholder="Select here..."
+                      appendTo="body"
                     >
                       <ng-template #item let-item>
                         <div>
@@ -461,6 +468,9 @@
                         </div>
                       </ng-template>
                     </p-select>
+                    <p class="text-surface-500 text-xs">
+                      The currency symbol to display for the column values.
+                    </p>
                   </div>
                 }
               }
@@ -483,10 +493,11 @@
                     optionValue="name"
                     placeholder="Select here..."
                     (onShow)="loadReferenceDisplayColumnOptions()"
+                    appendTo="body"
                   >
                     <ng-template #selectedItem let-selectedItem>
                       <div class="flex items-center gap-2">
-                        <i [class]="FIELD_ICON_MAP[selectedItem.dataType]"></i>
+                        <i [class]="selectedItem.dataType | fieldIcon"></i>
                         <p>
                           {{ selectedItem.presentation?.uiName || selectedItem.name }}
                           @if (selectedItem.presentation?.uiName) {
@@ -497,7 +508,7 @@
                     </ng-template>
                     <ng-template #item let-item>
                       <div class="flex items-center gap-2">
-                        <i [class]="FIELD_ICON_MAP[item.dataType]"></i>
+                        <i [class]="item.dataType | fieldIcon"></i>
                         <p>
                           {{ item.presentation?.uiName || item.name }}
                           @if (item.presentation?.uiName) {
@@ -507,6 +518,9 @@
                       </div>
                     </ng-template>
                   </p-select>
+                  <p class="text-surface-500 text-xs">
+                    The selected column will be shown as the display value for this reference.
+                  </p>
                 </div>
               }
             }
