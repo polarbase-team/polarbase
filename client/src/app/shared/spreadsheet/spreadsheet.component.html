@@ -83,7 +83,7 @@
         }
         @if ($any(tableService.config().toolbar).rowSize) {
           <row-size-options
-            [rowSize]="$any(tableRowService.rowSize)"
+            [rowSize]="tableRowService.rowSize()"
             (rowSizeChange)="tableRowService.setRowSize($event)"
           />
         }

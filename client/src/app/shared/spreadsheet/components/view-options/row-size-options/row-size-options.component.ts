@@ -18,24 +18,28 @@ export class RowSizeOptionsComponent {
   protected menuItems: MenuItem[] = [
     {
       label: 'Small',
+      value: 'S',
       command: () => {
         this.rowSize.set('S');
       },
     },
     {
       label: 'Medium',
+      value: 'M',
       command: () => {
         this.rowSize.set('M');
       },
     },
     {
       label: 'Large',
+      value: 'L',
       command: () => {
         this.rowSize.set('L');
       },
     },
     {
       label: 'X-Large',
+      value: 'XL',
       command: () => {
         this.rowSize.set('XL');
       },

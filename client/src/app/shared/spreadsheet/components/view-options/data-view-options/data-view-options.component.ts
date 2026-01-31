@@ -51,13 +51,12 @@ export class DataViewOptionsComponent {
 
   rules = signal<OrderingRule[]>([]);
 
-  protected isGroupType = computed(() => {
-    return this.type() === 'group';
-  });
+  protected isGroupType = computed(() => this.type() === 'group');
+  protected totalRules = computed(() => this.rules().length);
 
   protected isReachLimitColumn = computed<boolean>(() => {
     const limit = this.limit();
-    return limit !== undefined && this.rules().length >= limit;
+    return limit !== undefined && this.totalRules() >= limit;
   });
 
   protected menuItems = computed<MenuItem[]>(() => {

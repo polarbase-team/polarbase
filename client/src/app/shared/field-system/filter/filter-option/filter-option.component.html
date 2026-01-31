@@ -17,7 +17,7 @@
           />
           <p-button
             label="Apply changes"
-            [disabled]="!rulesCount()"
+            [disabled]="!totalRules()"
             (click)="applyChanges(); popover.hide()"
           />
         </div>
@@ -28,14 +28,14 @@
 
 <p-button
   [label]="
-    rulesCount() === 1
+    totalRules() === 1
       ? `Filtered by 1 rule`
-      : rulesCount() > 1
-        ? `Filtered by ${rulesCount()} rules`
+      : totalRules() > 1
+        ? `Filtered by ${totalRules()} rules`
         : 'Filter'
   "
   icon="icon icon-list-filter"
-  [variant]="rulesCount() ? 'outlined' : 'text'"
-  [severity]="rulesCount() ? 'success' : 'secondary'"
+  variant="text"
+  [severity]="totalRules() ? 'success' : 'secondary'"
   (click)="popover.show($event)"
 />
