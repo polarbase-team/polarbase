@@ -10,7 +10,13 @@
       class="w-full"
       [class.h-full]="!!tblService.selectedTables().length"
     >
-      <p-tablist lazy class="min-h-[48px]">
+      <p-tablist
+        lazy
+        cdkDropList
+        cdkDropListOrientation="horizontal"
+        (cdkDropListDropped)="onTabDrop($event)"
+        class="min-h-[48px]"
+      >
         <div class="flex items-center p-1 min-h-[47px]">
           <p-button
             [icon]="`icon ${sidebarVisible() ? 'icon-panel-left-close' : 'icon-panel-right-close'}`"
@@ -23,7 +29,7 @@
           />
         </div>
         @for (table of tblService.selectedTables(); track table.name) {
-          <p-tab [value]="table.name" class="group">
+          <p-tab cdkDrag cdkDragLockAxis="x" [value]="table.name" class="group">
             <div class="flex items-center gap-2 mt-1 relative">
               <i class="icon icon-table-2"></i>
               <span>{{ table.presentation?.uiName || table.name }}</span>

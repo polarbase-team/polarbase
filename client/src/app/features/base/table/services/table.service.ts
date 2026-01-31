@@ -127,15 +127,15 @@ export class TableService {
     this.selectedTables.update((tables) => [...tables.filter((t) => t.name !== tableName)]);
 
     let activeTable = this.activeTable();
-    this.activeTable.set(null);
-    setTimeout(() => {
-      if (tableName === activeTable.name) {
+    if (activeTable?.name === tableName) {
+      this.activeTable.set(null);
+      setTimeout(() => {
         activeTable = this.selectedTables().at(0);
-      }
-      if (activeTable) {
-        this.activeTable.set(activeTable);
-      }
-    }, 0);
+        if (activeTable) {
+          this.activeTable.set(activeTable);
+        }
+      }, 0);
+    }
 
     this.viewLayoutService.remove(tableName);
   }
