@@ -1,0 +1,47 @@
+<p-popover #popover appendTo="body" (onShow)="searchInput.value = ''" (onHide)="onSearch.emit('')">
+  <p-inputgroup class="w-3xs max-w-3xs">
+    <p-iconfield>
+      <p-inputicon class="icon icon-search !z-2" />
+      <input
+        #searchInput
+        type="text"
+        pInputText
+        [pAutoFocus]="true"
+        placeholder="Search"
+        (input)="onInput($event.target.value)"
+        (keydown.enter)="onSearchNext.emit()"
+      />
+    </p-iconfield>
+    @if (totalResults()) {
+      <p-inputgroup-addon>
+        <div class="text-center">
+          <span class="text-sm font-medium">
+            {{ (currentIndex() || 0) + 1 }}/{{ totalResults() }}
+          </span>
+        </div>
+      </p-inputgroup-addon>
+      <p-inputgroup-addon>
+        <div class="flex gap-2 justify-content-space-around px-2">
+          <i
+            class="icon icon-chevron-up cursor-pointer"
+            style="font-size: 16px"
+            (click)="onSearchPrevious.emit()"
+          ></i>
+          <i
+            class="icon icon-chevron-down cursor-pointer"
+            style="font-size: 16px"
+            (click)="onSearchNext.emit()"
+          ></i>
+        </div>
+      </p-inputgroup-addon>
+    }
+  </p-inputgroup>
+</p-popover>
+
+<p-button
+  icon="icon icon-search"
+  label="Search"
+  [text]="true"
+  severity="secondary"
+  (click)="popover.show($event)"
+/>
