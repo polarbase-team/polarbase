@@ -20,15 +20,15 @@
 **Polarbase** is an open-source **Extensible Data Backend** built directly on the PostgreSQL core. It empowers developers to architect, manage, and scale complex databases with ease, combining enterprise-grade reliability with a modern, developer-centric experience.
 
 **Architect your database with an intuitive UI and deploy data-driven solutions in minutes.**<br>
-[Explore Demo](https://polarbase-client.onrender.com) • [View Roadmap](./ROADMAP.md)
+[Explore Demo](https://polarbase-client.onrender.com) • [View Roadmap](./ROADMAP.md) • [Changelog](./CHANGELOG.md)
 
 ---
 
 ### Why Polarbase?
 
-- **Multi-View Workspace:** Go beyond standard tables. **Structure** your data through specialized interfaces—**Spreadsheet** for rapid editing, **Dashboards** for real-time insights, and **Operational Views** (Forms/Calendars) for seamless workflows.
+- **Multi-View Workspace:** Go beyond standard tables. **Structure** your data through specialized interfaces—**Spreadsheet** for rapid editing, **Dashboards** for real-time insights, and **Operational Views** (Forms/Calendars/Maps) for seamless workflows.
 - **Built for Extensibility:** Designed as a core foundation, not a closed silo. With upcoming **SDKs** and native **MCP (Model Context Protocol)** support, Polarbase is engineered to power both custom frontends and autonomous AI Agents.
-- **Pure PostgreSQL, Zero Lock-in:** We respect your data. By using SQLite exclusively for metadata and layout configurations, your PostgreSQL database remains clean, independent, and free from platform-specific overhead.
+- **Pure PostgreSQL, Zero Lock-in:** We respect your data. By using SQLite exclusively for metadata, your PostgreSQL database remains clean, independent, and free from platform-specific overhead.
 - **Developer-Centric & Agile:** Optimized for **data-intensive applications** that demand high performance and minimal backend overhead without sacrificing the power of a professional-grade engine.
 
 ---
@@ -75,8 +75,8 @@
 - **REST API for DB**: Secure and efficient API endpoints to interact with your PostgreSQL database.
 - **AI Agent for DB**: Intelligent agent to assist with database operations. Focuses on data reasoning and operational assistance.
 - **MCP Server for DB**: Model Context Protocol server for streamlined administration.
-- **Realtime for DB**: Real-time updates and synchronization for dynamic data handling (via WebSocket).
-- **Frontend with Spreadsheet-UI**: User-friendly spreadsheet-style interface for data visualization and manipulation.
+- **Realtime for DB**: Real-time updates and synchronization for dynamic data handling (via WebSocket or SSE).
+- **Multi-View**: User-friendly spreadsheet-style interface for data visualization and manipulation, besides calendar, map views, etc.
 - **API Key Management**: Generate API keys to grant controlled access to key features.
 
 ## 4. Tech Stack
@@ -158,7 +158,7 @@ Deploy easily with Docker Compose (recommended for production):
 docker compose up --build
 ```
 
-- Access at `http://localhost:8080`.
+- Access at `http://localhost`.
 - Customize with environment variables in `docker-compose.yml`.
 
 For a custom setup:
@@ -170,9 +170,9 @@ docker run -e GEMINI_API_KEY=<YOUR_GEMINI_KEY> -p 3000:3000 polarbase-team/polar
 ## 6. Configuration
 
 - **API Keys for AI**: Polarbase supports multiple AI providers. Use Google Gemini as the default mode by adding `GEMINI_API_KEY=your_api_key_here` to the `.env` file in the `server` folder. Alternatively, configure OpenAI with `OPENAI_API_KEY=your_api_key_here` for compatible features.
-- **PostgreSQL Connection**: Set up database details (host, user, password, etc.) in `server/config.ts`.
-- **Super Admin Key**: Use the super admin key for initial login and administration. Generate or set it in the `.env` file as `SUPER_ADMIN_KEY=your_secure_key_here`. This key is required to access admin features and manage API keys.
-- **API Key Generation**: Once logged in as super admin, generate API keys via the MCP interface to control access to features like REST API or AI agent.
+- **PostgreSQL Connection**: Set up database details (host, user, password, etc.) in `server/src/plugins/pg.ts`.
+- **Super Admin Key**: Use the super admin key for initial login and administration. Generate or set it in the `.env` file as `SUPER_ADMIN_API_KEY=your_secure_key_here`. This key is required to access admin features and manage API keys.
+- **API Key Generation**: Once logged in as super admin, generate API keys via the interface to control access to features like REST API or AI agent.
 
 **Privacy Note**: Polarbase does not store your database credentials. All operations run locally or in your controlled environment.
 

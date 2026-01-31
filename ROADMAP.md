@@ -27,6 +27,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Map View:** Visualize records with GeoPoint fields on a map.
 - **API Key Management:** Generate and manage keys for controlled access to REST API or AI features.
 - **Super Admin Control:** Secure administrative access via a dedicated Super Admin Key.
+- **Layout Configuration Persistence:** View configurations (column widths, filters, view states) are persisted via **LocalStorage** for a seamless client-side experience.
 
 ### 🤖 AI & Integration
 
@@ -37,10 +38,6 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ---
 
 ## 🏗️ In Development (Upcoming)
-
-### 🖼️ Multi-View Workspace
-
-- **Layout Configuration Storage:** Support storing UI layout configurations (column widths, filters, view states) directly in **SQLite** to maintain a clean main database.
 
 ### 🗄️ Multi-Schema Management
 
@@ -58,20 +55,14 @@ Our mission is to build the most extensible open-source backend engine for Postg
 
 ### ⚙️ Data & Schema Management
 
+- **Index Management:** Create and manage indexes for faster data retrieval.
 - **Copy Table Schema:** Quickly duplicate table structures.
 - **Import/Export:** Support for Database Schema and Table Data (CSV/JSON).
-
----
-
-## 🔍 Researching (Future)
 
 ### 🖼️ Advanced Views & UI
 
 - **Diagram View:** Visual ERD representation of table relationships.
 - **Query View:** Visual SQL builder for complex PostgreSQL queries.
-- **Form Builder:** Specialized views for data entry.
-- **Dashboard Builder:** Custom widgets and charts for real-time insights.
-- **Dark Mode:** System-wide dark theme support.
 - **S3 Storage:** Integrate S3 storage.
 
 ### 🔗 Extensibility & Integration
@@ -80,6 +71,19 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **API Playground:** Built-in Swagger/OpenAPI interface for instant testing.
 - **Virtual Fields:** Computed fields using logic without altering the PG schema.
 - **SDKs:** Official client libraries for **JavaScript** and **Dart**.
+
+---
+
+## 🔍 Researching (Future)
+
+### 🖼️ Advanced Views & UI
+
+- **Form Builder:** Specialized views for data entry.
+- **Dashboard Builder:** Custom widgets and charts for real-time insights.
+- **Dark Mode:** System-wide dark theme support.
+
+### 🔗 Extensibility & Integration
+
 - **Cron Jobs:** Scheduled tasks runner for periodic data operations.
 
 ### 🛡️ Enterprise & DevOps

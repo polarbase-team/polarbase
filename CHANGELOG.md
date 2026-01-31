@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3-beta] - 2026-01-31
+
+### Added
+
+- **Drag-and-Drop Reordering**: Support for reordering table list and open tabs, with persistence.
+- **Local Storage Layout Persistence**: View layout configurations (mode, column visibility, etc.) are now persisted locally for a better user experience.
+- **UI Metadata Integration**: Enhanced table and column metadata handling with UI-friendly names.
+
+### Changed
+
+- **Component Refactoring**: Migrated multiple components to use centralized services like `ViewLayoutService` and `SearchBoxComponent`.
+- **Filtering & Logic**: Consolidated record handling and formatting logic for better consistency.
+- **Styling**: Unified confirm dialog styles and improved input focus behavior.
+
+## [0.6.2-beta] - 2026-01-27
+
+### Added
+
+- **Display Column Selection**: Users can now select which column to display for reference fields.
+- **Number Formatting**: Added options for currency and number formatting in the column editor.
+- **Date Formatting**: Introduced selection of date formats and time display options.
+
+### Changed
+
+- **Schema & Validation**: Renamed table properties (`tableName` -> `name`) and enhanced validation patterns for range operators.
+- **UI/UX Refinement**: Improved table editor layout and accessibility (label `for` attributes).
+- **Type Safety**: Updated `DECIMAL` columns to `DOUBLE PRECISION` for improved precision.
+
+## [0.6.1-beta] - 2026-01-24
+
+### Added
+
+- **Real-time Synchronization**: Integrated `TableRealtimeService` for live data updates across views.
+- **Table Removal**: New functionality to remove tables directly from the UI.
+- **Map View Enhancements**: Added marker click events and split toolbar templates.
+- **Enhanced Data Validation**: Introduced custom PostgreSQL domains for email, URL, and attachment fields to ensure data integrity.
+
+### Fixed
+
+- **Leaflet Assets**: Corrected marker image loading issues in various environments.
+- **Performance**: Improved initial load times with preconnect and preload links.
+
 ## [0.6.0-beta] - 2026-01-23
 
 ### Added
