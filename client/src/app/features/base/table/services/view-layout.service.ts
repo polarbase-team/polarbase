@@ -1,12 +1,11 @@
 import { Injectable } from '@angular/core';
-import { TableService } from './table.service';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root',
+})
 export class ViewLayoutService {
-  constructor(private tblService: TableService) {}
-
-  load() {
-    const key = this.getTableKey();
+  load(tableName: string) {
+    const key = this.getTableKey(tableName);
     const layout = localStorage.getItem(key);
     try {
       return JSON.parse(layout);
@@ -15,14 +14,14 @@ export class ViewLayoutService {
     }
   }
 
-  save(value: any, replace = false) {
-    const key = this.getTableKey();
+  save(tableName: string, value: any, replace = false) {
+    const key = this.getTableKey(tableName);
     if (replace) {
       localStorage.setItem(key, JSON.stringify(value));
       return;
     }
 
-    const layout = this.load();
+    const layout = this.load(tableName);
     if (layout) {
       localStorage.setItem(key, JSON.stringify({ ...layout, ...value }));
     } else {
@@ -30,8 +29,12 @@ export class ViewLayoutService {
     }
   }
 
-  private getTableKey() {
-    const table = this.tblService.activeTable();
-    return table ? `table_${table.name}_layout` : '';
+  remove(tableName: string) {
+    const key = this.getTableKey(tableName);
+    localStorage.removeItem(key);
+  }
+
+  private getTableKey(tableName: string) {
+    return `table_${tableName}_layout`;
   }
 }

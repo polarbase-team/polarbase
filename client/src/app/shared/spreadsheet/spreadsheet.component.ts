@@ -51,12 +51,7 @@ import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
 import { OverlayModule } from 'primeng/overlay';
 import { MessageModule } from 'primeng/message';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputIconModule } from 'primeng/inputicon';
-import { InputGroupModule } from 'primeng/inputgroup';
-import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { ButtonModule } from 'primeng/button';
-import { IconFieldModule } from 'primeng/iconfield';
 
 // Utils
 import { Clipboard } from './utils/clipboard';
@@ -69,6 +64,7 @@ import { ColumnViewOptionsComponent } from './components/view-options/column-vie
 import { DataFilterOptionsComponent } from './components/view-options/data-filter-options/data-filter-options.component';
 import { DataViewOptionsComponent } from './components/view-options/data-view-options/data-view-options.component';
 import { RowSizeOptionsComponent } from './components/view-options/row-size-options/row-size-options.component';
+import { SearchBoxComponent } from './components/search-box/search-box.component';
 import { FieldCellService } from './components/field-cell/field-cell.service';
 
 import { VirtualScrollGroupRepeaterDirective } from './components/virtual-scroll/virtual-scroll-group-repeater.directive';
@@ -126,11 +122,6 @@ const stack: SpreadsheetComponent[] = [];
     OverlayModule,
     MessageModule,
     ConfirmDialogModule,
-    InputTextModule,
-    InputGroupModule,
-    InputGroupAddonModule,
-    InputIconModule,
-    IconFieldModule,
     ButtonModule,
     VirtualScrollComponent,
     VirtualScrollViewportComponent,
@@ -144,6 +135,7 @@ const stack: SpreadsheetComponent[] = [];
     DataViewOptionsComponent,
     ColumnViewOptionsComponent,
     RowSizeOptionsComponent,
+    SearchBoxComponent,
     ParseCalculatedResultPipe,
   ],
   providers: [

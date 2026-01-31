@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -47,7 +47,7 @@ interface MapViewConfiguration {
   ],
   providers: [ViewLayoutService],
 })
-export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> {
+export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> implements OnInit {
   filterOption = viewChild<FilterOptionComponent>('filterOption');
 
   protected geoPointColumns: ColumnDefinition[] = [];
@@ -56,9 +56,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> {
   protected selectedDisplayField: string;
   protected filterQuery: FilterGroup;
 
-  constructor() {
-    super();
-
+  ngOnInit() {
     const configuration = this.getViewConfiguration();
     this.selectedGeoPointField = configuration.selectedGeoPointField;
     this.selectedDisplayField = configuration.selectedDisplayField;

@@ -181,16 +181,16 @@ export class TableRowService extends TableBaseService {
 
   setRows(rows: TableRow[]) {
     if (this.tableService.isFiltering) {
-      const currRows = this.tableRowService.rows();
-      const latestDataMap = new Map(rows.map((row) => [row.id, row]));
+      const currRows = this.rows();
+      const rowsMap = new Map(rows.map((row) => [row.id, row]));
       const intersection = currRows
-        .filter((row) => latestDataMap.has(row.id))
-        .map((row) => latestDataMap.get(row.id));
-      this.tableRowService.rows.set(intersection);
+        .filter((row) => rowsMap.has(row.id))
+        .map((row) => rowsMap.get(row.id));
+      this.rows.set(intersection);
       return;
     }
 
-    this.tableRowService.rows.set(rows);
+    this.rows.set(rows);
   }
 
   setRowSize(size: TableRowSize) {
@@ -216,7 +216,7 @@ export class TableRowService extends TableBaseService {
     if (!this.canAddRow()) return;
 
     this.tableCellService.flushSelectingCellState();
-    this.tableRowService.flushPendingRow();
+    this.flushPendingRow();
 
     this.tableGroupService.isGrouped()
       ? this.tableGroupService.insertRowInGroup(group)

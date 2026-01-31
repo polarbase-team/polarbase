@@ -25,14 +25,14 @@ export class FilterOptionComponent {
 
   onFilter = output<any[]>();
 
-  protected rulesCount = computed(() => this.query()?.children?.length ?? 0);
+  protected totalRules = computed(() => this.query()?.children?.length ?? 0);
 
   private fieldsByName = computed(() => new Map(this.fields().map((f) => [f.name, f])));
 
   constructor(private filterService: FilterService) {}
 
   applyChanges(items = this.items()) {
-    if (!this.rulesCount()) {
+    if (!this.totalRules()) {
       this.onFilter.emit(items);
       return;
     }

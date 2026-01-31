@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 
 import { TabsModule } from 'primeng/tabs';
 import { ButtonModule } from 'primeng/button';
@@ -17,6 +18,7 @@ import { TableRealtimeService } from './table/services/table-realtime.service';
   styleUrl: './base.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DragDropModule,
     TabsModule,
     ButtonModule,
     ImageModule,
@@ -52,5 +54,20 @@ export class BaseComponent {
 
   protected onTabChange(tableName: string) {
     this.tblService.selectTable(tableName);
+  }
+
+  protected onTabDrop(event: CdkDragDrop<string[]>) {
+    this.tblService.selectedTables.update((tables) => {
+      moveItemInArray(tables, event.previousIndex, event.currentIndex);
+      return [...tables];
+    });
+
+    const activeTable = this.tblService.activeTable();
+    if (activeTable) {
+      this.tblService.activeTable.set(null);
+      setTimeout(() => {
+        this.tblService.activeTable.set(activeTable);
+      }, 0);
+    }
   }
 }

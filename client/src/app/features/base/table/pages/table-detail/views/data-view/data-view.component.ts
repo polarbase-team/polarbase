@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
@@ -71,7 +71,7 @@ interface DataViewConfiguration {
     SpreadsheetComponent,
   ],
 })
-export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> {
+export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> implements OnInit {
   spreadsheet = viewChild<SpreadsheetComponent>('spreadsheet');
 
   protected ssConfig = signal<TableConfig>({
@@ -99,9 +99,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
 
   private references = new Map<string, string>();
 
-  constructor() {
-    super();
-
+  ngOnInit() {
     const configuration = this.getViewConfiguration();
     this.ssConfig.set({
       sideSpacing: 20,
@@ -243,7 +241,6 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
     switch (action) {
       case 'insert': {
         if (currentRows.some((row) => row.id === record.new.id)) return;
-
         const newRow = { id: record.new.id, data: record.new };
         this.spreadsheet().setRows([...currentRows, newRow]);
         break;
@@ -253,7 +250,6 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
         const updatedRows = currentRows.map((row) =>
           row.id === record.new.id ? { ...row, data: { ...row.data, ...record.new } } : row,
         );
-
         this.spreadsheet().setRows(updatedRows);
         break;
       }
@@ -261,7 +257,6 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
       case 'delete': {
         const filteredRows = currentRows.filter((row) => row.id !== record.key.id);
         if (filteredRows.length === currentRows.length) return;
-
         this.spreadsheet().setRows(filteredRows);
         break;
       }

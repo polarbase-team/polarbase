@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { ButtonModule } from 'primeng/button';
@@ -58,7 +65,9 @@ export interface UpdateRecordEvent {
   ],
   providers: [ViewLayoutService],
 })
-export class TableDetailComponent {
+export class TableDetailComponent implements OnInit {
+  table = input<TableDefinition>();
+
   view = viewChild<DataViewComponent | CalendarViewComponent | MapViewComponent>('view');
 
   protected displayMode = signal<DisplayMode>(null);
@@ -101,8 +110,10 @@ export class TableDetailComponent {
   constructor(
     protected tblService: TableService,
     protected viewLayoutService: ViewLayoutService,
-  ) {
-    const viewLayout = this.viewLayoutService.load();
+  ) {}
+
+  ngOnInit() {
+    const viewLayout = this.viewLayoutService.load(this.table().name);
     this.displayMode.set(viewLayout?.displayMode || 'data-view');
   }
 
@@ -128,6 +139,6 @@ export class TableDetailComponent {
 
   private selectDisplayMode(mode: DisplayMode) {
     this.displayMode.set(mode);
-    this.viewLayoutService.save({ displayMode: mode }, true);
+    this.viewLayoutService.save(this.table().name, { displayMode: mode }, true);
   }
 }

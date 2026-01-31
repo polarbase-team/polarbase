@@ -17,6 +17,7 @@ import { DateFieldConfig } from '@app/shared/field-system/models/date/field.inte
 import { buildField } from '@app/shared/field-system/models/utils';
 import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/field.interface';
 import { AttachmentFieldConfig } from '@app/shared/field-system/models/attachment/field.interface';
+import { ViewLayoutService } from './view-layout.service';
 
 export interface TableDefinition {
   name: string;
@@ -102,7 +103,10 @@ export class TableService {
   private apiUrl = `${environment.apiUrl}/rest/db`;
   private schemaCache = new Map<string, Observable<ColumnDefinition[]>>();
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private viewLayoutService: ViewLayoutService,
+  ) {
     this.selectedTables.set(JSON.parse(localStorage.getItem('selectedTables') || '[]'));
     effect(() => {
       localStorage.setItem('selectedTables', JSON.stringify(this.selectedTables()));
@@ -123,15 +127,17 @@ export class TableService {
     this.selectedTables.update((tables) => [...tables.filter((t) => t.name !== tableName)]);
 
     let activeTable = this.activeTable();
-    this.activeTable.set(null);
-    setTimeout(() => {
-      if (tableName === activeTable.name) {
+    if (activeTable?.name === tableName) {
+      this.activeTable.set(null);
+      setTimeout(() => {
         activeTable = this.selectedTables().at(0);
-      }
-      if (activeTable) {
-        this.activeTable.set(activeTable);
-      }
-    }, 0);
+        if (activeTable) {
+          this.activeTable.set(activeTable);
+        }
+      }, 0);
+    }
+
+    this.viewLayoutService.remove(tableName);
   }
 
   getTables() {
