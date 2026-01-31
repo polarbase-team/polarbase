@@ -36,11 +36,12 @@ import { environment } from '@environments/environment';
 
 import { DrawerComponent } from '@app/core/components/drawer.component';
 import { sanitizeEmptyValues } from '@app/core/utils';
-import { NumberFormat } from '@app/shared/field-system/pipes/number-format.pipe';
-import { DataType, FIELD_ICON_MAP } from '@app/shared/field-system/models/field.interface';
+import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
+import { NumberFormat } from '@app/shared/field-system/models/number/field.interface';
 import { SelectField } from '@app/shared/field-system/models/select/field.object';
 import { MultiSelectField } from '@app/shared/field-system/models/multi-select/field.object';
+import { FieldIconPipe } from '@app/shared/field-system/pipes/field-icon.pipe';
 import { TextFieldEditorComponent } from '@app/shared/field-system/editors/text/editor.component';
 import { LongTextFieldEditorComponent } from '@app/shared/field-system/editors/long-text/editor.component';
 import { IntegerFieldEditorComponent } from '@app/shared/field-system/editors/integer/editor.component';
@@ -99,6 +100,7 @@ const DEFAULT_VALUE = {
     TooltipModule,
     ConfirmDialogModule,
     ToggleSwitchModule,
+    FieldIconPipe,
     TextFieldEditorComponent,
     LongTextFieldEditorComponent,
     IntegerFieldEditorComponent,
@@ -128,7 +130,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   protected dataTypes = Object.keys(DataType).map((t) => ({
     name: t,
     value: DataType[t],
-    icon: FIELD_ICON_MAP[DataType[t]],
   }));
   protected selectedDataType = signal<DataType>(null);
   protected internalField: Field;
@@ -177,7 +178,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       help: 'Automatically syncs updates and deletions.',
     },
   ];
-  protected referenceDisplayColumnOptions: { label: string; value: string; icon: string }[];
+  protected referenceDisplayColumnOptions: ColumnDefinition[];
 
   constructor(
     private destroyRef: DestroyRef,
@@ -329,11 +330,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.tblService
       .getTableSchema(this.columnFormData.foreignKey.table)
       .subscribe((columns: ColumnDefinition[]) => {
-        this.referenceDisplayColumnOptions = columns.map((col) => ({
-          label: col.presentation?.uiName || col.name,
-          value: col.name,
-          icon: FIELD_ICON_MAP[col.dataType],
-        }));
+        this.referenceDisplayColumnOptions = columns;
       });
   }
 

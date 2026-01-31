@@ -1,30 +1,113 @@
-<p-popover #popover appendTo="body">
-  <div class="flex gap-2">
+<p-popover #popover appendTo="body" styleClass="w-xs">
+  <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-1">
       <label for="startField" class="text-sm">Start Date</label>
       <p-select
         id="startField"
         [options]="dateColumns"
-        optionLabel="name"
         optionValue="name"
         placeholder="Select here..."
         [(ngModel)]="selectedStartField"
         [checkmark]="true"
-        class="w-3xs"
-      />
+        fluid
+      >
+        <ng-template #selectedItem let-selectedItem>
+          <div class="flex items-center gap-2">
+            <i [class]="selectedItem.dataType | fieldIcon"></i>
+            <p>
+              {{ selectedItem.presentation?.uiName || selectedItem.name }}
+              @if (selectedItem.presentation?.uiName) {
+                <span class="text-xs text-surface-500">{{ selectedItem.name }}</span>
+              }
+            </p>
+          </div>
+        </ng-template>
+        <ng-template #item let-item>
+          <div class="flex items-center gap-2">
+            <i [class]="item.dataType | fieldIcon"></i>
+            <p>
+              {{ item.presentation?.uiName || item.name }}
+              @if (item.presentation?.uiName) {
+                <span class="text-xs text-surface-500">{{ item.name }}</span>
+              }
+            </p>
+          </div>
+        </ng-template>
+      </p-select>
     </div>
     <div class="flex flex-col gap-1">
       <label for="endField" class="text-sm">End Date</label>
       <p-select
         id="endField"
         [options]="dateColumns"
-        optionLabel="name"
         optionValue="name"
         placeholder="Select here..."
         [(ngModel)]="selectedEndField"
         [checkmark]="true"
-        class="w-3xs"
-      />
+        fluid
+      >
+        <ng-template #selectedItem let-selectedItem>
+          <div class="flex items-center gap-2">
+            <i [class]="selectedItem.dataType | fieldIcon"></i>
+            <p>
+              {{ selectedItem.presentation?.uiName || selectedItem.name }}
+              @if (selectedItem.presentation?.uiName) {
+                <span class="text-xs text-surface-500">{{ selectedItem.name }}</span>
+              }
+            </p>
+          </div>
+        </ng-template>
+        <ng-template #item let-item>
+          <div class="flex items-center gap-2">
+            <i [class]="item.dataType | fieldIcon"></i>
+            <p>
+              {{ item.presentation?.uiName || item.name }}
+              @if (item.presentation?.uiName) {
+                <span class="text-xs text-surface-500">{{ item.name }}</span>
+              }
+            </p>
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+    <div class="flex flex-col gap-1">
+      <label for="displayField" class="text-sm">Display Field</label>
+      <p-select
+        id="displayField"
+        [options]="columns()"
+        optionValue="name"
+        placeholder="Select here..."
+        [(ngModel)]="selectedDisplayField"
+        [checkmark]="true"
+        [showClear]="true"
+        fluid
+      >
+        <ng-template #selectedItem let-selectedItem>
+          <div class="flex items-center gap-2">
+            <i [class]="selectedItem.dataType | fieldIcon"></i>
+            <p>
+              {{ selectedItem.presentation?.uiName || selectedItem.name }}
+              @if (selectedItem.presentation?.uiName) {
+                <span class="text-xs text-surface-500">{{ selectedItem.name }}</span>
+              }
+            </p>
+          </div>
+        </ng-template>
+        <ng-template #item let-item>
+          <div class="flex items-center gap-2">
+            <i [class]="item.dataType | fieldIcon"></i>
+            <p>
+              {{ item.presentation?.uiName || item.name }}
+              @if (item.presentation?.uiName) {
+                <span class="text-xs text-surface-500">{{ item.name }}</span>
+              }
+            </p>
+          </div>
+        </ng-template>
+      </p-select>
+      <p class="text-surface-500 text-xs">
+        The field to display as the title of the calendar events.
+      </p>
     </div>
   </div>
 
@@ -34,7 +117,7 @@
     <p-button
       label="Apply changes"
       [disabled]="!selectedStartField || !selectedEndField"
-      (click)="onChangeDateRange(); popover.hide()"
+      (click)="loadTable(); popover.hide()"
     />
   </div>
 </p-popover>
@@ -54,43 +137,54 @@
           <div class="flex gap-2">
             @if (isColumnsLoading()) {
               <p-skeleton width="100px" height="33px" />
-              <p-skeleton width="165px" height="33px" />
             } @else {
               <p-button label="Insert" icon="icon icon-plus" (click)="addNewRecord()" />
-              <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
-                <ng-template pTemplate="content">
-                  <i class="icon icon-calendar"></i>
-                  <span class="p-button-label truncate max-w-3xs">
-                    {{
-                      selectedStartField && selectedEndField
-                        ? selectedStartField + ' - ' + selectedEndField
-                        : 'Select Date Fields'
-                    }}
-                  </span>
-                </ng-template>
-              </p-button>
             }
           </div>
         </div>
       </div>
     </ng-template>
     <ng-template #rightToolbar>
-      <div class="flex items-center">
-        @if (isRecordsLoading()) {
-          <div class="mt-1 mr-4">
-            <p-progress-spinner class="w-4! h-4!" strokeWidth="8" />
-          </div>
-        }
+      <div class="flex gap-2 items-center">
         @if (isColumnsLoading()) {
           <p-skeleton width="90px" height="33px" />
+          <div class="flex items-center">
+            <p-skeleton width="90px" height="33px" />
+            <p-divider layout="vertical" class="scale-80" />
+          </div>
         } @else {
-          <filter-option
-            [fields]="fields()"
-            [items]="records()"
-            (onFilter)="onRecordsFiltered($event)"
-          />
+          @if (isRecordsLoading()) {
+            <div class="mt-1">
+              <p-progress-spinner class="w-4! h-4!" strokeWidth="8" />
+            </div>
+          }
+          <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
+            <ng-template #content>
+              <i class="icon icon-settings"></i>
+              @if (selectedStartField && selectedEndField) {
+                <span class="p-button-label truncate max-w-3xs">
+                  {{
+                    selectedStartField !== selectedEndField
+                      ? selectedStartField + ' - ' + selectedEndField
+                      : selectedStartField
+                  }}
+                </span>
+              } @else {
+                <span class="p-button-label">Configure</span>
+              }
+            </ng-template>
+          </p-button>
+          <div class="flex items-center">
+            <filter-option
+              #filterOption
+              [(query)]="filterQuery"
+              [fields]="fields()"
+              [items]="records()"
+              (onFilter)="onRecordsFiltered($event)"
+            />
+            <p-divider layout="vertical" class="scale-80" />
+          </div>
         }
-        <p-divider layout="vertical" class="scale-80" />
       </div>
     </ng-template>
   </calendar>

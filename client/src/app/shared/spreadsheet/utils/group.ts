@@ -146,7 +146,8 @@ function groupPredicate(groupByColumns: TableColumn[], row: TableRow, depth: num
 function sortGroupPredicate(groupByColumns: TableColumn[], currentRow: TableRow, depth: number) {
   const column = groupByColumns[groupByColumns.length - depth];
   if (!column) return null;
-  return sortPredicate([{ ...column, sortType: column.groupSortType }], 0, currentRow);
+
+  return sortPredicate([{ ...column, sortRule: column.sortRule }], 0, currentRow);
 }
 
 function buildData(data: GroupData, groupByColumns: TableColumn[], depth: number = 1): GroupData {

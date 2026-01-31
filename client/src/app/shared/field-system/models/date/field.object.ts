@@ -7,6 +7,15 @@ import { DataType, FIELD_ICON_MAP } from '../field.interface';
 import { Field, FieldValidationKey } from '../field.object';
 import { DateData, DateFieldConfig } from './field.interface';
 
+export const formatDateTime = (value: DateData, format?: string, showTime?: boolean) => {
+  if (showTime) {
+    format = format ?? environment.defaultDateTimeFormat ?? 'YYYY-MM-DD HH:mm';
+    return dayjs(value).format(format.includes('HH:mm') ? format : `${format} HH:mm`);
+  }
+
+  return dayjs(value).format(format ?? environment.defaultDateFormat ?? 'YYYY-MM-DD');
+};
+
 export class DateField extends Field<DateData> {
   static readonly dataType: DataType = DataType.Date;
 
@@ -70,6 +79,12 @@ export class DateField extends Field<DateData> {
   }
 
   override toString(data: DateData = this.data) {
-    return data ? dayjs(data).format(environment.defaultDateTimeFormat ?? 'YYYY-MM-DD HH:mm') : '';
+    return data && this.params.presentation?.format
+      ? formatDateTime(
+          data,
+          this.params.presentation.format.dateFormat,
+          this.params.presentation.format.showTime,
+        )
+      : '';
   }
 }

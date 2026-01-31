@@ -1,11 +1,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  effect,
   input,
   model,
   output,
   viewChildren,
+  linkedSignal,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -54,7 +55,16 @@ import {
   ],
 })
 export class FilterGroupComponent {
-  group = model.required<FilterGroup>();
+  rawGroup = model<FilterGroup | undefined>(undefined, { alias: 'group' });
+  group = linkedSignal({
+    source: this.rawGroup,
+    computation: (newVal) =>
+      newVal ?? {
+        type: FilterType.Group,
+        conjunction: Conjunction.AND,
+        children: [],
+      },
+  });
   isRoot = input(true);
   fields = input<Field[]>([]);
 
@@ -72,13 +82,7 @@ export class FilterGroupComponent {
 
   constructor() {
     effect(() => {
-      const selects = this.fieldSelects();
-
-      if (selects.length > 0) {
-        setTimeout(() => {
-          selects[selects.length - 1].show();
-        });
-      }
+      this.rawGroup.set(this.group());
     });
   }
 
@@ -112,6 +116,13 @@ export class FilterGroupComponent {
           value: '',
         }) - 1;
       return { ...group };
+    });
+
+    setTimeout(() => {
+      const selects = this.fieldSelects();
+      if (selects.length > 0) {
+        selects[selects.length - 1].show();
+      }
     });
   }
 

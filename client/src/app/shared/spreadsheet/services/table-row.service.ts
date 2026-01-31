@@ -11,40 +11,28 @@ import {
 import { outputToObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CdkDragStart, CdkDragMove, CdkDragEnd, Point } from '@angular/cdk/drag-drop';
 import { debounceTime, distinctUntilChanged, filter, map, pairwise } from 'rxjs';
+
 import { MenuItem } from 'primeng/api';
 
 import { EmitEventController } from '../utils/emit-event-controller';
 import { Dimension } from './table.service';
 import type { CellIndex } from './table-cell.service';
 import { TableBaseService } from './table-base.service';
-import { TableRow } from '../models/table-row';
+import { TableRow, TableRowSize } from '../models/table-row';
 import { TableGroup } from '../models/table-group';
 import { TableCell } from '../models/table-cell';
 import { TableRowAction, TableRowActionType, TableRowAddedEvent } from '../events/table-row';
 import { TableCellAction, TableCellActionType } from '../events/table-cell';
-
-export const RowSize = {
-  S: 32,
-  M: 56,
-  L: 92,
-  XL: 128,
-} as const;
-export type RowSize = keyof typeof RowSize;
+import { TableActionType } from '../events/table';
 
 @Injectable()
 export class TableRowService extends TableBaseService {
   rows = signal<TableRow[]>([]);
-  rowSize = signal<RowSize>('S');
+  rowSize = signal<TableRowSize>('S');
+  rowHeight = computed(() => TableRowSize[this.rowSize()]);
+  canAddRow = computed(() => this.tableService.config().row.addable);
   pendingRow: TableRow;
   selectedRows = new Set<TableRow>();
-
-  rowHeight = computed(() => {
-    return RowSize[this.rowSize()];
-  });
-
-  canAddRow = computed(() => {
-    return this.tableService.config().row.addable;
-  });
 
   private cdRef = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
@@ -193,24 +181,25 @@ export class TableRowService extends TableBaseService {
 
   setRows(rows: TableRow[]) {
     if (this.tableService.isFiltering) {
-      const currRows = this.tableRowService.rows();
-      const latestDataMap = new Map(rows.map((row) => [row.id, row]));
+      const currRows = this.rows();
+      const rowsMap = new Map(rows.map((row) => [row.id, row]));
       const intersection = currRows
-        .filter((row) => latestDataMap.has(row.id))
-        .map((row) => latestDataMap.get(row.id));
-      this.tableRowService.rows.set(intersection);
+        .filter((row) => rowsMap.has(row.id))
+        .map((row) => rowsMap.get(row.id));
+      this.rows.set(intersection);
       return;
     }
 
-    this.tableRowService.rows.set(rows);
+    this.rows.set(rows);
   }
 
-  setRowSize(size: RowSize) {
+  setRowSize(size: TableRowSize) {
     this.rowSize.set(size);
     if (this.tableGroupService.isGrouped()) {
       this.tableGroupService.updateGroupState();
     }
     this.tableService.positionFillHandle();
+    this.host.action.emit({ type: TableActionType.ChangeRowSize, payload: size });
   }
 
   expandRow(row: TableRow) {
@@ -227,7 +216,7 @@ export class TableRowService extends TableBaseService {
     if (!this.canAddRow()) return;
 
     this.tableCellService.flushSelectingCellState();
-    this.tableRowService.flushPendingRow();
+    this.flushPendingRow();
 
     this.tableGroupService.isGrouped()
       ? this.tableGroupService.insertRowInGroup(group)

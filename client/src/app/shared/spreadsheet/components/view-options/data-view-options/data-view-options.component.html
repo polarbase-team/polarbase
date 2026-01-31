@@ -91,7 +91,7 @@
         />
         <p-button
           label="Apply changes"
-          [disabled]="!rules().length"
+          [disabled]="!totalRules()"
           (click)="applyChanges(); popover.hide()"
         />
       </div>
@@ -102,29 +102,29 @@
 @if (isGroupType()) {
   <p-button
     [label]="
-      rules().length === 1
+      totalRules() === 1
         ? `Grouped by 1 rule`
-        : rules().length > 1
-          ? `Grouped by ${rules().length} rules`
+        : totalRules() > 1
+          ? `Grouped by ${totalRules()} rules`
           : 'Group'
     "
     icon="icon icon-list-collapse"
-    [variant]="rules().length ? 'outlined' : 'text'"
-    [severity]="rules().length ? 'help' : 'secondary'"
+    variant="text"
+    [severity]="totalRules() ? 'help' : 'secondary'"
     (click)="popover.show($event)"
   />
 } @else {
   <p-button
     [label]="
-      rules().length === 1
+      totalRules() === 1
         ? `Sorted by 1 rule`
-        : rules().length > 1
-          ? `Sorted by ${rules().length} rules`
+        : totalRules() > 1
+          ? `Sorted by ${totalRules()} rules`
           : 'Sort'
     "
     icon="icon icon-arrow-down-up"
-    [variant]="rules().length ? 'outlined' : 'text'"
-    [severity]="rules().length ? 'warn' : 'secondary'"
+    variant="text"
+    [severity]="totalRules() ? 'warn' : 'secondary'"
     (click)="popover.show($event)"
   />
 }

@@ -1,3 +1,5 @@
+import { FilterGroup } from '@app/shared/field-system/filter/models';
+
 export const TableRowSize = {
   S: 32,
   M: 56,
@@ -8,8 +10,8 @@ export type TableRowSize = keyof typeof TableRowSize;
 
 export interface TableConfig {
   sideSpacing?: number;
-  dataStream?: boolean;
-  allowSelectAllRows?: boolean;
+  streaming?: boolean;
+  filterQuery?: FilterGroup;
   toolbar?:
     | {
         filter?: boolean;
@@ -45,6 +47,7 @@ export interface TableConfig {
     addable?: boolean;
     insertable?: boolean;
     deletable?: boolean;
+    allowSelectAll?: boolean;
   };
   cell?: {
     fillable?: boolean;

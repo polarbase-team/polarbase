@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
@@ -11,11 +11,16 @@ import { DividerModule } from 'primeng/divider';
 
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { getReferenceValue } from '@app/shared/field-system/models/reference/field.object';
+import { FilterGroup } from '@app/shared/field-system/filter/models';
 import { TableColumn } from '@app/shared/spreadsheet/models/table-column';
-import { TableRow } from '@app/shared/spreadsheet/models/table-row';
+import { TableRow, TableRowSize } from '@app/shared/spreadsheet/models/table-row';
 import { TableConfig } from '@app/shared/spreadsheet/models/table';
 import { SpreadsheetComponent } from '@app/shared/spreadsheet/spreadsheet.component';
-import { TableAction, TableActionType } from '@app/shared/spreadsheet/events/table';
+import {
+  TableAction,
+  TableActionType,
+  TableFilterInfo,
+} from '@app/shared/spreadsheet/events/table';
 import {
   TableRowAction,
   TableRowActionType,
@@ -29,12 +34,29 @@ import {
 import {
   TableColumnAction,
   TableColumnActionType,
+  TableColumnMovedEvent,
 } from '@app/shared/spreadsheet/events/table-column';
 import { ReferenceViewDetailEvent } from '@app/shared/spreadsheet/components/field-cell/reference/cell.component';
-import { ColumnDefinition, RecordData, TableDefinition } from '../../../../services/table.service';
+import { ColumnDefinition, RecordData } from '../../../../services/table.service';
 import { TableRealtimeMessage } from '../../../../services/table-realtime.service';
 import type { UpdatedColumnMode, UpdatedRecordMode } from '../../table-detail.component';
 import { ViewBaseComponent } from '../view-base.component';
+
+interface ColumnLayout {
+  calculateType: TableColumn['calculateType'] | null;
+  groupRule: TableColumn['groupRule'] | null;
+  sortRule: TableColumn['sortRule'] | null;
+  hidden: boolean;
+  order: number;
+  width: number;
+}
+
+interface DataViewConfiguration {
+  filterQuery?: FilterGroup | null;
+  rowSize?: TableRowSize;
+  frozenCount?: number;
+  columnLayoutMap?: Record<string, Partial<ColumnLayout>>;
+}
 
 @Component({
   selector: 'data-view',
@@ -49,7 +71,7 @@ import { ViewBaseComponent } from '../view-base.component';
     SpreadsheetComponent,
   ],
 })
-export class DataViewComponent extends ViewBaseComponent {
+export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> implements OnInit {
   spreadsheet = viewChild<SpreadsheetComponent>('spreadsheet');
 
   protected ssConfig = signal<TableConfig>({
@@ -75,21 +97,18 @@ export class DataViewComponent extends ViewBaseComponent {
     },
   ];
 
-  private table: TableDefinition;
   private references = new Map<string, string>();
 
-  constructor() {
-    super();
+  ngOnInit() {
+    const configuration = this.getViewConfiguration();
+    this.ssConfig.set({
+      sideSpacing: 20,
+      filterQuery: configuration.filterQuery,
+      column: { frozenCount: configuration.frozenCount },
+      row: { size: configuration.rowSize, insertable: false, reorderable: false },
+    });
 
-    this.table = this.tblService.activeTable();
-    this.loadTable(this.table);
-  }
-
-  override reset() {
-    super.reset();
-
-    this.ssRows.set(null);
-    this.ssColumns.set(null);
+    this.loadTable();
   }
 
   override onColumnSave(
@@ -160,17 +179,31 @@ export class DataViewComponent extends ViewBaseComponent {
 
     if (!columns.length) return;
 
+    const configuration = this.getViewConfiguration();
     const ssColumns: TableColumn[] = [];
-    for (const c of columns) {
-      ssColumns.push({
-        id: c.name,
-        name: c.presentation?.uiName || c.name,
-        primary: c.primary,
-        editable: !c.primary,
-        field: this.tblService.buildField(c),
-      });
-      if (c.dataType === DataType.Reference) {
-        this.references.set(c.name, c.foreignKey.table);
+    for (const column of columns) {
+      const columnProps = configuration.columnLayoutMap?.[column.name] || {};
+      const ssColumn: TableColumn = {
+        id: column.name,
+        name: column.presentation?.uiName || column.name,
+        primary: column.primary,
+        editable: !column.primary,
+        hidden: columnProps.hidden,
+        width: columnProps.width,
+        calculateType: columnProps.calculateType,
+        groupRule: columnProps.groupRule,
+        sortRule: columnProps.sortRule,
+        field: this.tblService.buildField(column),
+      };
+
+      if (columnProps.order !== undefined) {
+        ssColumns.splice(columnProps.order, 0, ssColumn);
+      } else {
+        ssColumns.push(ssColumn);
+      }
+
+      if (column.dataType === DataType.Reference) {
+        this.references.set(column.name, `${column.name}_${column.foreignKey.table}`);
       }
     }
     setTimeout(() => {
@@ -203,62 +236,85 @@ export class DataViewComponent extends ViewBaseComponent {
 
   protected override onRealtimeMessage(message: TableRealtimeMessage) {
     const { action, record } = message;
-    const recordId = record.new?.id ?? record.key?.id;
     const currentRows = this.ssRows();
 
     switch (action) {
       case 'insert': {
-        if (currentRows.some((row) => row.id === recordId)) return;
-
-        const newRow = { id: recordId, data: record.new };
+        if (currentRows.some((row) => row.id === record.new.id)) return;
+        const newRow = { id: record.new.id, data: record.new };
         this.spreadsheet().setRows([...currentRows, newRow]);
         break;
       }
 
       case 'update': {
         const updatedRows = currentRows.map((row) =>
-          row.id === recordId ? { ...row, data: { ...row.data, ...record.new } } : row,
+          row.id === record.new.id ? { ...row, data: { ...row.data, ...record.new } } : row,
         );
-
         this.spreadsheet().setRows(updatedRows);
         break;
       }
 
       case 'delete': {
-        const filteredRows = currentRows.filter((row) => row.id !== recordId);
+        const filteredRows = currentRows.filter((row) => row.id !== record.key.id);
         if (filteredRows.length === currentRows.length) return;
-
         this.spreadsheet().setRows(filteredRows);
         break;
       }
     }
   }
 
+  protected override saveViewConfiguration(configuration: DataViewConfiguration) {
+    super.saveViewConfiguration({ ...this.getViewConfiguration(), ...configuration });
+  }
+
   protected onTableAction(action: TableAction) {
     switch (action.type) {
-      case TableActionType.ViewReferenceDetail: {
-        const { field, data } = action.payload as ReferenceViewDetailEvent;
-        const tableName = field.referenceTo;
-        const table = this.tblService.tables().find((t) => t.name === tableName);
-        if (!table) return;
-
-        this.tblService
-          .getTableSchema(tableName)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((columns) => {
-            const fields = columns.map((c) => this.tblService.buildField(c));
-            this.tblService
-              .getRecord(tableName, getReferenceValue(data))
-              .pipe(takeUntilDestroyed(this.destroyRef))
-              .subscribe((record) => {
-                this.onUpdateRecord.emit({
-                  record: { table, fields, data: record },
-                  mode: 'edit',
-                });
-              });
-          });
+      case TableActionType.Filter: {
+        const configuration = this.getViewConfiguration();
+        const filterQuery = (action.payload as TableFilterInfo).filterQuery;
+        this.saveViewConfiguration({ ...configuration, filterQuery });
         break;
       }
+      case TableActionType.Group: {
+        const configuration = this.getViewConfiguration();
+        const columns = action.payload as TableColumn[] | null;
+        const columnLayoutMap = configuration.columnLayoutMap || {};
+        if (columns) {
+          for (const column of columns) {
+            const columnProps = columnLayoutMap[column.id] || {};
+            columnLayoutMap[column.id] = { ...columnProps, groupRule: column.groupRule };
+          }
+        } else {
+          for (const column of Object.keys(columnLayoutMap)) {
+            columnLayoutMap[column] = { ...columnLayoutMap[column], groupRule: null };
+          }
+        }
+        this.saveViewConfiguration({ columnLayoutMap });
+        break;
+      }
+      case TableActionType.Sort: {
+        const configuration = this.getViewConfiguration();
+        const columns = action.payload as TableColumn[] | null;
+        const columnLayoutMap = configuration.columnLayoutMap || {};
+        if (columns) {
+          for (const column of columns) {
+            const columnProps = columnLayoutMap[column.id] || {};
+            columnLayoutMap[column.id] = { ...columnProps, sortRule: column.sortRule };
+          }
+        } else {
+          for (const column of Object.keys(columnLayoutMap)) {
+            columnLayoutMap[column] = { ...columnLayoutMap[column], sortRule: null };
+          }
+        }
+        this.saveViewConfiguration({ columnLayoutMap });
+        break;
+      }
+      case TableActionType.FreezeColumns:
+        this.saveViewConfiguration({ frozenCount: action.payload as number });
+        break;
+      case TableActionType.ChangeRowSize:
+        this.saveViewConfiguration({ rowSize: action.payload as TableRowSize });
+        break;
     }
   }
 
@@ -270,7 +326,7 @@ export class DataViewComponent extends ViewBaseComponent {
       case TableColumnActionType.Edit:
         this.editColumn(action.payload as TableColumn);
         break;
-      case TableColumnActionType.Delete:
+      case TableColumnActionType.Delete: {
         const columns = action.payload as TableColumn[];
         const obs = {};
         for (const column of columns) {
@@ -278,6 +334,65 @@ export class DataViewComponent extends ViewBaseComponent {
         }
         forkJoin(obs).subscribe();
         break;
+      }
+      case TableColumnActionType.Hide: {
+        const configuration = this.getViewConfiguration();
+        const columns = action.payload as TableColumn[];
+        const columnLayoutMap = configuration.columnLayoutMap || {};
+        for (const column of columns) {
+          const columnProps = columnLayoutMap[column.id] || {};
+          columnLayoutMap[column.id] = { ...columnProps, hidden: true };
+        }
+        this.saveViewConfiguration({ columnLayoutMap });
+        break;
+      }
+      case TableColumnActionType.Unhide: {
+        const configuration = this.getViewConfiguration();
+        const columns = action.payload as TableColumn[];
+        const columnLayoutMap = configuration.columnLayoutMap || {};
+        for (const column of columns) {
+          const columnProps = columnLayoutMap[column.id] || {};
+          columnLayoutMap[column.id] = { ...columnProps, hidden: false };
+        }
+        this.saveViewConfiguration({ columnLayoutMap });
+        break;
+      }
+      case TableColumnActionType.Calculate: {
+        const configuration = this.getViewConfiguration();
+        const column = action.payload as TableColumn;
+        const columnLayoutMap = configuration.columnLayoutMap || {};
+        const columnProps = columnLayoutMap[column.id] || {};
+        columnLayoutMap[column.id] = { ...columnProps, calculateType: column.calculateType };
+        this.saveViewConfiguration({ columnLayoutMap });
+        break;
+      }
+      case TableColumnActionType.Uncalculate: {
+        const configuration = this.getViewConfiguration();
+        const column = action.payload as TableColumn;
+        const columnLayoutMap = configuration.columnLayoutMap || {};
+        const columnProps = columnLayoutMap[column.id] || {};
+        columnLayoutMap[column.id] = { ...columnProps, calculateType: null };
+        this.saveViewConfiguration({ columnLayoutMap });
+        break;
+      }
+      case TableColumnActionType.Resize: {
+        const configuration = this.getViewConfiguration();
+        const column = action.payload as TableColumn;
+        const columnLayoutMap = configuration.columnLayoutMap || {};
+        const columnProps = columnLayoutMap[column.id] || {};
+        columnLayoutMap[column.id] = { ...columnProps, width: column.width };
+        this.saveViewConfiguration({ columnLayoutMap });
+        break;
+      }
+      case TableColumnActionType.Move: {
+        const configuration = this.getViewConfiguration();
+        const { column, position } = action.payload as TableColumnMovedEvent;
+        const columnLayoutMap = configuration.columnLayoutMap || {};
+        const columnProps = columnLayoutMap[column.id] || {};
+        columnLayoutMap[column.id] = { ...columnProps, order: position };
+        this.saveViewConfiguration({ columnLayoutMap });
+        break;
+      }
     }
   }
 
@@ -312,7 +427,7 @@ export class DataViewComponent extends ViewBaseComponent {
       case TableRowActionType.Expand:
         this.onUpdateRecord.emit({
           record: {
-            table: this.table,
+            table: this.table(),
             fields: this.fields(),
             data: action.payload['data'],
           },
@@ -337,6 +452,29 @@ export class DataViewComponent extends ViewBaseComponent {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;
+      case TableCellActionType.ViewReferenceDetail: {
+        const { field, data } = action.payload as ReferenceViewDetailEvent;
+        const tableName = field.referenceTo;
+        const table = this.tblService.tables().find((t) => t.name === tableName);
+        if (!table) return;
+
+        this.tblService
+          .getTableSchema(tableName)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((columns) => {
+            const fields = columns.map((c) => this.tblService.buildField(c));
+            this.tblService
+              .getRecord(tableName, getReferenceValue(data))
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe((record) => {
+                this.onUpdateRecord.emit({
+                  record: { table, fields, data: record },
+                  mode: 'edit',
+                });
+              });
+          });
+        break;
+      }
     }
   }
 
@@ -357,7 +495,7 @@ export class DataViewComponent extends ViewBaseComponent {
   protected addNewRecord() {
     this.onUpdateRecord.emit({
       record: {
-        table: this.table,
+        table: this.table(),
         fields: this.fields(),
         data: { id: undefined },
       },

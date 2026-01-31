@@ -1,6 +1,6 @@
 <p-toast appendTo="body" />
 
-<p-confirmdialog styleClass="max-w-100" appendTo="body">
+<p-confirmdialog appendTo="body" styleClass="max-w-md">
   <ng-template #message let-message>
     <div class="flex flex-col gap-4">
       <div>{{ message.message }}</div>
@@ -45,6 +45,8 @@
       <div class="flex flex-wrap gap-2 flex-1 justify-end min-w-[400px]">
         @if ($any(tableService.config().toolbar).filter) {
           <data-filter-options
+            #dataFilterOptions
+            [(query)]="tableService.filterQuery"
             [columns]="sourceColumns()"
             [rows]="sourceRows()"
             (onFilter)="tableService.onApplyFilter($event)"
@@ -81,48 +83,18 @@
         }
         @if ($any(tableService.config().toolbar).rowSize) {
           <row-size-options
-            [rowSize]="$any(tableRowService.rowSize)"
+            [rowSize]="tableRowService.rowSize()"
             (rowSizeChange)="tableRowService.setRowSize($event)"
           />
         }
         @if ($any(tableService.config().toolbar).search) {
-          <p-inputgroup class="w-3xs max-w-3xs">
-            <p-iconfield>
-              <p-inputicon class="icon icon-search !z-2" />
-              <input
-                type="text"
-                pInputText
-                placeholder="Search"
-                (input)="tableService.onSearch($any($event))"
-                (keydown.enter)="tableService.searchNext()"
-              />
-            </p-iconfield>
-            @if (tableService.searchResults?.length) {
-              <p-inputgroup-addon>
-                <div class="text-center">
-                  <span class="text-sm font-medium">
-                    {{ (tableService.layout.cell.search.currentMatchIndex || 0) + 1 }}/{{
-                      tableService.searchResults.length
-                    }}
-                  </span>
-                </div>
-              </p-inputgroup-addon>
-              <p-inputgroup-addon>
-                <div class="flex gap-2 justify-content-space-around px-2">
-                  <i
-                    class="icon icon-chevron-up cursor-pointer"
-                    style="font-size: 16px"
-                    (click)="tableService.searchPrevious()"
-                  ></i>
-                  <i
-                    class="icon icon-chevron-down cursor-pointer"
-                    style="font-size: 16px"
-                    (click)="tableService.searchNext()"
-                  ></i>
-                </div>
-              </p-inputgroup-addon>
-            }
-          </p-inputgroup>
+          <search-box
+            [currentIndex]="tableService.layout.cell.search?.currentMatchIndex"
+            [totalResults]="tableService.searchResults?.length"
+            (onSearch)="tableService.search($event)"
+            (onSearchNext)="tableService.searchNext()"
+            (onSearchPrevious)="tableService.searchPrevious()"
+          />
         }
       </div>
     </div>
@@ -280,7 +252,7 @@
       >
         <div class="header-cell cell index-cell">
           <div class="index-block">
-            @if (tableService.config().allowSelectAllRows) {
+            @if (tableService.config().row.allowSelectAll) {
               @let rowLength = tableRowService.rows().length;
               @let selectedRowLength = tableRowService.selectedRows.size;
               <p-checkbox
@@ -687,7 +659,7 @@
                         tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
                         tableService.layout.cell.selection.anchor.columnIndex === columnIndex
                       "
-                      (viewDetail)="tableService.viewReferenceDetail($event)"
+                      (viewDetail)="tableCellService.viewReferenceDetail($event)"
                     ></ng-template>
                   </div>
                 }
@@ -915,7 +887,7 @@
                         tableService.layout.cell.selection.anchor.rowIndex === rowIndex &&
                         tableService.layout.cell.selection.anchor.columnIndex === columnIndex
                       "
-                      (viewDetail)="tableService.viewReferenceDetail($event)"
+                      (viewDetail)="tableCellService.viewReferenceDetail($event)"
                     ></ng-template>
                   </div>
                 }
@@ -1164,7 +1136,12 @@
           @if (tableService.isStreaming) {
             <span class="white-space-nowrap overflow-hidden truncate">Calculating...</span>
           } @else {
-            {{ calcResults | parseCalculatedResult: column.calculateType }}
+            {{
+              calcResults
+                | parseCalculatedResult
+                  : column.calculateType
+                  : column.field.params.presentation?.format
+            }}
           }
         </b>
       } @else {
@@ -1180,7 +1157,12 @@
         @if (tableService.isStreaming) {
           <span class="white-space-nowrap overflow-hidden truncate">Calculating...</span>
         } @else {
-          {{ calcResults | parseCalculatedResult: column.calculateType }}
+          {{
+            calcResults
+              | parseCalculatedResult
+                : column.calculateType
+                : column.field.params.presentation?.format
+          }}
         }
       </b>
     </div>

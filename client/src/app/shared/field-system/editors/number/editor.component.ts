@@ -6,9 +6,8 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { FluidModule } from 'primeng/fluid';
 import { MessageModule } from 'primeng/message';
 
-import { NumberFormat } from '../../pipes/number-format.pipe';
 import { NumberField } from '../../models/number/field.object';
-import { NumberData } from '../../models/number/field.interface';
+import { NumberData, NumberFormat } from '../../models/number/field.interface';
 import { FieldEditorComponent } from '../editor.component';
 
 @Component({

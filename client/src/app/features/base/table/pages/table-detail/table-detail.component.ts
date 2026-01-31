@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +22,7 @@ import {
   TableDefinition,
   TableService,
 } from '../../services/table.service';
+import { ViewLayoutService } from '../../services/view-layout.service';
 import { DataViewComponent } from './views/data-view/data-view.component';
 import { CalendarViewComponent } from './views/calendar-view/calendar-view.component';
 import { MapViewComponent } from './views/map-view/map-view.component';
@@ -55,31 +63,34 @@ export interface UpdateRecordEvent {
     CalendarViewComponent,
     MapViewComponent,
   ],
+  providers: [ViewLayoutService],
 })
-export class TableDetailComponent {
-  view = viewChild<DataViewComponent | CalendarViewComponent>('view');
+export class TableDetailComponent implements OnInit {
+  table = input<TableDefinition>();
 
-  protected displayMode = signal<DisplayMode>('data-view');
+  view = viewChild<DataViewComponent | CalendarViewComponent | MapViewComponent>('view');
+
+  protected displayMode = signal<DisplayMode>(null);
   protected displayModeMenuItems: MenuItem[] = [
     {
       label: 'Data View',
       icon: 'icon icon-sheet',
       command: () => {
-        this.displayMode.set('data-view');
+        this.selectDisplayMode('data-view');
       },
     },
     {
       label: 'Calendar View',
       icon: 'icon icon-calendar-days',
       command: () => {
-        this.displayMode.set('calendar-view');
+        this.selectDisplayMode('calendar-view');
       },
     },
     {
       label: 'Map View',
       icon: 'icon icon-map',
       command: () => {
-        this.displayMode.set('map-view');
+        this.selectDisplayMode('map-view');
       },
     },
   ];
@@ -96,7 +107,15 @@ export class TableDetailComponent {
   protected updatedRecordMode: UpdatedRecordMode = 'add';
   protected visibleRecordEditor: boolean;
 
-  constructor(protected tblService: TableService) {}
+  constructor(
+    protected tblService: TableService,
+    protected viewLayoutService: ViewLayoutService,
+  ) {}
+
+  ngOnInit() {
+    const viewLayout = this.viewLayoutService.load(this.table().name);
+    this.displayMode.set(viewLayout?.displayMode || 'data-view');
+  }
 
   protected onUpdateColumn(event: UpdateColumnEvent) {
     this.updatedColumn = event.column;
@@ -116,5 +135,10 @@ export class TableDetailComponent {
 
   protected onRecordSave(savedRecord: RecordData) {
     this.view().onRecordSave(savedRecord, this.updatedRecordMode, this.updatedRecord.data);
+  }
+
+  private selectDisplayMode(mode: DisplayMode) {
+    this.displayMode.set(mode);
+    this.viewLayoutService.save(this.table().name, { displayMode: mode }, true);
   }
 }

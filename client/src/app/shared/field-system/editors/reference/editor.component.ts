@@ -44,12 +44,15 @@ export class ReferenceFieldEditorComponent extends FieldEditorComponent<
     super();
 
     effect(() => {
-      const { value, displayLabel } = parseReferenceData(
-        this.data(),
-        this.field().params.presentation?.format?.displayColumn,
-      );
-      this.value = value;
-      this.displayLabel = displayLabel;
+      const data = this.data();
+      if (data !== this.value) {
+        const { value, displayLabel } = parseReferenceData(
+          data,
+          this.field().params.presentation?.format?.displayColumn,
+        );
+        this.value = value;
+        this.displayLabel = displayLabel;
+      }
     });
   }
 
@@ -60,8 +63,8 @@ export class ReferenceFieldEditorComponent extends FieldEditorComponent<
 
   protected onPick(e: ReferencePickedEvent) {
     const { value, displayLabel, data } = e || {};
-    this.data.set(data);
     this.value = value;
     this.displayLabel = displayLabel;
+    this.data.set(value);
   }
 }
