@@ -12,6 +12,8 @@ import { TableDetailComponent } from './table/pages/table-detail/table-detail.co
 import { TableService } from './table/services/table.service';
 import { TableRealtimeService } from './table/services/table-realtime.service';
 
+const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
+
 @Component({
   selector: 'base',
   templateUrl: './base.component.html',
@@ -36,6 +38,10 @@ export class BaseComponent {
     private router: Router,
     private activatedRoute: ActivatedRoute,
   ) {
+    this.sidebarVisible.set(
+      Boolean(JSON.parse(localStorage.getItem(SIDEBAR_VISIBLE_KEY) || 'true')),
+    );
+
     effect(() => {
       const activeTable = this.tblService.activeTable();
       this.router.navigate([], {
@@ -50,6 +56,7 @@ export class BaseComponent {
 
   protected toggleSidebar() {
     this.sidebarVisible.update((v) => !v);
+    localStorage.setItem(SIDEBAR_VISIBLE_KEY, this.sidebarVisible().toString());
   }
 
   protected onTabChange(tableName: string) {
