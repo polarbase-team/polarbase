@@ -33,5 +33,11 @@ export class SearchBoxComponent {
   onSearchNext = output<void>();
   onSearchPrevious = output<void>();
 
+  protected searchQuery = '';
   protected onInput = _.throttle((value: string) => this.onSearch.emit(value), 500);
+
+  protected onHide() {
+    this.searchQuery = '';
+    this.onSearch.emit('');
+  }
 }
