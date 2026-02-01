@@ -330,7 +330,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
         const columns = action.payload as TableColumn[];
         const obs = {};
         for (const column of columns) {
-          obs[column.id] = this.tblService.deleteColumn(this.table.name, column.id as string);
+          obs[column.id] = this.tblService.deleteColumn(this.table().name, column.id as string);
         }
         forkJoin(obs).subscribe();
         break;
@@ -406,7 +406,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
           records.push(row.data || {});
         }
         this.tblService
-          .createRecords(this.table.name, records)
+          .createRecords(this.table().name, records)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe(({ data }) => {
             for (let i = 0; i < rows.length; i++) {
@@ -420,7 +420,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
       case TableRowActionType.Delete:
         const recordIds = (action.payload as TableRow[]).map((row) => row.id);
         this.tblService
-          .deleteRecords(this.table.name, recordIds)
+          .deleteRecords(this.table().name, recordIds)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;
@@ -448,7 +448,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
           recordUpdates.push({ id: row.id, data: newData });
         }
         this.tblService
-          .updateRecords(this.table.name, recordUpdates)
+          .updateRecords(this.table().name, recordUpdates)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
         break;

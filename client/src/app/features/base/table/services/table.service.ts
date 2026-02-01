@@ -92,6 +92,8 @@ const DATA_TYPE_MAPPING = {
   'auto-date': DataType.AutoDate,
 };
 
+const TABLE_SELECTED_KEY = 'table_selected';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -107,9 +109,9 @@ export class TableService {
     private http: HttpClient,
     private viewLayoutService: ViewLayoutService,
   ) {
-    this.selectedTables.set(JSON.parse(localStorage.getItem('selectedTables') || '[]'));
+    this.selectedTables.set(JSON.parse(localStorage.getItem(TABLE_SELECTED_KEY) || '[]'));
     effect(() => {
-      localStorage.setItem('selectedTables', JSON.stringify(this.selectedTables()));
+      localStorage.setItem(TABLE_SELECTED_KEY, JSON.stringify(this.selectedTables()));
     });
   }
 

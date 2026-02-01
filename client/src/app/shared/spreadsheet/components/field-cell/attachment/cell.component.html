@@ -11,13 +11,15 @@
         (onShow)="onPopoverOpen()"
         (onHide)="onPopoverClose()"
       >
-        @if (data === undefined || data === null || data.length < field.maxFiles) {
-          <file-uploader (onUpload)="onUpload($event)" />
-        } @else {
-          <p class="text-sm text-surface-500">
-            You have reached the maximum number of files ({{ field.maxFiles }}).
-          </p>
-        }
+        <ng-template #content>
+          @if (data === undefined || data === null || data.length < field.maxFiles) {
+            <file-uploader (onUpload)="onUpload($event)" />
+          } @else {
+            <p class="text-sm text-surface-500">
+              You have reached the maximum number of files ({{ field.maxFiles }}).
+            </p>
+          }
+        </ng-template>
       </p-popover>
     }
     <div
