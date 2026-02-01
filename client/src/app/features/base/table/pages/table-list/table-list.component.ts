@@ -23,7 +23,7 @@ import { ToastModule } from 'primeng/toast';
 import { TableService, TableDefinition, TableFormData } from '../../services/table.service';
 import { TableEditorDrawerComponent } from '../../components/table-editor/table-editor-drawer.component';
 
-const TABLE_ORDER_KEY = 'table-list-order';
+const TABLE_ORDER_KEY = 'table_list_order';
 
 @Component({
   selector: 'table-list',
