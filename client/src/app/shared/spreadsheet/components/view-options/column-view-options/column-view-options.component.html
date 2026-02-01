@@ -1,47 +1,49 @@
 <p-popover #popover>
-  <div class="w-3xs">
-    <!-- Body -->
-    <div class="overflow-y-auto max-h-100">
-      <div cdkDropList (cdkDropListDropped)="onDropped($event)" class="flex flex-col gap-2">
-        <div
-          *ngFor="let column of columns()"
-          cdkDrag
-          cdkDragLockAxis="y"
-          class="flex items-center justify-between gap-6"
-        >
-          <div class="flex min-w-0 items-center gap-2">
-            <!-- Drag handle -->
-            <div cdkDragHandle class="mt-1">
-              <i class="icon icon-grip-vertical"></i>
-            </div>
+  <ng-template #content>
+    <div class="w-3xs">
+      <!-- Body -->
+      <div class="overflow-y-auto max-h-100">
+        <div cdkDropList (cdkDropListDropped)="onDropped($event)" class="flex flex-col gap-2">
+          <div
+            *ngFor="let column of columns()"
+            cdkDrag
+            cdkDragLockAxis="y"
+            class="flex items-center justify-between gap-6"
+          >
+            <div class="flex min-w-0 items-center gap-2">
+              <!-- Drag handle -->
+              <div cdkDragHandle class="mt-1">
+                <i class="icon icon-grip-vertical"></i>
+              </div>
 
-            <!-- Field name -->
-            <div class="flex items-center gap-1 overflow-hidden">
-              @if (column.primary) {
-                <i class="icon icon-key rotate-45" style="color: var(--p-primary-color)"></i>
-              } @else {
-                <i [class]="`${column.field.icon}`"></i>
-              }
-              <span class="font-medium white-space-nowrap truncate" [attr.title]="column.name">
-                {{ column.name }}
-                @if (column.field.required) {
-                  <i class="icon icon-asterisk text-red-500"></i>
+              <!-- Field name -->
+              <div class="flex items-center gap-1 overflow-hidden">
+                @if (column.primary) {
+                  <i class="icon icon-key rotate-45" style="color: var(--p-primary-color)"></i>
+                } @else {
+                  <i [class]="`${column.field.icon}`"></i>
                 }
-              </span>
+                <span class="font-medium white-space-nowrap truncate" [attr.title]="column.name">
+                  {{ column.name }}
+                  @if (column.field.required) {
+                    <i class="icon icon-asterisk text-red-500"></i>
+                  }
+                </span>
+              </div>
             </div>
-          </div>
 
-          <!-- Toggle visible -->
-          <p-button
-            variant="text"
-            severity="secondary"
-            [icon]="`icon ${column.hidden ? 'icon-eye-closed' : 'icon-eye'}`"
-            (click)="toggleHidden(column)"
-          />
+            <!-- Toggle visible -->
+            <p-button
+              variant="text"
+              severity="secondary"
+              [icon]="`icon ${column.hidden ? 'icon-eye-closed' : 'icon-eye'}`"
+              (click)="toggleHidden(column)"
+            />
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </ng-template>
 </p-popover>
 
 <p-button

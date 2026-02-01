@@ -1,6 +1,6 @@
 {
   "name": "polarbase",
-  "version": "0.6.3-beta",
+  "version": "0.6.4-beta",
   "author": "Qui Nguyen",
   "devDependencies": {
     "concurrently": "^8.0.0"
