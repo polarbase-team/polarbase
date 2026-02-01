@@ -1,6 +1,6 @@
 {
   "name": "polarbase-server",
-  "version": "0.6.3-beta",
+  "version": "0.6.4-beta",
   "keywords": [
     "postgresql",
     "backend-as-a-service",
