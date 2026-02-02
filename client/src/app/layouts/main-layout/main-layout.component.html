@@ -1,92 +1,50 @@
 <p-toast position="top-right" [life]="5000"></p-toast>
 
 <div class="app">
-  <div
-    class="app-topbar flex items-center justify-between gap-2 pl-2 pr-4 py-2 border-b-1 border-surface-200"
-  >
-    <div class="flex gap-3 items-center">
-      <div class="px-0.5">
-        <p-image
-          src="assets/images/logo.png"
-          width="32"
-          class="cursor-pointer"
-          (click)="reload()"
-        />
-      </div>
-      <div class="text-surface-300">/</div>
-      <div class="font-medium text-sm">{{ title() }}</div>
-      @if (isBaseRoute()) {
-        <div class="text-surface-300">/</div>
-        <div class="flex items-center gap-1 text-sm text-surface-500">
-          <i class="icon icon-database"></i>
-          public
-        </div>
-      }
-    </div>
-    @if (isBaseRoute()) {
-      <div class="flex gap-2 items-center">
-        <p-button
-          icon="icon icon-book-open-text"
-          severity="secondary"
-          pTooltip="API Docs"
-          tooltipPosition="bottom"
-          (click)="openAPIDocs()"
-        />
-        <p-button
-          icon="icon icon-sparkles"
-          severity="info"
-          pTooltip="AI Chatbot"
-          tooltipPosition="bottom"
-          [outlined]="true"
-          (click)="toggleChatbot()"
-        />
-      </div>
-    }
-  </div>
-  <div class="app-main w-full h-full flex" [class.chatbot--visible]="chatbotVisible()">
+  <div class="app-main w-full h-full flex">
     <div class="flex flex-col justify-between border-r-1 border-surface-200">
-      <ul class="p-2 flex flex-col gap-2">
-        <li
-          class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
-          pTooltip="Base"
-          routerLink="/base"
-          routerLinkActive="bg-gray-100 text-surface-700"
-        >
-          <i class="icon icon-layers" style="font-size: 16px"></i>
-        </li>
-        <li
-          class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
-          pTooltip="API Keys"
-          routerLink="/api-keys"
-          routerLinkActive="bg-gray-100 text-surface-700"
-        >
-          <i class="icon icon-key" style="font-size: 16px"></i>
-        </li>
-      </ul>
-      <ul class="p-2 flex flex-col gap-2 mb-4">
-        <li
-          class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
-          pTooltip="Logout"
-          (click)="logout()"
-        >
-          <i class="icon icon-log-out" style="font-size: 16px"></i>
-        </li>
-      </ul>
+      <div>
+        <div class="flex justify-center p-2">
+          <p-image
+            src="assets/images/logo.png"
+            width="32"
+            class="cursor-pointer"
+            (click)="reload()"
+          />
+        </div>
+        <ul class="p-2 flex flex-col gap-2">
+          <li
+            class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
+            pTooltip="Base"
+            routerLink="/base"
+            routerLinkActive="bg-gray-100 text-surface-700"
+          >
+            <i class="icon icon-layers" style="font-size: 16px"></i>
+          </li>
+          <li
+            class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
+            pTooltip="API Keys"
+            routerLink="/api-keys"
+            routerLinkActive="bg-gray-100 text-surface-700"
+          >
+            <i class="icon icon-key" style="font-size: 16px"></i>
+          </li>
+        </ul>
+      </div>
+      <div class="mb-4">
+        <ul class="p-2 flex flex-col gap-2">
+          <li
+            class="flex flex-items gap-2 items-center p-3 rounded-lg hover:bg-gray-100 text-surface-500 cursor-pointer"
+            pTooltip="Logout"
+            (click)="logout()"
+          >
+            <i class="icon icon-log-out" style="font-size: 16px"></i>
+          </li>
+        </ul>
+      </div>
     </div>
-    <div class="w-full h-full">
+    <div class="w-full min-w-0 h-full">
       <router-outlet />
     </div>
-    @if (isBaseRoute()) {
-      <div
-        class="app-chatbot border-l-1 border-surface-200"
-        [class.fullscreen]="chatbotFullscreen()"
-      >
-        <chatbot
-          [visible]="chatbotVisible()"
-          (fullscreen)="chatbotFullscreen.set($event)"
-          (onClose)="chatbotVisible.set(false)"
-        />
-      </div>
-    }
   </div>
 </div>

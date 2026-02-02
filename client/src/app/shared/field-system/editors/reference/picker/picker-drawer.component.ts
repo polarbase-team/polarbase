@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { DrawerComponent, usingModules } from '@app/core/components/drawer.component';
+import { DrawerComponent, usingModules } from '@app/core/components/drawer/drawer.component';
 import { TableRowAction, TableRowActionType } from '@app/shared/spreadsheet/events/table-row';
 import { TableConfig } from '@app/shared/spreadsheet/models/table';
 import { TableColumn } from '@app/shared/spreadsheet/models/table-column';

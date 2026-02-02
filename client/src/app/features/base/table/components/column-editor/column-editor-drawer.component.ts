@@ -34,7 +34,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 import { environment } from '@environments/environment';
 
-import { DrawerComponent } from '@app/core/components/drawer.component';
+import { DrawerComponent } from '@app/core/components/drawer/drawer.component';
 import { sanitizeEmptyValues } from '@app/core/utils';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';

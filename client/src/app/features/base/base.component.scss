@@ -1,4 +1,5 @@
 $sidebar-width: 20rem;
+$chatbot-width: 30rem;
 $transition-duration: 0.2s;
 
 :host {
@@ -10,14 +11,17 @@ $transition-duration: 0.2s;
 
   .base {
     position: relative;
-    padding-left: $sidebar-width;
-    transition: padding-left $transition-duration;
+    padding-left: 0;
+    padding-right: 0;
+    transition:
+      padding-left $transition-duration,
+      padding-right $transition-duration;
 
-    &.sidebar--invisible {
-      padding-left: 0;
+    &.sidebar--visible {
+      padding-left: $sidebar-width;
 
       .base-sidebar {
-        left: -$sidebar-width;
+        left: 0;
       }
     }
 
@@ -25,9 +29,37 @@ $transition-duration: 0.2s;
       position: absolute;
       top: 0;
       bottom: 0;
-      left: 0;
+      left: -$sidebar-width;
       width: $sidebar-width;
       transition: left $transition-duration;
+    }
+
+    &.chatbot--visible {
+      padding-right: $chatbot-width;
+
+      .base-chatbot {
+        right: 0;
+      }
+    }
+
+    .base-chatbot {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: -$chatbot-width;
+      width: $chatbot-width;
+      transition: right $transition-duration;
+
+      &.fullscreen {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+      }
     }
   }
 }

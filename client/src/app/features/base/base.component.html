@@ -1,4 +1,36 @@
-<div class="base w-full h-full" [class.sidebar--invisible]="!sidebarVisible()">
+<topbar>
+  <div class="flex gap-2 items-center text-sm">
+    <div class="text-surface-500">Bases</div>
+    <div class="text-surface-300">/</div>
+    <div class="flex items-center gap-1">
+      <i class="icon icon-box"></i>
+      public
+    </div>
+  </div>
+  <div class="flex gap-2 items-center">
+    <p-button
+      icon="icon icon-book-open-text"
+      severity="secondary"
+      pTooltip="API Docs"
+      tooltipPosition="bottom"
+      (click)="openAPIDocs()"
+    />
+    <p-button
+      icon="icon icon-sparkles"
+      severity="info"
+      pTooltip="AI Chatbot"
+      tooltipPosition="bottom"
+      [outlined]="true"
+      (click)="toggleChatbot()"
+    />
+  </div>
+</topbar>
+
+<div
+  class="base w-full h-full"
+  [class.sidebar--visible]="sidebarVisible()"
+  [class.chatbot--visible]="chatbotVisible()"
+>
   <div class="base-sidebar border-r-1 border-surface-200">
     <table-list />
   </div>
@@ -60,5 +92,12 @@
         </p>
       </div>
     }
+  </div>
+  <div class="base-chatbot border-l-1 border-surface-200" [class.fullscreen]="chatbotFullscreen()">
+    <chatbot
+      [visible]="chatbotVisible()"
+      (fullscreen)="chatbotFullscreen.set($event)"
+      (onClose)="chatbotVisible.set(false)"
+    />
   </div>
 </div>

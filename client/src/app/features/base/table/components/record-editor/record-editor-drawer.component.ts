@@ -24,7 +24,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { FluidModule } from 'primeng/fluid';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
-import { DrawerComponent } from '@app/core/components/drawer.component';
+import { DrawerComponent } from '@app/core/components/drawer/drawer.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { Field } from '@app/shared/field-system/models/field.object';
 import { DateFormatPipe } from '@app/shared/field-system/pipes/date-format.pipe';

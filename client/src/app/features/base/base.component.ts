@@ -7,10 +7,14 @@ import { ButtonModule } from 'primeng/button';
 import { ImageModule } from 'primeng/image';
 import { TooltipModule } from 'primeng/tooltip';
 
+import { environment } from '@environments/environment';
+
+import { TopbarComponent } from '@app/core/components/topbar/topbar.component';
 import { TableListComponent } from './table/pages/table-list/table-list.component';
 import { TableDetailComponent } from './table/pages/table-detail/table-detail.component';
 import { TableService } from './table/services/table.service';
 import { TableRealtimeService } from './table/services/table-realtime.service';
+import { ChatBotComponent } from './chatbot/chatbot.component';
 
 const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
 
@@ -25,12 +29,16 @@ const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
     ButtonModule,
     ImageModule,
     TooltipModule,
+    TopbarComponent,
     TableListComponent,
     TableDetailComponent,
+    ChatBotComponent,
   ],
 })
 export class BaseComponent {
-  protected sidebarVisible = signal<boolean>(true);
+  protected sidebarVisible = signal(true);
+  protected chatbotVisible = signal(false);
+  protected chatbotFullscreen = signal(false);
 
   constructor(
     protected tblService: TableService,
@@ -54,9 +62,17 @@ export class BaseComponent {
     this.tblRealtimeService.enableSSE();
   }
 
+  protected openAPIDocs() {
+    window.open(`${environment.apiUrl}/rest/openapi`, '_blank');
+  }
+
   protected toggleSidebar() {
     this.sidebarVisible.update((v) => !v);
     localStorage.setItem(SIDEBAR_VISIBLE_KEY, this.sidebarVisible().toString());
+  }
+
+  protected toggleChatbot() {
+    this.chatbotVisible.update((v) => !v);
   }
 
   protected onTabChange(tableName: string) {

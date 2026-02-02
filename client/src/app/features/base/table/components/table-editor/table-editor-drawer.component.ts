@@ -23,7 +23,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
-import { DrawerComponent } from '@app/core/components/drawer.component';
+import { DrawerComponent } from '@app/core/components/drawer/drawer.component';
 import { sanitizeEmptyValues } from '@app/core/utils';
 import { TableFormData, TableDefinition, TableService } from '../../services/table.service';
 
