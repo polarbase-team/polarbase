@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 import { map } from 'rxjs';
 
@@ -17,6 +17,8 @@ export interface StreamEvent {
 
 @Injectable()
 export class AgentService {
+  openAIChatbot = signal(false);
+
   private apiUrl = `${environment.apiUrl}/agent`;
   private lastReadIndex = 0;
 

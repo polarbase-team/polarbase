@@ -3,7 +3,7 @@
   [class.sidebar--visible]="sidebarVisible()"
   [class.chatbot--visible]="chatbotVisible()"
 >
-  <div class="base-studio-sidebar border-r-1 border-surface-200">
+  <div class="base-studio-sidebar border-r border-surface-200">
     <table-list />
   </div>
   <div class="base-studio-table-detail w-full h-full">
@@ -66,13 +66,13 @@
     }
   </div>
   <div
-    class="base-studio-chatbot border-l-1 border-surface-200"
+    class="base-studio-chatbot border-l border-surface-200"
     [class.fullscreen]="chatbotFullscreen()"
   >
     <chatbot
       [visible]="chatbotVisible()"
       (fullscreen)="chatbotFullscreen.set($event)"
-      (onClose)="chatbotVisible.set(false)"
+      (onClose)="onCloseChatbot()"
     />
   </div>
 </div>

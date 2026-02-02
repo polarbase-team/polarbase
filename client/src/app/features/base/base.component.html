@@ -1,5 +1,5 @@
 <topbar>
-  <div class="flex gap-2 items-center text-sm">
+  <div left class="flex gap-2 items-center text-sm">
     <div class="text-surface-500">Bases</div>
     <div class="text-surface-300">/</div>
     <div class="flex items-center gap-1">
@@ -7,23 +7,35 @@
       public
     </div>
   </div>
-  <div class="flex gap-2 items-center">
-    <p-button
-      icon="icon icon-book-open-text"
-      severity="secondary"
-      pTooltip="API Docs"
-      tooltipPosition="bottom"
-      (click)="openAPIDocs()"
-    />
-    <p-button
-      icon="icon icon-sparkles"
-      severity="info"
-      pTooltip="AI Chatbot"
-      tooltipPosition="bottom"
-      [outlined]="true"
-      (click)="baseStudio.toggleChatbot()"
-    />
+  <div center>
+    <p-selectbutton [options]="options" [ngModel]="view()" [unselectable]="true">
+      <ng-template #item let-item>
+        <routerLink [routerLink]="item.routerLink">
+          <i [class]="item.icon"></i>
+          {{ item.label }}
+        </routerLink>
+      </ng-template>
+    </p-selectbutton>
   </div>
+  @if (view() === 'studio') {
+    <div right class="flex gap-2 items-center">
+      <p-button
+        icon="icon icon-book-open-text"
+        severity="secondary"
+        pTooltip="API Docs"
+        tooltipPosition="bottom"
+        (click)="openAPIDocs()"
+      />
+      <p-button
+        icon="icon icon-sparkles"
+        severity="info"
+        pTooltip="AI Chatbot"
+        tooltipPosition="bottom"
+        [outlined]="true"
+        (click)="toggleChatbot()"
+      />
+    </div>
+  }
 </topbar>
 
-<base-studio #baseStudio />
+<router-outlet></router-outlet>

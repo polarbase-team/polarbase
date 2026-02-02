@@ -44,6 +44,7 @@ const REALTIME_EVENT_NAME = 'db_change';
 export class TableRealtimeService {
   private wsUrl = `${environment.wsUrl}/realtime`;
   private sseUrl = `${environment.apiUrl}/realtime`;
+  private sseSource$: Observable<RealtimePayload>;
   private messages$ = new Subject<TableRealtimeMessage>();
 
   constructor(
@@ -85,10 +86,9 @@ export class TableRealtimeService {
    * Enable Server-Sent Events for realtime updates
    */
   enableSSE() {
-    const apiKey = getApiKey();
-    const sseUrl = `${this.sseUrl}?apiKey=${apiKey}`;
-
-    const sseStream$ = new Observable<RealtimePayload>((observer) => {
+    this.sseSource$ ||= new Observable<RealtimePayload>((observer) => {
+      const apiKey = getApiKey();
+      const sseUrl = `${this.sseUrl}?apiKey=${apiKey}`;
       const eventSource = new EventSource(sseUrl);
 
       eventSource.addEventListener(REALTIME_EVENT_NAME, (event) => {
@@ -106,7 +106,7 @@ export class TableRealtimeService {
       return () => eventSource.close();
     }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
-    sseStream$
+    this.sseSource$
       .pipe(
         filter((data) => data.relation.name === this.tableService.activeTable()?.name),
         takeUntilDestroyed(this.destroyRef),

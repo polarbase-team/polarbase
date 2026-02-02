@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 
@@ -12,6 +12,7 @@ import { TableDetailComponent } from './table/pages/table-detail/table-detail.co
 import { TableService } from './table/services/table.service';
 import { TableRealtimeService } from './table/services/table-realtime.service';
 import { ChatBotComponent } from './chatbot/chatbot.component';
+import { AgentService } from './chatbot/agent.service';
 
 const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
 
@@ -33,7 +34,7 @@ const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
 })
 export class BaseStudioComponent {
   protected sidebarVisible = signal(true);
-  protected chatbotVisible = signal(false);
+  protected chatbotVisible = computed(() => this.agentService.openAIChatbot());
   protected chatbotFullscreen = signal(false);
 
   constructor(
@@ -41,6 +42,7 @@ export class BaseStudioComponent {
     protected tblRealtimeService: TableRealtimeService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
+    private agentService: AgentService,
   ) {
     this.sidebarVisible.set(
       Boolean(JSON.parse(localStorage.getItem(SIDEBAR_VISIBLE_KEY) || 'true')),
@@ -58,13 +60,17 @@ export class BaseStudioComponent {
     this.tblRealtimeService.enableSSE();
   }
 
-  toggleSidebar() {
+  protected toggleSidebar() {
     this.sidebarVisible.update((v) => !v);
     localStorage.setItem(SIDEBAR_VISIBLE_KEY, this.sidebarVisible().toString());
   }
 
-  toggleChatbot() {
-    this.chatbotVisible.update((v) => !v);
+  protected toggleChatbot() {
+    this.agentService.openAIChatbot.update((v) => !v);
+  }
+
+  protected onCloseChatbot() {
+    this.agentService.openAIChatbot.set(false);
   }
 
   protected onTabChange(tableName: string) {
