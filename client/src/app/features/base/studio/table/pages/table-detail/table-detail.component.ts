@@ -108,7 +108,7 @@ export class TableDetailComponent implements OnInit {
   protected visibleRecordEditor: boolean;
 
   constructor(
-    protected tblService: TableService,
+    protected tableService: TableService,
     protected viewLayoutService: ViewLayoutService,
   ) {}
 

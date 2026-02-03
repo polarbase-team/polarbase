@@ -99,7 +99,7 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     private destroyRef: DestroyRef,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-    private tblService: TableService,
+    private tableService: TableService,
   ) {
     super();
   }
@@ -193,10 +193,10 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     let fn: Observable<any>;
     switch (this.mode()) {
       case 'add':
-        fn = this.tblService.createRecords(tableName, [data]);
+        fn = this.tableService.createRecords(tableName, [data]);
         break;
       case 'edit':
-        fn = this.tblService.updateRecords(tableName, [{ id, data }]);
+        fn = this.tableService.updateRecords(tableName, [{ id, data }]);
         break;
     }
 

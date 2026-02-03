@@ -38,8 +38,8 @@ export class BaseStudioComponent {
   protected chatbotFullscreen = signal(false);
 
   constructor(
-    protected tblService: TableService,
-    protected tblRealtimeService: TableRealtimeService,
+    protected tableService: TableService,
+    protected tableRealtimeService: TableRealtimeService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private agentService: AgentService,
@@ -49,7 +49,7 @@ export class BaseStudioComponent {
     );
 
     effect(() => {
-      const activeTable = this.tblService.activeTable();
+      const activeTable = this.tableService.activeTable();
       this.router.navigate([], {
         relativeTo: this.activatedRoute,
         queryParams: { table: activeTable?.name },
@@ -57,7 +57,7 @@ export class BaseStudioComponent {
       });
     });
 
-    this.tblRealtimeService.enableSSE();
+    this.tableRealtimeService.enableSSE();
   }
 
   protected toggleSidebar() {
@@ -74,20 +74,20 @@ export class BaseStudioComponent {
   }
 
   protected onTabChange(tableName: string) {
-    this.tblService.selectTable(tableName);
+    this.tableService.selectTable(tableName);
   }
 
   protected onTabDrop(event: CdkDragDrop<string[]>) {
-    this.tblService.selectedTables.update((tables) => {
+    this.tableService.selectedTables.update((tables) => {
       moveItemInArray(tables, event.previousIndex, event.currentIndex);
       return [...tables];
     });
 
-    const activeTable = this.tblService.activeTable();
+    const activeTable = this.tableService.activeTable();
     if (activeTable) {
-      this.tblService.activeTable.set(null);
+      this.tableService.activeTable.set(null);
       setTimeout(() => {
-        this.tblService.activeTable.set(activeTable);
+        this.tableService.activeTable.set(activeTable);
       }, 0);
     }
   }

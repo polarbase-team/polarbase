@@ -68,7 +68,7 @@ export class TableListComponent {
     private activatedRoute: ActivatedRoute,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
-    protected tblService: TableService,
+    protected tableService: TableService,
   ) {
     let tableFromQueryParam: string;
 
@@ -111,7 +111,7 @@ export class TableListComponent {
   }
 
   protected selectTable(tableName: string) {
-    this.tblService.selectTable(tableName);
+    this.tableService.selectTable(tableName);
   }
 
   protected addNewTable() {
@@ -155,7 +155,7 @@ export class TableListComponent {
           return;
         }
         this.isLoading.set(true);
-        this.tblService
+        this.tableService
           .deleteTable(this.tableToConfirm, this.isCascadeDeleteEnabled)
           .pipe(
             finalize(() => this.isLoading.set(false)),
@@ -192,7 +192,7 @@ export class TableListComponent {
 
   private getTables(tableNameWillSelect?: string) {
     this.isLoading.set(true);
-    this.tblService
+    this.tableService
       .getTables()
       .pipe(
         finalize(() => this.isLoading.set(false)),
@@ -213,7 +213,7 @@ export class TableListComponent {
 
         this.selectTable(
           tableNameWillSelect ||
-            this.tblService.selectedTables()[0]?.name ||
+            this.tableService.selectedTables()[0]?.name ||
             this.tables()[0]?.name,
         );
       });

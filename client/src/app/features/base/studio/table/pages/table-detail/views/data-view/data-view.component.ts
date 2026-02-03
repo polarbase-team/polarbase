@@ -126,7 +126,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
       const newColumn: TableColumn = {
         id: columnName,
         name: columnUiName,
-        field: this.tblService.buildField(savedColumn),
+        field: this.tableService.buildField(savedColumn),
       };
       this.ssColumns.update((arr) => [...arr, newColumn]);
 
@@ -143,7 +143,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
       const updatedColumn: TableColumn = {
         id: columnName,
         name: columnUiName,
-        field: this.tblService.buildField(savedColumn),
+        field: this.tableService.buildField(savedColumn),
       };
 
       this.ssColumns.update((columns) =>
@@ -193,7 +193,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
         calculateType: columnProps.calculateType,
         groupRule: columnProps.groupRule,
         sortRule: columnProps.sortRule,
-        field: this.tblService.buildField(column),
+        field: this.tableService.buildField(column),
       };
 
       if (columnProps.order !== undefined) {
@@ -330,7 +330,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
         const columns = action.payload as TableColumn[];
         const obs = {};
         for (const column of columns) {
-          obs[column.id] = this.tblService.deleteColumn(this.table().name, column.id as string);
+          obs[column.id] = this.tableService.deleteColumn(this.table().name, column.id as string);
         }
         forkJoin(obs).subscribe();
         break;
@@ -405,7 +405,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
           rows.push(row);
           records.push(row.data || {});
         }
-        this.tblService
+        this.tableService
           .createRecords(this.table().name, records)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe(({ data }) => {
@@ -419,7 +419,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
         break;
       case TableRowActionType.Delete:
         const recordIds = (action.payload as TableRow[]).map((row) => row.id);
-        this.tblService
+        this.tableService
           .deleteRecords(this.table().name, recordIds)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
@@ -447,7 +447,7 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
         for (const { row, newData } of action.payload as TableCellEditedEvent[]) {
           recordUpdates.push({ id: row.id, data: newData });
         }
-        this.tblService
+        this.tableService
           .updateRecords(this.table().name, recordUpdates)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe();
@@ -455,15 +455,15 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
       case TableCellActionType.ViewReferenceDetail: {
         const { field, data } = action.payload as ReferenceViewDetailEvent;
         const tableName = field.referenceTo;
-        const table = this.tblService.tables().find((t) => t.name === tableName);
+        const table = this.tableService.tables().find((t) => t.name === tableName);
         if (!table) return;
 
-        this.tblService
+        this.tableService
           .getTableSchema(tableName)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe((columns) => {
-            const fields = columns.map((c) => this.tblService.buildField(c));
-            this.tblService
+            const fields = columns.map((c) => this.tableService.buildField(c));
+            this.tableService
               .getRecord(tableName, getReferenceValue(data))
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe((record) => {

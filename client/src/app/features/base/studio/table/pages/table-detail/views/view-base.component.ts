@@ -38,18 +38,18 @@ export class ViewBaseComponent<T = any> {
   onUpdateRecord = output<UpdateRecordEvent>();
 
   protected destroyRef = inject(DestroyRef);
-  protected tblService = inject(TableService);
-  protected tblRealtimeService = inject(TableRealtimeService);
+  protected tableService = inject(TableService);
+  protected tableRealtimeService = inject(TableRealtimeService);
   protected viewLayoutService = inject(ViewLayoutService);
 
   protected columns = signal<ColumnDefinition[]>([]);
   protected isColumnsLoading = signal(false);
   protected records = signal<RecordData[]>([]);
   protected isRecordsLoading = signal(false);
-  protected fields = computed(() => this.columns().map((c) => this.tblService.buildField(c)));
+  protected fields = computed(() => this.columns().map((c) => this.tableService.buildField(c)));
 
   constructor() {
-    this.tblRealtimeService
+    this.tableRealtimeService
       .watch()
       .pipe(delay(200), takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -119,7 +119,7 @@ export class ViewBaseComponent<T = any> {
   protected loadTableSchema() {
     return new Promise((resolve, reject) => {
       this.isColumnsLoading.set(true);
-      this.tblService
+      this.tableService
         .getTableSchema(this.table().name)
         .pipe(
           finalize(() => this.isColumnsLoading.set(false)),
@@ -141,7 +141,7 @@ export class ViewBaseComponent<T = any> {
   protected loadTableData(filter?: Record<string, any>) {
     return new Promise((resolve, reject) => {
       this.isRecordsLoading.set(true);
-      this.tblService
+      this.tableService
         .getRecords(this.table().name, filter)
         .pipe(
           finalize(() => this.isRecordsLoading.set(false)),

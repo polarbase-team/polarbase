@@ -160,7 +160,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   ];
 
   // Reference type
-  protected tableOptions = computed(() => this.tblService.tables());
+  protected tableOptions = computed(() => this.tableService.tables());
   protected referentialActions: { name: string; value: string; help: string }[] = [
     {
       name: 'No Action',
@@ -183,7 +183,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   constructor(
     private destroyRef: DestroyRef,
     private confirmationService: ConfirmationService,
-    private tblService: TableService,
+    private tableService: TableService,
   ) {
     super();
 
@@ -193,7 +193,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
       this.initPresentation(selectedDataType);
       this.initValidation(selectedDataType);
-      this.internalField = this.tblService.buildField(this.columnFormData as ColumnDefinition);
+      this.internalField = this.tableService.buildField(this.columnFormData as ColumnDefinition);
     });
   }
 
@@ -276,9 +276,9 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
 
     let fn: Observable<any>;
     if (this.mode() === 'edit') {
-      fn = this.tblService.updateColumn(this.table().name, this.column().name, formData);
+      fn = this.tableService.updateColumn(this.table().name, this.column().name, formData);
     } else {
-      fn = this.tblService.createColumn(this.table().name, formData);
+      fn = this.tableService.createColumn(this.table().name, formData);
     }
 
     fn.pipe(
@@ -314,7 +314,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   }
 
   protected onTableSelect(tableName: string) {
-    const table = this.tblService.tables().find((t) => t.name === tableName);
+    const table = this.tableService.tables().find((t) => t.name === tableName);
     if (!table) return;
 
     this.columnFormData.foreignKey.table = table.name;
@@ -327,7 +327,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       return;
     }
 
-    this.tblService
+    this.tableService
       .getTableSchema(this.columnFormData.foreignKey.table)
       .subscribe((columns: ColumnDefinition[]) => {
         this.referenceDisplayColumnOptions = columns;

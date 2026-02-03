@@ -9,10 +9,10 @@
   <div class="base-studio-table-detail w-full h-full">
     <p-tabs
       lazy
-      [value]="tblService.activeTable()?.name"
+      [value]="tableService.activeTable()?.name"
       (valueChange)="onTabChange($any($event))"
       class="w-full"
-      [class.h-full]="!!tblService.selectedTables().length"
+      [class.h-full]="!!tableService.selectedTables().length"
     >
       <p-tablist
         lazy
@@ -32,21 +32,21 @@
             (click)="toggleSidebar()"
           />
         </div>
-        @for (table of tblService.selectedTables(); track table.name) {
+        @for (table of tableService.selectedTables(); track table.name) {
           <p-tab cdkDrag cdkDragLockAxis="x" [value]="table.name" class="group">
             <div class="flex items-center gap-2 mt-1 relative">
               <i class="icon icon-table-2"></i>
               <span>{{ table.presentation?.uiName || table.name }}</span>
               <i
                 class="icon icon-x cursor-pointer absolute right-[-15px] top-0.5 opacity-0 group-hover:opacity-100"
-                (click)="$event.stopPropagation(); tblService.removeTable(table.name)"
+                (click)="$event.stopPropagation(); tableService.removeTable(table.name)"
               ></i>
             </div>
           </p-tab>
         }
       </p-tablist>
       <p-tabpanels class="flex-1 !p-0">
-        @for (table of tblService.selectedTables(); track table.name) {
+        @for (table of tableService.selectedTables(); track table.name) {
           <p-tabpanel [value]="table.name">
             <ng-template #content>
               <table-detail [table]="table" />
@@ -56,7 +56,7 @@
       </p-tabpanels>
     </p-tabs>
 
-    @if (!tblService.selectedTables().length) {
+    @if (!tableService.selectedTables().length) {
       <div class="flex flex-col w-full h-full items-center pt-50 bg-gray-50">
         <p-image src="assets/images/chill-bear.png" width="320" height="320" />
         <p class="text-surface-500 italic flex items-center" style="margin-top: -45px">

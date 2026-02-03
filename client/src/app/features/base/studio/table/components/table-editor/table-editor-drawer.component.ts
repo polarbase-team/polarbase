@@ -83,7 +83,7 @@ export class TableEditorDrawerComponent extends DrawerComponent {
   constructor(
     private destroyRef: DestroyRef,
     private confirmationService: ConfirmationService,
-    private tblService: TableService,
+    private tableService: TableService,
   ) {
     super();
   }
@@ -138,9 +138,9 @@ export class TableEditorDrawerComponent extends DrawerComponent {
 
     let fn: Observable<any>;
     if (this.mode() === 'edit') {
-      fn = this.tblService.updateTable(this.table().name, formData);
+      fn = this.tableService.updateTable(this.table().name, formData);
     } else {
-      fn = this.tblService.createTable(formData);
+      fn = this.tableService.createTable(formData);
     }
 
     fn.pipe(
