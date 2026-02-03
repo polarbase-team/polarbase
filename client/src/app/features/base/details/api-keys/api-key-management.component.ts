@@ -72,11 +72,12 @@ export class ApiKeyManagementComponent implements OnInit {
   protected filteredKeys = signal<ApiKey[]>([]);
   protected searchQuery: string = '';
 
-  // Creation
+  // Management
   protected apiKeyForm = viewChild<NgForm>('apiKeyForm');
-  protected isCreating = signal(false);
-  protected isCreationMode = false;
-  protected newApiKey: ApiKey = { ...DEFAULT_VALUE };
+  protected isSaving = signal(false);
+  protected isDrawerVisible = false;
+  protected activeApiKey: ApiKey = { ...DEFAULT_VALUE };
+  protected isViewMode = signal(false);
 
   constructor(
     private destroyRef: DestroyRef,
@@ -94,9 +95,14 @@ export class ApiKeyManagementComponent implements OnInit {
     this.loadApiKeys();
   }
 
-  protected reset() {
-    this.apiKeyForm().reset();
-    this.newApiKey = { ...DEFAULT_VALUE };
+  protected onEditorOpen() {
+    // No metadata to load for now
+  }
+
+  protected onEditorClose() {
+    this.apiKeyForm()?.reset();
+    this.activeApiKey = { ...DEFAULT_VALUE };
+    this.isViewMode.set(false);
   }
 
   protected loadApiKeys() {
@@ -106,6 +112,12 @@ export class ApiKeyManagementComponent implements OnInit {
       .subscribe((apiKeys) => {
         this.apiKeys.set(apiKeys);
       });
+  }
+
+  protected viewApiKey(apiKey: ApiKey) {
+    this.activeApiKey = { ...apiKey };
+    this.isViewMode.set(true);
+    this.isDrawerVisible = true;
   }
 
   protected searchByName() {
@@ -170,17 +182,16 @@ export class ApiKeyManagementComponent implements OnInit {
   }
 
   protected onApiKeyFormSubmit() {
-    this.isCreating.set(true);
+    this.isSaving.set(true);
     this.apiKeyService
-      .createKey(this.newApiKey)
+      .createKey(this.activeApiKey)
       .pipe(
-        finalize(() => this.isCreating.set(false)),
+        finalize(() => this.isSaving.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
-        this.isCreationMode = false;
+        this.isDrawerVisible = false;
         this.loadApiKeys();
-        this.reset();
       });
   }
 }

@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { filter, startWith } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -19,7 +21,7 @@ import { AgentService } from './studio/chatbot/agent.service';
   providers: [AgentService],
 })
 export class BaseComponent {
-  protected view = computed(() => this.router.url.split('?')[0].split('/')[2]);
+  protected view = signal('studio');
   protected options = [
     {
       label: 'Studio',
@@ -36,9 +38,20 @@ export class BaseComponent {
   ];
 
   constructor(
+    private destroyRef: DestroyRef,
     private router: Router,
     private agentService: AgentService,
-  ) {}
+  ) {
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        startWith(this.router.url),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.view.set(this.router.url.split('?')[0].split('/')[2]);
+      });
+  }
 
   protected openAPIDocs() {
     window.open(`${environment.apiUrl}/rest/openapi`, '_blank');

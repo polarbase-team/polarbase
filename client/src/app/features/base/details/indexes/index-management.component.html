@@ -1,0 +1,220 @@
+<p-toast appendTo="body" />
+<p-confirmdialog appendTo="body" styleClass="max-w-md" />
+
+<p-drawer
+  [(visible)]="isDrawerVisible"
+  position="right"
+  [header]="isViewMode() ? 'Index Definition' : 'Add Index'"
+  styleClass="!w-150 custom-drawer"
+  (onShow)="onEditorOpen()"
+  (onHide)="onEditorClose()"
+>
+  <ng-template #content>
+    <form id="indexForm" #indexForm="ngForm" (ngSubmit)="onIndexFormSubmit()">
+      <div class="p-5 flex flex-col gap-6">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Target</p>
+            <p class="text-surface-500 text-xs">Specify the table and columns for this index.</p>
+          </label>
+          <div class="flex flex-col gap-6 col-span-2">
+            <div class="flex flex-col gap-1">
+              <label for="tableName" class="text-sm">
+                Table
+                <i class="icon icon-asterisk text-red-500"></i>
+              </label>
+              <p-select
+                id="tableName"
+                name="tableName"
+                [options]="tables()"
+                [(ngModel)]="activeIndex.tableName"
+                optionLabel="name"
+                optionValue="name"
+                placeholder="Select a table"
+                required
+                class="w-full"
+                (onChange)="onTableChange()"
+                [readonly]="isViewMode()"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="columnNames" class="text-sm">
+                Columns
+                <i class="icon icon-asterisk text-red-500"></i>
+              </label>
+              <p-multiSelect
+                id="columnNames"
+                name="columnNames"
+                [options]="columns()"
+                [(ngModel)]="activeIndex.columnNames"
+                optionLabel="name"
+                optionValue="name"
+                placeholder="Select columns"
+                required
+                class="w-full"
+                [disabled]="!activeIndex.tableName"
+                [readonly]="isViewMode()"
+              />
+            </div>
+          </div>
+        </div>
+
+        <p-divider />
+
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Settings</p>
+            <p class="text-surface-500 text-xs">Configure the index type and uniqueness.</p>
+          </label>
+          <div class="flex flex-col gap-6 col-span-2">
+            <div class="flex flex-col gap-1">
+              <label for="indexName" class="text-sm">
+                Index Name
+                <i class="icon icon-asterisk text-red-500"></i>
+              </label>
+              <input
+                pInputText
+                id="indexName"
+                name="indexName"
+                [(ngModel)]="activeIndex.name"
+                #indexName="ngModel"
+                placeholder="e.g. idx_table_column"
+                required
+                class="w-full"
+                [readonly]="isViewMode()"
+              />
+              @if (indexName.invalid && (indexName.touched || indexForm.submitted)) {
+                <p-message severity="error" size="small" variant="simple">
+                  @if (indexName.errors['required']) {
+                    Index name is required.
+                  }
+                </p-message>
+              }
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label for="indexType" class="text-sm">Index Type</label>
+              <p-select
+                id="indexType"
+                name="indexType"
+                [options]="indexTypes"
+                [(ngModel)]="activeIndex.type"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select type"
+                class="w-full"
+                [readonly]="isViewMode()"
+              >
+                <ng-template #item let-item>
+                  <div class="flex flex-col max-w-70 whitespace-normal">
+                    <div class="text-sm font-medium">{{ item.label }}</div>
+                    <div class="text-xs text-surface-500">{{ item.description }}</div>
+                  </div>
+                </ng-template>
+              </p-select>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <p-checkbox
+                id="unique"
+                name="unique"
+                [(ngModel)]="activeIndex.unique"
+                [binary]="true"
+                [readonly]="isViewMode()"
+              />
+              <label for="unique" class="text-sm">Unique Index</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" (click)="isDrawerVisible = false" />
+      @if (!isViewMode()) {
+        <button
+          pButton
+          label="Save"
+          [loading]="isSaving()"
+          [disabled]="indexForm().invalid"
+          type="submit"
+          form="indexForm"
+        ></button>
+      }
+    </div>
+  </ng-template>
+</p-drawer>
+
+<div class="p-10 max-w-6xl mx-auto">
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <div class="text-xl">Index Management</div>
+      <p class="text-sm text-gray-500">
+        Improve query performance by adding indexes to your tables.
+      </p>
+    </div>
+    <p-button label="Add Index" icon="icon icon-plus" (click)="isDrawerVisible = true" />
+  </div>
+
+  <div class="mb-4">
+    <p-iconfield>
+      <p-inputicon class="icon icon-search" />
+      <input
+        class="w-70"
+        type="text"
+        pInputText
+        placeholder="Search index..."
+        [(ngModel)]="searchQuery"
+        (input)="searchByName()"
+      />
+    </p-iconfield>
+  </div>
+
+  <p-table
+    [value]="filteredIndexes()"
+    [paginator]="true"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Name</th>
+        <th>Table</th>
+        <th>Columns</th>
+        <th class="text-center!">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-index>
+      <tr>
+        <td>{{ index.name }}</td>
+        <td>{{ index.tableName }}</td>
+        <td>{{ index.columnNames.join(', ') }}</td>
+        <td class="text-center!">
+          <p-button
+            icon="icon icon-eye"
+            severity="info"
+            [text]="true"
+            pTooltip="View details"
+            tooltipPosition="top"
+            (click)="viewIndex(index)"
+          />
+          <p-button
+            icon="icon icon-trash"
+            severity="danger"
+            [text]="true"
+            pTooltip="Delete index"
+            tooltipPosition="top"
+            (click)="deleteIndex(index)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="7" class="!text-center py-5">No indexes found</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

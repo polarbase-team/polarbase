@@ -2,11 +2,12 @@
 <p-confirmdialog appendTo="body" styleClass="max-w-md" />
 
 <p-drawer
-  [(visible)]="isCreationMode"
+  [(visible)]="isDrawerVisible"
   position="right"
-  header="Add key"
+  [header]="isViewMode() ? 'Key Details' : 'Add Key'"
   styleClass="!w-150 custom-drawer"
-  (onHide)="reset()"
+  (onShow)="onEditorOpen()"
+  (onHide)="onEditorClose()"
 >
   <ng-template #content>
     <form id="apiKeyForm" #apiKeyForm="ngForm" (ngSubmit)="onApiKeyFormSubmit()">
@@ -26,10 +27,11 @@
               name="keyName"
               [pAutoFocus]="true"
               [invalid]="keyName.invalid && (keyName.touched || apiKeyForm.submitted)"
-              [(ngModel)]="newApiKey.name"
+              [(ngModel)]="activeApiKey.name"
               #keyName="ngModel"
               placeholder="Input here..."
               required
+              [readonly]="isViewMode()"
             />
             @if (keyName.invalid && (keyName.touched || apiKeyForm.submitted)) {
               <p-message severity="error" size="small" variant="simple">
@@ -47,15 +49,16 @@
           <label class="col-span-1">
             <p class="font-medium text-sm">Permissions</p>
           </label>
-          <div class="flex flex-col gap-8 col-span-2">
+          <div class="flex flex-col gap-6 col-span-2">
             <div class="flex gap-4">
               <p-checkbox
                 inputId="restApiPermission"
                 name="restApiPermission"
-                [(ngModel)]="newApiKey.scopes.rest"
+                [(ngModel)]="activeApiKey.scopes.rest"
                 [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
+                [readonly]="isViewMode()"
               />
               <label for="restApiPermission" class="text-sm">
                 REST API Access
@@ -69,10 +72,11 @@
               <p-checkbox
                 inputId="agentApiPermission"
                 name="agentApiPermission"
-                [(ngModel)]="newApiKey.scopes.agent"
+                [(ngModel)]="activeApiKey.scopes.agent"
                 [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
+                [readonly]="isViewMode()"
               />
               <label for="agentApiPermission" class="text-sm">
                 Agent API Access
@@ -86,10 +90,11 @@
               <p-checkbox
                 inputId="mcpServerPermission"
                 name="mcpServerPermission"
-                [(ngModel)]="newApiKey.scopes.mcp"
+                [(ngModel)]="activeApiKey.scopes.mcp"
                 [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
+                [readonly]="isViewMode()"
               />
               <label for="mcpServerPermission" class="text-sm">
                 MCP Server Access
@@ -103,10 +108,11 @@
               <p-checkbox
                 inputId="realtimeServerPermission"
                 name="realtimeServerPermission"
-                [(ngModel)]="newApiKey.scopes.realtime"
+                [(ngModel)]="activeApiKey.scopes.realtime"
                 [ngModelOptions]="{ standalone: true }"
                 [binary]="true"
                 size="large"
+                [readonly]="isViewMode()"
               />
               <label for="realtimeServerPermission" class="text-sm">
                 Realtime Server Access
@@ -123,15 +129,17 @@
   </ng-template>
   <ng-template #footer>
     <div class="flex justify-end gap-2">
-      <p-button label="Cancel" severity="secondary" (click)="isCreationMode = false" />
-      <button
-        pButton
-        label="Save"
-        [loading]="isCreating()"
-        [disabled]="apiKeyForm().invalid"
-        type="submit"
-        form="apiKeyForm"
-      ></button>
+      <p-button label="Cancel" severity="secondary" (click)="isDrawerVisible = false" />
+      @if (!isViewMode()) {
+        <button
+          pButton
+          label="Save"
+          [loading]="isSaving()"
+          [disabled]="apiKeyForm().invalid"
+          type="submit"
+          form="apiKeyForm"
+        ></button>
+      }
     </div>
   </ng-template>
 </p-drawer>
@@ -144,7 +152,7 @@
         Manage API keys to securely access your data via REST, Agent, MCP, and Realtime APIs.
       </p>
     </div>
-    <p-button label="Add Key" icon="icon icon-plus" (click)="isCreationMode = true" />
+    <p-button label="Add Key" icon="icon icon-plus" (click)="isDrawerVisible = true" />
   </div>
 
   <div class="mb-4">
@@ -169,8 +177,8 @@
         <th>Key</th>
         <th>Scopes</th>
         <th>Created At</th>
-        <th>Status</th>
-        <th>Actions</th>
+        <th class="text-center!">Status</th>
+        <th class="text-center!">Actions</th>
       </tr>
     </ng-template>
     <ng-template #body let-key>
@@ -208,23 +216,33 @@
           </div>
         </td>
         <td>{{ key.createdAt | date: 'medium' }}</td>
-        <td>
+        <td class="text-center!">
           <p-tag
             [value]="key.revoked ? 'Revoked' : 'Active'"
             [severity]="key.revoked ? 'danger' : 'success'"
           />
         </td>
-        <td>
-          @if (!key.revoked) {
+        <td class="text-center!">
+          <div class="flex justify-center gap-1">
             <p-button
-              icon="icon icon-trash"
-              severity="danger"
+              icon="icon icon-eye"
+              severity="info"
               [text]="true"
-              pTooltip="Revoke key"
+              pTooltip="View details"
               tooltipPosition="top"
-              (click)="revokeKey(key)"
+              (click)="viewApiKey(key)"
             />
-          }
+            @if (!key.revoked) {
+              <p-button
+                icon="icon icon-trash"
+                severity="danger"
+                [text]="true"
+                pTooltip="Revoke key"
+                tooltipPosition="top"
+                (click)="revokeKey(key)"
+              />
+            }
+          </div>
         </td>
       </tr>
     </ng-template>

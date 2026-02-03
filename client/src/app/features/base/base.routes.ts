@@ -16,5 +16,9 @@ export const routes: Routes = [
     data: { shouldReuse: true },
     children: DetailRoutes,
   },
-  { path: '**', redirectTo: 'studio' },
+  {
+    path: '',
+    redirectTo: 'studio',
+    pathMatch: 'full',
+  },
 ];
