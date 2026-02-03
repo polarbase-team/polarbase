@@ -16,7 +16,7 @@
             <label class="col-span-1">
               <p class="font-medium text-sm">General</p>
             </label>
-            <div class="flex flex-col col-span-2 gap-8">
+            <div class="flex flex-col col-span-2 gap-6">
               <div class="flex flex-col gap-1">
                 <label for="name" class="text-sm">
                   Name
@@ -71,7 +71,7 @@
             <p class="font-medium text-sm">Presentation</p>
             <p class="text-surface-500 text-xs">This does not affect the database schema.</p>
           </label>
-          <div class="flex flex-col gap-8 col-span-2">
+          <div class="flex flex-col gap-6 col-span-2">
             <div class="flex flex-col gap-1">
               <label for="uiName" class="text-sm">Display Name</label>
               <input
@@ -94,82 +94,27 @@
             <label for="description" class="col-span-1">
               <p class="font-medium text-sm">Settings</p>
             </label>
-            <div class="flex flex-col gap-8 col-span-2">
-              <div class="flex gap-4">
-                <div class="flex flex-col gap-1">
-                  <label class="text-sm font-medium">ID type</label>
-                  <div class="flex flex-col gap-2">
-                    <!-- Integer  (Recommended default) -->
-                    <div class="flex gap-4">
-                      <p-radiobutton
-                        inputId="integer"
-                        value="integer"
-                        name="idType"
-                        [(ngModel)]="tableFormData.idType"
-                      />
-                      <label for="integer" class="text-sm">
-                        Integer
-                        <p class="text-surface-500 text-xs">Ex: 1, 2, 3, ..., 2147483647</p>
-                        <p class="text-surface-500 text-xs">Limited to ~2.1 billion rows</p>
-                      </label>
+            <div class="flex flex-col gap-6 col-span-2">
+              <div class="flex flex-col gap-1">
+                <label for="idType" class="text-sm font-medium">ID type</label>
+                <p-select
+                  id="idType"
+                  name="idType"
+                  [options]="idTypes"
+                  [(ngModel)]="tableFormData.idType"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Select ID type"
+                  class="w-full"
+                  appendTo="body"
+                >
+                  <ng-template #item let-item>
+                    <div class="flex flex-col max-w-70 whitespace-normal">
+                      <div class="text-sm font-medium">{{ item.label }}</div>
+                      <div class="text-xs text-surface-500">{{ item.description }}</div>
                     </div>
-
-                    <!-- Big Integer -->
-                    <div class="flex gap-4">
-                      <p-radiobutton
-                        inputId="biginteger"
-                        value="biginteger"
-                        name="idType"
-                        [(ngModel)]="tableFormData.idType"
-                      />
-                      <label for="biginteger" class="text-sm">
-                        Big Integer
-                        <p class="text-surface-500 text-xs">
-                          Ex: 1, 123456789, 9223372036854775807
-                        </p>
-                        <p class="text-surface-500 text-xs">
-                          Recommended – supports up to ~9 quintillion rows
-                        </p>
-                      </label>
-                    </div>
-
-                    <!-- UUID -->
-                    <div class="flex gap-4">
-                      <p-radiobutton
-                        inputId="uuid"
-                        value="uuid"
-                        name="idType"
-                        [(ngModel)]="tableFormData.idType"
-                      />
-                      <label for="uuid" class="text-sm">
-                        UUID
-                        <p class="text-surface-500 text-xs">
-                          Ex: 17bd48cc-61c1-4ee1-96bf-6059bfe6d69b
-                        </p>
-                        <p class="text-surface-500 text-xs">
-                          Globally unique, good for distributed systems
-                        </p>
-                      </label>
-                    </div>
-
-                    <!-- Short ID (random 16 characters) -->
-                    <div class="flex gap-4">
-                      <p-radiobutton
-                        inputId="shortid"
-                        value="shortid"
-                        name="idType"
-                        [(ngModel)]="tableFormData.idType"
-                      />
-                      <label for="shortid" class="text-sm">
-                        Short ID (alphanumeric)
-                        <p class="text-surface-500 text-xs">Ex: aEF1xWKBLzb4XLrx</p>
-                        <p class="text-surface-500 text-xs">
-                          Compact & URL-friendly, suitable for public IDs
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-                </div>
+                  </ng-template>
+                </p-select>
               </div>
               <div class="flex gap-4">
                 <p-checkbox

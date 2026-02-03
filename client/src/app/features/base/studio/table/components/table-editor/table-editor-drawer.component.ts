@@ -19,7 +19,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { AutoFocusModule } from 'primeng/autofocus';
 import { DividerModule } from 'primeng/divider';
-import { RadioButtonModule } from 'primeng/radiobutton';
+import { SelectModule } from 'primeng/select';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
@@ -43,7 +43,7 @@ const DEFAULT_VALUE = { idType: 'integer', timestamps: true, presentation: {} } 
     MessageModule,
     AutoFocusModule,
     DividerModule,
-    RadioButtonModule,
+    SelectModule,
     ConfirmDialogModule,
   ],
   providers: [ConfirmationService],
@@ -57,6 +57,28 @@ export class TableEditorDrawerComponent extends DrawerComponent {
   protected tableForm = viewChild<NgForm>('tableForm');
   protected tableFormData: TableFormData = { ...DEFAULT_VALUE };
   protected isSaving = signal(false);
+  protected idTypes = [
+    {
+      label: 'Integer',
+      value: 'integer',
+      description: 'Ex: 1, 2, 3... Limited to ~2.1 billion rows.',
+    },
+    {
+      label: 'Big Integer',
+      value: 'biginteger',
+      description: 'Recommended. Supports up to ~9 quintillion rows.',
+    },
+    {
+      label: 'UUID',
+      value: 'uuid',
+      description: 'Globally unique, good for distributed systems.',
+    },
+    {
+      label: 'Short ID',
+      value: 'shortid',
+      description: 'Compact & URL-friendly alphanumeric ID.',
+    },
+  ];
 
   constructor(
     private destroyRef: DestroyRef,
