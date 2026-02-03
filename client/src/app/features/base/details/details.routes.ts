@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { ApiKeyManagementComponent } from './api-keys/api-key-manangement/api-key-manangement.component';
+import { ApiKeyManagementComponent } from './api-keys/api-key-management.component';
 
 export const routes: Routes = [
   {

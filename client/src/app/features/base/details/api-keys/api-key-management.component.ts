@@ -29,7 +29,7 @@ import { DividerModule } from 'primeng/divider';
 import { CheckboxModule } from 'primeng/checkbox';
 import { Tooltip } from 'primeng/tooltip';
 
-import { ApiKey, ApiKeyService } from '../api-key.service';
+import { ApiKey, ApiKeyService } from './api-key.service';
 
 const DEFAULT_VALUE = {
   scopes: {
