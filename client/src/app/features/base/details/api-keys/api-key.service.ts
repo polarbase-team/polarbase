@@ -17,9 +17,7 @@ export interface ApiKey {
   revoked: boolean;
 }
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class ApiKeyService {
   private apiUrl = `${environment.apiUrl}/api-keys`;
 

@@ -27,7 +27,7 @@ import { AutoFocusModule } from 'primeng/autofocus';
 import { MessageModule } from 'primeng/message';
 import { DividerModule } from 'primeng/divider';
 import { CheckboxModule } from 'primeng/checkbox';
-import { Tooltip } from 'primeng/tooltip';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { ApiKey, ApiKeyService } from './api-key.service';
 
@@ -41,7 +41,7 @@ const DEFAULT_VALUE = {
 } as ApiKey;
 
 @Component({
-  selector: 'app-api-key-management',
+  selector: 'api-key-management',
   templateUrl: './api-key-management.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -60,11 +60,11 @@ const DEFAULT_VALUE = {
     MessageModule,
     DividerModule,
     CheckboxModule,
+    TooltipModule,
     DatePipe,
     SlicePipe,
-    Tooltip,
   ],
-  providers: [ConfirmationService, MessageService],
+  providers: [ConfirmationService, MessageService, ApiKeyService],
 })
 export class ApiKeyManagementComponent implements OnInit {
   // List
