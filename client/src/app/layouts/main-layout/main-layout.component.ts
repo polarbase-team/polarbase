@@ -5,6 +5,7 @@ import { filter, map, mergeMap, of, startWith } from 'rxjs';
 
 import { ToastModule } from 'primeng/toast';
 import { ImageModule } from 'primeng/image';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { removeApiKey } from '../../core/guards/api-key.guard';
 
@@ -13,7 +14,7 @@ import { removeApiKey } from '../../core/guards/api-key.guard';
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterModule, ToastModule, ImageModule],
+  imports: [RouterModule, ToastModule, ImageModule, TooltipModule],
 })
 export class MainLayoutComponent implements OnInit {
   protected title = signal('');

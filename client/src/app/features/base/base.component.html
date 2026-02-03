@@ -11,8 +11,10 @@
     <p-selectbutton [options]="options" [ngModel]="view()" [unselectable]="true">
       <ng-template #item let-item>
         <routerLink [routerLink]="item.routerLink">
-          <i [class]="item.icon"></i>
-          {{ item.label }}
+          <div class="flex items-center gap-1">
+            <i [class]="item.icon"></i>
+            {{ item.label }}
+          </div>
         </routerLink>
       </ng-template>
     </p-selectbutton>

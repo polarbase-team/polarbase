@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { BaseStudioComponent } from './studio/studio.component';
 import { BaseDetailsComponent } from './details/details.component';
+import { routes as DetailRoutes } from './details/details.routes';
 
 export const routes: Routes = [
   {
@@ -13,6 +14,7 @@ export const routes: Routes = [
     path: 'details',
     component: BaseDetailsComponent,
     data: { shouldReuse: true },
+    children: DetailRoutes,
   },
   { path: '**', redirectTo: 'studio' },
 ];
