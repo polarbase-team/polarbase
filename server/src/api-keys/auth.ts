@@ -22,6 +22,7 @@ export const apiKeyAuth = async (apiKey: string) => {
     return {
       keyId: 'super-admin-key',
       name: 'Super Admin Key',
+      schemaName: null,
       scopes: { rest: true, mcp: true, agent: true, realtime: true },
     };
   }
@@ -39,6 +40,7 @@ export const apiKeyAuth = async (apiKey: string) => {
   return {
     keyId: row.id,
     name: row.name,
+    schemaName: row.schemaName,
     scopes: scopes as {
       rest: boolean;
       mcp: boolean;
