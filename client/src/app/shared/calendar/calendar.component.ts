@@ -1,9 +1,11 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   contentChild,
   input,
+  OnDestroy,
   output,
   TemplateRef,
   viewChild,
@@ -51,7 +53,7 @@ export interface CalendarEventClickArg extends EventClickArg {}
     DividerModule,
   ],
 })
-export class CalendarComponent {
+export class CalendarComponent implements AfterViewInit, OnDestroy {
   toolbarTmpl = contentChild<TemplateRef<any>>('toolbar');
   leftToolbarTmpl = contentChild<TemplateRef<any>>('leftToolbar');
   rightToolbarTmpl = contentChild<TemplateRef<any>>('rightToolbar');
@@ -95,9 +97,21 @@ export class CalendarComponent {
       value: CalendarView.DAY,
     },
   ];
+  protected resizeObserver: ResizeObserver | null = null;
+
+  ngAfterViewInit() {
+    this.resizeObserver = new ResizeObserver(() => {
+      this.fullCalendar()?.getApi()?.updateSize();
+    });
+    this.resizeObserver.observe(this.fullCalendar()?.getApi().el);
+  }
+
+  ngOnDestroy() {
+    this.resizeObserver?.disconnect();
+  }
 
   getCurrentDate() {
-    return this.fullCalendar().getApi()?.getDate();
+    return this.fullCalendar()?.getApi()?.getDate();
   }
 
   reset() {
@@ -107,22 +121,22 @@ export class CalendarComponent {
 
   protected changeView(view: CalendarView) {
     this.view = view;
-    this.fullCalendar().getApi()?.changeView(view);
+    this.fullCalendar()?.getApi()?.changeView(view);
     this.onChangeView.emit(view);
   }
 
   protected today() {
-    this.fullCalendar().getApi()?.today();
+    this.fullCalendar()?.getApi()?.today();
     this.emitCurrentMonthDateRange();
   }
 
   protected next() {
-    this.fullCalendar().getApi()?.next();
+    this.fullCalendar()?.getApi()?.next();
     this.emitCurrentMonthDateRange();
   }
 
   protected prev() {
-    this.fullCalendar().getApi()?.prev();
+    this.fullCalendar()?.getApi()?.prev();
     this.emitCurrentMonthDateRange();
   }
 
