@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Side Bar**: Support for caching side bar state.
 
 ### Changed
+
 - **Refactoring**: Add `<ng-template #content></ng-template>` to `PrimeNG Popover/Dialog` components to lazy load content.
 
 ### Fixed
