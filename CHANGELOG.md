@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0-beta] - 2026-02-04
+
+### Added
+
+- **Index Management**: Create and manage indexes for faster data retrieval.
+- **Relation Diagram**: Visual ERD representation of table relationships using flow-based visualization.
+- **API Key Schemas**: Added support for `schemaName` in API keys to scope access.
+- **Nested Routing**: Implemented nested routing for better feature modularity.
+
+### Changed
+
+- **Refactoring**: Extracted studio-related logic to `BaseStudioComponent`.
+- **Refactoring**: Relocated API key management to base details.
+- **Performance**: Enhanced calendar responsiveness with `ResizeObserver`.
+- **UI/UX**: Updated table editor ID type selection for better clarity.
+
 ## [0.6.4-beta] - 2026-02-01
 
 ### Added

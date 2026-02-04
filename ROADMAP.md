@@ -35,6 +35,11 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **AI Agent for DB:** Intelligent agent to assist with database operations without manual SQL generation.
 - **Multi-Provider Support:** Integration with Google Gemini (default) and OpenAI.
 
+### ⚙️ Data & Schema Management
+
+- **Index Management:** Create and manage indexes for faster data retrieval.
+- **Relation Diagram:** Visual ERD representation of table relationships.
+
 ---
 
 ## 🏗️ In Development (Upcoming)
@@ -43,8 +48,6 @@ Our mission is to build the most extensible open-source backend engine for Postg
 
 - **Isolated Schema Support:** Ability to create, manage, and toggle between multiple PostgreSQL schemas within a single database instance.
 - **Schema-Scoped Operations:** Dedicated API endpoints and UI contexts that respect schema boundaries.
-- **Cross-Schema Relations:** Support for Reference Fields (Foreign Keys) that bridge tables across different schemas.
-- **Schema Migrations:** Visual tools to track and manage versioning for individual schemas.
 
 ### 🤖 Agentic Backend (AI & MCP)
 
@@ -55,13 +58,11 @@ Our mission is to build the most extensible open-source backend engine for Postg
 
 ### ⚙️ Data & Schema Management
 
-- **Index Management:** Create and manage indexes for faster data retrieval.
 - **Copy Table Schema:** Quickly duplicate table structures.
 - **Import/Export:** Support for Database Schema and Table Data (CSV/JSON).
 
 ### 🖼️ Advanced Views & UI
 
-- **Diagram View:** Visual ERD representation of table relationships.
 - **Query View:** Visual SQL builder for complex PostgreSQL queries.
 - **S3 Storage:** Integrate S3 storage.
 
@@ -76,6 +77,10 @@ Our mission is to build the most extensible open-source backend engine for Postg
 
 ## 🔍 Researching (Future)
 
+### 🗄️ Multi-Schema Management
+
+- **Schema Migrations:** Visual tools to track and manage versioning for individual schemas.
+
 ### 🖼️ Advanced Views & UI
 
 - **Form Builder:** Specialized views for data entry.
@@ -89,7 +94,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ### 🛡️ Enterprise & DevOps
 
 - **Open Auth:** Built-in authentication system (OAuth, OTP) stored on-platform.
-- **Database Snapshots:** Versioning schemas before major AI-led changes.
+- **Database Snapshots:** Backup and restore database schemas and data.
 - **CLI Tool:** Command-line interface for deployments and environment configs.
 - **Audit Logs:** Detailed tracking of every change for compliance.
 - **Pglite Integration:** Enabling "One-click Installation" capabilities.
