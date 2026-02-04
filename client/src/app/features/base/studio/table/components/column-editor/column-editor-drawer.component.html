@@ -1,0 +1,707 @@
+<ng-template #dateFormatBuilder>
+  <div class="space-y-2">
+    <div class="flex flex-col gap-1">
+      <label for="format" class="text-sm">Date Format</label>
+      <p-select
+        inputId="format"
+        name="format"
+        [(ngModel)]="columnFormData.presentation.format.dateFormat"
+        [options]="dateFormats"
+        [checkmark]="true"
+        [showClear]="true"
+        placeholder="Select here..."
+        appendTo="body"
+      />
+    </div>
+    <div class="flex items-center gap-2">
+      <p-toggleswitch name="showTime" [(ngModel)]="columnFormData.presentation.format.showTime" />
+      <label class="text-sm">Show time</label>
+    </div>
+    <p class="text-surface-500 text-xs">The date format to display the column values.</p>
+  </div>
+</ng-template>
+
+<ng-template #optionsBuilder>
+  <div class="flex flex-col gap-1">
+    <label class="text-sm">Options</label>
+    <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2 overflow-y-auto max-h-60">
+        @for (option of columnFormData.options; track $index; let idx = $index) {
+          <div class="flex gap-1">
+            <input
+              pInputText
+              [ngModel]="option"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="editOption(idx, $event)"
+              placeholder="Input here..."
+              fluid
+            />
+            <p-button
+              icon="icon icon-trash"
+              [text]="true"
+              severity="danger"
+              (click)="removeOption(idx)"
+            />
+          </div>
+        }
+      </div>
+      <p-button icon="icon icon-plus" label="Add option" (click)="addOption()" />
+    </div>
+  </div>
+</ng-template>
+
+<p-confirmdialog appendTo="body" styleClass="max-w-md" />
+
+<p-drawer
+  [visible]="visible()"
+  position="right"
+  [header]="mode() === 'edit' ? `Edit column: ${column().name}` : 'Add column'"
+  styleClass="!w-150 custom-drawer"
+  (onShow)="onShow()"
+  (onHide)="onHide()"
+>
+  <ng-template #content>
+    <form #columnForm="ngForm" (ngSubmit)="onSubmit()">
+      <div class="p-5">
+        <div class="flex flex-col gap-12">
+          <div class="grid grid-cols-3 w-full gap-12">
+            <label class="col-span-1">
+              <p class="font-medium text-sm">General</p>
+            </label>
+            <div class="flex flex-col col-span-2 gap-6">
+              <div class="flex flex-col gap-1">
+                <label for="name" class="text-sm">
+                  Name
+                  <i class="icon icon-asterisk text-red-500"></i>
+                </label>
+                <input
+                  pInputText
+                  id="name"
+                  name="name"
+                  [pAutoFocus]="true"
+                  [invalid]="name.invalid && (name.touched || columnForm.submitted)"
+                  [(ngModel)]="columnFormData.name"
+                  #name="ngModel"
+                  placeholder="Input here..."
+                  required
+                  pattern="^[a-zA-Z_][a-zA-Z0-9_]*$"
+                />
+                @if (name.invalid && (name.touched || columnForm.submitted)) {
+                  <p-message severity="error" size="small" variant="simple">
+                    @if (name.errors['required']) {
+                      Table name is required.
+                    } @else if (name.errors?.['pattern']) {
+                      Invalid table name.
+                    }
+                  </p-message>
+                }
+                <p class="text-surface-500 text-xs">
+                  Only letters, numbers, and _ allowed. Must start with a letter or _.
+                </p>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label for="description" class="text-sm">Description</label>
+                <textarea
+                  pTextarea
+                  id="description"
+                  name="description"
+                  [(ngModel)]="columnFormData.comment"
+                  rows="5"
+                  placeholder="Input here..."
+                  maxlength="500"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Data Type</p>
+          </label>
+          <div class="flex flex-col gap-6 col-span-2">
+            <div class="flex flex-col gap-1">
+              <label for="type" class="text-sm">
+                Type
+                <i class="icon icon-asterisk text-red-500"></i>
+              </label>
+              <p-select
+                id="type"
+                inputId="type"
+                name="type"
+                [options]="dataTypes"
+                [(ngModel)]="selectedDataType"
+                (ngModelChange)="onDataTypeSelect($event)"
+                [checkmark]="true"
+                [showClear]="true"
+                placeholder="Select here..."
+                required
+              >
+                <ng-template let-item #item>
+                  <div class="flex items-center gap-2">
+                    <i [class]="item.value | fieldIcon"></i>
+                    <span>{{ item.name }}</span>
+                  </div>
+                </ng-template>
+                <ng-template let-selectedItem #selectedItem>
+                  <div class="flex items-center gap-2">
+                    <i [class]="selectedItem.value | fieldIcon"></i>
+                    <span>{{ selectedItem.name }}</span>
+                  </div>
+                </ng-template>
+              </p-select>
+            </div>
+            @switch (selectedDataType()) {
+              @case (DataType.Text) {
+                <div class="flex flex-col gap-1">
+                  <label for="minLength" class="text-sm">Min length</label>
+                  <p-inputnumber
+                    inputId="minLength"
+                    name="minLength"
+                    [(ngModel)]="columnFormData.validation.minLength"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label for="maxLength" class="text-sm">Max length</label>
+                  <p-inputnumber
+                    inputId="maxLength"
+                    name="maxLength"
+                    [(ngModel)]="columnFormData.validation.maxLength"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.LongText) {
+                <div class="flex flex-col gap-1">
+                  <label for="maxSize" class="text-sm">Max size (bytes)</label>
+                  <p-inputnumber
+                    inputId="maxSize"
+                    name="maxSize"
+                    [(ngModel)]="columnFormData.validation.maxSize"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.Integer) {
+                <div class="flex flex-col gap-1">
+                  <label for="minValue" class="text-sm">Min value</label>
+                  <p-inputnumber
+                    inputId="minValue"
+                    name="minValue"
+                    [(ngModel)]="columnFormData.validation.minValue"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label for="maxValue" class="text-sm">Max value</label>
+                  <p-inputnumber
+                    inputId="maxValue"
+                    name="maxValue"
+                    [(ngModel)]="columnFormData.validation.maxValue"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.Number) {
+                <div class="flex flex-col gap-1">
+                  <label for="minValue" class="text-sm">Min value</label>
+                  <p-inputnumber
+                    inputId="minValue"
+                    name="minValue"
+                    [(ngModel)]="columnFormData.validation.minValue"
+                    mode="decimal"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="5"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label for="maxValue" class="text-sm">Max value</label>
+                  <p-inputnumber
+                    inputId="maxValue"
+                    name="maxValue"
+                    [(ngModel)]="columnFormData.validation.maxValue"
+                    mode="decimal"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="5"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.Date) {
+                <div class="flex flex-col gap-1">
+                  <label for="minDate" class="text-sm">Min date</label>
+                  <p-datepicker
+                    inputId="minDate"
+                    name="minDate"
+                    [(ngModel)]="columnFormData.validation.minDate"
+                    dataType="string"
+                    dateFormat="yy-mm-dd"
+                    [showTime]="true"
+                    [showClear]="true"
+                    appendTo="body"
+                    placeholder="Select here..."
+                    fluid
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label for="maxDate" class="text-sm">Max date</label>
+                  <p-datepicker
+                    inputId="maxDate"
+                    name="maxDate"
+                    [(ngModel)]="columnFormData.validation.maxDate"
+                    dataType="string"
+                    dateFormat="yy-mm-dd"
+                    [showTime]="true"
+                    [showClear]="true"
+                    appendTo="body"
+                    placeholder="Select here..."
+                    fluid
+                  />
+                </div>
+              }
+              @case (DataType.Select) {
+                <ng-container [ngTemplateOutlet]="optionsBuilder" />
+              }
+              @case (DataType.MultiSelect) {
+                <ng-container [ngTemplateOutlet]="optionsBuilder" />
+              }
+              @case (DataType.Email) {
+                <div class="flex flex-col gap-1">
+                  <label for="allowedDomains" class="text-sm">Allowed domains</label>
+                  <input
+                    pInputText
+                    id="allowedDomains"
+                    name="allowedDomains"
+                    [(ngModel)]="columnFormData.validation.allowedDomains"
+                    placeholder="Input here..."
+                  />
+                  <p class="text-surface-500 text-xs">
+                    Comma separated. Leave blank to allow all domains. E.g. example.com, test.com
+                  </p>
+                </div>
+              }
+              @case (DataType.JSON) {
+                <div class="flex flex-col gap-1">
+                  <label for="maxSize" class="text-sm">Max size (bytes)</label>
+                  <p-inputnumber
+                    inputId="maxSize"
+                    name="maxSize"
+                    [(ngModel)]="columnFormData.validation.maxSize"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+              @case (DataType.Reference) {
+                <div class="flex flex-col gap-1">
+                  <label for="table" class="text-sm">Reference to</label>
+                  <p-select
+                    inputId="table"
+                    name="table"
+                    [options]="tableOptions()"
+                    [(ngModel)]="columnFormData.foreignKey.table"
+                    (ngModelChange)="onTableSelect($event)"
+                    [checkmark]="true"
+                    [showClear]="true"
+                    optionValue="name"
+                    placeholder="Select here..."
+                    required
+                    appendTo="body"
+                  >
+                    <ng-template #selectedItem let-selectedItem>
+                      <div class="flex items-center gap-2">
+                        <i class="icon icon-table-2"></i>
+                        <p>
+                          {{ selectedItem.presentation?.uiName || selectedItem.name }}
+                          @if (selectedItem.presentation?.uiName) {
+                            <span class="text-xs text-surface-500">{{ selectedItem.name }}</span>
+                          }
+                        </p>
+                      </div>
+                    </ng-template>
+                    <ng-template #item let-item>
+                      <div class="flex items-center gap-2">
+                        <i class="icon icon-table-2"></i>
+                        <p>
+                          {{ item.presentation?.uiName || item.name }}
+                          @if (item.presentation?.uiName) {
+                            <span class="text-xs text-surface-500">{{ item.name }}</span>
+                          }
+                        </p>
+                      </div>
+                    </ng-template>
+                  </p-select>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label for="onUpdate" class="text-sm">
+                    On Update
+                    <p class="text-xs text-surface-500">When the parent record is modified...</p>
+                  </label>
+                  <p-selectbutton
+                    inputId="onUpdate"
+                    name="onUpdate"
+                    [options]="referentialActions"
+                    [(ngModel)]="columnFormData.foreignKey.onUpdate"
+                    fluid
+                  >
+                    <ng-template #item let-item>
+                      <p class="text-xs flex items-center gap-1">
+                        <span>{{ item.name }}</span>
+                        <i class="icon icon-info" [pTooltip]="item.help" tooltipPosition="top"></i>
+                      </p>
+                    </ng-template>
+                  </p-selectbutton>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label for="onDelete" class="text-sm">
+                    On Delete
+                    <p class="text-xs text-surface-500">When the parent record is removed...</p>
+                  </label>
+                  <p-selectbutton
+                    inputId="onDelete"
+                    name="onDelete"
+                    [options]="referentialActions"
+                    [(ngModel)]="columnFormData.foreignKey.onDelete"
+                    fluid
+                  >
+                    <ng-template #item let-item>
+                      <p class="text-xs flex items-center gap-1">
+                        <span>{{ item.name }}</span>
+                        <i
+                          class="icon icon-info"
+                          [pTooltip]="item.tooltip"
+                          tooltipPosition="top"
+                        ></i>
+                      </p>
+                    </ng-template>
+                  </p-selectbutton>
+                </div>
+              }
+              @case (DataType.Attachment) {
+                <div class="flex flex-col gap-1">
+                  <label for="maxFiles" class="text-sm">Max files</label>
+                  <p-inputnumber
+                    inputId="maxFiles"
+                    name="maxFiles"
+                    [(ngModel)]="columnFormData.validation.maxFiles"
+                    [useGrouping]="false"
+                    placeholder="Input here..."
+                  />
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Presentation</p>
+            <p class="text-surface-500 text-xs">This does not affect the database schema.</p>
+          </label>
+          <div class="flex flex-col gap-6 col-span-2">
+            <div class="flex flex-col gap-1">
+              <label for="uiName" class="text-sm">Display Name</label>
+              <input
+                pInputText
+                id="uiName"
+                name="uiName"
+                [(ngModel)]="columnFormData.presentation.uiName"
+                placeholder="Input here..."
+              />
+              <p class="text-surface-500 text-xs">The display name for the column.</p>
+            </div>
+            @switch (selectedDataType()) {
+              @case (DataType.Number) {
+                <div class="flex flex-col gap-1">
+                  <label for="format" class="text-sm">Number Format</label>
+                  <p-select
+                    inputId="format"
+                    name="format"
+                    [(ngModel)]="columnFormData.presentation.format.numberFormat"
+                    [options]="numberFormats"
+                    [checkmark]="true"
+                    [showClear]="true"
+                    placeholder="Select here..."
+                    appendTo="body"
+                  >
+                    <ng-template #item let-item>
+                      <div>
+                        {{ item.label }}
+                        <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
+                      </div>
+                    </ng-template>
+                  </p-select>
+                  <p class="text-surface-500 text-xs">
+                    The number format to display the column values.
+                  </p>
+                </div>
+                @if (columnFormData.presentation.format.numberFormat === NumberFormat.Currency) {
+                  <div class="flex flex-col gap-1">
+                    <label for="currency" class="text-sm">Currency</label>
+                    <p-select
+                      inputId="currency"
+                      name="currency"
+                      [(ngModel)]="columnFormData.presentation.format.currency"
+                      [options]="currencies"
+                      [checkmark]="true"
+                      [showClear]="true"
+                      placeholder="Select here..."
+                      appendTo="body"
+                    >
+                      <ng-template #item let-item>
+                        <div>
+                          {{ item.label }}
+                          <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
+                        </div>
+                      </ng-template>
+                    </p-select>
+                    <p class="text-surface-500 text-xs">
+                      The currency symbol to display for the column values.
+                    </p>
+                  </div>
+                }
+              }
+              @case (DataType.Date) {
+                <ng-container [ngTemplateOutlet]="dateFormatBuilder"></ng-container>
+              }
+              @case (DataType.AutoDate) {
+                <ng-container [ngTemplateOutlet]="dateFormatBuilder"></ng-container>
+              }
+              @case (DataType.Reference) {
+                <div class="flex flex-col gap-1">
+                  <label for="displayReference" class="text-sm">Display Reference</label>
+                  <p-select
+                    inputId="displayReference"
+                    name="displayReference"
+                    [(ngModel)]="columnFormData.presentation.format.displayColumn"
+                    [options]="referenceDisplayColumnOptions"
+                    [checkmark]="true"
+                    [showClear]="true"
+                    optionValue="name"
+                    placeholder="Select here..."
+                    (onShow)="loadReferenceDisplayColumnOptions()"
+                    appendTo="body"
+                  >
+                    <ng-template #selectedItem let-selectedItem>
+                      <div class="flex items-center gap-2">
+                        <i [class]="selectedItem.dataType | fieldIcon"></i>
+                        <p>
+                          {{ selectedItem.presentation?.uiName || selectedItem.name }}
+                          @if (selectedItem.presentation?.uiName) {
+                            <span class="text-xs text-surface-500">{{ selectedItem.name }}</span>
+                          }
+                        </p>
+                      </div>
+                    </ng-template>
+                    <ng-template #item let-item>
+                      <div class="flex items-center gap-2">
+                        <i [class]="item.dataType | fieldIcon"></i>
+                        <p>
+                          {{ item.presentation?.uiName || item.name }}
+                          @if (item.presentation?.uiName) {
+                            <span class="text-xs text-surface-500">{{ item.name }}</span>
+                          }
+                        </p>
+                      </div>
+                    </ng-template>
+                  </p-select>
+                  <p class="text-surface-500 text-xs">
+                    The selected column will be shown as the display value for this reference.
+                  </p>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Default Value</p>
+          </label>
+          <div class="flex flex-col gap-6 col-span-2">
+            @switch (selectedDataType()) {
+              @case (DataType.Text) {
+                <text-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.LongText) {
+                <long-text-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Integer) {
+                <integer-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Number) {
+                <number-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Select) {
+                <select-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.MultiSelect) {
+                <multi-select-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Checkbox) {
+                <checkbox-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Date) {
+                <date-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Email) {
+                <email-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Url) {
+                <url-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.JSON) {
+                <json-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.GeoPoint) {
+                <geo-point-field-editor
+                  [field]="internalField"
+                  [(data)]="columnFormData.defaultValue"
+                  [label]="false"
+                  class="col-span-2"
+                />
+              }
+              @case (DataType.Reference) {
+                <p class="text-sm">Not support</p>
+              }
+              @case (DataType.Attachment) {
+                <p class="text-sm">Not support</p>
+              }
+              @case (DataType.AutoNumber) {
+                <p class="text-sm">Not support</p>
+              }
+              @case (DataType.AutoDate) {
+                <p class="text-sm">Not support</p>
+              }
+              @default {
+                <i class="text-sm text-surface-500">Select a data type first.</i>
+              }
+            }
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Constraints</p>
+          </label>
+          <div class="flex flex-col gap-6 col-span-2">
+            <div class="flex gap-4">
+              <p-checkbox
+                inputId="nullable"
+                name="nullable"
+                [(ngModel)]="columnFormData.nullable"
+                [binary]="true"
+                size="large"
+              />
+              <label for="nullable" class="text-sm">
+                Allow Nullable
+                <p class="text-surface-500 text-xs">
+                  Allows the column to be left blank (optional).
+                </p>
+              </label>
+            </div>
+            <div class="flex gap-4">
+              <p-checkbox
+                inputId="unique"
+                name="unique"
+                [(ngModel)]="columnFormData.unique"
+                [binary]="true"
+                size="large"
+              />
+              <label for="unique" class="text-sm">
+                Is Unique
+                <p class="text-surface-500 text-xs">
+                  Ensures all values are different (no duplicates). Can be blank if allowed, unlike
+                  Primary Key.
+                </p>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" (click)="cancel()" />
+      <p-button
+        label="Save"
+        [loading]="isSaving()"
+        [disabled]="columnForm().invalid"
+        (click)="save()"
+      />
+    </div>
+  </ng-template>
+</p-drawer>

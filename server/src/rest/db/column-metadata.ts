@@ -43,6 +43,26 @@ export function getAllColumnMetadata(schemaName: string, tableName: string) {
   }));
 }
 
+export function getMultiColumnMetadata(
+  schemaName: string,
+  tableNames: string[]
+) {
+  if (tableNames.length === 0) return [];
+
+  const placeholders = tableNames.map(() => '?').join(', ');
+  const rows = db
+    .query<
+      ColumnMetadata,
+      any[]
+    >(`SELECT * FROM column_metadata WHERE schemaName = ? AND tableName IN (${placeholders})`)
+    .all(schemaName, ...tableNames);
+
+  return rows.map((row) => ({
+    ...row,
+    format: row.format ? JSON.parse(row.format) : null,
+  }));
+}
+
 export function getColumnMetadata(
   schemaName: string,
   tableName: string,

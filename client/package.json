@@ -47,6 +47,7 @@
     "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
+    "@foblex/flow": "^18.0.0",
     "@formulajs/formulajs": "^4.5.4",
     "@fullcalendar/angular": "^6.1.20",
     "@fullcalendar/core": "^6.1.20",

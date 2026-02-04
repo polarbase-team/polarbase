@@ -1,0 +1,255 @@
+<p-toast appendTo="body" />
+<p-confirmdialog appendTo="body" styleClass="max-w-md" />
+
+<p-drawer
+  [(visible)]="isDrawerVisible"
+  position="right"
+  [header]="isViewMode() ? 'Key Details' : 'Add Key'"
+  styleClass="!w-150 custom-drawer"
+  (onShow)="onEditorOpen()"
+  (onHide)="onEditorClose()"
+>
+  <ng-template #content>
+    <form id="apiKeyForm" #apiKeyForm="ngForm" (ngSubmit)="onApiKeyFormSubmit()">
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">General</p>
+          </label>
+          <div class="flex flex-col gap-1 col-span-2">
+            <label for="name" class="text-sm">
+              Name
+              <i class="icon icon-asterisk text-red-500"></i>
+            </label>
+            <input
+              pInputText
+              id="name"
+              name="keyName"
+              [pAutoFocus]="true"
+              [invalid]="keyName.invalid && (keyName.touched || apiKeyForm.submitted)"
+              [(ngModel)]="activeApiKey.name"
+              #keyName="ngModel"
+              placeholder="Input here..."
+              required
+              [readonly]="isViewMode()"
+            />
+            @if (keyName.invalid && (keyName.touched || apiKeyForm.submitted)) {
+              <p-message severity="error" size="small" variant="simple">
+                @if (keyName.errors['required']) {
+                  Key name is required.
+                }
+              </p-message>
+            }
+          </div>
+        </div>
+      </div>
+      <p-divider />
+      <div class="p-5">
+        <div class="grid grid-cols-3 w-full gap-12">
+          <label class="col-span-1">
+            <p class="font-medium text-sm">Permissions</p>
+          </label>
+          <div class="flex flex-col gap-6 col-span-2">
+            <div class="flex gap-4">
+              <p-checkbox
+                inputId="restApiPermission"
+                name="restApiPermission"
+                [(ngModel)]="activeApiKey.scopes.rest"
+                [ngModelOptions]="{ standalone: true }"
+                [binary]="true"
+                size="large"
+                [readonly]="isViewMode()"
+              />
+              <label for="restApiPermission" class="text-sm">
+                REST API Access
+                <p class="text-surface-500 text-xs">
+                  Enable this to allow the API key to access and manage data via the system’s
+                  RESTful API.
+                </p>
+              </label>
+            </div>
+            <div class="flex gap-4">
+              <p-checkbox
+                inputId="agentApiPermission"
+                name="agentApiPermission"
+                [(ngModel)]="activeApiKey.scopes.agent"
+                [ngModelOptions]="{ standalone: true }"
+                [binary]="true"
+                size="large"
+                [readonly]="isViewMode()"
+              />
+              <label for="agentApiPermission" class="text-sm">
+                Agent API Access
+                <p class="text-surface-500 text-xs">
+                  Enable this to allow the API key to access and manage data via the system’s Agent
+                  API.
+                </p>
+              </label>
+            </div>
+            <div class="flex gap-4">
+              <p-checkbox
+                inputId="mcpServerPermission"
+                name="mcpServerPermission"
+                [(ngModel)]="activeApiKey.scopes.mcp"
+                [ngModelOptions]="{ standalone: true }"
+                [binary]="true"
+                size="large"
+                [readonly]="isViewMode()"
+              />
+              <label for="mcpServerPermission" class="text-sm">
+                MCP Server Access
+                <p class="text-surface-500 text-xs">
+                  Enable this to allow the API key to access and manage data via the system’s MCP
+                  Server.
+                </p>
+              </label>
+            </div>
+            <div class="flex gap-4">
+              <p-checkbox
+                inputId="realtimeServerPermission"
+                name="realtimeServerPermission"
+                [(ngModel)]="activeApiKey.scopes.realtime"
+                [ngModelOptions]="{ standalone: true }"
+                [binary]="true"
+                size="large"
+                [readonly]="isViewMode()"
+              />
+              <label for="realtimeServerPermission" class="text-sm">
+                Realtime Server Access
+                <p class="text-surface-500 text-xs">
+                  Enable this to allow the API key to access and manage data via the system’s
+                  Realtime Server.
+                </p>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" (click)="isDrawerVisible = false" />
+      @if (!isViewMode()) {
+        <button
+          pButton
+          label="Save"
+          [loading]="isSaving()"
+          [disabled]="apiKeyForm().invalid"
+          type="submit"
+          form="apiKeyForm"
+        ></button>
+      }
+    </div>
+  </ng-template>
+</p-drawer>
+
+<div class="p-10 max-w-6xl mx-auto">
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <div class="text-xl">API Key Management</div>
+      <p class="text-sm text-gray-500">
+        Manage API keys to securely access your data via REST, Agent, MCP, and Realtime APIs.
+      </p>
+    </div>
+    <p-button label="Add Key" icon="icon icon-plus" (click)="isDrawerVisible = true" />
+  </div>
+
+  <div class="mb-4">
+    <p-iconfield>
+      <p-inputicon class="icon icon-search" />
+      <input
+        class="w-70"
+        type="text"
+        pInputText
+        placeholder="Search key..."
+        [(ngModel)]="searchQuery"
+        (input)="searchByName()"
+      />
+    </p-iconfield>
+  </div>
+
+  <p-table [value]="filteredKeys()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true">
+    <ng-template #header>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Key</th>
+        <th>Scopes</th>
+        <th>Created At</th>
+        <th class="text-center!">Status</th>
+        <th class="text-center!">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-key>
+      <tr>
+        <td>{{ key.id }}</td>
+        <td>{{ key.name }}</td>
+        <td>
+          <div class="flex items-center gap-2">
+            <code class="text-sm truncate">{{ key.key | slice: 0 : 10 }}...</code>
+            <p-button
+              icon="icon icon-copy"
+              severity="secondary"
+              [text]="true"
+              pTooltip="Copy to clipboard"
+              tooltipPosition="top"
+              [cdkCopyToClipboard]="key.key"
+              (cdkCopyToClipboardCopied)="onCopyKey()"
+            />
+          </div>
+        </td>
+        <td>
+          <div class="flex flex-wrap gap-1">
+            @if (key.scopes.rest) {
+              <p-tag severity="secondary" value="rest" />
+            }
+            @if (key.scopes.agent) {
+              <p-tag severity="secondary" value="agent" />
+            }
+            @if (key.scopes.mcp) {
+              <p-tag severity="secondary" value="mcp" />
+            }
+            @if (key.scopes.realtime) {
+              <p-tag severity="secondary" value="realtime" />
+            }
+          </div>
+        </td>
+        <td>{{ key.createdAt | date: 'medium' }}</td>
+        <td class="text-center!">
+          <p-tag
+            [value]="key.revoked ? 'Revoked' : 'Active'"
+            [severity]="key.revoked ? 'danger' : 'success'"
+          />
+        </td>
+        <td class="text-center!">
+          <div class="flex justify-center gap-1">
+            <p-button
+              icon="icon icon-eye"
+              severity="info"
+              [text]="true"
+              pTooltip="View details"
+              tooltipPosition="top"
+              (click)="viewApiKey(key)"
+            />
+            @if (!key.revoked) {
+              <p-button
+                icon="icon icon-trash"
+                severity="danger"
+                [text]="true"
+                pTooltip="Revoke key"
+                tooltipPosition="top"
+                (click)="revokeKey(key)"
+              />
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="7" class="!text-center py-5">No API Keys found</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

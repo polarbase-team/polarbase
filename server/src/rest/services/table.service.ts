@@ -3,6 +3,8 @@ import {
   getTable,
   getTableList,
   getTableSchema,
+  getMultiTableSchema,
+  getColumnSchema,
   toPgArray,
 } from '../utils/table';
 import {
@@ -30,8 +32,24 @@ import { setTableMetadata } from '../db/table-metadata';
 import { setColumnMetadata } from '../db/column-metadata';
 
 export class TableService {
-  async getAll({ schemaName = 'public' }: { schemaName?: string } = {}) {
+  async getAll({
+    schemaName = 'public',
+    includeSchema = false,
+  }: {
+    schemaName?: string;
+    includeSchema?: boolean;
+  } = {}) {
     const tables = await getTableList(pg, schemaName);
+    if (includeSchema) {
+      const schemas = await getMultiTableSchema(
+        pg,
+        schemaName,
+        tables.map((t) => t.name)
+      );
+      for (const table of tables) {
+        table.schema = schemas[table.name] || [];
+      }
+    }
     return tables;
   }
 
@@ -414,7 +432,7 @@ export class TableService {
       throw error;
     }
 
-    return (await getTableSchema(pg, schemaName, tableName, name))[0];
+    return getColumnSchema(pg, schemaName, tableName, name);
   }
 
   async updateColumn({
@@ -513,12 +531,12 @@ export class TableService {
     if (!columnExists)
       throw new Error(`Column "${columnName}" not found in ${fullTableName}`);
 
-    const [oldSchema] = (await getTableSchema(
+    const oldSchema = await getColumnSchema(
       pg,
       schemaName,
       tableName,
       columnName
-    )) as Column[];
+    );
 
     let recreateConstraints = false;
 
@@ -802,7 +820,7 @@ export class TableService {
       setColumnMetadata(schemaName, tableName, newName, metadata);
     }
 
-    return (await getTableSchema(pg, schemaName, tableName, newName))[0];
+    return getColumnSchema(pg, schemaName, tableName, newName);
   }
 
   async deleteColumn({
