@@ -27,13 +27,11 @@ export class BaseComponent {
       label: 'Studio',
       icon: 'icon icon-layout-grid',
       value: 'studio',
-      routerLink: '/base/studio',
     },
     {
       label: 'Details',
       icon: 'icon icon-sliders-horizontal',
       value: 'details',
-      routerLink: '/base/details',
     },
   ];
 
@@ -51,6 +49,10 @@ export class BaseComponent {
       .subscribe(() => {
         this.view.set(this.router.url.split('?')[0].split('/')[2]);
       });
+  }
+
+  protected navigate(value: string) {
+    this.router.navigate([`base/${value}`]);
   }
 
   protected openAPIDocs() {

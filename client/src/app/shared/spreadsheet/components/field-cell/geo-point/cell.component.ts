@@ -35,7 +35,7 @@ export class GeoPointFieldCellComponent extends FieldCellInputable<GeoPointData>
         typeof this.data === 'object'
           ? [this.data.x, this.data.y]
           : this.data.split(',').map((p) => parseFloat(p));
-      location = { lng: point[0], lat: point[1] };
+      location = { lat: point[0], lng: point[1] };
     }
 
     this.location = location;
@@ -43,6 +43,6 @@ export class GeoPointFieldCellComponent extends FieldCellInputable<GeoPointData>
   }
 
   protected onLocationSave(location: Location) {
-    this.save(`(${location.lng}, ${location.lat})`);
+    this.save(`(${location.lat}, ${location.lng})`);
   }
 }
