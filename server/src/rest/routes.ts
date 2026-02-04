@@ -151,10 +151,24 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       /**
        * GET /rest/db/tables → list of allowed tables + comments
        */
-      .get('/tables', async () => {
-        const tables = await tableService.getAll();
-        return tables.filter((t) => !REST_BLACKLISTED_TABLES.includes(t.name));
-      })
+      .get(
+        '/tables',
+        async ({ query: { includeSchema } }) => {
+          const tables = await tableService.getAll({ includeSchema });
+          return tables.filter(
+            (t) => !REST_BLACKLISTED_TABLES.includes(t.name)
+          );
+        },
+        {
+          query: t.Object({
+            includeSchema: t.Optional(
+              t.Boolean({
+                error: 'includeSchema must be a boolean',
+              })
+            ),
+          }),
+        }
+      )
 
       /**
        * GET /rest/db/tables/:table/schema → detailed column schema

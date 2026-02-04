@@ -1,6 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, effect, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { filter } from 'rxjs';
 
 import { TabsModule } from 'primeng/tabs';
 import { ButtonModule } from 'primeng/button';
@@ -40,6 +49,7 @@ export class BaseStudioComponent {
   constructor(
     protected tableService: TableService,
     protected tableRealtimeService: TableRealtimeService,
+    private destroyRef: DestroyRef,
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private agentService: AgentService,
@@ -56,6 +66,18 @@ export class BaseStudioComponent {
         queryParamsHandling: 'merge',
       });
     });
+
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        const table = this.activatedRoute.snapshot.queryParams['table'];
+        if (table) {
+          this.tableService.selectTable(table);
+        }
+      });
 
     this.tableRealtimeService.enableSSE();
   }

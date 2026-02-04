@@ -5,18 +5,20 @@
     </div>
     <nav class="flex-1 px-2 space-y-1">
       <a
+        routerLink="relations"
+        routerLinkActive="bg-surface-200!"
+        class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-surface-100 text-surface-700 cursor-pointer"
+      >
+        <i class="icon icon-workflow"></i>
+        <span>Relations</span>
+      </a>
+      <a
         routerLink="indexes"
         routerLinkActive="bg-surface-200!"
         class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-surface-100 text-surface-700 cursor-pointer"
       >
         <i class="icon icon-list-indent-increase"></i>
         <span>Indexes</span>
-      </a>
-      <a
-        class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-surface-100 text-surface-700 cursor-pointer"
-      >
-        <i class="icon icon-workflow"></i>
-        <span>Relations</span>
       </a>
       <a
         routerLink="api-keys"
@@ -26,16 +28,14 @@
         <i class="icon icon-key-round"></i>
         <span>API Keys</span>
       </a>
-      <a
-        class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-surface-100 text-surface-700 cursor-pointer"
-      >
+      <a class="flex items-center gap-3 px-3 py-2 rounded-md text-surface-300">
         <i class="icon icon-webhook"></i>
         <span>Webhooks</span>
       </a>
     </nav>
   </div>
 
-  <div class="flex-1 overflow-auto bg-white p-8">
+  <div class="flex-1 overflow-auto">
     <router-outlet></router-outlet>
   </div>
 </div>

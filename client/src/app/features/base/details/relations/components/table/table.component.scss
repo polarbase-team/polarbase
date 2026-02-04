@@ -1,0 +1,41 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 250px;
+  padding: 8px 8px 16px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: var(--db-background);
+  box-shadow: var(--db-shadow-1);
+
+  &.f-selected {
+    box-shadow: var(--db-shadow-2);
+  }
+}
+
+:host {
+  --header-background: var(--db-node-header-normal-state-background-color);
+
+  &.f-selected {
+    --header-background: var(--db-primary-soft);
+  }
+}
+
+:host {
+  .f-node-input,
+  .f-node-output {
+    position: absolute;
+    background-color: transparent;
+    width: 56px;
+    height: 100%;
+  }
+
+  .f-node-input {
+    left: -8px;
+  }
+
+  .f-node-output {
+    right: -8px;
+  }
+}

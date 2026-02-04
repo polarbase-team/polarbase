@@ -26,6 +26,7 @@ export interface TableDefinition {
   presentation: {
     uiName?: string;
   } | null;
+  schema?: ColumnDefinition[];
 }
 
 export interface TableFormData extends Omit<TableDefinition, 'primaryKey'> {
@@ -142,14 +143,16 @@ export class TableService {
     this.viewLayoutService.remove(tableName);
   }
 
-  getTables() {
-    return this.http.get<ApiResponse<TableDefinition[]>>(`${this.apiUrl}/tables`).pipe(
-      map((res) => {
-        const tables = res.data;
-        this.tables.set(tables);
-        return tables;
-      }),
-    );
+  getTables(includeSchema = false) {
+    return this.http
+      .get<ApiResponse<TableDefinition[]>>(`${this.apiUrl}/tables?includeSchema=${includeSchema}`)
+      .pipe(
+        map((res) => {
+          const tables = res.data;
+          this.tables.set(tables);
+          return tables;
+        }),
+      );
   }
 
   getTableSchema(tableName: string) {
