@@ -25,6 +25,7 @@ interface MapViewConfiguration {
   selectedGeoPointField?: string;
   selectedDisplayField?: string;
   filterQuery?: FilterGroup;
+  mapZoom?: number;
 }
 
 @Component({
@@ -55,12 +56,14 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
   protected selectedGeoPointField: string;
   protected selectedDisplayField: string;
   protected filterQuery: FilterGroup;
+  protected mapZoom = 13;
 
   ngOnInit() {
     const configuration = this.getViewConfiguration();
     this.selectedGeoPointField = configuration.selectedGeoPointField;
     this.selectedDisplayField = configuration.selectedDisplayField;
     this.filterQuery = configuration.filterQuery;
+    this.mapZoom = configuration.mapZoom;
 
     this.loadTable();
   }
@@ -136,6 +139,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
       selectedGeoPointField: this.selectedGeoPointField,
       selectedDisplayField: this.selectedDisplayField,
       filterQuery: this.filterQuery,
+      mapZoom: this.mapZoom,
     });
   }
 
@@ -151,6 +155,10 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
       },
       mode: 'add',
     });
+  }
+
+  protected onMapZoomChange() {
+    this.saveViewConfiguration();
   }
 
   protected onMarkerClick(location: Location) {

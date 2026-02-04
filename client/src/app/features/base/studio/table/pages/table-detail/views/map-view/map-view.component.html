@@ -91,6 +91,8 @@
 
 <open-map
   [locations]="locations()"
+  [(zoom)]="mapZoom"
+  (zoomChange)="onMapZoomChange()"
   (onMarkerClick)="onMarkerClick($event)"
   toolbarStyleClass="pt-[16px] px-[20px]"
 >

@@ -12,6 +12,7 @@ import {
   TemplateRef,
   DestroyRef,
   signal,
+  model,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -60,7 +61,7 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
   container = viewChild<ElementRef<HTMLDivElement>>('container');
 
   locations = input<Location[]>();
-  zoom = input<number>(13);
+  zoom = model(13);
   toolbarStyleClass = input<string>();
   contentStyleClass = input<string>();
 
@@ -100,7 +101,7 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
       navigator.geolocation.getCurrentPosition((position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        this.map.flyTo([lat, lng], this.zoom());
+        this.map.flyTo([lat, lng], this.zoom() ?? 13);
       });
     }
   }
@@ -135,11 +136,15 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
             environment.openStreetMap.defaultLocation[1],
           ]
         : [0, 0],
-      this.zoom(),
+      this.zoom() ?? 13,
     );
     L.tileLayer(environment.openStreetMap.url, {
       attribution: environment.openStreetMap.attribution,
     }).addTo(this.map);
+
+    this.map.on('zoomend', () => {
+      this.zoom.set(this.map.getZoom());
+    });
 
     this.map.on('click', (e: L.LeafletMouseEvent) => {
       this.onMapClick.emit({ lat: e.latlng.lat, lng: e.latlng.lng });
@@ -170,7 +175,7 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
       }
       this.markers = markers;
 
-      this.map.setView([locations[0].lat, locations[0].lng], this.zoom());
+      this.map.setView([locations[0].lat, locations[0].lng], this.zoom() ?? 13);
     }
   }
 }
