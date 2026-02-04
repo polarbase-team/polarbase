@@ -100,8 +100,8 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
           {
             id: record.new.id,
             title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
-            lng: record.new[this.selectedGeoPointField].x,
-            lat: record.new[this.selectedGeoPointField].y,
+            lat: record.new[this.selectedGeoPointField].x,
+            lng: record.new[this.selectedGeoPointField].y,
           },
         ]);
         break;
@@ -114,8 +114,8 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
                 ? {
                     id: record.new.id,
                     title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
-                    lng: record.new[this.selectedGeoPointField].x,
-                    lat: record.new[this.selectedGeoPointField].y,
+                    lat: record.new[this.selectedGeoPointField].x,
+                    lng: record.new[this.selectedGeoPointField].y,
                   }
                 : l,
             ),
@@ -146,7 +146,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
         fields: this.fields(),
         data: {
           id: undefined,
-          [this.selectedGeoPointField]: location ? { x: location.lng, y: location.lat } : undefined,
+          [this.selectedGeoPointField]: location ? { x: location.lat, y: location.lng } : undefined,
         },
       },
       mode: 'add',
@@ -176,8 +176,8 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
           acc.push({
             id: r.id,
             title: getRecordDisplayLabel(r, this.selectedDisplayField),
-            lng: r[this.selectedGeoPointField].x,
-            lat: r[this.selectedGeoPointField].y,
+            lat: r[this.selectedGeoPointField].x,
+            lng: r[this.selectedGeoPointField].y,
           });
         }
         return acc;
