@@ -1,0 +1,162 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule, NgForm } from '@angular/forms';
+import { finalize, Observable } from 'rxjs';
+
+import { DrawerModule } from 'primeng/drawer';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { CheckboxModule } from 'primeng/checkbox';
+import { MessageModule } from 'primeng/message';
+import { AutoFocusModule } from 'primeng/autofocus';
+import { DividerModule } from 'primeng/divider';
+import { SelectModule } from 'primeng/select';
+import { ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+
+import { DrawerComponent } from '@app/core/components/drawer/drawer.component';
+import { sanitizeEmptyValues } from '@app/core/utils';
+import { TableFormData, TableDefinition, TableService } from '../../services/table.service';
+
+const DEFAULT_VALUE = { idType: 'integer', timestamps: true, presentation: {} } as TableFormData;
+
+@Component({
+  selector: 'table-editor-drawer',
+  templateUrl: './table-editor-drawer.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    FormsModule,
+    DrawerModule,
+    ButtonModule,
+    InputTextModule,
+    TextareaModule,
+    CheckboxModule,
+    MessageModule,
+    AutoFocusModule,
+    DividerModule,
+    SelectModule,
+    ConfirmDialogModule,
+  ],
+  providers: [ConfirmationService],
+})
+export class TableEditorDrawerComponent extends DrawerComponent {
+  table = input<TableDefinition>();
+  mode = input<'add' | 'edit'>('add');
+
+  onSave = output<TableFormData>();
+
+  protected tableForm = viewChild<NgForm>('tableForm');
+  protected tableFormData: TableFormData = { ...DEFAULT_VALUE };
+  protected isSaving = signal(false);
+  protected idTypes = [
+    {
+      label: 'Integer',
+      value: 'integer',
+      description: 'Ex: 1, 2, 3... Limited to ~2.1 billion rows.',
+    },
+    {
+      label: 'Big Integer',
+      value: 'biginteger',
+      description: 'Recommended. Supports up to ~9 quintillion rows.',
+    },
+    {
+      label: 'UUID',
+      value: 'uuid',
+      description: 'Globally unique, good for distributed systems.',
+    },
+    {
+      label: 'Short ID',
+      value: 'shortid',
+      description: 'Compact & URL-friendly alphanumeric ID.',
+    },
+  ];
+
+  constructor(
+    private destroyRef: DestroyRef,
+    private confirmationService: ConfirmationService,
+    private tableService: TableService,
+  ) {
+    super();
+  }
+
+  protected override onShow() {
+    super.onShow();
+
+    this.isSaving.set(false);
+
+    const table = { ...DEFAULT_VALUE, ...this.table() };
+    const { primaryKey, ...rest } = table;
+    this.tableFormData = {
+      ...rest,
+      presentation: { ...DEFAULT_VALUE.presentation, ...rest.presentation },
+    };
+  }
+
+  protected override onHide() {
+    super.onHide();
+
+    if (this.tableForm().dirty) {
+      this.confirmationService.confirm({
+        target: null,
+        header: 'Discard changes?',
+        message: 'You have unsaved changes. Are you sure you want to discard them?',
+        rejectButtonProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+          outlined: true,
+        },
+        acceptButtonProps: {
+          label: 'Discard',
+          severity: 'danger',
+        },
+        accept: () => {
+          this.close();
+        },
+      });
+      return;
+    }
+
+    this.close();
+  }
+
+  protected async onSubmit() {
+    if (!this.tableForm().valid) return;
+
+    this.isSaving.set(true);
+
+    // Sanitize the table form data by removing empty values
+    const formData = sanitizeEmptyValues(this.tableFormData);
+
+    let fn: Observable<any>;
+    if (this.mode() === 'edit') {
+      fn = this.tableService.updateTable(this.table().name, formData);
+    } else {
+      fn = this.tableService.createTable(formData);
+    }
+
+    fn.pipe(
+      finalize(() => this.isSaving.set(false)),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(({ data: table }) => {
+      this.onSave.emit(table);
+      this.close();
+    });
+  }
+
+  protected save() {
+    this.onSubmit();
+  }
+
+  protected cancel() {
+    this.close();
+  }
+}

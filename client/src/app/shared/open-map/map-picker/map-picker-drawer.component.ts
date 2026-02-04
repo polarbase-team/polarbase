@@ -5,7 +5,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
-import { DrawerComponent } from '@app/core/components/drawer.component';
+import { DrawerComponent } from '@app/core/components/drawer/drawer.component';
 import { Location } from '../open-map.component';
 import { MapPickerComponent } from './map-picker.component';
 

@@ -1,7 +1,10 @@
 import { Knex } from 'knex';
 import { LRUCache } from 'lru-cache';
 import { getAllTableMetadata, getTableMetadata } from '../db/table-metadata';
-import { getAllColumnMetadata, getColumnMetadata } from '../db/column-metadata';
+import {
+  getColumnMetadata,
+  getMultiColumnMetadata,
+} from '../db/column-metadata';
 import {
   Column,
   LENGTH_CHECK_SUFFIX,
@@ -21,9 +24,14 @@ export interface Table {
   presentation?: {
     uiName?: string;
   } | null;
+  schema?: Column[];
 }
 
-const fetchTables = (pg: Knex, schemaName: string, tableName?: string): Promise<Table[]> => {
+const fetchTables = (
+  pg: Knex,
+  schemaName: string,
+  tableName?: string
+): Promise<Table[]> => {
   return pg('pg_class as c')
     .select({
       name: 'c.relname',
@@ -88,7 +96,11 @@ export const getTableList = async (pg: Knex, schemaName: string) => {
  * Retrieves a specific table from the database
  * along with its presentation metadata.
  */
-export const getTable = async (pg: Knex, schemaName: string, tableName: string) => {
+export const getTable = async (
+  pg: Knex,
+  schemaName: string,
+  tableName: string
+) => {
   // Get table from database
   const table = (await fetchTables(pg, schemaName, tableName))?.[0];
   if (!table) {
@@ -105,21 +117,73 @@ export const getTable = async (pg: Knex, schemaName: string, tableName: string) 
 
   return table;
 };
-
 /**
- * Retrieves the schema of a specific table,
- * including column metadata, primary key identification,
- * column comments, and additional validation and foreign key details.
+ * Retrieves the schema of a specific table.
  */
 export const getTableSchema = async (
   pg: Knex,
   schemaName: string,
-  tableName: string,
-  columnName?: string
+  tableName: string
 ) => {
+  const schemas = await fetchSchemasInternal(pg, schemaName, {
+    type: 'tables',
+    tableNames: [tableName],
+  });
+  return schemas[tableName] || [];
+};
+
+/**
+ * Retrieves schemas for multiple tables in a single operation.
+ */
+export const getMultiTableSchema = async (
+  pg: Knex,
+  schemaName: string,
+  tableNames: string[]
+) => {
+  return fetchSchemasInternal(pg, schemaName, { type: 'tables', tableNames });
+};
+
+/**
+ * Retrieves the schema for a single column.
+ */
+export const getColumnSchema = async (
+  pg: Knex,
+  schemaName: string,
+  tableName: string,
+  columnName: string
+) => {
+  const schemas = await fetchSchemasInternal(pg, schemaName, {
+    type: 'column',
+    tableName,
+    columnName,
+  });
+  return schemas[tableName]?.[0] || null;
+};
+
+/**
+ * Defines the target for schema fetching: either multiple tables or a single column.
+ */
+type SchemaTarget =
+  | { type: 'tables'; tableNames: string[] }
+  | { type: 'column'; tableName: string; columnName: string };
+
+/**
+ * Shared internal implementation to fetch raw database schema information.
+ * Adapts filters dynamically based on the target (batch tables or single column).
+ */
+const fetchSchemasInternal = async (
+  pg: Knex,
+  schemaName: string,
+  target: SchemaTarget
+): Promise<Record<string, Column[]>> => {
+  const tableNames =
+    target.type === 'tables' ? target.tableNames : [target.tableName];
+  const columnName = target.type === 'column' ? target.columnName : undefined;
+
+  if (tableNames.length === 0) return {};
+
   /**
-   * 1. Parallel Data Fetching
-   * Execute all independent metadata queries concurrently to minimize network latency.
+   * Execute all database and metadata queries concurrently.
    */
   const [
     columns,
@@ -130,9 +194,10 @@ export const getTableSchema = async (
     checkConstraints,
     columnMetadata,
   ] = await Promise.all([
-    // Basic column properties (type, nullability, default values)
+    // 1. Basic column properties
     pg('information_schema.columns')
       .select(
+        'table_name',
         'column_name',
         'data_type',
         'udt_name',
@@ -142,91 +207,69 @@ export const getTableSchema = async (
         'column_default',
         'ordinal_position'
       )
-      .where({
-        table_schema: schemaName,
-        table_name: tableName,
-        ...(columnName ? { column_name: columnName } : {}),
+      .where({ table_schema: schemaName })
+      .whereIn('table_name', tableNames)
+      .modify((qb) => {
+        if (columnName) qb.where({ column_name: columnName });
       })
-      .orderBy('ordinal_position'),
+      .orderBy(['table_name' as any, 'ordinal_position' as any]),
 
-    // Column descriptions from pg_description
+    // 2. Column descriptions (Postgres)
     pg('pg_description')
       .select(
+        'pg_class.relname as table_name',
         'pg_description.objsubid as ordinal_position',
         'pg_description.description',
-        'information_schema.columns.column_name'
+        'c.column_name'
       )
       .join('pg_class', 'pg_description.objoid', 'pg_class.oid')
       .join('pg_namespace', 'pg_class.relnamespace', 'pg_namespace.oid')
-      .leftJoin('information_schema.columns', function () {
-        this.on(
-          'information_schema.columns.table_name',
-          '=',
-          'pg_class.relname'
-        )
-          .andOn(
-            'information_schema.columns.table_schema',
-            '=',
-            'pg_namespace.nspname'
-          )
-          .andOn(
-            'information_schema.columns.ordinal_position',
-            '=',
-            'pg_description.objsubid'
-          );
+      .join('information_schema.columns as c', function () {
+        this.on('c.table_name', '=', 'pg_class.relname')
+          .andOn('c.table_schema', '=', 'pg_namespace.nspname')
+          .andOn('c.ordinal_position', '=', 'pg_description.objsubid');
       })
-      .where({
-        'pg_namespace.nspname': schemaName,
-        'pg_class.relname': tableName,
-        ...(columnName
-          ? { 'information_schema.columns.column_name': columnName }
-          : {}),
+      .where('pg_namespace.nspname', schemaName)
+      .whereIn('pg_class.relname', tableNames)
+      .modify((qb) => {
+        if (columnName) qb.where({ 'c.column_name': columnName });
       }),
 
-    // Identify primary key columns
-    pg('information_schema.key_column_usage')
-      .select('column_name')
-      .join('information_schema.table_constraints', function () {
-        this.on(
-          'table_constraints.constraint_name',
-          '=',
-          'key_column_usage.constraint_name'
-        )
-          .andOn(
-            'table_constraints.table_schema',
-            '=',
-            'key_column_usage.table_schema'
-          )
-          .andOn(
-            'table_constraints.table_name',
-            '=',
-            'key_column_usage.table_name'
-          );
+    // 3. Primary keys
+    pg('information_schema.key_column_usage as kcu')
+      .select('kcu.table_name', 'kcu.column_name')
+      .join('information_schema.table_constraints as tc', function () {
+        this.on('tc.constraint_name', '=', 'kcu.constraint_name')
+          .andOn('tc.table_schema', '=', 'kcu.table_schema')
+          .andOn('tc.table_name', '=', 'kcu.table_name');
       })
       .where({
-        'key_column_usage.table_schema': schemaName,
-        'key_column_usage.table_name': tableName,
-        ...(columnName ? { 'key_column_usage.column_name': columnName } : {}),
-        'table_constraints.constraint_type': 'PRIMARY KEY',
+        'kcu.table_schema': schemaName,
+        'tc.constraint_type': 'PRIMARY KEY',
+      })
+      .whereIn('kcu.table_name', tableNames)
+      .modify((qb) => {
+        if (columnName) qb.where({ 'kcu.column_name': columnName });
       }),
 
-    // Fetch Foreign Key relationships and referential actions (ON UPDATE/DELETE)
+    // 4. Foreign keys
     pg.raw(
       `
-      SELECT kcu.column_name, c.udt_name AS column_udt_type, ccu.table_name AS referenced_table_name,
-             ccu.column_name AS referenced_column_name, rc.update_rule AS on_update, rc.delete_rule AS on_delete
+      SELECT kcu.table_name, kcu.column_name, c.udt_name AS column_udt_type, 
+             ccu.table_name AS referenced_table_name, ccu.column_name AS referenced_column_name, 
+             rc.update_rule AS on_update, rc.delete_rule AS on_delete
       FROM information_schema.key_column_usage AS kcu
       JOIN information_schema.referential_constraints AS rc ON kcu.constraint_name = rc.constraint_name AND kcu.constraint_schema = rc.constraint_schema
       JOIN information_schema.constraint_column_usage AS ccu ON rc.unique_constraint_name = ccu.constraint_name AND rc.unique_constraint_schema = ccu.constraint_schema
       JOIN information_schema.columns AS c ON kcu.table_schema = c.table_schema AND kcu.table_name = c.table_name AND kcu.column_name = c.column_name
-      WHERE kcu.table_schema = ? AND kcu.table_name = ? ${columnName ? 'AND kcu.column_name = ?' : ''}
+      WHERE kcu.table_schema = ? AND kcu.table_name = ANY(?) ${columnName ? 'AND kcu.column_name = ?' : ''}
     `,
-      [schemaName, tableName, ...(columnName ? [columnName] : [])]
+      [schemaName, tableNames, ...(columnName ? [columnName] : [])]
     ),
 
-    // Single-column unique constraints
+    // 5. Unique constraints
     pg('information_schema.table_constraints as tc')
-      .select('kcu.column_name')
+      .select('kcu.table_name', 'kcu.column_name')
       .join('information_schema.key_column_usage as kcu', function () {
         this.on('kcu.constraint_name', '=', 'tc.constraint_name')
           .andOn('kcu.table_schema', '=', 'tc.table_schema')
@@ -234,44 +277,98 @@ export const getTableSchema = async (
       })
       .where({
         'tc.table_schema': schemaName,
-        'tc.table_name': tableName,
         'tc.constraint_type': 'UNIQUE',
-        ...(columnName ? { 'kcu.column_name': columnName } : {}),
       })
-      .groupBy('kcu.column_name')
+      .whereIn('kcu.table_name', tableNames)
+      .modify((qb) => {
+        if (columnName) qb.where({ 'kcu.column_name': columnName });
+      })
+      .groupBy('kcu.table_name', 'kcu.column_name')
       .havingRaw('COUNT(*) = 1'),
 
-    // Check constraints definition for custom validation logic
+    // 6. Check constraints
     pg.raw(
       `
-      SELECT c.conname AS constraint_name, pg_get_constraintdef(c.oid) AS constraint_def,
+      SELECT rel.relname AS table_name, c.conname AS constraint_name, pg_get_constraintdef(c.oid) AS constraint_def,
              STRING_AGG(a.attname, ', ' ORDER BY array_position(c.conkey, a.attnum)) AS involved_columns
       FROM pg_constraint c
       JOIN pg_class rel ON rel.oid = c.conrelid
       JOIN pg_namespace ns ON ns.oid = rel.relnamespace
       LEFT JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
-      WHERE ns.nspname = ? AND rel.relname = ? AND c.contype = 'c' ${columnName ? `AND a.attname = ?` : ''}
-      GROUP BY c.conname, c.oid, c.conkey;
+      WHERE ns.nspname = ? AND rel.relname = ANY(?) AND c.contype = 'c' ${columnName ? `AND a.attname = ?` : ''}
+      GROUP BY rel.relname, c.conname, c.oid, c.conkey;
     `,
-      columnName ? [schemaName, tableName, columnName] : [schemaName, tableName]
+      [schemaName, tableNames, ...(columnName ? [columnName] : [])]
     ),
 
-    // Get column metadata
-    columnName
-      ? getColumnMetadata(schemaName, tableName, columnName)
-      : getAllColumnMetadata(schemaName, tableName),
+    // 7. Column metadata (SQLite)
+    columnName && tableNames.length === 1
+      ? [getColumnMetadata(schemaName, tableNames[0], columnName)].filter(
+          Boolean
+        )
+      : getMultiColumnMetadata(schemaName, tableNames),
   ]);
 
-  /**
-   * 2. Map Raw Data to Optimized Lookup Structures (O(1) access)
-   */
+  const results: Record<string, Column[]> = {};
+
+  for (const tableName of tableNames) {
+    const tableColumns = (columns as any[]).filter(
+      (c) => c.table_name === tableName
+    );
+    if (!tableColumns.length && tableNames.length > 1) continue;
+
+    const tableComments = (comments as any[]).filter(
+      (c) => c.table_name === tableName
+    );
+    const tablePKs = (primaryKeys as any[]).filter(
+      (pk) => pk.table_name === tableName
+    );
+    const tableFKs = (foreignKeys.rows as any[]).filter(
+      (fk) => fk.table_name === tableName
+    );
+    const tableUniques = (uniqueConstraints as any[]).filter(
+      (u) => u.table_name === tableName
+    );
+    const tableChecks = (checkConstraints.rows as any[]).filter(
+      (cons) => cons.table_name === tableName
+    );
+    const tableMeta = (columnMetadata as any[]).filter(
+      (m) => m.tableName === tableName
+    );
+
+    results[tableName] = processTableSchema(
+      tableColumns,
+      tableComments,
+      tablePKs,
+      tableFKs,
+      tableUniques,
+      tableChecks,
+      tableMeta
+    );
+  }
+
+  return results;
+};
+
+/**
+ * Maps raw database results to a unified Column schema structure.
+ */
+const processTableSchema = (
+  columns: any[],
+  comments: any[],
+  primaryKeys: any[],
+  foreignKeys: any[],
+  uniqueConstraints: any[],
+  checkConstraints: any[],
+  columnMetadata: any[]
+): Column[] => {
   const commentMap = Object.fromEntries(
     comments.map((c: any) => [c.column_name, c.description])
   );
   const primaryKeySet = new Set(primaryKeys.map((pk: any) => pk.column_name));
   const uniqueSet = new Set(uniqueConstraints.map((u: any) => u.column_name));
   const foreignKeyMap = Object.fromEntries(
-    foreignKeys.rows.map((fk: any) => [
+    foreignKeys.map((fk: any) => [
       fk.column_name,
       {
         table: fk.referenced_table_name,
@@ -282,13 +379,9 @@ export const getTableSchema = async (
     ])
   );
 
-  /**
-   * 3. Parse Check Constraints into Validation Rules
-   * Uses Naming Convention (Suffixes) to categorize constraints.
-   */
   const validationMap: Record<string, any> = {};
   const optionsMap: Record<string, string[] | null> = {};
-  for (const cons of checkConstraints.rows) {
+  for (const cons of checkConstraints) {
     const def = cons.constraint_def;
     const colName = cons.involved_columns;
     validationMap[colName] = validationMap[colName] || { constraints: [] };
@@ -353,15 +446,9 @@ export const getTableSchema = async (
     }
   }
 
-  /**
-   * 4. Get column presentation metadata
-   * columnMetadata is either a single object or an array of objects
-   */
   const presentationMap: Record<string, { uiName: string; format: any }> = {};
   if (columnMetadata) {
-    for (const m of Array.isArray(columnMetadata)
-      ? columnMetadata
-      : [columnMetadata]) {
+    for (const m of columnMetadata) {
       presentationMap[m.columnName] = {
         uiName: m.uiName,
         format: m.format,
@@ -369,10 +456,6 @@ export const getTableSchema = async (
     }
   }
 
-  /**
-   * 5. Final Schema Assembly
-   * Combine all metadata into a unified Column object.
-   */
   return columns.map((col) => {
     const {
       value: defaultValue,

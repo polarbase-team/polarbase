@@ -9,7 +9,7 @@
     },
     "client": {
       "name": "polarbase-client",
-      "version": "0.6.4-beta",
+      "version": "0.7.0-beta",
       "dependencies": {
         "@angular/common": "^20.3.0",
         "@angular/compiler": "^20.3.0",
@@ -17,6 +17,7 @@
         "@angular/forms": "^20.3.0",
         "@angular/platform-browser": "^20.3.0",
         "@angular/router": "^20.3.0",
+        "@foblex/flow": "^18.0.0",
         "@formulajs/formulajs": "^4.5.4",
         "@fullcalendar/angular": "^6.1.20",
         "@fullcalendar/core": "^6.1.20",
@@ -57,7 +58,7 @@
     },
     "server": {
       "name": "polarbase-server",
-      "version": "0.6.4-beta",
+      "version": "0.7.0-beta",
       "dependencies": {
         "@ai-sdk/anthropic": "^2.0.53",
         "@ai-sdk/google": "^2.0.44",
@@ -1081,6 +1082,71 @@
       "",
       { "os": "win32", "cpu": "x64" },
       "sha512-PPOl1mi6lpLNQxnGoyAfschAodRFYXJ+9fs6WHXz7CSWKbOqiMZsubC+BQsVKuul+3vKLuwTHsS2c2y9EoKwxQ==",
+    ],
+
+    "@foblex/2d": [
+      "@foblex/2d@1.2.2",
+      "",
+      {
+        "dependencies": { "tslib": "^2.3.0" },
+        "peerDependencies": {
+          "@angular/common": ">=12.0.0",
+          "@angular/core": ">=12.0.0",
+          "rxjs": ">=6.6.0",
+        },
+      },
+      "sha512-nVl2iw6hF0RDE2+E4U1tSRX5lOI2toG9nY1VaMlQ0RdIB+0mEK1+lhjJDn/qDrBsMYpNCaTZ2CC3Jy54ItOnsQ==",
+    ],
+
+    "@foblex/flow": [
+      "@foblex/flow@18.0.0",
+      "",
+      {
+        "dependencies": { "tslib": "^2.3.0" },
+        "peerDependencies": {
+          "@angular/common": ">=15.0.0",
+          "@angular/core": ">=15.0.0",
+          "@foblex/2d": "1.2.2",
+          "@foblex/mediator": "1.1.3",
+          "@foblex/platform": "1.0.4",
+          "@foblex/utils": "1.1.1",
+        },
+      },
+      "sha512-Os85P3IETYiC7SZRXv1Onrm08+RbJZ9JpAReBevMm7h4nw9kR2MbUXxw6ckqjhSIj9MrfNYYL8Bn6K7l1hp3nQ==",
+    ],
+
+    "@foblex/mediator": [
+      "@foblex/mediator@1.1.3",
+      "",
+      {
+        "dependencies": { "tslib": "^2.3.0" },
+        "peerDependencies": {
+          "@angular/common": ">=12.0.0",
+          "@angular/core": ">=12.0.0",
+          "rxjs": ">=6.6.0",
+        },
+      },
+      "sha512-Yuvu4lpefFo0N1oo1xDBL7UItUe5KuasPniurcQITY3wvBRITSHZCPIEpB/FEWuaoknyC8t1blxDyOh11U+daA==",
+    ],
+
+    "@foblex/platform": [
+      "@foblex/platform@1.0.4",
+      "",
+      {
+        "dependencies": { "tslib": "^2.3.0" },
+        "peerDependencies": {
+          "@angular/common": ">=12.0.0",
+          "@angular/core": ">=12.0.0",
+        },
+      },
+      "sha512-GLbqPX9xL/w2pRX51J8RSjMrZcTKb8rmi9+EcrPtpRXCa4KETY4mpIzfKlaOthZusFY++UUFecM07aXRnp+sMw==",
+    ],
+
+    "@foblex/utils": [
+      "@foblex/utils@1.1.1",
+      "",
+      { "dependencies": { "tslib": "^2.3.0" } },
+      "sha512-w4g49vLAIogIXNYHWQzcv2p5jJKi/XAoTw7LvuEzKvEXDJ8ezL0BZJfbeg43q2+PyKvlUfu+6ySvNxnXYrb/Bg==",
     ],
 
     "@formulajs/formulajs": [

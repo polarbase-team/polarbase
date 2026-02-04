@@ -1,0 +1,71 @@
+<column-editor-drawer
+  [(visible)]="visibleColumnEditor"
+  [table]="tableService.activeTable()"
+  [column]="updatedColumn"
+  [mode]="updatedColumnMode"
+  (onSave)="onColumnSave($any($event))"
+/>
+<record-editor-drawer
+  [(visible)]="visibleRecordEditor"
+  [table]="updatedRecord.table"
+  [fields]="updatedRecord.fields"
+  [record]="updatedRecord.data"
+  [mode]="updatedRecordMode"
+  (onSave)="onRecordSave($event)"
+/>
+
+<ng-template #displayModeTmpl>
+  <div class="flex items-center">
+    <div>
+      <p-menu #displayModeMenu [model]="displayModeMenuItems" [popup]="true" appendTo="body" />
+      <button pButton severity="secondary" [outlined]="true" (click)="displayModeMenu.show($event)">
+        @switch (displayMode()) {
+          @case ('data-view') {
+            <i pButtonIcon class="icon icon-sheet"></i>
+            <span pButtonLabel class="whitespace-nowrap">Data View</span>
+          }
+          @case ('calendar-view') {
+            <i pButtonIcon class="icon icon-calendar-days"></i>
+            <span pButtonLabel class="whitespace-nowrap">Calendar View</span>
+          }
+          @case ('map-view') {
+            <i pButtonIcon class="icon icon-map-pin"></i>
+            <span pButtonLabel class="whitespace-nowrap">Map View</span>
+          }
+        }
+        <i pButtonIcon class="icon icon-chevron-down"></i>
+      </button>
+    </div>
+    <p-divider layout="vertical" class="scale-80" />
+  </div>
+</ng-template>
+
+@switch (displayMode()) {
+  @case ('data-view') {
+    <data-view
+      #view
+      [table]="table()"
+      [displayModeTmpl]="displayModeTmpl"
+      (onUpdateColumn)="onUpdateColumn($event)"
+      (onUpdateRecord)="onUpdateRecord($event)"
+    />
+  }
+  @case ('calendar-view') {
+    <calendar-view
+      #view
+      [table]="table()"
+      [displayModeTmpl]="displayModeTmpl"
+      (onUpdateColumn)="onUpdateColumn($event)"
+      (onUpdateRecord)="onUpdateRecord($event)"
+    />
+  }
+  @case ('map-view') {
+    <map-view
+      #view
+      [table]="table()"
+      [displayModeTmpl]="displayModeTmpl"
+      (onUpdateColumn)="onUpdateColumn($event)"
+      (onUpdateRecord)="onUpdateRecord($event)"
+    />
+  }
+}
