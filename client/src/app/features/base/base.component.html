@@ -8,14 +8,17 @@
     </div>
   </div>
   <div center>
-    <p-selectbutton [options]="options" [ngModel]="view()" [unselectable]="true">
+    <p-selectbutton
+      [options]="options"
+      [ngModel]="view()"
+      (ngModelChange)="navigate($event)"
+      [unselectable]="true"
+    >
       <ng-template #item let-item>
-        <routerLink [routerLink]="item.routerLink">
-          <div class="flex items-center gap-1">
-            <i [class]="item.icon"></i>
-            {{ item.label }}
-          </div>
-        </routerLink>
+        <div class="flex items-center gap-1">
+          <i [class]="item.icon"></i>
+          {{ item.label }}
+        </div>
       </ng-template>
     </p-selectbutton>
   </div>
