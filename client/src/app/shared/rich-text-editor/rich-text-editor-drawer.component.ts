@@ -7,7 +7,7 @@ import { EditorModule } from 'primeng/editor';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
-import { DrawerComponent } from '@app/core/components/drawer.component';
+import { DrawerComponent } from '@app/core/components/drawer/drawer.component';
 
 @Component({
   selector: 'rich-text-editor-drawer',

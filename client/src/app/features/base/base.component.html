@@ -1,64 +1,43 @@
-<div class="base w-full h-full" [class.sidebar--invisible]="!sidebarVisible()">
-  <div class="base-sidebar border-r-1 border-surface-200">
-    <table-list />
+<topbar>
+  <div left class="flex gap-2 items-center text-sm">
+    <div class="text-surface-500">Bases</div>
+    <div class="text-surface-300">/</div>
+    <div class="flex items-center gap-1">
+      <i class="icon icon-box"></i>
+      public
+    </div>
   </div>
-  <div class="base-table-detail w-full h-full">
-    <p-tabs
-      lazy
-      [value]="tblService.activeTable()?.name"
-      (valueChange)="onTabChange($any($event))"
-      class="w-full"
-      [class.h-full]="!!tblService.selectedTables().length"
-    >
-      <p-tablist
-        lazy
-        cdkDropList
-        cdkDropListOrientation="horizontal"
-        (cdkDropListDropped)="onTabDrop($event)"
-        class="min-h-[48px]"
-      >
-        <div class="flex items-center p-1 min-h-[47px]">
-          <p-button
-            [icon]="`icon ${sidebarVisible() ? 'icon-panel-left-close' : 'icon-panel-right-close'}`"
-            [text]="true"
-            size="large"
-            [pTooltip]="sidebarVisible() ? 'Collaspe sidebar' : 'Expand sidebar'"
-            tooltipPosition="bottom"
-            severity="secondary"
-            (click)="toggleSidebar()"
-          />
-        </div>
-        @for (table of tblService.selectedTables(); track table.name) {
-          <p-tab cdkDrag cdkDragLockAxis="x" [value]="table.name" class="group">
-            <div class="flex items-center gap-2 mt-1 relative">
-              <i class="icon icon-table-2"></i>
-              <span>{{ table.presentation?.uiName || table.name }}</span>
-              <i
-                class="icon icon-x cursor-pointer absolute right-[-15px] top-0.5 opacity-0 group-hover:opacity-100"
-                (click)="$event.stopPropagation(); tblService.removeTable(table.name)"
-              ></i>
-            </div>
-          </p-tab>
-        }
-      </p-tablist>
-      <p-tabpanels class="flex-1 !p-0">
-        @for (table of tblService.selectedTables(); track table.name) {
-          <p-tabpanel [value]="table.name">
-            <ng-template #content>
-              <table-detail [table]="table" />
-            </ng-template>
-          </p-tabpanel>
-        }
-      </p-tabpanels>
-    </p-tabs>
+  <div center>
+    <p-selectbutton [options]="options" [ngModel]="view()" [unselectable]="true">
+      <ng-template #item let-item>
+        <routerLink [routerLink]="item.routerLink">
+          <div class="flex items-center gap-1">
+            <i [class]="item.icon"></i>
+            {{ item.label }}
+          </div>
+        </routerLink>
+      </ng-template>
+    </p-selectbutton>
+  </div>
+  @if (view() === 'studio') {
+    <div right class="flex gap-2 items-center">
+      <p-button
+        icon="icon icon-book-open-text"
+        severity="secondary"
+        pTooltip="API Docs"
+        tooltipPosition="bottom"
+        (click)="openAPIDocs()"
+      />
+      <p-button
+        icon="icon icon-sparkles"
+        severity="info"
+        pTooltip="AI Chatbot"
+        tooltipPosition="bottom"
+        [outlined]="true"
+        (click)="toggleChatbot()"
+      />
+    </div>
+  }
+</topbar>
 
-    @if (!tblService.selectedTables().length) {
-      <div class="flex flex-col w-full h-full items-center pt-50 bg-gray-50">
-        <p-image src="assets/images/chill-bear.png" width="320" height="320" />
-        <p class="text-surface-500 italic flex items-center" style="margin-top: -45px">
-          <span>Unlock insights by picking any table to explore its data!</span>
-        </p>
-      </div>
-    }
-  </div>
-</div>
+<router-outlet></router-outlet>

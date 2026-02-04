@@ -8,6 +8,7 @@ import { err, json } from '../utils/api-response';
 import { apiKeyAuth } from '../api-keys/auth';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
+import { IndexService } from './services/index.service';
 import { Column, DataType, ReferentialAction } from './utils/column';
 import { WhereFilter } from './utils/record';
 
@@ -24,6 +25,7 @@ const REST_BLACKLISTED_TABLES = (
 
 const tableService = new TableService();
 const tableRecordService = new TableRecordService();
+const indexService = new IndexService();
 const storage = new LocalStorageProvider();
 
 /**
@@ -149,10 +151,24 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
       /**
        * GET /rest/db/tables → list of allowed tables + comments
        */
-      .get('/tables', async () => {
-        const tables = await tableService.getAll();
-        return tables.filter((t) => !REST_BLACKLISTED_TABLES.includes(t.name));
-      })
+      .get(
+        '/tables',
+        async ({ query: { includeSchema } }) => {
+          const tables = await tableService.getAll({ includeSchema });
+          return tables.filter(
+            (t) => !REST_BLACKLISTED_TABLES.includes(t.name)
+          );
+        },
+        {
+          query: t.Object({
+            includeSchema: t.Optional(
+              t.Boolean({
+                error: 'includeSchema must be a boolean',
+              })
+            ),
+          }),
+        }
+      )
 
       /**
        * GET /rest/db/tables/:table/schema → detailed column schema
@@ -284,6 +300,60 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
         {
           params: t.Object({ table: t.String() }),
           query: t.Object({ cascade: t.Optional(t.Boolean()) }),
+        }
+      )
+
+      /**
+       * GET /rest/db/indexes → list indexes
+       */
+      .get(
+        '/indexes',
+        ({ query: { table } }) => {
+          return indexService.getAll({ tableName: table });
+        },
+        {
+          query: t.Object({ table: t.Optional(t.String()) }),
+        }
+      )
+
+      /**
+       * POST /rest/db/indexes → create index
+       */
+      .post(
+        '/indexes',
+        ({ body }) => {
+          return indexService.createIndex({ index: body as any });
+        },
+        {
+          body: t.Object({
+            name: t.String(),
+            tableName: t.String(),
+            columnNames: t.Array(t.String()),
+            unique: t.Optional(t.Boolean()),
+            type: t.Optional(
+              t.Union([
+                t.Literal('btree'),
+                t.Literal('hash'),
+                t.Literal('gist'),
+                t.Literal('gin'),
+                t.Literal('brin'),
+                t.Literal('spgist'),
+              ])
+            ),
+          }),
+        }
+      )
+
+      /**
+       * DELETE /rest/db/indexes/:name → delete index
+       */
+      .delete(
+        '/indexes/:name',
+        ({ params: { name } }) => {
+          return indexService.deleteIndex({ indexName: name });
+        },
+        {
+          params: t.Object({ name: t.String() }),
         }
       )
 

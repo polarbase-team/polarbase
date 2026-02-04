@@ -6,20 +6,15 @@ import {
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { definePreset, palette } from '@primeuix/themes';
+import Aura from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
-import Aura from '@primeuix/themes/aura';
-import { definePreset, palette } from '@primeuix/themes';
 
 import { httpApiKeyInterceptor } from './core/interceptors/http-api-key.interceptor';
 import { httpErrorInterceptor } from './core/interceptors/http-error.interceptor';
+import { provideCustomRouteReuseStrategy } from './core/strategies/custom-route-reuse.strategy';
 import { routes } from './app.routes';
-
-const AuraCyan = definePreset(Aura, {
-  semantic: {
-    primary: palette('{cyan}'),
-  },
-});
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,15 +22,26 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideAnimationsAsync(),
     provideHttpClient(withInterceptors([httpApiKeyInterceptor, httpErrorInterceptor])),
+
+    // PrimeNG UI Library
     providePrimeNG({
       theme: {
-        preset: AuraCyan,
+        preset: definePreset(Aura, {
+          semantic: {
+            primary: palette('{cyan}'),
+          },
+        }),
         options: {
           darkModeSelector: false,
         },
       },
     }),
-    MessageService,
+
+    // Route Reuse Strategy
+    provideCustomRouteReuseStrategy(),
     provideRouter(routes),
+
+    // Global Services
+    MessageService,
   ],
 };

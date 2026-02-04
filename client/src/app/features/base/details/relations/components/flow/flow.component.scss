@@ -1,0 +1,130 @@
+:host {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  background-color: #f1f1fa;
+}
+
+::ng-deep {
+  :root {
+    --db-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --db-shadow-2: 0 18px 56px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.16);
+    --db-shadow-3: 0 3px 12px rgba(0, 0, 0, 0.07), 0 1px 4px rgba(0, 0, 0, 0.07);
+  }
+
+  :root {
+    --db-background: #ffffff;
+    --db-primary-1: #5672cd;
+    --db-primary-2: #3451b2;
+    --db-primary-soft: rgba(100, 108, 255, 0.24);
+
+    --db-red-soft: rgba(244, 63, 94, 0.14);
+
+    --db-yellow: #915930;
+
+    --db-text-1: rgba(60, 60, 67);
+
+    --db-gray-soft: rgba(142, 150, 170, 0.14);
+  }
+
+  :root {
+    --db-line-alignment-color: rgba(60, 60, 67, 0.56);
+
+    --db-snap-connection: rgba(180, 180, 180);
+
+    --db-node-header-normal-state-background-color: #e4e4e9;
+
+    --db-background-component-color: rgba(0, 0, 0, 0.1);
+
+    --db-select-field-text-color: rgba(60, 60, 67, 0.56);
+    --db-select-option-hover-state-layer-color: rgba(142, 150, 170, 0.14);
+    --db-select-option-focus-state-layer-color: rgba(142, 150, 170, 0.14);
+
+    --db-button-default-bg: #ebebef;
+    --db-button-default-hover-bg: #e4e4e9;
+    --db-button-default-active-bg: #dddde3;
+  }
+
+  .f-background {
+    circle {
+      fill: var(--db-background-component-color);
+    }
+  }
+
+  .f-connection {
+    .f-connection-drag-handle {
+      fill: transparent;
+    }
+
+    .f-connection-selection {
+      fill: none;
+      stroke: transparent;
+      stroke-width: 20;
+      cursor: pointer;
+    }
+
+    .f-connection-path {
+      fill: none;
+      stroke: var(--db-text-1);
+      stroke-width: 2;
+    }
+
+    .f-marker {
+      path,
+      circle {
+        fill: var(--db-text-1);
+      }
+    }
+
+    &.f-selected {
+      .f-connection-path {
+        stroke: var(--db-primary-1);
+      }
+
+      .f-marker {
+        path,
+        circle {
+          fill: var(--db-primary-1);
+        }
+      }
+    }
+
+    &:hover {
+      .f-connection-selection {
+        stroke: var(--db-primary-1);
+        opacity: 0.1;
+      }
+    }
+  }
+
+  .f-line-alignment {
+    .f-line {
+      border: 0.5px dashed var(--db-line-alignment-color);
+    }
+  }
+
+  .f-selection-area {
+    background-color: var(--db-primary-soft);
+  }
+
+  .f-minimap {
+    background-color: var(--db-background);
+    bottom: 16px;
+    right: 16px;
+    width: 100px;
+    height: 70px;
+
+    .f-minimap-node {
+      fill: var(--db-text-1);
+
+      &.f-selected {
+        fill: var(--db-primary-2);
+      }
+    }
+
+    .f-minimap-view {
+      fill: var(--db-primary-soft);
+    }
+  }
+}

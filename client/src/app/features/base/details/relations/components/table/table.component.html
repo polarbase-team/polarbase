@@ -1,0 +1,67 @@
+<div
+  class="flex items-center justify-between gap-1 bg-gray-200 pl-2 pr-1 py-1 rounded-sm overflow-hidden"
+>
+  <div class="w-[18px] h-[18px] flex items-center justify-center">
+    <i class="icon icon-table-2"></i>
+  </div>
+  <span class="truncate flex-1">
+    {{ usePresentationMode() ? table()?.presentation?.uiName || table()?.name : table()?.name }}
+  </span>
+  <p-button
+    icon="icon icon-external-link"
+    size="small"
+    severity="secondary"
+    [text]="true"
+    (onClick)="openTable()"
+  />
+</div>
+
+<div class="space-y-2">
+  @for (col of table()?.schema; track col.name) {
+    @let id = table()!.name + '-' + col.name;
+    <div class="relative">
+      <div fNodeInput [fInputId]="id" fInputConnectableSide="left"></div>
+      <div
+        fNodeOutput
+        [fOutputId]="id"
+        fOutputConnectableSide="right"
+        [isSelfConnectable]="false"
+      ></div>
+      <div class="flex items-center justify-between gap-1 px-2">
+        <div class="w-[18px] h-[18px] flex items-center justify-center">
+          @if (col.primary) {
+            <i class="icon icon-key rotate-45 block" style="color: var(--color-primary)"></i>
+          } @else if (col.foreignKey) {
+            <i class="icon icon-link"></i>
+          }
+        </div>
+        @if (usePresentationMode()) {
+          <span class="truncate flex-1">
+            {{ col.presentation?.uiName || col.name }}
+          </span>
+          @let dataType = dataTypes[col.dataType];
+          <span
+            class="text-surface-500 text-sm font-light truncate max-w-30"
+            [attr.title]="dataType"
+          >
+            {{ dataType }}
+          </span>
+        } @else {
+          <span class="truncate flex-1">
+            {{ col.name }}
+          </span>
+          @let dataType =
+            col.metadata.pgDataType === 'ARRAY'
+              ? col.metadata.pgRawType.split('_')[1] + '[]'
+              : col.metadata.pgDomainName || col.metadata.pgDataType;
+          <span
+            class="text-surface-500 text-sm font-light truncate max-w-30"
+            [attr.title]="dataType"
+          >
+            {{ dataType }}
+          </span>
+        }
+      </div>
+    </div>
+  }
+</div>

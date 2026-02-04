@@ -1,0 +1,14 @@
+<div
+  class="grid grid-cols-3 items-center justify-between gap-2 px-4 py-2 border-b border-surface-200"
+>
+  <div class="col-span-1 empty:hidden">
+    <ng-content select="[left]"></ng-content>
+  </div>
+  <div class="col-span-1 flex justify-center empty:hidden">
+    <ng-content select="[center]"></ng-content>
+  </div>
+  <div class="col-span-1 flex justify-end empty:hidden">
+    <ng-content select="[right]"></ng-content>
+  </div>
+  <ng-content></ng-content>
+</div>

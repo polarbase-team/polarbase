@@ -21,15 +21,22 @@ export const apiKeyRoutes = new Elysia({ prefix: '/api-keys' })
     ({ body }) => {
       const key = generateApiKey();
       const stmt = db.prepare(`
-        INSERT INTO api_keys (key, name, scopes)
-        VALUES (?, ?, ?)
+        INSERT INTO api_keys (key, name, schemaName, scopes)
+        VALUES (?, ?, ?, ?)
       `);
-      stmt.run(key, body.name, JSON.stringify(body.scopes));
-      return { key, name: body.name, scopes: body.scopes };
+      const schemaName = body.schemaName ?? 'public';
+      stmt.run(key, body.name, schemaName, JSON.stringify(body.scopes));
+      return {
+        key,
+        name: body.name,
+        schemaName,
+        scopes: body.scopes,
+      };
     },
     {
       body: t.Object({
         name: t.String(),
+        schemaName: t.Optional(t.String({ default: 'public' })),
         scopes: t.Object({
           rest: t.Boolean(),
           mcp: t.Boolean(),
@@ -43,18 +50,26 @@ export const apiKeyRoutes = new Elysia({ prefix: '/api-keys' })
   // List all API keys
   .get('/', () => {
     const rows = db
-      .prepare('SELECT id, key, name, scopes, createdAt, revoked FROM api_keys')
+      .prepare(
+        'SELECT id, key, name, schemaName, scopes, createdAt, revoked FROM api_keys'
+      )
       .all() as ApiKey[];
-    return rows.map((r) => ({
-      ...r,
-      revoked: !!r.revoked,
-      scopes: JSON.parse(r.scopes) as {
+    return rows.map((r) => {
+      const scopes = JSON.parse(r.scopes) as {
         rest: boolean;
         mcp: boolean;
         agent: boolean;
         realtime: boolean;
-      },
-    }));
+      };
+      return {
+        keyId: r.id,
+        name: r.name,
+        schemaName: r.schemaName,
+        scopes,
+        revoked: !!r.revoked,
+        createdAt: r.createdAt,
+      };
+    });
   })
 
   // Permanently revoke (soft delete) an API key
