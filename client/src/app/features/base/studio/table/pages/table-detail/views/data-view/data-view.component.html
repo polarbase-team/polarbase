@@ -1,7 +1,7 @@
 @if (isColumnsLoading()) {
   <div class="flex gap-2 justify-between px-[20px] py-[16px]">
     <div class="flex items-start">
-      <ng-template [ngTemplateOutlet]="displayModeTmpl()"></ng-template>
+      <ng-template *ngTemplateOutlet="displayModeTmpl()"></ng-template>
       <p-skeleton width="100px" height="33px" />
     </div>
     <div class="flex flex-wrap gap-2 flex-1 justify-end min-w-[400px]">
@@ -35,7 +35,7 @@
     (cellAction)="onCellAction($event)"
   >
     <ng-template #toolbar>
-      <ng-template [ngTemplateOutlet]="displayModeTmpl()"></ng-template>
+      <ng-template *ngTemplateOutlet="displayModeTmpl()"></ng-template>
       <p-splitbutton
         label="Insert"
         icon="icon icon-plus"

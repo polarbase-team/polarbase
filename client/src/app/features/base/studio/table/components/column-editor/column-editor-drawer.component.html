@@ -1,3 +1,50 @@
+<ng-template #numberFormatBuilder>
+  <div class="flex flex-col gap-1">
+    <label for="format" class="text-sm">Number Format</label>
+    <p-select
+      inputId="format"
+      name="format"
+      [(ngModel)]="columnFormData.presentation.format.numberFormat"
+      [options]="numberFormats"
+      [checkmark]="true"
+      [showClear]="true"
+      placeholder="Select here..."
+      appendTo="body"
+    >
+      <ng-template #item let-item>
+        <div>
+          {{ item.label }}
+          <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
+        </div>
+      </ng-template>
+    </p-select>
+    <p class="text-surface-500 text-xs">The number format to display the column values.</p>
+  </div>
+  @if (columnFormData.presentation.format.numberFormat === NumberFormat.Currency) {
+    <div class="flex flex-col gap-1">
+      <label for="currency" class="text-sm">Currency</label>
+      <p-select
+        inputId="currency"
+        name="currency"
+        [(ngModel)]="columnFormData.presentation.format.currency"
+        [options]="currencies"
+        [checkmark]="true"
+        [showClear]="true"
+        placeholder="Select here..."
+        appendTo="body"
+      >
+        <ng-template #item let-item>
+          <div>
+            {{ item.label }}
+            <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
+          </div>
+        </ng-template>
+      </p-select>
+      <p class="text-surface-500 text-xs">The currency symbol to display for the column values.</p>
+    </div>
+  }
+</ng-template>
+
 <ng-template #dateFormatBuilder>
   <div class="space-y-2">
     <div class="flex flex-col gap-1">
@@ -270,10 +317,10 @@
                 </div>
               }
               @case (DataType.Select) {
-                <ng-container [ngTemplateOutlet]="optionsBuilder" />
+                <ng-container *ngTemplateOutlet="optionsBuilder" />
               }
               @case (DataType.MultiSelect) {
-                <ng-container [ngTemplateOutlet]="optionsBuilder" />
+                <ng-container *ngTemplateOutlet="optionsBuilder" />
               }
               @case (DataType.Email) {
                 <div class="flex flex-col gap-1">
@@ -411,6 +458,7 @@
                     inputId="resultType"
                     name="resultType"
                     [(ngModel)]="columnFormData.formula.resultType"
+                    (ngModelChange)="onResultTypeChange()"
                     [options]="resultTypeOptions"
                     [checkmark]="true"
                     optionValue="value"
@@ -463,60 +511,13 @@
             </div>
             @switch (selectedDataType()) {
               @case (DataType.Number) {
-                <div class="flex flex-col gap-1">
-                  <label for="format" class="text-sm">Number Format</label>
-                  <p-select
-                    inputId="format"
-                    name="format"
-                    [(ngModel)]="columnFormData.presentation.format.numberFormat"
-                    [options]="numberFormats"
-                    [checkmark]="true"
-                    [showClear]="true"
-                    placeholder="Select here..."
-                    appendTo="body"
-                  >
-                    <ng-template #item let-item>
-                      <div>
-                        {{ item.label }}
-                        <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
-                      </div>
-                    </ng-template>
-                  </p-select>
-                  <p class="text-surface-500 text-xs">
-                    The number format to display the column values.
-                  </p>
-                </div>
-                @if (columnFormData.presentation.format.numberFormat === NumberFormat.Currency) {
-                  <div class="flex flex-col gap-1">
-                    <label for="currency" class="text-sm">Currency</label>
-                    <p-select
-                      inputId="currency"
-                      name="currency"
-                      [(ngModel)]="columnFormData.presentation.format.currency"
-                      [options]="currencies"
-                      [checkmark]="true"
-                      [showClear]="true"
-                      placeholder="Select here..."
-                      appendTo="body"
-                    >
-                      <ng-template #item let-item>
-                        <div>
-                          {{ item.label }}
-                          <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
-                        </div>
-                      </ng-template>
-                    </p-select>
-                    <p class="text-surface-500 text-xs">
-                      The currency symbol to display for the column values.
-                    </p>
-                  </div>
-                }
+                <ng-container *ngTemplateOutlet="numberFormatBuilder"></ng-container>
               }
               @case (DataType.Date) {
-                <ng-container [ngTemplateOutlet]="dateFormatBuilder"></ng-container>
+                <ng-container *ngTemplateOutlet="dateFormatBuilder"></ng-container>
               }
               @case (DataType.AutoDate) {
-                <ng-container [ngTemplateOutlet]="dateFormatBuilder"></ng-container>
+                <ng-container *ngTemplateOutlet="dateFormatBuilder"></ng-container>
               }
               @case (DataType.Reference) {
                 <div class="flex flex-col gap-1">
@@ -560,6 +561,16 @@
                     The selected column will be shown as the display value for this reference.
                   </p>
                 </div>
+              }
+              @case (DataType.Formula) {
+                @switch (columnFormData.formula.resultType) {
+                  @case (FormulaResultType.Number) {
+                    <ng-container *ngTemplateOutlet="numberFormatBuilder"></ng-container>
+                  }
+                  @case (FormulaResultType.Date) {
+                    <ng-container *ngTemplateOutlet="dateFormatBuilder"></ng-container>
+                  }
+                }
               }
             }
           </div>

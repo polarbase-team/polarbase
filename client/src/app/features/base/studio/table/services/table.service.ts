@@ -14,6 +14,10 @@ import { TextFieldConfig } from '@app/shared/field-system/models/text/field.inte
 import { LongTextFieldConfig } from '@app/shared/field-system/models/long-text/field.interface';
 import { JSONFieldConfig } from '@app/shared/field-system/models/json/field.interface';
 import { DateFieldConfig } from '@app/shared/field-system/models/date/field.interface';
+import {
+  FormulaFieldConfig,
+  FormulaResultType,
+} from '@app/shared/field-system/models/formula/field.interface';
 import { buildField } from '@app/shared/field-system/models/utils';
 import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/field.interface';
 import { AttachmentFieldConfig } from '@app/shared/field-system/models/attachment/field.interface';
@@ -65,8 +69,8 @@ export interface ColumnDefinition {
     onDelete?: string;
   } | null;
   formula: {
+    resultType: FormulaResultType;
     expression: string;
-    resultType: string;
   } | null;
   metadata: any;
 }
@@ -95,6 +99,7 @@ const DATA_TYPE_MAPPING = {
   attachment: DataType.Attachment,
   'auto-number': DataType.AutoNumber,
   'auto-date': DataType.AutoDate,
+  formula: DataType.Formula,
 };
 
 const TABLE_SELECTED_KEY = 'table_selected';
@@ -307,6 +312,10 @@ export class TableService {
       case DataType.AutoNumber:
         break;
       case DataType.AutoDate:
+        break;
+      case DataType.Formula:
+        (config as FormulaFieldConfig).resultType = column.formula.resultType;
+        (config as FormulaFieldConfig).expression = column.formula.expression;
         break;
     }
 

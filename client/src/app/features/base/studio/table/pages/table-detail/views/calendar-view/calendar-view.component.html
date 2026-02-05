@@ -135,7 +135,7 @@
     <ng-template #leftToolbar>
       <div class="flex flex-wrap gap-2">
         <div class="flex items-start">
-          <ng-template [ngTemplateOutlet]="displayModeTmpl()"></ng-template>
+          <ng-template *ngTemplateOutlet="displayModeTmpl()"></ng-template>
           <div class="flex gap-2">
             @if (isColumnsLoading()) {
               <p-skeleton width="100px" height="33px" />
