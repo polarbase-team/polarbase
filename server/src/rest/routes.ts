@@ -479,15 +479,23 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
        */
       .put(
         '/tables/:table/columns/:column',
-        ({ params: { table, column }, body }) => {
+        ({
+          params: { table, column },
+          body,
+          query: { allowPresentationSaveOnFailure },
+        }) => {
           return tableService.updateColumn({
             tableName: table,
             columnName: column,
             column: body as any,
+            allowPresentationSaveOnFailure,
           });
         },
         {
           params: t.Object({ table: t.String(), column: t.String() }),
+          query: t.Object({
+            allowPresentationSaveOnFailure: t.Optional(t.Boolean()),
+          }),
           body: t.Object(
             {
               name: t.String({

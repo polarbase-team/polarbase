@@ -208,9 +208,14 @@ export class TableService {
     );
   }
 
-  updateColumn(tableName: string, columnName: string, column: ColumnFormData) {
+  updateColumn(
+    tableName: string,
+    columnName: string,
+    column: ColumnFormData,
+    allowPresentationSaveOnFailure = false,
+  ) {
     return this.http.put<ApiResponse<ColumnDefinition>>(
-      `${this.apiUrl}/tables/${tableName}/columns/${columnName}`,
+      `${this.apiUrl}/tables/${tableName}/columns/${columnName}?allowPresentationSaveOnFailure=${allowPresentationSaveOnFailure}`,
       column,
     );
   }

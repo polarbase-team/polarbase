@@ -462,6 +462,7 @@ export class TableService {
     tableName,
     columnName,
     column,
+    allowPresentationSaveOnFailure,
   }: {
     schemaName?: string;
     tableName: string;
@@ -534,6 +535,7 @@ export class TableService {
           formula?: null;
         }
     );
+    allowPresentationSaveOnFailure?: boolean;
   }) {
     const {
       name: newName,
@@ -580,287 +582,302 @@ export class TableService {
       columnName
     );
 
-    // Handle formula columns separately (generated columns don't support normal ALTER)
-    if (
-      dataType === DataType.Formula &&
-      oldSchema.dataType === DataType.Formula
-    ) {
-      // Handle formula result type change (requires drop/recreate - not supported)
-      if (formula?.resultType !== oldSchema.formula?.resultType) {
-        throw new Error(
-          'Changing formula result type is not supported. Please delete and recreate the column.'
-        );
+    const updateColumnMetadata = (name: string) => {
+      if (presentation !== undefined) {
+        const metadata: { uiName?: string | null; format?: any | null } = {};
+        if (presentation === null) {
+          metadata.uiName = null;
+          metadata.format = null;
+        } else {
+          metadata.uiName = presentation.uiName;
+          metadata.format = presentation.format;
+        }
+        setColumnMetadata(schemaName, tableName, name, metadata);
       }
+    };
 
-      // Handle formula expression change using PostgreSQL 17's SET EXPRESSION
-      if (formula?.expression !== oldSchema.formula?.expression) {
-        await updateFormulaExpression(
-          pg,
-          schemaName,
-          tableName,
-          columnName,
-          formula!.expression
-        );
-      }
+    try {
+      // Handle formula columns separately (generated columns don't support normal ALTER)
+      if (
+        dataType === DataType.Formula &&
+        oldSchema.dataType === DataType.Formula
+      ) {
+        // Handle formula result type change (requires drop/recreate - not supported)
+        if (formula?.resultType !== oldSchema.formula?.resultType) {
+          throw new Error(
+            'Changing formula result type is not supported. Please delete and recreate the column.'
+          );
+        }
 
-      // Handle column rename if needed
-      if (newName !== columnName) {
+        // Handle formula expression change using PostgreSQL 17's SET EXPRESSION
+        if (formula?.expression !== oldSchema.formula?.expression) {
+          await updateFormulaExpression(
+            pg,
+            schemaName,
+            tableName,
+            columnName,
+            formula!.expression
+          );
+        }
+
+        // Handle column rename if needed
+        if (newName !== columnName) {
+          await pg.schema
+            .withSchema(schemaName)
+            .alterTable(tableName, (tableBuilder) => {
+              tableBuilder.renameColumn(columnName, newName);
+            });
+        }
+
+        // Handle comment update if needed
+        if (comment !== oldSchema.comment) {
+          await pg.raw(
+            `COMMENT ON COLUMN "${schemaName}"."${tableName}"."${newName}" IS ${
+              comment ? `'${comment.replace(/'/g, "''")}'` : 'NULL'
+            }`
+          );
+        }
+      } else {
+        let recreateConstraints = false;
+
         await pg.schema
           .withSchema(schemaName)
           .alterTable(tableName, (tableBuilder) => {
-            tableBuilder.renameColumn(columnName, newName);
-          });
-      }
-
-      // Handle comment update if needed
-      if (comment !== oldSchema.comment) {
-        await pg.raw(
-          `COMMENT ON COLUMN "${schemaName}"."${tableName}"."${newName}" IS ${
-            comment ? `'${comment.replace(/'/g, "''")}'` : 'NULL'
-          }`
-        );
-      }
-    } else {
-      let recreateConstraints = false;
-
-      await pg.schema
-        .withSchema(schemaName)
-        .alterTable(tableName, (tableBuilder) => {
-          const columnBuilder = specificType(
-            pg,
-            tableBuilder,
-            {
-              name: columnName,
-              dataType: dataType || oldSchema.dataType,
-              foreignKey,
-              formula,
-            },
-            dataType === oldSchema.dataType
-          ).alter();
-
-          if (newName !== oldSchema.name) {
-            tableBuilder.renameColumn(columnName, newName);
-            recreateConstraints = true;
-          }
-
-          if (nullable !== oldSchema.nullable) {
-            if (nullable === true) columnBuilder.nullable();
-            else if (nullable === false) columnBuilder.notNullable();
-          }
-
-          if (unique !== oldSchema.unique) {
-            if (unique === true) columnBuilder.unique();
-            else if (unique === false) tableBuilder.dropUnique([columnName]);
-          }
-
-          if (defaultValue !== oldSchema.defaultValue) {
-            switch (dataType) {
-              case DataType.MultiSelect:
-                columnBuilder.defaultTo(toPgArray(defaultValue));
-                break;
-              case DataType.Attachment:
-              case DataType.Reference:
-              case DataType.Formula:
-                // Not support default value
-                break;
-              default:
-                columnBuilder.defaultTo(defaultValue);
-            }
-          }
-
-          if (comment !== oldSchema.comment) {
-            columnBuilder.comment(comment || '');
-          }
-
-          if (
-            recreateConstraints ||
-            minLength !== oldSchema.validation?.minLength ||
-            maxLength !== oldSchema.validation?.maxLength
-          ) {
-            if (!recreateConstraints) {
-              const constraintName = getConstraintName(
-                tableName,
-                columnName,
-                'length'
-              );
-              if (
-                oldSchema.metadata.constraints?.find(
-                  (c: any) => c.constraint_name === constraintName
-                )
-              ) {
-                removeLengthCheck(tableBuilder, tableName, columnName);
-              }
-            }
-
-            addLengthCheck(
+            const columnBuilder = specificType(
+              pg,
               tableBuilder,
-              tableName,
-              newName,
-              minLength!,
-              maxLength!
-            );
-          }
+              {
+                name: columnName,
+                dataType: dataType || oldSchema.dataType,
+                foreignKey,
+                formula,
+              },
+              dataType === oldSchema.dataType
+            ).alter();
 
-          if (
-            recreateConstraints ||
-            minValue !== oldSchema.validation?.minValue ||
-            maxValue !== oldSchema.validation?.maxValue
-          ) {
-            if (!recreateConstraints) {
-              const constraintName = getConstraintName(
-                tableName,
-                columnName,
-                'value-range'
-              );
-              if (
-                oldSchema.metadata.constraints?.find(
-                  (c: any) => c.constraint_name === constraintName
-                )
-              ) {
-                removeRangeCheck(tableBuilder, tableName, columnName);
+            if (newName !== oldSchema.name) {
+              tableBuilder.renameColumn(columnName, newName);
+              recreateConstraints = true;
+            }
+
+            if (nullable !== oldSchema.nullable) {
+              if (nullable === true) columnBuilder.nullable();
+              else if (nullable === false) columnBuilder.notNullable();
+            }
+
+            if (unique !== oldSchema.unique) {
+              if (unique === true) columnBuilder.unique();
+              else if (unique === false) tableBuilder.dropUnique([columnName]);
+            }
+
+            if (defaultValue !== oldSchema.defaultValue) {
+              switch (dataType) {
+                case DataType.MultiSelect:
+                  columnBuilder.defaultTo(toPgArray(defaultValue));
+                  break;
+                case DataType.Attachment:
+                case DataType.Reference:
+                case DataType.Formula:
+                  // Not support default value
+                  break;
+                default:
+                  columnBuilder.defaultTo(defaultValue);
               }
             }
 
-            addRangeCheck(
-              tableBuilder,
-              tableName,
-              newName,
-              minValue!,
-              maxValue!
-            );
-          }
-
-          if (
-            recreateConstraints ||
-            minDate !== oldSchema.validation?.minDate ||
-            maxDate !== oldSchema.validation?.maxDate
-          ) {
-            if (!recreateConstraints) {
-              const constraintName = getConstraintName(
-                tableName,
-                columnName,
-                'date-range'
-              );
-              if (
-                oldSchema.metadata.constraints?.find(
-                  (c: any) => c.constraint_name === constraintName
-                )
-              ) {
-                removeDateRangeCheck(tableBuilder, tableName, columnName);
-              }
+            if (comment !== oldSchema.comment) {
+              columnBuilder.comment(comment || '');
             }
 
-            addDateRangeCheck(
-              tableBuilder,
-              tableName,
-              newName,
-              minDate!,
-              maxDate!
-            );
-          }
-
-          if (
-            recreateConstraints ||
-            maxSize !== oldSchema.validation?.maxSize
-          ) {
-            if (!recreateConstraints) {
-              const constraintName = getConstraintName(
-                tableName,
-                columnName,
-                'size'
-              );
-              if (
-                oldSchema.metadata.constraints?.find(
-                  (c: any) => c.constraint_name === constraintName
-                )
-              ) {
-                removeSizeCheck(tableBuilder, tableName, columnName);
+            if (
+              recreateConstraints ||
+              minLength !== oldSchema.validation?.minLength ||
+              maxLength !== oldSchema.validation?.maxLength
+            ) {
+              if (!recreateConstraints) {
+                const constraintName = getConstraintName(
+                  tableName,
+                  columnName,
+                  'length'
+                );
+                if (
+                  oldSchema.metadata.constraints?.find(
+                    (c: any) => c.constraint_name === constraintName
+                  )
+                ) {
+                  removeLengthCheck(tableBuilder, tableName, columnName);
+                }
               }
+
+              addLengthCheck(
+                tableBuilder,
+                tableName,
+                newName,
+                minLength!,
+                maxLength!
+              );
             }
 
-            addSizeCheck(tableBuilder, tableName, newName, maxSize!);
-          }
-
-          if (
-            recreateConstraints ||
-            maxFiles !== oldSchema.validation?.maxFiles
-          ) {
-            if (!recreateConstraints) {
-              const constraintName = getConstraintName(
-                tableName,
-                columnName,
-                'file-count'
-              );
-              if (
-                oldSchema.metadata.constraints?.find(
-                  (c: any) => c.constraint_name === constraintName
-                )
-              ) {
-                removeFileCountCheck(tableBuilder, tableName, columnName);
+            if (
+              recreateConstraints ||
+              minValue !== oldSchema.validation?.minValue ||
+              maxValue !== oldSchema.validation?.maxValue
+            ) {
+              if (!recreateConstraints) {
+                const constraintName = getConstraintName(
+                  tableName,
+                  columnName,
+                  'value-range'
+                );
+                if (
+                  oldSchema.metadata.constraints?.find(
+                    (c: any) => c.constraint_name === constraintName
+                  )
+                ) {
+                  removeRangeCheck(tableBuilder, tableName, columnName);
+                }
               }
+
+              addRangeCheck(
+                tableBuilder,
+                tableName,
+                newName,
+                minValue!,
+                maxValue!
+              );
             }
 
-            addFileCountCheck(tableBuilder, tableName, newName, maxFiles!);
-          }
-
-          if (
-            recreateConstraints ||
-            allowedDomains !== oldSchema.validation?.allowedDomains
-          ) {
-            if (!recreateConstraints) {
-              const constraintName = getConstraintName(
-                tableName,
-                columnName,
-                'email-domain'
-              );
-              if (
-                oldSchema.metadata.constraints?.find(
-                  (c: any) => c.constraint_name === constraintName
-                )
-              ) {
-                removeEmailDomainCheck(tableBuilder, tableName, columnName);
+            if (
+              recreateConstraints ||
+              minDate !== oldSchema.validation?.minDate ||
+              maxDate !== oldSchema.validation?.maxDate
+            ) {
+              if (!recreateConstraints) {
+                const constraintName = getConstraintName(
+                  tableName,
+                  columnName,
+                  'date-range'
+                );
+                if (
+                  oldSchema.metadata.constraints?.find(
+                    (c: any) => c.constraint_name === constraintName
+                  )
+                ) {
+                  removeDateRangeCheck(tableBuilder, tableName, columnName);
+                }
               }
+
+              addDateRangeCheck(
+                tableBuilder,
+                tableName,
+                newName,
+                minDate!,
+                maxDate!
+              );
             }
 
-            addEmailDomainCheck(
-              tableBuilder,
-              tableName,
-              newName,
-              allowedDomains!
-            );
-          }
-
-          if (
-            recreateConstraints ||
-            JSON.stringify(options) !== JSON.stringify(oldSchema.options)
-          ) {
-            if (!recreateConstraints) {
-              const constraintName = getConstraintName(
-                tableName,
-                columnName,
-                'options'
-              );
-              if (
-                oldSchema.metadata.constraints?.find(
-                  (c: any) => c.constraint_name === constraintName
-                )
-              ) {
-                removeOptionsCheck(tableBuilder, tableName, columnName);
+            if (
+              recreateConstraints ||
+              maxSize !== oldSchema.validation?.maxSize
+            ) {
+              if (!recreateConstraints) {
+                const constraintName = getConstraintName(
+                  tableName,
+                  columnName,
+                  'size'
+                );
+                if (
+                  oldSchema.metadata.constraints?.find(
+                    (c: any) => c.constraint_name === constraintName
+                  )
+                ) {
+                  removeSizeCheck(tableBuilder, tableName, columnName);
+                }
               }
+
+              addSizeCheck(tableBuilder, tableName, newName, maxSize!);
             }
-            addOptionsCheck(
-              tableBuilder,
-              tableName,
-              newName,
-              options!,
-              dataType === DataType.MultiSelect
-            );
-          }
-        })
-        .then(() => {
-          if (recreateConstraints) {
-            return pg.raw(
-              `
+
+            if (
+              recreateConstraints ||
+              maxFiles !== oldSchema.validation?.maxFiles
+            ) {
+              if (!recreateConstraints) {
+                const constraintName = getConstraintName(
+                  tableName,
+                  columnName,
+                  'file-count'
+                );
+                if (
+                  oldSchema.metadata.constraints?.find(
+                    (c: any) => c.constraint_name === constraintName
+                  )
+                ) {
+                  removeFileCountCheck(tableBuilder, tableName, columnName);
+                }
+              }
+
+              addFileCountCheck(tableBuilder, tableName, newName, maxFiles!);
+            }
+
+            if (
+              recreateConstraints ||
+              allowedDomains !== oldSchema.validation?.allowedDomains
+            ) {
+              if (!recreateConstraints) {
+                const constraintName = getConstraintName(
+                  tableName,
+                  columnName,
+                  'email-domain'
+                );
+                if (
+                  oldSchema.metadata.constraints?.find(
+                    (c: any) => c.constraint_name === constraintName
+                  )
+                ) {
+                  removeEmailDomainCheck(tableBuilder, tableName, columnName);
+                }
+              }
+
+              addEmailDomainCheck(
+                tableBuilder,
+                tableName,
+                newName,
+                allowedDomains!
+              );
+            }
+
+            if (
+              recreateConstraints ||
+              JSON.stringify(options) !== JSON.stringify(oldSchema.options)
+            ) {
+              if (!recreateConstraints) {
+                const constraintName = getConstraintName(
+                  tableName,
+                  columnName,
+                  'options'
+                );
+                if (
+                  oldSchema.metadata.constraints?.find(
+                    (c: any) => c.constraint_name === constraintName
+                  )
+                ) {
+                  removeOptionsCheck(tableBuilder, tableName, columnName);
+                }
+              }
+              addOptionsCheck(
+                tableBuilder,
+                tableName,
+                newName,
+                options!,
+                dataType === DataType.MultiSelect
+              );
+            }
+          })
+          .then(() => {
+            if (recreateConstraints) {
+              return pg.raw(
+                `
             ALTER TABLE public."${tableName}"
             DROP CONSTRAINT IF EXISTS "${getConstraintName(
               tableName,
@@ -898,21 +915,17 @@ export class TableService {
               'options'
             )}";
           `
-            );
-          }
-        });
-    }
-
-    if (presentation !== undefined) {
-      const metadata: { uiName?: string | null; format?: any | null } = {};
-      if (presentation === null) {
-        metadata.uiName = null;
-        metadata.format = null;
-      } else {
-        metadata.uiName = presentation.uiName;
-        metadata.format = presentation.format;
+              );
+            }
+          });
       }
-      setColumnMetadata(schemaName, tableName, newName, metadata);
+
+      updateColumnMetadata(newName);
+    } catch (error) {
+      if (allowPresentationSaveOnFailure) {
+        updateColumnMetadata(columnName);
+      }
+      throw error;
     }
 
     return getColumnSchema(pg, schemaName, tableName, newName);

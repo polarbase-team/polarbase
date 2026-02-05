@@ -303,8 +303,15 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     }
 
     let fn: Observable<any>;
+    let allowPresentationSaveOnFailure = false;
     if (this.mode() === 'edit') {
-      fn = this.tableService.updateColumn(this.table().name, this.column().name, formData);
+      allowPresentationSaveOnFailure = true;
+      fn = this.tableService.updateColumn(
+        this.table().name,
+        this.column().name,
+        formData,
+        allowPresentationSaveOnFailure,
+      );
     } else {
       fn = this.tableService.createColumn(this.table().name, formData);
     }
@@ -312,9 +319,17 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     fn.pipe(
       finalize(() => this.isSaving.set(false)),
       takeUntilDestroyed(this.destroyRef),
-    ).subscribe(({ data: column }) => {
-      this.onSave.emit(column);
-      this.close();
+    ).subscribe({
+      next: ({ data: column }) => {
+        this.onSave.emit(column);
+        this.close();
+      },
+      error: (error) => {
+        if (allowPresentationSaveOnFailure) {
+          this.onSave.emit({ ...this.column(), presentation: this.columnFormData.presentation });
+          this.close();
+        }
+      },
     });
   }
 
