@@ -522,6 +522,11 @@ export const getCachedTableSchema = async (
   return schema;
 };
 
+export const clearSchemaCache = (schemaName: string, tableName: string) => {
+  const cacheKey = `schema:${schemaName}:${tableName}`;
+  schemaCache.delete(cacheKey);
+};
+
 const parsePgDefault = (
   rawDefault: string | null
 ): {

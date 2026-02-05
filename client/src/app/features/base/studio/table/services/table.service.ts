@@ -224,8 +224,14 @@ export class TableService {
     return this.http.delete(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`);
   }
 
-  getRecords(tableName: string, filter?: Record<string, any>): Observable<RecordData[]> {
+  getRecords(
+    tableName: string,
+    { fields, filter }: { fields?: string[]; filter?: Record<string, any> } = {},
+  ) {
     let url = `${this.apiUrl}/${tableName}?expand=all`;
+    if (fields) {
+      url += `&fields=${fields.join(',')}`;
+    }
     if (filter) {
       url += `&filter=${JSON.stringify(filter)}`;
     }

@@ -122,6 +122,8 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
     const columnUiName = savedColumn.presentation?.uiName || savedColumn.name;
     const currentColumnId = currentColumn?.name;
 
+    let shouldReloadRecords = false;
+
     if (mode === 'add') {
       const newColumn: TableColumn = {
         id: columnName,
@@ -130,15 +132,8 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
       };
       this.ssColumns.update((arr) => [...arr, newColumn]);
 
-      if (savedColumn.defaultValue !== undefined) {
-        this.ssRows.update((rows) =>
-          rows.map((row) =>
-            row.data[columnName] === undefined
-              ? { ...row, data: { ...row.data, [columnName]: savedColumn.defaultValue } }
-              : row,
-          ),
-        );
-      }
+      shouldReloadRecords =
+        savedColumn.dataType === DataType.Formula || savedColumn.defaultValue !== undefined;
     } else if (mode === 'edit' && currentColumnId !== undefined) {
       const updatedColumn: TableColumn = {
         id: columnName,
@@ -149,7 +144,31 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
       this.ssColumns.update((columns) =>
         columns.map((col) => (col.id === currentColumnId ? updatedColumn : col)),
       );
+
+      shouldReloadRecords =
+        (savedColumn.dataType === DataType.Formula &&
+          savedColumn.formula !== currentColumn?.formula) ||
+        savedColumn.dataType !== currentColumn?.dataType ||
+        savedColumn.defaultValue !== currentColumn?.defaultValue;
     }
+
+    if (!shouldReloadRecords) return;
+
+    this.tableService
+      .getRecords(this.table()?.name, { fields: ['id', columnName] })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((records) => {
+        const recordsMap: Record<string, RecordData> = records.reduce((acc, record) => {
+          acc[record.id] = record;
+          return acc;
+        }, {});
+        this.ssRows.update((rows) =>
+          rows.map((row) => ({
+            ...row,
+            data: { ...row.data, [columnName]: recordsMap[row.id]?.[columnName] },
+          })),
+        );
+      });
   }
 
   override onRecordSave(

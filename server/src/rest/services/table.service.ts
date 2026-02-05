@@ -6,6 +6,7 @@ import {
   getMultiTableSchema,
   getColumnSchema,
   toPgArray,
+  clearSchemaCache,
 } from '../utils/table';
 import {
   addLengthCheck,
@@ -454,6 +455,7 @@ export class TableService {
       throw error;
     }
 
+    clearSchemaCache(schemaName, tableName);
     return getColumnSchema(pg, schemaName, tableName, name);
   }
 
@@ -928,6 +930,7 @@ export class TableService {
       throw error;
     }
 
+    clearSchemaCache(schemaName, tableName);
     return getColumnSchema(pg, schemaName, tableName, newName);
   }
 
@@ -958,5 +961,7 @@ export class TableService {
       .alterTable(tableName, (tableBuilder) => {
         tableBuilder.dropColumn(columnName);
       });
+
+    clearSchemaCache(schemaName, tableName);
   }
 }
