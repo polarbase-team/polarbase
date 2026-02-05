@@ -1,4 +1,21 @@
 @switch (field.resultType) {
+  @case (FormulaResultType.Integer) {
+    @if (data !== undefined && data !== null) {
+      <div class="w-full h-full text-right text-overflow-ellipsis">
+        {{ data }}
+      </div>
+    }
+  }
+  @case (FormulaResultType.Number) {
+    @if (data !== undefined && data !== null) {
+      <div class="w-full h-full text-right text-overflow-ellipsis">
+        @let presentation = field.params.presentation;
+        @let numberFormat = presentation?.format;
+        @let currency = presentation?.currency;
+        {{ data | numberFormat: numberFormat : currency }}
+      </div>
+    }
+  }
   @case (FormulaResultType.Date) {
     @if (data !== undefined && data !== null) {
       <div class="field-cell__text-content">
@@ -6,16 +23,6 @@
         @let dateFormat = presentation?.dateFormat;
         @let showTime = presentation?.showTime;
         {{ data | dateFormat: dateFormat : showTime }}
-      </div>
-    }
-  }
-  @case (FormulaResultType.Number) {
-    @if (data !== undefined && data !== null) {
-      <div class="field-cell__text-content">
-        @let presentation = field.params.presentation;
-        @let numberFormat = presentation?.format;
-        @let currency = presentation?.currency;
-        {{ data | numberFormat: numberFormat : currency }}
       </div>
     }
   }

@@ -776,7 +776,19 @@ const cleanFormulaExpression = (expression: string): string => {
 
   cleaned = cleaned.trim();
 
-  // 2. Iteratively remove outer parentheses if they enclose the whole expression safely
+  // 2. Remove quotes from function names: 'func'( -> func( or "func"( -> func(
+  cleaned = cleaned.replace(
+    /('(?:''|[^'])*'|"(?:""|[^"])*")\s*(?=\()/g,
+    (match, quoted) =>
+      quoted
+        .slice(1, -1)
+        .replace(
+          quoted.startsWith("'") ? /''/g : /""/g,
+          quoted.startsWith("'") ? "'" : '"'
+        )
+  );
+
+  // 3. Iteratively remove outer parentheses if they enclose the whole expression safely
   while (true) {
     if (!cleaned.startsWith('(') || !cleaned.endsWith(')')) break;
 
@@ -819,7 +831,7 @@ const cleanFormulaExpression = (expression: string): string => {
     }
   }
 
-  // 3. Remove parentheses around simple column names: (col) -> col
+  // 4. Remove parentheses around simple column names: (col) -> col
   cleaned = cleaned.replace(
     /('(?:''|[^'])*')|("(?:""|[^"])*")|(\(\s*([a-zA-Z0-9_]+|"(?:""|[^"])*")\s*\))/g,
     (match, sQuote, dQuote, parenGroup, innerIdent) => {
@@ -830,6 +842,7 @@ const cleanFormulaExpression = (expression: string): string => {
     }
   );
 
+  // 5. Fix concatenation operator spacing: || -> ||
   return cleaned.replace(
     /('(?:''|[^'])*')|("(?:""|[^"])*")|(\s*\|\|\s*)/g,
     (match, sQuote, dQuote, op) => {

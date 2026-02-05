@@ -197,6 +197,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     { value: 'boolean', label: 'Boolean', example: 'true' },
     { value: 'jsonb', label: 'JSON', example: '{ "key": "value" }' },
   ];
+  protected columnNames: string[] = [];
 
   constructor(
     private destroyRef: DestroyRef,
@@ -323,6 +324,15 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.columnFormData.presentation = { ...DEFAULT_VALUE.presentation };
     this.columnFormData.validation = { ...DEFAULT_VALUE.validation };
     this.columnFormData.foreignKey = { ...DEFAULT_VALUE.foreignKey };
+
+    if (dataType === DataType.Formula) {
+      this.tableService
+        .getTableSchema(this.table().name)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((columns: ColumnDefinition[]) => {
+          this.columnNames = columns.map((c) => c.name);
+        });
+    }
   }
 
   protected addOption() {

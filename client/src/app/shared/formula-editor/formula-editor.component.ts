@@ -20,6 +20,7 @@ import { syntaxHighlightPlugin } from './extensions/syntax-highlight';
 import { inlineSuggestionPlugin } from './extensions/inline-suggestion';
 import { roundBracketFoldService } from './extensions/round-bracket-fold';
 import { replaceDoubleQuotes } from './extensions/replace-double-quotes';
+import { SUPPORTED_FUNCTIONS } from './supported-functions';
 
 @Component({
   selector: 'formula-editor',
@@ -36,6 +37,7 @@ import { replaceDoubleQuotes } from './extensions/replace-double-quotes';
 })
 export class FormulaEditorComponent implements AfterViewInit, ControlValueAccessor {
   placeholder = input('');
+  columns = input<string[]>([]);
 
   focus = output();
   blur = output();
@@ -66,11 +68,28 @@ export class FormulaEditorComponent implements AfterViewInit, ControlValueAccess
         indentInsideBrackets,
         deleteBracketPair,
         inlineSuggestionPlugin({
-          async suggest(text) {
-            if (text.endsWith('SU')) {
-              return ['M()', -1];
-            } else if (text.endsWith('Na')) {
-              return ['me'];
+          suggest: async (text) => {
+            const lastWordMatch = text.match(/[a-zA-Z_][a-zA-Z0-9_]*$/);
+            if (!lastWordMatch) return null;
+
+            const lastWord = lastWordMatch[0];
+            const lowerLastWord = lastWord.toLowerCase();
+
+            // Try matching functions first
+            const funcMatch = SUPPORTED_FUNCTIONS.find((f) => f.startsWith(lowerLastWord));
+            if (funcMatch) {
+              const suggestionText = funcMatch.slice(lastWord.length);
+              const isUpper = lastWord === lastWord.toUpperCase() && lastWord.length > 0;
+              const result = isUpper ? suggestionText.toUpperCase() : suggestionText;
+              return [result + '()', -1];
+            }
+
+            // Try matching columns
+            const colMatch = this.columns().find(
+              (c) => c.toLowerCase().startsWith(lastWord.toLowerCase()) && c !== lastWord,
+            );
+            if (colMatch) {
+              return [colMatch.slice(lastWord.length)];
             }
 
             return null;
