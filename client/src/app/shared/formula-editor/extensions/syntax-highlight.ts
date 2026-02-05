@@ -4,7 +4,7 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { javascript } from '@codemirror/lang-javascript';
 import { tags } from '@lezer/highlight';
 
-const REGEX = /\b(NULL|TRUE|FALSE)\b/g;
+const REGEX = /\b(null|true|false)\b/g;
 
 export const syntaxHighlightPlugin = ViewPlugin.fromClass(
   class {

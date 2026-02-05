@@ -17,9 +17,9 @@ import { bracketMatching } from '@codemirror/language';
 import { indentInsideBrackets } from './extensions/indent-inside-brackets';
 import { deleteBracketPair } from './extensions/delete-bracket-pair';
 import { syntaxHighlightPlugin } from './extensions/syntax-highlight';
-import { chipReplacerPlugin } from './extensions/chip-replacer';
 import { inlineSuggestionPlugin } from './extensions/inline-suggestion';
 import { roundBracketFoldService } from './extensions/round-bracket-fold';
+import { replaceDoubleQuotes } from './extensions/replace-double-quotes';
 
 @Component({
   selector: 'formula-editor',
@@ -65,12 +65,6 @@ export class FormulaEditorComponent implements AfterViewInit, ControlValueAccess
         syntaxHighlightPlugin,
         indentInsideBrackets,
         deleteBracketPair,
-        chipReplacerPlugin({
-          regex: /#{field_([0-7][0-9A-HJKMNP-TV-Z]{25})}/g,
-          async replace(id) {
-            return '<i class="icon icon-text mr-4 pv-2"></i><span>Name</span>';
-          },
-        }),
         inlineSuggestionPlugin({
           async suggest(text) {
             if (text.endsWith('SU')) {
@@ -83,6 +77,7 @@ export class FormulaEditorComponent implements AfterViewInit, ControlValueAccess
           },
         }),
         roundBracketFoldService,
+        replaceDoubleQuotes,
         placeholder(this.placeholder()),
         EditorView.updateListener.of(this.onUpdated.bind(this)),
       ],
