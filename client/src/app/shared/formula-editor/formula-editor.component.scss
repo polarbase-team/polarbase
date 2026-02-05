@@ -1,0 +1,16 @@
+:host {
+  display: flex;
+  height: 100%;
+  width: 100%;
+
+  ::ng-deep {
+    .cm-editor {
+      height: 100%;
+      width: 100%;
+
+      &.cm-focused {
+        outline: none;
+      }
+    }
+  }
+}

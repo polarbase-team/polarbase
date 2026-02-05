@@ -13,7 +13,6 @@ import {
   addRangeCheck,
   specificType,
   DataType,
-  Column,
   removeLengthCheck,
   removeRangeCheck,
   removeSizeCheck,
@@ -284,16 +283,33 @@ export class TableService {
           dataType: typeof DataType.Select | typeof DataType.MultiSelect;
           options: string[];
           foreignKey?: null;
+          formula?: null;
         }
       | {
           dataType: typeof DataType.Reference;
+          options?: null;
           foreignKey: {
             table: string;
             column: { name: string; type: string };
             onUpdate: ReferentialAction;
             onDelete: ReferentialAction;
           };
+          formula?: null;
+        }
+      | {
+          dataType: typeof DataType.Formula;
           options?: null;
+          foreignKey?: null;
+          formula: {
+            resultType:
+              | 'text'
+              | 'integer'
+              | 'numeric'
+              | 'date'
+              | 'boolean'
+              | 'jsonb';
+            expression: string;
+          };
         }
       | {
           dataType: Exclude<
@@ -301,9 +317,11 @@ export class TableService {
             | typeof DataType.Select
             | typeof DataType.MultiSelect
             | typeof DataType.Reference
+            | typeof DataType.Formula
           >;
           options?: null;
           foreignKey?: null;
+          formula?: null;
         }
     );
   }) {
@@ -318,6 +336,7 @@ export class TableService {
       validation,
       options,
       foreignKey,
+      formula,
     } = column;
     const {
       minLength,
@@ -351,6 +370,7 @@ export class TableService {
           name,
           dataType,
           foreignKey,
+          formula,
         });
 
         if (nullable) columnBuilder.nullable();
@@ -365,6 +385,7 @@ export class TableService {
               break;
             case DataType.Attachment:
             case DataType.Reference:
+            case DataType.Formula:
               // Not support default value
               break;
             default:
@@ -471,16 +492,33 @@ export class TableService {
           dataType: typeof DataType.Select | typeof DataType.MultiSelect;
           options: string[];
           foreignKey?: null;
+          formula?: null;
         }
       | {
           dataType: typeof DataType.Reference;
+          options?: null;
           foreignKey: {
             table: string;
             column: { name: string; type: string };
             onUpdate: ReferentialAction;
             onDelete: ReferentialAction;
           };
+          formula?: null;
+        }
+      | {
+          dataType: typeof DataType.Formula;
           options?: null;
+          foreignKey?: null;
+          formula: {
+            resultType:
+              | 'text'
+              | 'integer'
+              | 'numeric'
+              | 'date'
+              | 'boolean'
+              | 'jsonb';
+            expression: string;
+          };
         }
       | {
           dataType: Exclude<
@@ -488,9 +526,11 @@ export class TableService {
             | typeof DataType.Select
             | typeof DataType.MultiSelect
             | typeof DataType.Reference
+            | typeof DataType.Formula
           >;
           options?: null;
           foreignKey?: null;
+          formula?: null;
         }
     );
   }) {
@@ -505,6 +545,7 @@ export class TableService {
       validation,
       options,
       foreignKey,
+      formula,
     } = column;
     const {
       minLength,
@@ -550,6 +591,7 @@ export class TableService {
             name: columnName,
             dataType: dataType || oldSchema.dataType,
             foreignKey,
+            formula,
           },
           dataType === oldSchema.dataType
         ).alter();
@@ -576,6 +618,7 @@ export class TableService {
               break;
             case DataType.Attachment:
             case DataType.Reference:
+            case DataType.Formula:
               // Not support default value
               break;
             default:

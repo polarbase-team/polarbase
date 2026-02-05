@@ -135,7 +135,6 @@
                 [(ngModel)]="selectedDataType"
                 (ngModelChange)="onDataTypeSelect($event)"
                 [checkmark]="true"
-                [showClear]="true"
                 placeholder="Select here..."
                 required
               >
@@ -305,7 +304,10 @@
               }
               @case (DataType.Reference) {
                 <div class="flex flex-col gap-1">
-                  <label for="table" class="text-sm">Reference to</label>
+                  <label for="table" class="text-sm">
+                    Reference to
+                    <i class="icon icon-asterisk text-red-500"></i>
+                  </label>
                   <p-select
                     inputId="table"
                     name="table"
@@ -313,7 +315,6 @@
                     [(ngModel)]="columnFormData.foreignKey.table"
                     (ngModelChange)="onTableSelect($event)"
                     [checkmark]="true"
-                    [showClear]="true"
                     optionValue="name"
                     placeholder="Select here..."
                     required
@@ -398,6 +399,43 @@
                     [useGrouping]="false"
                     placeholder="Input here..."
                   />
+                </div>
+              }
+              @case (DataType.Formula) {
+                <div class="flex flex-col gap-1">
+                  <label for="resultType" class="text-sm">
+                    Result Type
+                    <i class="icon icon-asterisk text-red-500"></i>
+                  </label>
+                  <p-select
+                    inputId="resultType"
+                    name="resultType"
+                    [(ngModel)]="columnFormData.formula.resultType"
+                    [options]="resultTypeOptions"
+                    [checkmark]="true"
+                    optionValue="value"
+                    placeholder="Select here..."
+                    required
+                    appendTo="body"
+                  >
+                    <ng-template #item let-item>
+                      <div>
+                        {{ item.label }}
+                        <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
+                      </div>
+                    </ng-template>
+                  </p-select>
+                  <p class="text-surface-500 text-xs">The result type of the formula.</p>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label for="expression" class="text-sm">Expression</label>
+                  <div class="h-40 border border-surface-300 rounded-md overflow-hidden">
+                    <formula-editor
+                      id="expression"
+                      name="expression"
+                      [(doc)]="columnFormData.formula.expression"
+                    />
+                  </div>
                 </div>
               }
             }
@@ -641,6 +679,9 @@
                 <p class="text-sm">Not support</p>
               }
               @case (DataType.AutoDate) {
+                <p class="text-sm">Not support</p>
+              }
+              @case (DataType.Formula) {
                 <p class="text-sm">Not support</p>
               }
               @default {

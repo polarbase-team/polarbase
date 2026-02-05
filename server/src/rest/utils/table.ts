@@ -15,6 +15,7 @@ import {
   FILE_COUNT_CHECK_SUFFIX,
   OPTIONS_CHECK_SUFFIX,
   EMAIL_DOMAIN_CHECK_SUFFIX,
+  FormulaResultType,
 } from './column';
 
 export interface Table {
@@ -205,7 +206,9 @@ const fetchSchemasInternal = async (
         'is_nullable',
         'character_maximum_length',
         'column_default',
-        'ordinal_position'
+        'ordinal_position',
+        'is_generated',
+        'generation_expression'
       )
       .where({ table_schema: schemaName })
       .whereIn('table_name', tableNames)
@@ -471,15 +474,24 @@ const processTableSchema = (
       unique: uniqueSet.has(col.column_name),
       defaultValue: !hasSpecialDefault ? defaultValue : null,
       comment: commentMap[col.column_name] ?? null,
+      presentation: presentationMap[col.column_name] ?? null,
+      validation: Object.keys(validation).length ? validation : null,
       options: optionsMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
-      validation: Object.keys(validation).length ? validation : null,
-      presentation: presentationMap[col.column_name] ?? null,
+      formula:
+        col.is_generated === 'ALWAYS'
+          ? {
+              resultType: mapToFormulaResultType(col.data_type),
+              expression: cleanFormulaExpression(col.generation_expression),
+            }
+          : null,
       metadata: {
-        pgDataType: col.data_type,
-        pgRawType: col.udt_name,
-        pgDomainName: col.domain_name,
-        pgDefaultValue: rawDefaultValue,
+        rawDataType: col.data_type,
+        rawDefaultValue,
+        udtName: col.udt_name,
+        domainName: col.domain_name,
+        isGenerated: col.is_generated,
+        generationExpression: col.generation_expression,
         constraints,
       },
     } as Column;
@@ -714,4 +726,117 @@ const extractOptions = (definition: string): string[] | null => {
         .replace(/''/g, "'");
     })
     .filter((item) => item !== '');
+};
+
+const mapToFormulaResultType = (pgType: string): any => {
+  const normalizedType = pgType.toLowerCase();
+  if (
+    [
+      'integer',
+      'smallint',
+      'bigint',
+      'serial',
+      'smallserial',
+      'bigserial',
+    ].includes(normalizedType)
+  ) {
+    return FormulaResultType.Integer;
+  }
+  if (['numeric', 'real', 'double precision'].includes(normalizedType)) {
+    return FormulaResultType.Number;
+  }
+  if (['boolean'].includes(normalizedType)) {
+    return FormulaResultType.Boolean;
+  }
+  if (
+    ['date', 'timestamp', 'time', 'timestamp with time zone'].includes(
+      normalizedType
+    )
+  ) {
+    return FormulaResultType.Date;
+  }
+  if (['json', 'jsonb'].includes(normalizedType)) {
+    return FormulaResultType.Jsonb;
+  }
+  return FormulaResultType.Text;
+};
+
+const cleanFormulaExpression = (expression: string): string => {
+  if (!expression) return '';
+
+  // 1. Remove type casts: ::type, but skip strings
+  let cleaned = expression.replace(
+    /('(?:''|[^'])*')|("(?:""|[^"])*")|(::[\w\s"]+(?:\[\])?)/g,
+    (match, sQuote, dQuote, cast) => {
+      if (sQuote) return sQuote;
+      if (dQuote) return dQuote;
+      return '';
+    }
+  );
+
+  cleaned = cleaned.trim();
+
+  // 2. Iteratively remove outer parentheses if they enclose the whole expression safely
+  while (true) {
+    if (!cleaned.startsWith('(') || !cleaned.endsWith(')')) break;
+
+    let depth = 0;
+    let safe = true;
+    let inSQuote = false;
+    let inDQuote = false;
+
+    for (let i = 0; i < cleaned.length - 1; i++) {
+      const char = cleaned[i];
+      if (inSQuote) {
+        if (char === "'" && cleaned[i + 1] === "'") {
+          i++;
+          continue;
+        }
+        if (char === "'") inSQuote = false;
+      } else if (inDQuote) {
+        if (char === '"' && cleaned[i + 1] === '"') {
+          i++;
+          continue;
+        }
+        if (char === '"') inDQuote = false;
+      } else {
+        if (char === "'") inSQuote = true;
+        else if (char === '"') inDQuote = true;
+        else if (char === '(') depth++;
+        else if (char === ')') depth--;
+      }
+
+      if (depth === 0) {
+        safe = false;
+        break;
+      }
+    }
+
+    if (safe) {
+      cleaned = cleaned.slice(1, -1).trim();
+    } else {
+      break;
+    }
+  }
+
+  // 3. Remove parentheses around simple column names: (col) -> col
+  cleaned = cleaned.replace(
+    /('(?:''|[^'])*')|("(?:""|[^"])*")|(\(\s*([a-zA-Z0-9_]+|"(?:""|[^"])*")\s*\))/g,
+    (match, sQuote, dQuote, parenGroup, innerIdent) => {
+      if (sQuote) return sQuote;
+      if (dQuote) return dQuote;
+      if (parenGroup) return innerIdent;
+      return match;
+    }
+  );
+
+  return cleaned.replace(
+    /('(?:''|[^'])*')|("(?:""|[^"])*")|(\s*\|\|\s*)/g,
+    (match, sQuote, dQuote, op) => {
+      if (sQuote) return sQuote;
+      if (dQuote) return dQuote;
+      if (op) return ' || ';
+      return match;
+    }
+  );
 };

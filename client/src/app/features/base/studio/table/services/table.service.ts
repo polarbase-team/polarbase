@@ -64,6 +64,10 @@ export interface ColumnDefinition {
     onUpdate?: string;
     onDelete?: string;
   } | null;
+  formula: {
+    expression: string;
+    resultType: string;
+  } | null;
   metadata: any;
 }
 
