@@ -28,7 +28,7 @@
   }
   @case (FormulaResultType.Boolean) {
     <span class="text-sm min-w-10">
-      {{ data ? 'TRUE' : 'FALSE' }}
+      {{ data === true ? 'TRUE' : data === false ? 'FALSE' : '' }}
     </span>
   }
   @default {
