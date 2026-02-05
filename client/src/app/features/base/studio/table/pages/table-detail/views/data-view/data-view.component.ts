@@ -158,10 +158,13 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
       .getRecords(this.table()?.name, { fields: ['id', columnName] })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((records) => {
-        const recordsMap: Record<string, RecordData> = records.reduce((acc, record) => {
-          acc[record.id] = record;
-          return acc;
-        }, {});
+        const recordsMap = records.reduce(
+          (acc, record) => {
+            acc[record.id] = record;
+            return acc;
+          },
+          {} as Record<string, RecordData>,
+        );
         this.ssRows.update((rows) =>
           rows.map((row) => ({
             ...row,

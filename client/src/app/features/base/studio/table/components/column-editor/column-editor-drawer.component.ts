@@ -348,7 +348,7 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
       this.tableService
         .getTableSchema(this.table().name)
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe((columns: ColumnDefinition[]) => {
+        .subscribe((columns) => {
           this.columnNames = columns.map((c) => c.name);
         });
     }
