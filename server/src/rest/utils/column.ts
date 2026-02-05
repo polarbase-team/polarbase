@@ -1,5 +1,7 @@
 import { Knex } from 'knex';
 
+import { getPostgresVersion } from '../../plugins/pg';
+
 export const DataType = {
   Text: 'text',
   LongText: 'long-text',
@@ -274,6 +276,32 @@ export const specificType = (
     default:
       throw new Error(`Unsupported column type: ${dataType}`);
   }
+};
+
+/**
+ * Updates the expression of a formula (generated) column.
+ * Uses PostgreSQL 17's SET EXPRESSION syntax.
+ * @throws Error if PostgreSQL version is below 17
+ */
+export const updateFormulaExpression = async (
+  pg: Knex,
+  schemaName: string,
+  tableName: string,
+  columnName: string,
+  expression: string
+) => {
+  const pgVersion = await getPostgresVersion();
+  if (pgVersion < 17) {
+    throw new Error(
+      `Updating formula expressions requires PostgreSQL 17 or higher (current: ${pgVersion}). ` +
+        'Please delete and recreate the column, or upgrade your PostgreSQL version.'
+    );
+  }
+
+  await pg.raw(
+    `ALTER TABLE "${schemaName}"."${tableName}" 
+     ALTER COLUMN "${columnName}" SET EXPRESSION AS (${expression})`
+  );
 };
 
 export const LENGTH_CHECK_SUFFIX = '_length_check';

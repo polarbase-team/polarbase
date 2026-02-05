@@ -72,7 +72,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     container_name: polarbase-db
     environment:
       - POSTGRES_USER=postgres
