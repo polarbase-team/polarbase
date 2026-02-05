@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -325,7 +326,10 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
         this.close();
       },
       error: (error) => {
-        if (allowPresentationSaveOnFailure) {
+        if (
+          allowPresentationSaveOnFailure &&
+          !_.isEqual(this.column().presentation, this.columnFormData.presentation)
+        ) {
           this.onSave.emit({ ...this.column(), presentation: this.columnFormData.presentation });
           this.close();
         }

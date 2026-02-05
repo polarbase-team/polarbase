@@ -182,6 +182,7 @@
                 [(ngModel)]="selectedDataType"
                 (ngModelChange)="onDataTypeSelect($event)"
                 [checkmark]="true"
+                [disabled]="mode() === 'edit' && selectedDataType() === DataType.Formula"
                 placeholder="Select here..."
                 required
               >
@@ -461,6 +462,7 @@
                     (ngModelChange)="onResultTypeChange()"
                     [options]="resultTypeOptions"
                     [checkmark]="true"
+                    [disabled]="mode() === 'edit'"
                     optionValue="value"
                     placeholder="Select here..."
                     required
