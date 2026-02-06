@@ -29,6 +29,7 @@ import {
   removeEmailDomainCheck,
   updateFormulaExpression,
   FormulaStrategy,
+  FormulaResultType,
 } from '../utils/column';
 import { setTableMetadata } from '../db/table-metadata';
 import { setColumnMetadata } from '../db/column-metadata';
@@ -304,13 +305,7 @@ export class TableService {
           options?: null;
           foreignKey?: null;
           formula: {
-            resultType:
-              | 'text'
-              | 'integer'
-              | 'numeric'
-              | 'date'
-              | 'boolean'
-              | 'jsonb';
+            resultType: FormulaResultType;
             expression: string;
             strategy?: FormulaStrategy;
           };
@@ -523,13 +518,7 @@ export class TableService {
           options?: null;
           foreignKey?: null;
           formula: {
-            resultType:
-              | 'text'
-              | 'integer'
-              | 'numeric'
-              | 'date'
-              | 'boolean'
-              | 'jsonb';
+            resultType: FormulaResultType;
             expression: string;
             strategy?: FormulaStrategy;
           };

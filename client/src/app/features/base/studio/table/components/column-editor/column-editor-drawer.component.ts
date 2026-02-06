@@ -195,12 +195,12 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   // Formula type
   protected readonly FormulaResultType = FormulaResultType;
   protected resultTypeOptions = [
-    { value: 'text', label: 'Text', example: 'Hello' },
-    { value: 'integer', label: 'Integer', example: '123' },
-    { value: 'numeric', label: 'Number', example: '123.45' },
-    { value: 'date', label: 'Date', example: '2022-01-01' },
-    { value: 'boolean', label: 'Boolean', example: 'true' },
-    { value: 'jsonb', label: 'JSON', example: '{ "key": "value" }' },
+    { value: FormulaResultType.Text, label: 'Text', example: 'Hello' },
+    { value: FormulaResultType.Integer, label: 'Integer', example: '123' },
+    { value: FormulaResultType.Number, label: 'Number', example: '123.45' },
+    { value: FormulaResultType.Date, label: 'Date', example: '2022-01-01' },
+    { value: FormulaResultType.Boolean, label: 'Boolean', example: 'true' },
+    { value: FormulaResultType.Jsonb, label: 'JSON', example: '{ "key": "value" }' },
   ];
   protected formulaStrategyOptions = [
     { value: FormulaStrategy.Stored, label: 'Stored (Persisted)' },
