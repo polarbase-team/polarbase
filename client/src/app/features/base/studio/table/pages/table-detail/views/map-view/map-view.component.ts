@@ -6,13 +6,12 @@ import { ButtonModule } from 'primeng/button';
 import { PopoverModule } from 'primeng/popover';
 import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SkeletonModule } from 'primeng/skeleton';
 import { FluidModule } from 'primeng/fluid';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
 import { DataType } from '@app/shared/field-system/models/field.interface';
-import { OpenMapComponent, Location } from '@app/shared/open-map/open-map.component';
+import { OpenMapComponent, Location, Position } from '@app/shared/open-map/open-map.component';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { FilterGroup } from '@app/shared/field-system/filter/models';
 import { FieldIconPipe } from '@app/shared/field-system/pipes/field-icon.pipe';
@@ -25,6 +24,7 @@ interface MapViewConfiguration {
   selectedGeoPointField?: string;
   selectedDisplayField?: string;
   filterQuery?: FilterGroup;
+  mapCenter?: Position;
   mapZoom?: number;
 }
 
@@ -39,7 +39,6 @@ interface MapViewConfiguration {
     PopoverModule,
     SelectModule,
     DividerModule,
-    ProgressSpinnerModule,
     SkeletonModule,
     FluidModule,
     OpenMapComponent,
@@ -56,6 +55,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
   protected selectedGeoPointField: string;
   protected selectedDisplayField: string;
   protected filterQuery: FilterGroup;
+  protected mapCenter: Position;
   protected mapZoom = 13;
 
   ngOnInit() {
@@ -139,6 +139,7 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
       selectedGeoPointField: this.selectedGeoPointField,
       selectedDisplayField: this.selectedDisplayField,
       filterQuery: this.filterQuery,
+      mapCenter: this.mapCenter,
       mapZoom: this.mapZoom,
     });
   }
@@ -157,7 +158,11 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
     });
   }
 
-  protected onMapZoomChange() {
+  protected onMapMove() {
+    this.saveViewConfiguration();
+  }
+
+  protected onMapZoom() {
     this.saveViewConfiguration();
   }
 
