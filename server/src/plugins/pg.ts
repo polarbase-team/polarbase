@@ -101,4 +101,34 @@ export const initDatabaseTypes = async () => {
   }
 };
 
+let cachedVersion: number | null = null;
+
+/**
+ * Detects PostgreSQL major version from the database.
+ * Uses SHOW server_version_num which returns a number like 170001 for PG 17.0.1
+ * Major version = first 2 digits (e.g., 170001 -> 17)
+ * Result is cached after first call.
+ */
+export const getPostgresVersion = async (): Promise<number> => {
+  if (cachedVersion !== null) {
+    return cachedVersion;
+  }
+
+  const result = await pg.raw('SHOW server_version_num');
+  const versionNum = parseInt(result.rows[0].server_version_num, 10);
+
+  cachedVersion = Math.floor(versionNum / 10000);
+  return cachedVersion;
+};
+
+/**
+ * Check if PostgreSQL version meets minimum requirement.
+ */
+export const isPgVersionAtLeast = async (
+  minVersion: number
+): Promise<boolean> => {
+  const version = await getPostgresVersion();
+  return version >= minVersion;
+};
+
 export default pg;

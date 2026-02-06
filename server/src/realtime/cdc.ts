@@ -6,7 +6,7 @@ import {
 } from 'pg-logical-replication';
 
 import { log } from '../utils/logger';
-import { pgConfig } from '../plugins/pg';
+import { isPgVersionAtLeast, pgConfig } from '../plugins/pg';
 
 export const CDC_EVENTS = {
   CHANGE: 'cdc:change',
@@ -44,9 +44,11 @@ export async function setupReplication() {
 
     // Create publication for all tables
     try {
-      await client.query(
-        `CREATE PUBLICATION ${PUBLICATION_NAME} FOR ALL TABLES`
-      );
+      let query = `CREATE PUBLICATION ${PUBLICATION_NAME} FOR ALL TABLES`;
+      if (await isPgVersionAtLeast(18)) {
+        query += ` WITH (publish_generated_columns = 'stored')`;
+      }
+      await client.query(query);
       log.info(`Publication "${PUBLICATION_NAME}" created successfully`);
     } catch (error) {
       const err = error as Error;

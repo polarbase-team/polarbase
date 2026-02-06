@@ -14,6 +14,10 @@ import { TextFieldConfig } from '@app/shared/field-system/models/text/field.inte
 import { LongTextFieldConfig } from '@app/shared/field-system/models/long-text/field.interface';
 import { JSONFieldConfig } from '@app/shared/field-system/models/json/field.interface';
 import { DateFieldConfig } from '@app/shared/field-system/models/date/field.interface';
+import {
+  FormulaFieldConfig,
+  FormulaResultType,
+} from '@app/shared/field-system/models/formula/field.interface';
 import { buildField } from '@app/shared/field-system/models/utils';
 import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/field.interface';
 import { AttachmentFieldConfig } from '@app/shared/field-system/models/attachment/field.interface';
@@ -64,6 +68,10 @@ export interface ColumnDefinition {
     onUpdate?: string;
     onDelete?: string;
   } | null;
+  formula: {
+    resultType: FormulaResultType;
+    expression: string;
+  } | null;
   metadata: any;
 }
 
@@ -91,6 +99,7 @@ const DATA_TYPE_MAPPING = {
   attachment: DataType.Attachment,
   'auto-number': DataType.AutoNumber,
   'auto-date': DataType.AutoDate,
+  formula: DataType.Formula,
 };
 
 const TABLE_SELECTED_KEY = 'table_selected';
@@ -199,9 +208,14 @@ export class TableService {
     );
   }
 
-  updateColumn(tableName: string, columnName: string, column: ColumnFormData) {
+  updateColumn(
+    tableName: string,
+    columnName: string,
+    column: ColumnFormData,
+    allowPresentationSaveOnFailure = false,
+  ) {
     return this.http.put<ApiResponse<ColumnDefinition>>(
-      `${this.apiUrl}/tables/${tableName}/columns/${columnName}`,
+      `${this.apiUrl}/tables/${tableName}/columns/${columnName}?allowPresentationSaveOnFailure=${allowPresentationSaveOnFailure}`,
       column,
     );
   }
@@ -210,8 +224,14 @@ export class TableService {
     return this.http.delete(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`);
   }
 
-  getRecords(tableName: string, filter?: Record<string, any>): Observable<RecordData[]> {
+  getRecords(
+    tableName: string,
+    { fields, filter }: { fields?: string[]; filter?: Record<string, any> } = {},
+  ) {
     let url = `${this.apiUrl}/${tableName}?expand=all`;
+    if (fields) {
+      url += `&fields=${fields.join(',')}`;
+    }
     if (filter) {
       url += `&filter=${JSON.stringify(filter)}`;
     }
@@ -303,6 +323,10 @@ export class TableService {
       case DataType.AutoNumber:
         break;
       case DataType.AutoDate:
+        break;
+      case DataType.Formula:
+        (config as FormulaFieldConfig).resultType = column.formula.resultType;
+        (config as FormulaFieldConfig).expression = column.formula.expression;
         break;
     }
 

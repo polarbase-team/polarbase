@@ -85,7 +85,7 @@
               <div class="flex-grow min-w-[220px]">
                 @let field = getField(it.field);
 
-                @switch (field.dataType) {
+                @switch (getEffectiveDataType(field)) {
                   @case (DataType.LongText) {
                     <textarea
                       pTextarea

@@ -9,7 +9,12 @@ import { apiKeyAuth } from '../api-keys/auth';
 import { TableService } from './services/table.service';
 import { TableRecordService } from './services/table-record.service';
 import { IndexService } from './services/index.service';
-import { Column, DataType, ReferentialAction } from './utils/column';
+import {
+  Column,
+  DataType,
+  FormulaResultType,
+  ReferentialAction,
+} from './utils/column';
 import { WhereFilter } from './utils/record';
 
 const REST_RATE_LIMIT = Number(process.env.REST_RATE_LIMIT) || 100;
@@ -430,10 +435,25 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                   })
                 )
               ),
+              formula: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    resultType: t.Union([
+                      t.Literal(FormulaResultType.Text),
+                      t.Literal(FormulaResultType.Integer),
+                      t.Literal(FormulaResultType.Number),
+                      t.Literal(FormulaResultType.Date),
+                      t.Literal(FormulaResultType.Boolean),
+                      t.Literal(FormulaResultType.Jsonb),
+                    ]),
+                    expression: t.String(),
+                  })
+                )
+              ),
             },
             {
               error: (value) => {
-                const { dataType, options, foreignKey } =
+                const { dataType, options, foreignKey, formula } =
                   value as unknown as Column;
                 if (
                   (dataType === DataType.Select ||
@@ -444,6 +464,9 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                 }
                 if (dataType === DataType.Reference && !foreignKey) {
                   return 'foreignKey_required: Reference type must specify a target table and column';
+                }
+                if (dataType !== DataType.Formula && formula) {
+                  return 'formula_only_for_formula: Formula can only be set for formula type';
                 }
               },
             }
@@ -456,15 +479,23 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
        */
       .put(
         '/tables/:table/columns/:column',
-        ({ params: { table, column }, body }) => {
+        ({
+          params: { table, column },
+          body,
+          query: { allowPresentationSaveOnFailure },
+        }) => {
           return tableService.updateColumn({
             tableName: table,
             columnName: column,
             column: body as any,
+            allowPresentationSaveOnFailure,
           });
         },
         {
           params: t.Object({ table: t.String(), column: t.String() }),
+          query: t.Object({
+            allowPresentationSaveOnFailure: t.Optional(t.Boolean()),
+          }),
           body: t.Object(
             {
               name: t.String({
@@ -517,10 +548,25 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                   })
                 )
               ),
+              formula: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    resultType: t.Union([
+                      t.Literal(FormulaResultType.Text),
+                      t.Literal(FormulaResultType.Integer),
+                      t.Literal(FormulaResultType.Number),
+                      t.Literal(FormulaResultType.Date),
+                      t.Literal(FormulaResultType.Boolean),
+                      t.Literal(FormulaResultType.Jsonb),
+                    ]),
+                    expression: t.String(),
+                  })
+                )
+              ),
             },
             {
               error: (value) => {
-                const { dataType, options, foreignKey } =
+                const { dataType, options, foreignKey, formula } =
                   value as unknown as Column;
                 if (
                   (dataType === DataType.Select ||
@@ -531,6 +577,9 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                 }
                 if (dataType === DataType.Reference && !foreignKey) {
                   return 'foreignKey_required: Reference type must specify a target table and column';
+                }
+                if (dataType !== DataType.Formula && formula) {
+                  return 'formula_only_for_formula: Formula can only be set for formula type';
                 }
               },
             }
