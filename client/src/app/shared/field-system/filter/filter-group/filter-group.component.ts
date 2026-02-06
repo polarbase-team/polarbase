@@ -25,8 +25,7 @@ import { TextareaModule } from 'primeng/textarea';
 
 import { Field } from '../../models/field.object';
 import { DataType } from '../../models/field.interface';
-import { FormulaResultType } from '../../models/formula/field.interface';
-import { FormulaField } from '../../models/formula/field.object';
+import { getEffectiveDataType } from '../../models/utils';
 import {
   Conjunction,
   FilterGroup,
@@ -98,24 +97,7 @@ export class FilterGroupComponent {
   }
 
   protected getEffectiveDataType(field: Field) {
-    if (field.dataType === DataType.Formula) {
-      const resultType = (field as FormulaField).resultType;
-      switch (resultType) {
-        case FormulaResultType.Number:
-          return DataType.Number;
-        case FormulaResultType.Integer:
-          return DataType.Integer;
-        case FormulaResultType.Date:
-          return DataType.Date;
-        case FormulaResultType.Boolean:
-          return DataType.Checkbox;
-        case FormulaResultType.Text:
-          return DataType.Text;
-        default:
-          return DataType.Text;
-      }
-    }
-    return field.dataType;
+    return getEffectiveDataType(field);
   }
 
   protected onFieldChange(rule: FilterRule) {

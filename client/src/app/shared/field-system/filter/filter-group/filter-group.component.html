@@ -118,28 +118,7 @@
                       fluid
                     />
                   }
-                  @case (DataType.AutoNumber) {
-                    <p-inputnumber
-                      [(ngModel)]="it.value"
-                      [useGrouping]="false"
-                      [pAutoFocus]="autoFocusIdx === i"
-                      placeholder="Input here..."
-                      fluid
-                    />
-                  }
                   @case (DataType.Date) {
-                    <p-datepicker
-                      [(ngModel)]="it.value"
-                      [pAutoFocus]="autoFocusIdx === i"
-                      [showClear]="true"
-                      [showIcon]="true"
-                      iconDisplay="input"
-                      placeholder="Select date"
-                      appendTo="body"
-                      fluid
-                    />
-                  }
-                  @case (DataType.AutoDate) {
                     <p-datepicker
                       [(ngModel)]="it.value"
                       [pAutoFocus]="autoFocusIdx === i"
