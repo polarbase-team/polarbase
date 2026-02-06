@@ -17,9 +17,9 @@ import { bracketMatching } from '@codemirror/language';
 import { indentInsideBrackets } from './extensions/indent-inside-brackets';
 import { deleteBracketPair } from './extensions/delete-bracket-pair';
 import { syntaxHighlightPlugin } from './extensions/syntax-highlight';
-import { inlineSuggestionPlugin } from './extensions/inline-suggestion';
 import { roundBracketFoldService } from './extensions/round-bracket-fold';
 import { replaceDoubleQuotes } from './extensions/replace-double-quotes';
+import { formulaAutocomplete } from './extensions/autocomplete';
 import { SUPPORTED_FUNCTIONS } from './supported-functions';
 
 @Component({
@@ -58,8 +58,50 @@ export class FormulaEditorComponent implements AfterViewInit, ControlValueAccess
       extensions: [
         minimalSetup,
         EditorView.theme({
+          '&': {
+            height: '100%',
+            borderRadius: 'inherit',
+            overflow: 'visible',
+          },
+          '.cm-scroller': {
+            lineHeight: 2,
+            borderRadius: 'inherit',
+          },
+          '.cm-gutters': {
+            lineHeight: 2,
+            borderTopLeftRadius: 'inherit',
+            borderBottomLeftRadius: 'inherit',
+            minWidth: '30px',
+            display: 'flex',
+            justifyContent: 'center',
+          },
           '.cm-content': { lineHeight: 2 },
-          '.cm-gutter': { lineHeight: 2 },
+          '&.cm-focused .cm-cursor': { borderLeftColor: '#3b82f6' },
+          '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
+            backgroundColor: '#dbeafe',
+          },
+          '.cm-tooltip-autocomplete': {
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            backgroundColor: '#ffffff',
+            overflow: 'hidden',
+          },
+          '.cm-tooltip-autocomplete > ul': {
+            fontFamily: 'inherit',
+          },
+          '.cm-tooltip-autocomplete > ul > li': {
+            padding: '6px 12px',
+          },
+          '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
+            backgroundColor: '#eff6ff',
+            color: '#1d4ed8',
+          },
+          '.cm-completionDetail': {
+            fontStyle: 'italic',
+            color: '#6b7280',
+            marginLeft: '8px',
+          },
         }),
         keymap.of(defaultKeymap),
         bracketMatching(),
@@ -67,34 +109,7 @@ export class FormulaEditorComponent implements AfterViewInit, ControlValueAccess
         syntaxHighlightPlugin,
         indentInsideBrackets,
         deleteBracketPair,
-        inlineSuggestionPlugin({
-          suggest: async (text) => {
-            const lastWordMatch = text.match(/[a-zA-Z_][a-zA-Z0-9_]*$/);
-            if (!lastWordMatch) return null;
-
-            const lastWord = lastWordMatch[0];
-            const lowerLastWord = lastWord.toLowerCase();
-
-            // Try matching functions first
-            const funcMatch = SUPPORTED_FUNCTIONS.find((f) => f.startsWith(lowerLastWord));
-            if (funcMatch) {
-              const suggestionText = funcMatch.slice(lastWord.length);
-              const isUpper = lastWord === lastWord.toUpperCase() && lastWord.length > 0;
-              const result = isUpper ? suggestionText.toUpperCase() : suggestionText;
-              return [result + '()', -1];
-            }
-
-            // Try matching columns
-            const colMatch = this.columns().find(
-              (c) => c.toLowerCase().startsWith(lastWord.toLowerCase()) && c !== lastWord,
-            );
-            if (colMatch) {
-              return [colMatch.slice(lastWord.length)];
-            }
-
-            return null;
-          },
-        }),
+        formulaAutocomplete(() => this.columns()),
         roundBracketFoldService,
         replaceDoubleQuotes,
         placeholder(this.placeholder()),
