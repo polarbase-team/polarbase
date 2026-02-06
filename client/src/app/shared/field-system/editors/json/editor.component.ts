@@ -36,7 +36,7 @@ export class JSONFieldEditorComponent extends FieldEditorComponent<JSONField, JS
     super();
 
     effect(() => {
-      this.jsonText = !_.isNil(this.data) ? JSON.stringify(this.data) : '';
+      this.jsonText = !_.isNil(this.data()) ? JSON.stringify(this.data()) : '';
     });
   }
 

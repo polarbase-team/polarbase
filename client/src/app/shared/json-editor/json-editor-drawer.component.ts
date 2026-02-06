@@ -1,4 +1,5 @@
 import { Component, output, model, input, ChangeDetectionStrategy } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
@@ -12,7 +13,7 @@ import { JSONEditorComponent } from './json-editor.component';
   selector: 'json-editor-drawer',
   templateUrl: './json-editor-drawer.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DrawerModule, ButtonModule, ConfirmDialogModule, JSONEditorComponent],
+  imports: [FormsModule, DrawerModule, ButtonModule, ConfirmDialogModule, JSONEditorComponent],
   providers: [ConfirmationService],
 })
 export class JSONEditorDrawerComponent extends DrawerComponent {
