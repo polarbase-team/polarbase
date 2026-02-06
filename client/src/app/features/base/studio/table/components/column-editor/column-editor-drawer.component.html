@@ -1,3 +1,50 @@
+<ng-template #numberFormatBuilder>
+  <div class="flex flex-col gap-1">
+    <label for="format" class="text-sm">Number Format</label>
+    <p-select
+      inputId="format"
+      name="format"
+      [(ngModel)]="columnFormData.presentation.format.numberFormat"
+      [options]="numberFormats"
+      [checkmark]="true"
+      [showClear]="true"
+      placeholder="Select here..."
+      appendTo="body"
+    >
+      <ng-template #item let-item>
+        <div>
+          {{ item.label }}
+          <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
+        </div>
+      </ng-template>
+    </p-select>
+    <p class="text-surface-500 text-xs">The number format to display the column values.</p>
+  </div>
+  @if (columnFormData.presentation.format.numberFormat === NumberFormat.Currency) {
+    <div class="flex flex-col gap-1">
+      <label for="currency" class="text-sm">Currency</label>
+      <p-select
+        inputId="currency"
+        name="currency"
+        [(ngModel)]="columnFormData.presentation.format.currency"
+        [options]="currencies"
+        [checkmark]="true"
+        [showClear]="true"
+        placeholder="Select here..."
+        appendTo="body"
+      >
+        <ng-template #item let-item>
+          <div>
+            {{ item.label }}
+            <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
+          </div>
+        </ng-template>
+      </p-select>
+      <p class="text-surface-500 text-xs">The currency symbol to display for the column values.</p>
+    </div>
+  }
+</ng-template>
+
 <ng-template #dateFormatBuilder>
   <div class="space-y-2">
     <div class="flex flex-col gap-1">
@@ -88,10 +135,10 @@
                 />
                 @if (name.invalid && (name.touched || columnForm.submitted)) {
                   <p-message severity="error" size="small" variant="simple">
-                    @if (name.errors['required']) {
-                      Table name is required.
+                    @if (name.errors?.['required']) {
+                      Column name is required.
                     } @else if (name.errors?.['pattern']) {
-                      Invalid table name.
+                      Invalid column name.
                     }
                   </p-message>
                 }
@@ -133,9 +180,11 @@
                 name="type"
                 [options]="dataTypes"
                 [(ngModel)]="selectedDataType"
+                #type="ngModel"
                 (ngModelChange)="onDataTypeSelect($event)"
                 [checkmark]="true"
-                [showClear]="true"
+                [disabled]="mode() === 'edit' && selectedDataType() === DataType.Formula"
+                [invalid]="type.invalid && (type.touched || columnForm.submitted)"
                 placeholder="Select here..."
                 required
               >
@@ -152,6 +201,11 @@
                   </div>
                 </ng-template>
               </p-select>
+              @if (type.invalid && (type.touched || columnForm.submitted)) {
+                <p-message severity="error" size="small" variant="simple">
+                  Data type is required.
+                </p-message>
+              }
             </div>
             @switch (selectedDataType()) {
               @case (DataType.Text) {
@@ -271,10 +325,10 @@
                 </div>
               }
               @case (DataType.Select) {
-                <ng-container [ngTemplateOutlet]="optionsBuilder" />
+                <ng-container *ngTemplateOutlet="optionsBuilder" />
               }
               @case (DataType.MultiSelect) {
-                <ng-container [ngTemplateOutlet]="optionsBuilder" />
+                <ng-container *ngTemplateOutlet="optionsBuilder" />
               }
               @case (DataType.Email) {
                 <div class="flex flex-col gap-1">
@@ -305,15 +359,19 @@
               }
               @case (DataType.Reference) {
                 <div class="flex flex-col gap-1">
-                  <label for="table" class="text-sm">Reference to</label>
+                  <label for="table" class="text-sm">
+                    Reference to
+                    <i class="icon icon-asterisk text-red-500"></i>
+                  </label>
                   <p-select
                     inputId="table"
                     name="table"
                     [options]="tableOptions()"
                     [(ngModel)]="columnFormData.foreignKey.table"
+                    #table="ngModel"
                     (ngModelChange)="onTableSelect($event)"
                     [checkmark]="true"
-                    [showClear]="true"
+                    [invalid]="table.invalid && (table.touched || columnForm.submitted)"
                     optionValue="name"
                     placeholder="Select here..."
                     required
@@ -342,6 +400,11 @@
                       </div>
                     </ng-template>
                   </p-select>
+                  @if (table.invalid && (table.touched || columnForm.submitted)) {
+                    <p-message severity="error" size="small" variant="simple">
+                      Table is required.
+                    </p-message>
+                  }
                 </div>
                 <div class="flex flex-col gap-1">
                   <label for="onUpdate" class="text-sm">
@@ -400,6 +463,91 @@
                   />
                 </div>
               }
+              @case (DataType.Formula) {
+                <div class="flex flex-col gap-1">
+                  <label for="resultType" class="text-sm">
+                    Result Type
+                    <i class="icon icon-asterisk text-red-500"></i>
+                  </label>
+                  <p-select
+                    inputId="resultType"
+                    name="resultType"
+                    [(ngModel)]="columnFormData.formula.resultType"
+                    #resultType="ngModel"
+                    (ngModelChange)="onResultTypeChange()"
+                    [options]="resultTypeOptions"
+                    [checkmark]="true"
+                    [disabled]="mode() === 'edit'"
+                    [invalid]="resultType.invalid && (resultType.touched || columnForm.submitted)"
+                    optionValue="value"
+                    placeholder="Select here..."
+                    required
+                    appendTo="body"
+                  >
+                    <ng-template #item let-item>
+                      <div>
+                        {{ item.label }}
+                        <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
+                      </div>
+                    </ng-template>
+                  </p-select>
+                  @if (resultType.invalid && (resultType.touched || columnForm.submitted)) {
+                    <p-message severity="error" size="small" variant="simple">
+                      Result type is required.
+                    </p-message>
+                  }
+                  <p class="text-surface-500 text-xs">The result type of the formula.</p>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label for="expression" class="text-sm">
+                    Expression
+                    <i class="icon icon-asterisk text-red-500"></i>
+                  </label>
+                  <div
+                    class="h-40 border rounded-md"
+                    [class.border-red-500]="
+                      expression.invalid && (expression.touched || columnForm.submitted)
+                    "
+                    [class.border-surface-300]="
+                      !expression.invalid || (!expression.touched && !columnForm.submitted)
+                    "
+                  >
+                    <formula-editor
+                      id="expression"
+                      name="expression"
+                      [(ngModel)]="columnFormData.formula.expression"
+                      #expression="ngModel"
+                      required
+                      placeholder="Input formula..."
+                      [columns]="columnNames"
+                    />
+                  </div>
+                  @if (expression.invalid && (expression.touched || columnForm.submitted)) {
+                    <p-message severity="error" size="small" variant="simple">
+                      Expression is required.
+                    </p-message>
+                  }
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label for="strategy" class="text-sm">Storage Strategy</label>
+                  <p-select
+                    inputId="strategy"
+                    name="strategy"
+                    [(ngModel)]="columnFormData.formula.strategy"
+                    [options]="formulaStrategyOptions"
+                    [checkmark]="true"
+                    [disabled]="mode() === 'edit'"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select here..."
+                    required
+                    appendTo="body"
+                  />
+                  <p class="text-surface-500 text-xs">
+                    Virtual columns are only supported in PostgreSQL 18 or higher.
+                  </p>
+                </div>
+              }
             }
           </div>
         </div>
@@ -425,60 +573,13 @@
             </div>
             @switch (selectedDataType()) {
               @case (DataType.Number) {
-                <div class="flex flex-col gap-1">
-                  <label for="format" class="text-sm">Number Format</label>
-                  <p-select
-                    inputId="format"
-                    name="format"
-                    [(ngModel)]="columnFormData.presentation.format.numberFormat"
-                    [options]="numberFormats"
-                    [checkmark]="true"
-                    [showClear]="true"
-                    placeholder="Select here..."
-                    appendTo="body"
-                  >
-                    <ng-template #item let-item>
-                      <div>
-                        {{ item.label }}
-                        <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
-                      </div>
-                    </ng-template>
-                  </p-select>
-                  <p class="text-surface-500 text-xs">
-                    The number format to display the column values.
-                  </p>
-                </div>
-                @if (columnFormData.presentation.format.numberFormat === NumberFormat.Currency) {
-                  <div class="flex flex-col gap-1">
-                    <label for="currency" class="text-sm">Currency</label>
-                    <p-select
-                      inputId="currency"
-                      name="currency"
-                      [(ngModel)]="columnFormData.presentation.format.currency"
-                      [options]="currencies"
-                      [checkmark]="true"
-                      [showClear]="true"
-                      placeholder="Select here..."
-                      appendTo="body"
-                    >
-                      <ng-template #item let-item>
-                        <div>
-                          {{ item.label }}
-                          <p class="text-xs text-surface-500">e.g. {{ item.example }}</p>
-                        </div>
-                      </ng-template>
-                    </p-select>
-                    <p class="text-surface-500 text-xs">
-                      The currency symbol to display for the column values.
-                    </p>
-                  </div>
-                }
+                <ng-container *ngTemplateOutlet="numberFormatBuilder"></ng-container>
               }
               @case (DataType.Date) {
-                <ng-container [ngTemplateOutlet]="dateFormatBuilder"></ng-container>
+                <ng-container *ngTemplateOutlet="dateFormatBuilder"></ng-container>
               }
               @case (DataType.AutoDate) {
-                <ng-container [ngTemplateOutlet]="dateFormatBuilder"></ng-container>
+                <ng-container *ngTemplateOutlet="dateFormatBuilder"></ng-container>
               }
               @case (DataType.Reference) {
                 <div class="flex flex-col gap-1">
@@ -522,6 +623,16 @@
                     The selected column will be shown as the display value for this reference.
                   </p>
                 </div>
+              }
+              @case (DataType.Formula) {
+                @switch (columnFormData.formula.resultType) {
+                  @case (FormulaResultType.Number) {
+                    <ng-container *ngTemplateOutlet="numberFormatBuilder"></ng-container>
+                  }
+                  @case (FormulaResultType.Date) {
+                    <ng-container *ngTemplateOutlet="dateFormatBuilder"></ng-container>
+                  }
+                }
               }
             }
           </div>
@@ -641,6 +752,9 @@
                 <p class="text-sm">Not support</p>
               }
               @case (DataType.AutoDate) {
+                <p class="text-sm">Not support</p>
+              }
+              @case (DataType.Formula) {
                 <p class="text-sm">Not support</p>
               }
               @default {

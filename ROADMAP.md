@@ -39,6 +39,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 
 - **Index Management:** Create and manage indexes for faster data retrieval.
 - **Relation Diagram:** Visual ERD representation of table relationships.
+- **Formula Fields:** Support for stored and virtual generated columns with a robust formula engine.
 
 ---
 
@@ -70,7 +71,6 @@ Our mission is to build the most extensible open-source backend engine for Postg
 
 - **Webhooks Engine:** Trigger HTTP POST requests on data events.
 - **API Playground:** Built-in Swagger/OpenAPI interface for instant testing.
-- **Virtual Fields:** Computed fields using logic without altering the PG schema.
 - **SDKs:** Official client libraries for **JavaScript** and **Dart**.
 
 ---

@@ -135,7 +135,7 @@
     <ng-template #leftToolbar>
       <div class="flex flex-wrap gap-2">
         <div class="flex items-start">
-          <ng-template [ngTemplateOutlet]="displayModeTmpl()"></ng-template>
+          <ng-template *ngTemplateOutlet="displayModeTmpl()"></ng-template>
           <div class="flex gap-2">
             @if (isColumnsLoading()) {
               <p-skeleton width="100px" height="33px" />
@@ -155,11 +155,6 @@
             <p-divider layout="vertical" class="scale-80" />
           </div>
         } @else {
-          @if (isRecordsLoading()) {
-            <div class="mt-1">
-              <p-progress-spinner class="w-4! h-4!" strokeWidth="8" />
-            </div>
-          }
           <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
             <ng-template #content>
               <i class="icon icon-settings"></i>

@@ -9,7 +9,6 @@ import { ButtonModule } from 'primeng/button';
 import { PopoverModule } from 'primeng/popover';
 import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SkeletonModule } from 'primeng/skeleton';
 import { FluidModule } from 'primeng/fluid';
 
@@ -48,7 +47,6 @@ interface CalendarViewConfiguration {
     PopoverModule,
     SelectModule,
     DividerModule,
-    ProgressSpinnerModule,
     SkeletonModule,
     FluidModule,
     CalendarComponent,

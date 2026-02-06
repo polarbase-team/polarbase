@@ -14,7 +14,7 @@ import { OpenMapComponent, Location } from '../open-map.component';
   template: `<open-map
     #openMap
     [locations]="locations()"
-    (onMapClick)="onMapClick($event)"
+    (onClick)="onMapClick($event)"
     toolbarStyleClass="pt-[16px] px-[20px]"
   />`,
   changeDetection: ChangeDetectionStrategy.OnPush,

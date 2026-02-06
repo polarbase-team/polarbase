@@ -51,9 +51,9 @@
             {{ col.name }}
           </span>
           @let dataType =
-            col.metadata.pgDataType === 'ARRAY'
-              ? col.metadata.pgRawType.split('_')[1] + '[]'
-              : col.metadata.pgDomainName || col.metadata.pgDataType;
+            col.metadata.rawDataType === 'ARRAY'
+              ? col.metadata.udtName.split('_')[1] + '[]'
+              : col.metadata.domainName || col.metadata.rawDataType;
           <span
             class="text-surface-500 text-sm font-light truncate max-w-30"
             [attr.title]="dataType"

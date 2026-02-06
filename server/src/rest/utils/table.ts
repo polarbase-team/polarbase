@@ -15,6 +15,8 @@ import {
   FILE_COUNT_CHECK_SUFFIX,
   OPTIONS_CHECK_SUFFIX,
   EMAIL_DOMAIN_CHECK_SUFFIX,
+  FormulaResultType,
+  FormulaStrategy,
 } from './column';
 
 export interface Table {
@@ -195,19 +197,34 @@ const fetchSchemasInternal = async (
     columnMetadata,
   ] = await Promise.all([
     // 1. Basic column properties
-    pg('information_schema.columns')
+    pg('information_schema.columns as c')
       .select(
-        'table_name',
-        'column_name',
-        'data_type',
-        'udt_name',
-        'domain_name',
-        'is_nullable',
-        'character_maximum_length',
-        'column_default',
-        'ordinal_position'
+        'c.table_name',
+        'c.column_name',
+        'c.data_type',
+        'c.udt_name',
+        'c.domain_name',
+        'c.is_nullable',
+        'c.character_maximum_length',
+        'c.column_default',
+        'c.ordinal_position',
+        'c.is_generated',
+        'c.generation_expression',
+        'a.attgenerated'
       )
-      .where({ table_schema: schemaName })
+      .leftJoin('pg_class as cls', 'cls.relname', 'c.table_name')
+      .leftJoin('pg_namespace as ns', 'ns.oid', 'cls.relnamespace')
+      .leftJoin('pg_attribute as a', function () {
+        this.on('a.attrelid', '=', 'cls.oid').andOn(
+          'a.attname',
+          '=',
+          'c.column_name'
+        );
+      })
+      .where({
+        'c.table_schema': schemaName,
+        'ns.nspname': schemaName,
+      })
       .whereIn('table_name', tableNames)
       .modify((qb) => {
         if (columnName) qb.where({ column_name: columnName });
@@ -471,15 +488,28 @@ const processTableSchema = (
       unique: uniqueSet.has(col.column_name),
       defaultValue: !hasSpecialDefault ? defaultValue : null,
       comment: commentMap[col.column_name] ?? null,
+      presentation: presentationMap[col.column_name] ?? null,
+      validation: Object.keys(validation).length ? validation : null,
       options: optionsMap[col.column_name] ?? null,
       foreignKey: foreignKeyMap[col.column_name] || null,
-      validation: Object.keys(validation).length ? validation : null,
-      presentation: presentationMap[col.column_name] ?? null,
+      formula:
+        col.is_generated === 'ALWAYS'
+          ? {
+              resultType: mapToFormulaResultType(col.data_type),
+              expression: cleanFormulaExpression(col.generation_expression),
+              strategy:
+                col.attgenerated === 'v'
+                  ? FormulaStrategy.Virtual
+                  : FormulaStrategy.Stored,
+            }
+          : null,
       metadata: {
-        pgDataType: col.data_type,
-        pgRawType: col.udt_name,
-        pgDomainName: col.domain_name,
-        pgDefaultValue: rawDefaultValue,
+        rawDataType: col.data_type,
+        rawDefaultValue,
+        udtName: col.udt_name,
+        domainName: col.domain_name,
+        isGenerated: col.is_generated,
+        generationExpression: col.generation_expression,
         constraints,
       },
     } as Column;
@@ -508,6 +538,11 @@ export const getCachedTableSchema = async (
   schemaCache.set(cacheKey, schema);
 
   return schema;
+};
+
+export const clearSchemaCache = (schemaName: string, tableName: string) => {
+  const cacheKey = `schema:${schemaName}:${tableName}`;
+  schemaCache.delete(cacheKey);
 };
 
 const parsePgDefault = (
@@ -714,4 +749,130 @@ const extractOptions = (definition: string): string[] | null => {
         .replace(/''/g, "'");
     })
     .filter((item) => item !== '');
+};
+
+const mapToFormulaResultType = (pgType: string): any => {
+  const normalizedType = pgType.toLowerCase();
+  if (
+    [
+      'integer',
+      'smallint',
+      'bigint',
+      'serial',
+      'smallserial',
+      'bigserial',
+    ].includes(normalizedType)
+  ) {
+    return FormulaResultType.Integer;
+  }
+  if (['numeric', 'real', 'double precision'].includes(normalizedType)) {
+    return FormulaResultType.Number;
+  }
+  if (['boolean'].includes(normalizedType)) {
+    return FormulaResultType.Boolean;
+  }
+  if (
+    ['date', 'timestamp', 'time', 'timestamp with time zone'].includes(
+      normalizedType
+    )
+  ) {
+    return FormulaResultType.Date;
+  }
+  if (['json', 'jsonb'].includes(normalizedType)) {
+    return FormulaResultType.Jsonb;
+  }
+  return FormulaResultType.Text;
+};
+
+const cleanFormulaExpression = (expression: string): string => {
+  if (!expression) return '';
+
+  // 1. Remove type casts: ::type, but skip strings
+  let cleaned = expression.replace(
+    /('(?:''|[^'])*')|("(?:""|[^"])*")|(::[\w\s"]+(?:\[\])?)/g,
+    (match, sQuote, dQuote, cast) => {
+      if (sQuote) return sQuote;
+      if (dQuote) return dQuote;
+      return '';
+    }
+  );
+
+  cleaned = cleaned.trim();
+
+  // 2. Remove quotes from function names: 'func'( -> func( or "func"( -> func(
+  cleaned = cleaned.replace(
+    /('(?:''|[^'])*'|"(?:""|[^"])*")\s*(?=\()/g,
+    (match, quoted) =>
+      quoted
+        .slice(1, -1)
+        .replace(
+          quoted.startsWith("'") ? /''/g : /""/g,
+          quoted.startsWith("'") ? "'" : '"'
+        )
+  );
+
+  // 3. Iteratively remove outer parentheses if they enclose the whole expression safely
+  while (true) {
+    if (!cleaned.startsWith('(') || !cleaned.endsWith(')')) break;
+
+    let depth = 0;
+    let safe = true;
+    let inSQuote = false;
+    let inDQuote = false;
+
+    for (let i = 0; i < cleaned.length - 1; i++) {
+      const char = cleaned[i];
+      if (inSQuote) {
+        if (char === "'" && cleaned[i + 1] === "'") {
+          i++;
+          continue;
+        }
+        if (char === "'") inSQuote = false;
+      } else if (inDQuote) {
+        if (char === '"' && cleaned[i + 1] === '"') {
+          i++;
+          continue;
+        }
+        if (char === '"') inDQuote = false;
+      } else {
+        if (char === "'") inSQuote = true;
+        else if (char === '"') inDQuote = true;
+        else if (char === '(') depth++;
+        else if (char === ')') depth--;
+      }
+
+      if (depth === 0) {
+        safe = false;
+        break;
+      }
+    }
+
+    if (safe) {
+      cleaned = cleaned.slice(1, -1).trim();
+    } else {
+      break;
+    }
+  }
+
+  // 4. Remove parentheses around simple column names: (col) -> col
+  cleaned = cleaned.replace(
+    /('(?:''|[^'])*')|("(?:""|[^"])*")|(\(\s*([a-zA-Z0-9_]+|"(?:""|[^"])*")\s*\))/g,
+    (match, sQuote, dQuote, parenGroup, innerIdent) => {
+      if (sQuote) return sQuote;
+      if (dQuote) return dQuote;
+      if (parenGroup) return innerIdent;
+      return match;
+    }
+  );
+
+  // 5. Fix concatenation operator spacing: || -> ||
+  return cleaned.replace(
+    /('(?:''|[^'])*')|("(?:""|[^"])*")|(\s*\|\|\s*)/g,
+    (match, sQuote, dQuote, op) => {
+      if (sQuote) return sQuote;
+      if (dQuote) return dQuote;
+      if (op) return ' || ';
+      return match;
+    }
+  );
 };

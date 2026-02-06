@@ -142,7 +142,7 @@ export class ViewBaseComponent<T = any> {
     return new Promise((resolve, reject) => {
       this.isRecordsLoading.set(true);
       this.tableService
-        .getRecords(this.table().name, filter)
+        .getRecords(this.table().name, { filter })
         .pipe(
           finalize(() => this.isRecordsLoading.set(false)),
           takeUntilDestroyed(this.destroyRef),

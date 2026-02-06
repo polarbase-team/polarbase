@@ -11,6 +11,7 @@ import { TableBaseService } from './table-base.service';
 import { TableColumn } from '../models/table-column';
 import { TableColumnActionType } from '../events/table-column';
 import { DataType } from '../../field-system/models/field.interface';
+import { getEffectiveDataType } from '../../field-system/models/utils';
 
 const LABELS: Record<CalculateType, string> = {
   [CalculateType.Empty]: 'Count Empty',
@@ -46,7 +47,7 @@ export function getAggregateMenuItems(
   ];
   common.forEach((t) => allowed.add(t));
 
-  const dataType = column.field.dataType;
+  const dataType = getEffectiveDataType(column.field);
   switch (dataType) {
     case DataType.Date:
       allowed.add(CalculateType.EarliestDate);

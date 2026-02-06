@@ -8,7 +8,7 @@
   (onHide)="onHide()"
 >
   <ng-template #content>
-    <json-editor [(value)]="value" (valueChange)="isValueChanged = true" />
+    <json-editor [(ngModel)]="value" (ngModelChange)="isValueChanged = true" />
   </ng-template>
   <ng-template #footer>
     <div class="flex justify-end gap-2">
