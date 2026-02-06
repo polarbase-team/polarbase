@@ -528,6 +528,25 @@
                     </p-message>
                   }
                 </div>
+                <div class="flex flex-col gap-1">
+                  <label for="strategy" class="text-sm">Storage Strategy</label>
+                  <p-select
+                    inputId="strategy"
+                    name="strategy"
+                    [(ngModel)]="columnFormData.formula.strategy"
+                    [options]="formulaStrategyOptions"
+                    [checkmark]="true"
+                    [disabled]="mode() === 'edit'"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select here..."
+                    required
+                    appendTo="body"
+                  />
+                  <p class="text-surface-500 text-xs">
+                    Virtual columns are only supported in PostgreSQL 18 or higher.
+                  </p>
+                </div>
               }
             }
           </div>

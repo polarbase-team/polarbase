@@ -42,6 +42,13 @@ export const FormulaResultType = {
 export type FormulaResultType =
   (typeof FormulaResultType)[keyof typeof FormulaResultType];
 
+export const FormulaStrategy = {
+  Stored: 'stored',
+  Virtual: 'virtual',
+} as const;
+export type FormulaStrategy =
+  (typeof FormulaStrategy)[keyof typeof FormulaStrategy];
+
 export interface Column {
   name: string;
   dataType: DataType;
@@ -75,6 +82,7 @@ export interface Column {
   formula?: {
     resultType: FormulaResultType;
     expression: string;
+    strategy?: FormulaStrategy;
   } | null;
   metadata: {
     rawDataType?: string;
@@ -217,9 +225,11 @@ export const specificType = (
     formula?: {
       resultType: FormulaResultType;
       expression: string;
+      strategy?: FormulaStrategy;
     } | null;
   },
-  typeDefinitionOnly?: boolean
+  typeDefinitionOnly?: boolean,
+  pgVersion?: number
 ) => {
   switch (dataType) {
     case DataType.Text:
@@ -269,9 +279,19 @@ export const specificType = (
       if (!formula) {
         throw new Error(`Formula metadata is required for column: ${name}`);
       }
+      const strategy = formula.strategy || FormulaStrategy.Stored;
+      if (strategy === FormulaStrategy.Virtual) {
+        if (pgVersion! < 18) {
+          throw new Error(
+            `Virtual generated columns require PostgreSQL 18 or higher (current: ${pgVersion})`
+          );
+        }
+      }
       return tableBuilder.specificType(
         name,
-        `${formula.resultType} GENERATED ALWAYS AS (${formula.expression}) STORED`
+        `${
+          formula.resultType
+        } GENERATED ALWAYS AS (${formula.expression}) ${strategy.toUpperCase()}`
       );
     default:
       throw new Error(`Unsupported column type: ${dataType}`);

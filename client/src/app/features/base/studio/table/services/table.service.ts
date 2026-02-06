@@ -17,6 +17,7 @@ import { DateFieldConfig } from '@app/shared/field-system/models/date/field.inte
 import {
   FormulaFieldConfig,
   FormulaResultType,
+  FormulaStrategy,
 } from '@app/shared/field-system/models/formula/field.interface';
 import { buildField } from '@app/shared/field-system/models/utils';
 import { ReferenceFieldConfig } from '@app/shared/field-system/models/reference/field.interface';
@@ -71,6 +72,7 @@ export interface ColumnDefinition {
   formula: {
     resultType: FormulaResultType;
     expression: string;
+    strategy?: FormulaStrategy;
   } | null;
   metadata: any;
 }
@@ -327,6 +329,7 @@ export class TableService {
       case DataType.Formula:
         (config as FormulaFieldConfig).resultType = column.formula.resultType;
         (config as FormulaFieldConfig).expression = column.formula.expression;
+        (config as FormulaFieldConfig).strategy = column.formula.strategy;
         break;
     }
 

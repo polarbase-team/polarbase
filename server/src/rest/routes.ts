@@ -13,6 +13,7 @@ import {
   Column,
   DataType,
   FormulaResultType,
+  FormulaStrategy,
   ReferentialAction,
 } from './utils/column';
 import { WhereFilter } from './utils/record';
@@ -447,6 +448,12 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                       t.Literal(FormulaResultType.Jsonb),
                     ]),
                     expression: t.String(),
+                    strategy: t.Optional(
+                      t.Union([
+                        t.Literal(FormulaStrategy.Stored),
+                        t.Literal(FormulaStrategy.Virtual),
+                      ])
+                    ),
                   })
                 )
               ),
@@ -560,6 +567,12 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
                       t.Literal(FormulaResultType.Jsonb),
                     ]),
                     expression: t.String(),
+                    strategy: t.Optional(
+                      t.Union([
+                        t.Literal(FormulaStrategy.Stored),
+                        t.Literal(FormulaStrategy.Virtual),
+                      ])
+                    ),
                   })
                 )
               ),
