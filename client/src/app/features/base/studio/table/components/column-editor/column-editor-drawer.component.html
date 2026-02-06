@@ -135,10 +135,10 @@
                 />
                 @if (name.invalid && (name.touched || columnForm.submitted)) {
                   <p-message severity="error" size="small" variant="simple">
-                    @if (name.errors['required']) {
-                      Table name is required.
+                    @if (name.errors?.['required']) {
+                      Column name is required.
                     } @else if (name.errors?.['pattern']) {
-                      Invalid table name.
+                      Invalid column name.
                     }
                   </p-message>
                 }
@@ -180,9 +180,11 @@
                 name="type"
                 [options]="dataTypes"
                 [(ngModel)]="selectedDataType"
+                #type="ngModel"
                 (ngModelChange)="onDataTypeSelect($event)"
                 [checkmark]="true"
                 [disabled]="mode() === 'edit' && selectedDataType() === DataType.Formula"
+                [invalid]="type.invalid && (type.touched || columnForm.submitted)"
                 placeholder="Select here..."
                 required
               >
@@ -199,6 +201,11 @@
                   </div>
                 </ng-template>
               </p-select>
+              @if (type.invalid && (type.touched || columnForm.submitted)) {
+                <p-message severity="error" size="small" variant="simple">
+                  Data type is required.
+                </p-message>
+              }
             </div>
             @switch (selectedDataType()) {
               @case (DataType.Text) {
@@ -361,8 +368,10 @@
                     name="table"
                     [options]="tableOptions()"
                     [(ngModel)]="columnFormData.foreignKey.table"
+                    #table="ngModel"
                     (ngModelChange)="onTableSelect($event)"
                     [checkmark]="true"
+                    [invalid]="table.invalid && (table.touched || columnForm.submitted)"
                     optionValue="name"
                     placeholder="Select here..."
                     required
@@ -391,6 +400,11 @@
                       </div>
                     </ng-template>
                   </p-select>
+                  @if (table.invalid && (table.touched || columnForm.submitted)) {
+                    <p-message severity="error" size="small" variant="simple">
+                      Table is required.
+                    </p-message>
+                  }
                 </div>
                 <div class="flex flex-col gap-1">
                   <label for="onUpdate" class="text-sm">
@@ -459,10 +473,12 @@
                     inputId="resultType"
                     name="resultType"
                     [(ngModel)]="columnFormData.formula.resultType"
+                    #resultType="ngModel"
                     (ngModelChange)="onResultTypeChange()"
                     [options]="resultTypeOptions"
                     [checkmark]="true"
                     [disabled]="mode() === 'edit'"
+                    [invalid]="resultType.invalid && (resultType.touched || columnForm.submitted)"
                     optionValue="value"
                     placeholder="Select here..."
                     required
@@ -475,6 +491,11 @@
                       </div>
                     </ng-template>
                   </p-select>
+                  @if (resultType.invalid && (resultType.touched || columnForm.submitted)) {
+                    <p-message severity="error" size="small" variant="simple">
+                      Result type is required.
+                    </p-message>
+                  }
                   <p class="text-surface-500 text-xs">The result type of the formula.</p>
                 </div>
                 <div class="flex flex-col gap-1">
