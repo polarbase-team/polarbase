@@ -6,13 +6,12 @@ import { ButtonModule } from 'primeng/button';
 import { PopoverModule } from 'primeng/popover';
 import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SkeletonModule } from 'primeng/skeleton';
 import { FluidModule } from 'primeng/fluid';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
 import { DataType } from '@app/shared/field-system/models/field.interface';
-import { OpenMapComponent, Location } from '@app/shared/open-map/open-map.component';
+import { OpenMapComponent, Location, Position } from '@app/shared/open-map/open-map.component';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { FilterGroup } from '@app/shared/field-system/filter/models';
 import { FieldIconPipe } from '@app/shared/field-system/pipes/field-icon.pipe';
@@ -25,6 +24,8 @@ interface MapViewConfiguration {
   selectedGeoPointField?: string;
   selectedDisplayField?: string;
   filterQuery?: FilterGroup;
+  mapCenter?: Position;
+  mapZoom?: number;
 }
 
 @Component({
@@ -38,7 +39,6 @@ interface MapViewConfiguration {
     PopoverModule,
     SelectModule,
     DividerModule,
-    ProgressSpinnerModule,
     SkeletonModule,
     FluidModule,
     OpenMapComponent,
@@ -55,12 +55,15 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
   protected selectedGeoPointField: string;
   protected selectedDisplayField: string;
   protected filterQuery: FilterGroup;
+  protected mapCenter: Position;
+  protected mapZoom = 13;
 
   ngOnInit() {
     const configuration = this.getViewConfiguration();
     this.selectedGeoPointField = configuration.selectedGeoPointField;
     this.selectedDisplayField = configuration.selectedDisplayField;
     this.filterQuery = configuration.filterQuery;
+    this.mapZoom = configuration.mapZoom;
 
     this.loadTable();
   }
@@ -100,8 +103,8 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
           {
             id: record.new.id,
             title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
-            lng: record.new[this.selectedGeoPointField].x,
-            lat: record.new[this.selectedGeoPointField].y,
+            lat: record.new[this.selectedGeoPointField].x,
+            lng: record.new[this.selectedGeoPointField].y,
           },
         ]);
         break;
@@ -114,8 +117,8 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
                 ? {
                     id: record.new.id,
                     title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
-                    lng: record.new[this.selectedGeoPointField].x,
-                    lat: record.new[this.selectedGeoPointField].y,
+                    lat: record.new[this.selectedGeoPointField].x,
+                    lng: record.new[this.selectedGeoPointField].y,
                   }
                 : l,
             ),
@@ -136,6 +139,8 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
       selectedGeoPointField: this.selectedGeoPointField,
       selectedDisplayField: this.selectedDisplayField,
       filterQuery: this.filterQuery,
+      mapCenter: this.mapCenter,
+      mapZoom: this.mapZoom,
     });
   }
 
@@ -146,11 +151,19 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
         fields: this.fields(),
         data: {
           id: undefined,
-          [this.selectedGeoPointField]: location ? { x: location.lng, y: location.lat } : undefined,
+          [this.selectedGeoPointField]: location ? { x: location.lat, y: location.lng } : undefined,
         },
       },
       mode: 'add',
     });
+  }
+
+  protected onMapMove() {
+    this.saveViewConfiguration();
+  }
+
+  protected onMapZoom() {
+    this.saveViewConfiguration();
   }
 
   protected onMarkerClick(location: Location) {
@@ -176,8 +189,8 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
           acc.push({
             id: r.id,
             title: getRecordDisplayLabel(r, this.selectedDisplayField),
-            lng: r[this.selectedGeoPointField].x,
-            lat: r[this.selectedGeoPointField].y,
+            lat: r[this.selectedGeoPointField].x,
+            lng: r[this.selectedGeoPointField].y,
           });
         }
         return acc;

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0-beta] - 2026-02-06
+
+### Added
+
+- **Formula Field**: Support for computed fields using PostgreSQL generated columns (stored and virtual). Features a robust formula editor with autocompletion, validation, and type-specific formatting (number, currency).
+- **Loading Progress**: Integrated a global HTTP interceptor and progress indicator to provide visual feedback during background API operations.
+- **JSON Editor**: Added `ngModel` support to the JSON editor for improved integration with Angular forms.
+
+### Changed
+
+- **Map View**: Standardized coordinate order to (latitude, longitude) and implemented persistence for map zoom levels.
+- **UI/UX**: Enhanced column editor with required field validation and clearer error messaging.
+
 ## [0.7.0-beta] - 2026-02-04
 
 ### Added

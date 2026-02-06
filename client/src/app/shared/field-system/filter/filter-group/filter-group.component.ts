@@ -25,6 +25,7 @@ import { TextareaModule } from 'primeng/textarea';
 
 import { Field } from '../../models/field.object';
 import { DataType } from '../../models/field.interface';
+import { getEffectiveDataType } from '../../models/utils';
 import {
   Conjunction,
   FilterGroup,
@@ -92,7 +93,11 @@ export class FilterGroupComponent {
 
   protected getOps(fieldName: string) {
     const field = this.fields().find((f) => f.name === fieldName);
-    return field ? getOperatorsByDataType(field.dataType) : [];
+    return field ? getOperatorsByDataType(this.getEffectiveDataType(field) as DataType) : [];
+  }
+
+  protected getEffectiveDataType(field: Field) {
+    return getEffectiveDataType(field);
   }
 
   protected onFieldChange(rule: FilterRule) {

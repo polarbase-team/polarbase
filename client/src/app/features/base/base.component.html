@@ -8,19 +8,30 @@
     </div>
   </div>
   <div center>
-    <p-selectbutton [options]="options" [ngModel]="view()" [unselectable]="true">
+    <p-selectbutton
+      [options]="options"
+      [ngModel]="view()"
+      (ngModelChange)="navigate($event)"
+      [unselectable]="true"
+    >
       <ng-template #item let-item>
-        <routerLink [routerLink]="item.routerLink">
-          <div class="flex items-center gap-1">
-            <i [class]="item.icon"></i>
-            {{ item.label }}
-          </div>
-        </routerLink>
+        <div class="flex items-center gap-1">
+          <i [class]="item.icon"></i>
+          {{ item.label }}
+        </div>
       </ng-template>
     </p-selectbutton>
   </div>
-  @if (view() === 'studio') {
-    <div right class="flex gap-2 items-center">
+  <div right class="flex gap-2 items-center">
+    @if (loadingService.isLoading()) {
+      <p-progressspinner
+        [style]="{ width: '16px', height: '16px' }"
+        strokeWidth="6"
+        fill="transparent"
+        animationDuration=".8s"
+      />
+    }
+    @if (view() === 'studio') {
       <p-button
         icon="icon icon-book-open-text"
         severity="secondary"
@@ -36,8 +47,8 @@
         [outlined]="true"
         (click)="toggleChatbot()"
       />
-    </div>
-  }
+    }
+  </div>
 </topbar>
 
 <router-outlet></router-outlet>

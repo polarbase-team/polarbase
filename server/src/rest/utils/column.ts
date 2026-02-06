@@ -1,5 +1,7 @@
 import { Knex } from 'knex';
 
+import { getPostgresVersion } from '../../plugins/pg';
+
 export const DataType = {
   Text: 'text',
   LongText: 'long-text',
@@ -17,6 +19,7 @@ export const DataType = {
   Attachment: 'attachment',
   AutoNumber: 'auto-number',
   AutoDate: 'auto-date',
+  Formula: 'formula',
 } as const;
 export type DataType = (typeof DataType)[keyof typeof DataType];
 
@@ -27,6 +30,24 @@ export const ReferentialAction = {
 } as const;
 export type ReferentialAction =
   (typeof ReferentialAction)[keyof typeof ReferentialAction];
+
+export const FormulaResultType = {
+  Text: 'text',
+  Integer: 'integer',
+  Number: 'numeric',
+  Date: 'date',
+  Boolean: 'boolean',
+  Jsonb: 'jsonb',
+} as const;
+export type FormulaResultType =
+  (typeof FormulaResultType)[keyof typeof FormulaResultType];
+
+export const FormulaStrategy = {
+  Stored: 'stored',
+  Virtual: 'virtual',
+} as const;
+export type FormulaStrategy =
+  (typeof FormulaStrategy)[keyof typeof FormulaStrategy];
 
 export interface Column {
   name: string;
@@ -58,11 +79,18 @@ export interface Column {
     onUpdate: ReferentialAction;
     onDelete: ReferentialAction;
   } | null;
+  formula?: {
+    resultType: FormulaResultType;
+    expression: string;
+    strategy?: FormulaStrategy;
+  } | null;
   metadata: {
-    pgDataType?: string;
-    pgRawType?: string;
-    pgDomainName?: string;
-    pgDefaultValue?: string;
+    rawDataType?: string;
+    rawDefaultValue?: string;
+    udtName?: string;
+    domainName?: string;
+    isGenerated?: string;
+    generationExpression?: string;
     constraints?: {
       constraint_name: string;
       constraint_type: string;
@@ -118,36 +146,36 @@ const PG_TYPE_MAPPING: Record<string, DataType> = {
 };
 
 export const mapDataType = (column: Column) => {
-  const { pgDataType, pgRawType, pgDomainName, pgDefaultValue } =
+  const { rawDataType, rawDefaultValue, udtName, domainName } =
     column.metadata || {};
 
   // Detect AutoNumber
   if (
-    pgDefaultValue &&
-    typeof pgDefaultValue === 'string' &&
-    pgDefaultValue.includes('nextval')
+    rawDefaultValue &&
+    typeof rawDefaultValue === 'string' &&
+    rawDefaultValue.includes('nextval')
   ) {
     return DataType.AutoNumber;
   }
 
   // Detect AutoDateTime
   if (
-    pgDataType === 'timestamp with time zone' &&
-    pgDefaultValue === 'CURRENT_TIMESTAMP'
+    rawDataType === 'timestamp with time zone' &&
+    rawDefaultValue === 'CURRENT_TIMESTAMP'
   ) {
     return DataType.AutoDate;
   }
 
   // Detect Email and Url domains
-  if (pgDomainName === 'email_address') {
+  if (domainName === 'email_address') {
     return DataType.Email;
-  } else if (pgDomainName === 'url_address') {
+  } else if (domainName === 'url_address') {
     return DataType.Url;
   }
 
   // Detect Selects and Multi-Selects
   if (column.options) {
-    if (pgDataType === 'ARRAY') {
+    if (rawDataType === 'ARRAY') {
       return DataType.MultiSelect;
     }
     return DataType.Select;
@@ -158,12 +186,17 @@ export const mapDataType = (column: Column) => {
     return DataType.Reference;
   }
 
+  // Detect Formula
+  if (column.formula) {
+    return DataType.Formula;
+  }
+
   // Detect Attachment
-  if (pgRawType === '_attachment') {
+  if (udtName === '_attachment') {
     return DataType.Attachment;
   }
 
-  const normalizedType = pgDataType!
+  const normalizedType = rawDataType!
     .toLowerCase()
     .split('(')[0]
     .trim()
@@ -179,6 +212,7 @@ export const specificType = (
     name,
     dataType,
     foreignKey,
+    formula,
   }: {
     name: string;
     dataType: DataType;
@@ -188,8 +222,14 @@ export const specificType = (
       onUpdate: ReferentialAction;
       onDelete: ReferentialAction;
     } | null;
+    formula?: {
+      resultType: FormulaResultType;
+      expression: string;
+      strategy?: FormulaStrategy;
+    } | null;
   },
-  typeDefinitionOnly?: boolean
+  typeDefinitionOnly?: boolean,
+  pgVersion?: number
 ) => {
   switch (dataType) {
     case DataType.Text:
@@ -235,9 +275,53 @@ export const specificType = (
       return tableBuilder.bigIncrements(name, { primaryKey: false });
     case DataType.AutoDate:
       return tableBuilder.timestamp(name).defaultTo(pg.fn.now());
+    case DataType.Formula:
+      if (!formula) {
+        throw new Error(`Formula metadata is required for column: ${name}`);
+      }
+      const strategy = formula.strategy || FormulaStrategy.Stored;
+      if (strategy === FormulaStrategy.Virtual) {
+        if (pgVersion! < 18) {
+          throw new Error(
+            `Virtual generated columns require PostgreSQL 18 or higher (current: ${pgVersion})`
+          );
+        }
+      }
+      return tableBuilder.specificType(
+        name,
+        `${
+          formula.resultType
+        } GENERATED ALWAYS AS (${formula.expression}) ${strategy.toUpperCase()}`
+      );
     default:
       throw new Error(`Unsupported column type: ${dataType}`);
   }
+};
+
+/**
+ * Updates the expression of a formula (generated) column.
+ * Uses PostgreSQL 17's SET EXPRESSION syntax.
+ * @throws Error if PostgreSQL version is below 17
+ */
+export const updateFormulaExpression = async (
+  pg: Knex,
+  schemaName: string,
+  tableName: string,
+  columnName: string,
+  expression: string
+) => {
+  const pgVersion = await getPostgresVersion();
+  if (pgVersion < 17) {
+    throw new Error(
+      `Updating formula expressions requires PostgreSQL 17 or higher (current: ${pgVersion}). ` +
+        'Please delete and recreate the column, or upgrade your PostgreSQL version.'
+    );
+  }
+
+  await pg.raw(
+    `ALTER TABLE "${schemaName}"."${tableName}" 
+     ALTER COLUMN "${columnName}" SET EXPRESSION AS (${expression})`
+  );
 };
 
 export const LENGTH_CHECK_SUFFIX = '_length_check';

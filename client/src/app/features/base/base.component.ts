@@ -6,10 +6,12 @@ import { filter, startWith } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 import { environment } from '@environments/environment';
 
 import { TopbarComponent } from '@app/core/components/topbar/topbar.component';
+import { LoadingService } from '@app/core/services/loading.service';
 import { AgentService } from './studio/chatbot/agent.service';
 
 @Component({
@@ -17,7 +19,14 @@ import { AgentService } from './studio/chatbot/agent.service';
   templateUrl: './base.component.html',
   styleUrl: './base.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterModule, FormsModule, ButtonModule, SelectButtonModule, TopbarComponent],
+  imports: [
+    RouterModule,
+    FormsModule,
+    ButtonModule,
+    SelectButtonModule,
+    ProgressSpinnerModule,
+    TopbarComponent,
+  ],
   providers: [AgentService],
 })
 export class BaseComponent {
@@ -27,13 +36,11 @@ export class BaseComponent {
       label: 'Studio',
       icon: 'icon icon-layout-grid',
       value: 'studio',
-      routerLink: '/base/studio',
     },
     {
       label: 'Details',
       icon: 'icon icon-sliders-horizontal',
       value: 'details',
-      routerLink: '/base/details',
     },
   ];
 
@@ -41,6 +48,7 @@ export class BaseComponent {
     private destroyRef: DestroyRef,
     private router: Router,
     private agentService: AgentService,
+    protected loadingService: LoadingService,
   ) {
     this.router.events
       .pipe(
@@ -51,6 +59,10 @@ export class BaseComponent {
       .subscribe(() => {
         this.view.set(this.router.url.split('?')[0].split('/')[2]);
       });
+  }
+
+  protected navigate(value: string) {
+    this.router.navigate([`base/${value}`]);
   }
 
   protected openAPIDocs() {

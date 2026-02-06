@@ -12,6 +12,7 @@ import {
   TemplateRef,
   DestroyRef,
   signal,
+  model,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -32,11 +33,14 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { environment } from '@environments/environment';
 
-export interface Location {
-  id?: string | number;
-  title?: string;
+export interface Position {
   lat: number;
   lng: number;
+}
+
+export interface Location extends Position {
+  id?: string | number;
+  title?: string;
 }
 
 @Component({
@@ -60,12 +64,15 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
   container = viewChild<ElementRef<HTMLDivElement>>('container');
 
   locations = input<Location[]>();
-  zoom = input<number>(13);
+  center = model<Position>();
+  zoom = model(13);
   toolbarStyleClass = input<string>();
   contentStyleClass = input<string>();
 
-  onMapClick = output<Location>();
-  onMarkerClick = output<Location>();
+  onMove = output<Position>();
+  onZoom = output<number>();
+  onClick = output<Position>();
+  onMarkerClick = output<Position>();
 
   protected suggestions = signal<any[]>([]);
 
@@ -100,7 +107,7 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
       navigator.geolocation.getCurrentPosition((position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        this.map.flyTo([lat, lng], this.zoom());
+        this.map.flyTo([lat, lng], this.zoom() ?? 13);
       });
     }
   }
@@ -135,14 +142,27 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
             environment.openStreetMap.defaultLocation[1],
           ]
         : [0, 0],
-      this.zoom(),
+      this.zoom() ?? 13,
     );
     L.tileLayer(environment.openStreetMap.url, {
       attribution: environment.openStreetMap.attribution,
     }).addTo(this.map);
 
+    this.map.on('moveend', () => {
+      const center = this.map.getCenter();
+      const position: Position = { lat: center.lat, lng: center.lng };
+      this.center.set(position);
+      this.onMove.emit(position);
+    });
+
+    this.map.on('zoomend', () => {
+      const zoom = this.map.getZoom();
+      this.zoom.set(zoom);
+      this.onZoom.emit(zoom);
+    });
+
     this.map.on('click', (e: L.LeafletMouseEvent) => {
-      this.onMapClick.emit({ lat: e.latlng.lat, lng: e.latlng.lng });
+      this.onClick.emit({ lat: e.latlng.lat, lng: e.latlng.lng });
     });
 
     this.initMarkers(this.locations());
@@ -170,7 +190,7 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
       }
       this.markers = markers;
 
-      this.map.setView([locations[0].lat, locations[0].lng], this.zoom());
+      this.map.setView([locations[0].lat, locations[0].lng], this.zoom() ?? 13);
     }
   }
 }
