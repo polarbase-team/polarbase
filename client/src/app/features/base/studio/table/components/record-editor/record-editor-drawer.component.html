@@ -177,6 +177,15 @@
               fluid
             />
           }
+          @default {
+            <input
+              pInputText
+              [ngModel]="updatedRecord[field.name]"
+              [readonly]="true"
+              placeholder="N/A"
+              fluid
+            />
+          }
         }
       }
     </div>

@@ -16,6 +16,7 @@ import {
   OPTIONS_CHECK_SUFFIX,
   EMAIL_DOMAIN_CHECK_SUFFIX,
   FormulaResultType,
+  FormulaStrategy,
 } from './column';
 
 export interface Table {
@@ -196,21 +197,34 @@ const fetchSchemasInternal = async (
     columnMetadata,
   ] = await Promise.all([
     // 1. Basic column properties
-    pg('information_schema.columns')
+    pg('information_schema.columns as c')
       .select(
-        'table_name',
-        'column_name',
-        'data_type',
-        'udt_name',
-        'domain_name',
-        'is_nullable',
-        'character_maximum_length',
-        'column_default',
-        'ordinal_position',
-        'is_generated',
-        'generation_expression'
+        'c.table_name',
+        'c.column_name',
+        'c.data_type',
+        'c.udt_name',
+        'c.domain_name',
+        'c.is_nullable',
+        'c.character_maximum_length',
+        'c.column_default',
+        'c.ordinal_position',
+        'c.is_generated',
+        'c.generation_expression',
+        'a.attgenerated'
       )
-      .where({ table_schema: schemaName })
+      .leftJoin('pg_class as cls', 'cls.relname', 'c.table_name')
+      .leftJoin('pg_namespace as ns', 'ns.oid', 'cls.relnamespace')
+      .leftJoin('pg_attribute as a', function () {
+        this.on('a.attrelid', '=', 'cls.oid').andOn(
+          'a.attname',
+          '=',
+          'c.column_name'
+        );
+      })
+      .where({
+        'c.table_schema': schemaName,
+        'ns.nspname': schemaName,
+      })
       .whereIn('table_name', tableNames)
       .modify((qb) => {
         if (columnName) qb.where({ column_name: columnName });
@@ -483,6 +497,10 @@ const processTableSchema = (
           ? {
               resultType: mapToFormulaResultType(col.data_type),
               expression: cleanFormulaExpression(col.generation_expression),
+              strategy:
+                col.attgenerated === 'v'
+                  ? FormulaStrategy.Virtual
+                  : FormulaStrategy.Stored,
             }
           : null,
       metadata: {

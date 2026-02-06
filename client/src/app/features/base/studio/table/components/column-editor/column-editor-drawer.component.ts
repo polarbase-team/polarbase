@@ -42,7 +42,10 @@ import { Field } from '@app/shared/field-system/models/field.object';
 import { NumberFormat } from '@app/shared/field-system/models/number/field.interface';
 import { SelectField } from '@app/shared/field-system/models/select/field.object';
 import { MultiSelectField } from '@app/shared/field-system/models/multi-select/field.object';
-import { FormulaResultType } from '@app/shared/field-system/models/formula/field.interface';
+import {
+  FormulaResultType,
+  FormulaStrategy,
+} from '@app/shared/field-system/models/formula/field.interface';
 import { FieldIconPipe } from '@app/shared/field-system/pipes/field-icon.pipe';
 import { FormulaEditorComponent } from '@app/shared/formula-editor/formula-editor.component';
 import { TextFieldEditorComponent } from '@app/shared/field-system/editors/text/editor.component';
@@ -81,6 +84,7 @@ const DEFAULT_VALUE = {
   formula: {
     expression: '',
     resultType: 'text',
+    strategy: FormulaStrategy.Stored,
   },
 } as ColumnFormData;
 
@@ -191,12 +195,16 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   // Formula type
   protected readonly FormulaResultType = FormulaResultType;
   protected resultTypeOptions = [
-    { value: 'text', label: 'Text', example: 'Hello' },
-    { value: 'integer', label: 'Integer', example: '123' },
-    { value: 'numeric', label: 'Number', example: '123.45' },
-    { value: 'date', label: 'Date', example: '2022-01-01' },
-    { value: 'boolean', label: 'Boolean', example: 'true' },
-    { value: 'jsonb', label: 'JSON', example: '{ "key": "value" }' },
+    { value: FormulaResultType.Text, label: 'Text', example: 'Hello' },
+    { value: FormulaResultType.Integer, label: 'Integer', example: '123' },
+    { value: FormulaResultType.Number, label: 'Number', example: '123.45' },
+    { value: FormulaResultType.Date, label: 'Date', example: '2022-01-01' },
+    { value: FormulaResultType.Boolean, label: 'Boolean', example: 'true' },
+    { value: FormulaResultType.Jsonb, label: 'JSON', example: '{ "key": "value" }' },
+  ];
+  protected formulaStrategyOptions = [
+    { value: FormulaStrategy.Stored, label: 'Stored (Persisted)' },
+    { value: FormulaStrategy.Virtual, label: 'Virtual (Computed)' },
   ];
   protected columnNames: string[] = [];
 

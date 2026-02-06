@@ -1,4 +1,4 @@
-import pg from '../../plugins/pg';
+import pg, { getPostgresVersion } from '../../plugins/pg';
 import {
   getTable,
   getTableList,
@@ -28,6 +28,8 @@ import {
   addEmailDomainCheck,
   removeEmailDomainCheck,
   updateFormulaExpression,
+  FormulaStrategy,
+  FormulaResultType,
 } from '../utils/column';
 import { setTableMetadata } from '../db/table-metadata';
 import { setColumnMetadata } from '../db/column-metadata';
@@ -303,14 +305,9 @@ export class TableService {
           options?: null;
           foreignKey?: null;
           formula: {
-            resultType:
-              | 'text'
-              | 'integer'
-              | 'numeric'
-              | 'date'
-              | 'boolean'
-              | 'jsonb';
+            resultType: FormulaResultType;
             expression: string;
+            strategy?: FormulaStrategy;
           };
         }
       | {
@@ -367,13 +364,20 @@ export class TableService {
       throw new Error(`Column "${name}" already exists in ${fullTableName}`);
 
     try {
+      const pgVersion = await getPostgresVersion();
       await schemaBuilder.alterTable(tableName, (tableBuilder) => {
-        const columnBuilder = specificType(pg, tableBuilder, {
-          name,
-          dataType,
-          foreignKey,
-          formula,
-        });
+        const columnBuilder = specificType(
+          pg,
+          tableBuilder,
+          {
+            name,
+            dataType,
+            foreignKey,
+            formula,
+          },
+          false,
+          pgVersion
+        );
 
         if (nullable) columnBuilder.nullable();
         else columnBuilder.notNullable();
@@ -514,14 +518,9 @@ export class TableService {
           options?: null;
           foreignKey?: null;
           formula: {
-            resultType:
-              | 'text'
-              | 'integer'
-              | 'numeric'
-              | 'date'
-              | 'boolean'
-              | 'jsonb';
+            resultType: FormulaResultType;
             expression: string;
+            strategy?: FormulaStrategy;
           };
         }
       | {
@@ -611,6 +610,16 @@ export class TableService {
           );
         }
 
+        // Handle formula strategy change
+        if (
+          (formula?.strategy || FormulaStrategy.Stored) !==
+          (oldSchema.formula?.strategy || FormulaStrategy.Stored)
+        ) {
+          throw new Error(
+            'Changing formula storage strategy is not supported. Please delete and recreate the column.'
+          );
+        }
+
         // Handle formula expression change using PostgreSQL 17's SET EXPRESSION
         if (formula?.expression !== oldSchema.formula?.expression) {
           await updateFormulaExpression(
@@ -642,6 +651,7 @@ export class TableService {
       } else {
         let recreateConstraints = false;
 
+        const pgVersion = await getPostgresVersion();
         await pg.schema
           .withSchema(schemaName)
           .alterTable(tableName, (tableBuilder) => {
@@ -654,7 +664,8 @@ export class TableService {
                 foreignKey,
                 formula,
               },
-              dataType === oldSchema.dataType
+              dataType === oldSchema.dataType,
+              pgVersion
             ).alter();
 
             if (newName !== oldSchema.name) {
