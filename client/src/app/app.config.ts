@@ -13,6 +13,7 @@ import { MessageService } from 'primeng/api';
 
 import { httpApiKeyInterceptor } from './core/interceptors/http-api-key.interceptor';
 import { httpErrorInterceptor } from './core/interceptors/http-error.interceptor';
+import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { provideCustomRouteReuseStrategy } from './core/strategies/custom-route-reuse.strategy';
 import { routes } from './app.routes';
 
@@ -21,7 +22,9 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([httpApiKeyInterceptor, httpErrorInterceptor])),
+    provideHttpClient(
+      withInterceptors([loadingInterceptor, httpApiKeyInterceptor, httpErrorInterceptor]),
+    ),
 
     // PrimeNG UI Library
     providePrimeNG({
