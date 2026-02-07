@@ -28,7 +28,8 @@ export function resolveModel(modelId: string) {
     'gpt-5.1': openai('gpt-5.1'),
 
     // Google Gemini
-    'gemini-2.0-flash': google('gemini-2.0-flash'),
+    'gemini-2.5-flash': google('gemini-2.5-flash'),
+    'gemini-2.5-pro': google('gemini-2.5-pro'),
     'gemini-3-flash-preview': google('gemini-3-flash-preview'),
     'gemini-3-pro-preview': google('gemini-3-pro-preview'),
 
