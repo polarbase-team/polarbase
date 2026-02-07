@@ -17,13 +17,14 @@ import { ButtonModule } from 'primeng/button';
 import { ScrollPanel, ScrollPanelModule } from 'primeng/scrollpanel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ImageModule } from 'primeng/image';
-import { SafeHtmlPipe } from 'primeng/menu';
 
+import { MarkdownPipe } from './pipes/markdown.pipe';
 import { AgentService, ChatMessage, StreamEvent } from './agent.service';
 
 @Component({
   selector: 'chatbot',
   templateUrl: './chatbot.component.html',
+  styleUrl: './chatbot.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -32,7 +33,7 @@ import { AgentService, ChatMessage, StreamEvent } from './agent.service';
     ScrollPanelModule,
     ProgressSpinnerModule,
     ImageModule,
-    SafeHtmlPipe,
+    MarkdownPipe,
   ],
   providers: [AgentService],
 })
@@ -119,7 +120,7 @@ export class ChatBotComponent {
 
           events.forEach((event) => {
             if (event.type === 'text') {
-              botMessage.content += event.value.replace(/(?:\r\n|\r|\n)/g, '<br>');
+              botMessage.content += event.value;
               this.messages.set([...messages, botMessage]);
               this.scrollToBottom();
             } else if (event.type === 'tool') {

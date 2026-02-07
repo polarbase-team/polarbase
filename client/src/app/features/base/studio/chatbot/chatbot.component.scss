@@ -1,0 +1,61 @@
+@import 'highlight.js/styles/atom-one-dark.css';
+
+.chatbot-prose {
+  ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+  }
+
+  ol {
+    list-style-type: decimal;
+    margin-left: 1.5rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+
+  th,
+  td {
+    border: 1px solid var(--p-surface-300);
+    padding: 0.5rem;
+    text-align: left;
+  }
+
+  th {
+    background-color: var(--p-surface-100);
+  }
+
+  pre {
+    background: #282c34;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    font-size: 0.9rem;
+  }
+
+  :not(pre) > code {
+    background: var(--p-surface-100);
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  p {
+    margin: 0.5rem 0;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}

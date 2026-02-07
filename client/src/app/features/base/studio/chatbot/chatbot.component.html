@@ -45,7 +45,7 @@
                 } @else {
                   <div class="flex gap-2 leading-6">
                     <i class="icon icon-sparkles" style="color: var(--p-primary-color)"></i>
-                    <p class="m-0 white-space-pre-wrap" [innerHTML]="msg.content | safeHtml"></p>
+                    <div class="chatbot-prose" [innerHTML]="msg.content | markdown"></div>
                   </div>
                 }
               </div>
