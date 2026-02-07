@@ -19,7 +19,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ImageModule } from 'primeng/image';
 
 import { MarkdownPipe } from './pipes/markdown.pipe';
-import { AgentService, ChatMessage, StreamEvent } from './agent.service';
+import { AgentService, ChatMessage, StreamEvent } from './services/agent.service';
 
 @Component({
   selector: 'chatbot',

@@ -21,7 +21,7 @@ import { TableDetailComponent } from './table/pages/table-detail/table-detail.co
 import { TableService } from './table/services/table.service';
 import { TableRealtimeService } from './table/services/table-realtime.service';
 import { ChatBotComponent } from './chatbot/chatbot.component';
-import { AgentService } from './chatbot/agent.service';
+import { AgentService } from './chatbot/services/agent.service';
 
 const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
 
