@@ -52,7 +52,7 @@ services:
       - POSTGRES_MAX_CONNECTIONS=20
 
       # LLM
-      - LLM_DEFAULT_MODEL=gemini-2.5-flash
+      - LLM_DEFAULT_MODEL=gemini-3-pro-preview
       - OPENAI_API_KEY=
       - GEMINI_API_KEY=
       - ANTHROPIC_API_KEY=

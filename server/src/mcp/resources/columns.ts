@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { loadColumns } from '../../agent/resources/columns';
+import { builderAgentTools } from '../../agent/agents/builder';
 
 export default function register(server: FastMCP) {
   server.addResourceTemplate({
@@ -16,7 +16,10 @@ export default function register(server: FastMCP) {
         async complete() {
           try {
             const tablesResource = await server.embedded('db://tables');
-            const tables = JSON.parse(tablesResource.text || '[]') as string[];
+            const tablesData = JSON.parse(tablesResource.text || '[]') as any[];
+            const tables = Array.isArray(tablesData)
+              ? tablesData.map((t) => (typeof t === 'string' ? t : t.name))
+              : [];
             return { values: tables };
           } catch (error) {
             return { values: [] };
@@ -26,9 +29,12 @@ export default function register(server: FastMCP) {
     ],
     async load({ tableName }) {
       try {
-        const columns = await loadColumns(tableName);
+        const result = (await builderAgentTools.findColumns.execute!(
+          { tableName },
+          {} as any
+        )) as any;
         return {
-          text: JSON.stringify(columns, null, 2),
+          text: JSON.stringify(result.columns, null, 2),
         };
       } catch (error) {
         const err = error as any;

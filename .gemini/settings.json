@@ -9,7 +9,7 @@
     }
   },
   "model": {
-    "name": "gemini-2.5-flash"
+    "name": "gemini-3-pro-preview"
   },
   "mcp": {
     "discovery": true
