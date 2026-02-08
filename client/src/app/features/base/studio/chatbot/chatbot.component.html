@@ -12,6 +12,7 @@
       <div class="flex">
         <p-button
           icon="icon icon-maximize"
+          [rounded]="true"
           [text]="true"
           severity="secondary"
           size="small"
@@ -19,6 +20,7 @@
         />
         <p-button
           icon="icon icon-x"
+          [rounded]="true"
           [text]="true"
           severity="secondary"
           size="small"
@@ -73,7 +75,7 @@
           }
         </div>
       } @else {
-        <div class="w-full h-full flex items-center pt-30 flex flex-col">
+        <div class="flex flex-col items-center py-10">
           <video
             autoplay
             muted
@@ -81,9 +83,39 @@
             class="w-64 h-64"
             src="assets/animations/chatbot-animation.mp4"
           ></video>
-          <div class="text-center" style="margin-top: -40px">
-            <p class="text-2xl font-medium">Ask about your database</p>
-            <p class="text-sm text-surface-500">AI responses may be inaccurate.</p>
+          <div class="text-center mt-[-20px]">
+            <h2 class="text-xl font-semibold tracking-tight text-color">
+              How can I assist your data?
+            </h2>
+            <p class="text-sm text-surface-500 mb-4">
+              Choose a starting point or type your own request below.
+            </p>
+
+            <p-tabs [value]="0">
+              <p-tablist class="w-fit self-center">
+                @for (promptTmp of promptTemplates; track promptTmp.label; let i = $index) {
+                  <p-tab [value]="i">{{ promptTmp.label }}</p-tab>
+                }
+              </p-tablist>
+              <p-tabpanels>
+                @for (promptTmp of promptTemplates; track promptTmp.label; let i = $index) {
+                  <p-tabpanel [value]="i">
+                    <div class="flex flex-wrap gap-3 justify-center max-w-2xl">
+                      @for (prompt of promptTmp.prompts; track prompt) {
+                        <p-button
+                          [label]="prompt"
+                          icon="icon icon-sparkles"
+                          [text]="true"
+                          severity="secondary"
+                          size="small"
+                          (click)="setPrompt(prompt)"
+                        />
+                      }
+                    </div>
+                  </p-tabpanel>
+                }
+              </p-tabpanels>
+            </p-tabs>
           </div>
         </div>
       }

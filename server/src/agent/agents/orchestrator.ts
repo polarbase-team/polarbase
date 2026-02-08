@@ -1,4 +1,4 @@
-import { ToolLoopAgent, tool } from 'ai';
+import { ToolLoopAgent, stepCountIs, tool } from 'ai';
 import { z } from 'zod';
 
 import { createBuilderAgent } from './builder';
@@ -46,5 +46,6 @@ export function createOrchestratorAgent(model: any, temperature?: number) {
         },
       }),
     },
+    stopWhen: stepCountIs(5),
   });
 }

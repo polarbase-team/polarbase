@@ -1,4 +1,4 @@
-import { ToolLoopAgent, tool } from 'ai';
+import { ToolLoopAgent, stepCountIs, tool } from 'ai';
 import { z } from 'zod';
 
 import { TableService } from '../../rest/services/table.service';
@@ -282,5 +282,6 @@ export function createBuilderAgent(model: any, temperature?: number) {
     When a user asks for a complex schema or a specific solution, design a comprehensive set of tables with appropriate columns and relationships, and explain your design choices in the plan.
     Use the provided tools to implement the schema only after stating your plan.`,
     tools: builderAgentTools,
+    stopWhen: stepCountIs(5),
   });
 }

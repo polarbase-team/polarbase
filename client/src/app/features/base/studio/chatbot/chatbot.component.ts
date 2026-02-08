@@ -17,9 +17,27 @@ import { ButtonModule } from 'primeng/button';
 import { ScrollPanel, ScrollPanelModule } from 'primeng/scrollpanel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ImageModule } from 'primeng/image';
+import { TabsModule } from 'primeng/tabs';
 
 import { MarkdownPipe } from './pipes/markdown.pipe';
 import { AgentService, ChatMessage, StreamEvent } from './services/agent.service';
+
+const setSelectionRangeCE = (element: HTMLElement, startOffset: number, endOffset: number) => {
+  element.focus();
+  const range = document.createRange();
+  const selection = window.getSelection();
+
+  if (element.firstChild && element.firstChild.nodeType === Node.TEXT_NODE) {
+    range.setStart(element.firstChild, startOffset);
+    range.setEnd(element.firstChild, endOffset);
+  } else {
+    console.error('Content is complex. Cannot set selection with simple logic.');
+    return;
+  }
+
+  selection.removeAllRanges();
+  selection.addRange(range);
+};
 
 @Component({
   selector: 'chatbot',
@@ -33,6 +51,7 @@ import { AgentService, ChatMessage, StreamEvent } from './services/agent.service
     ScrollPanelModule,
     ProgressSpinnerModule,
     ImageModule,
+    TabsModule,
     MarkdownPipe,
   ],
   providers: [AgentService],
@@ -49,6 +68,25 @@ export class ChatBotComponent {
   protected callingTool = signal('');
   protected inputText = '';
   protected isFullscreen = false;
+  protected promptTemplates = [
+    {
+      label: 'Structure',
+      prompts: [
+        'Build a table for sales leads',
+        'Add a "Priority" column to my tasks',
+        'Create a new database for my team',
+      ],
+    },
+    {
+      label: 'Manage',
+      prompts: [
+        'List all overdue invoices',
+        'Add a new customer named Jane Doe',
+        'Update my last order to "Paid"',
+        'Remove all completed projects',
+      ],
+    },
+  ];
 
   private scrollContainer = viewChild<ScrollPanel>('scrollContainer');
   private editor = viewChild<ElementRef>('editor');
@@ -67,7 +105,7 @@ export class ChatBotComponent {
       if (this.visible()) {
         setTimeout(() => {
           this.scrollToBottom();
-          this.editor().nativeElement.focus();
+          this.focus();
         }, 100);
       }
     });
@@ -75,6 +113,16 @@ export class ChatBotComponent {
 
   scrollToBottom() {
     this.scrollContainer().scrollTop(999999);
+  }
+
+  focus() {
+    const el = this.editor().nativeElement;
+    el.focus();
+    setSelectionRangeCE(el, el.innerText.length, el.innerText.length);
+  }
+
+  blur() {
+    this.editor().nativeElement.blur();
   }
 
   protected toggleFullscreen() {
@@ -91,7 +139,13 @@ export class ChatBotComponent {
   protected startNewChat() {
     this.messages.set([]);
     this.inputText = this.editor().nativeElement.innerHTML = '';
-    this.editor().nativeElement.focus();
+    this.focus();
+  }
+
+  protected setPrompt(prompt: string) {
+    const el = this.editor().nativeElement;
+    el.innerHTML = this.inputText = prompt;
+    this.focus();
   }
 
   protected sendMessage() {
@@ -137,9 +191,9 @@ export class ChatBotComponent {
   }
 
   protected onInput(event: InputEvent) {
-    const target: any = event.target;
-
+    const target = event.target as HTMLElement;
     const trimmed = target.innerText.trim();
+
     if (trimmed === '') target.innerText = '';
 
     this.inputText = trimmed;

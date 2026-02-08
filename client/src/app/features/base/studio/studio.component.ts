@@ -43,7 +43,7 @@ const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
 })
 export class BaseStudioComponent {
   protected sidebarVisible = signal(true);
-  protected chatbotVisible = computed(() => this.agentService.openAIChatbot());
+  protected chatbotVisible = signal(false);
   protected chatbotFullscreen = signal(false);
 
   constructor(
@@ -65,6 +65,10 @@ export class BaseStudioComponent {
         queryParams: { table: activeTable?.name },
         queryParamsHandling: 'merge',
       });
+    });
+
+    effect(() => {
+      this.chatbotVisible.set(this.agentService.openAIChatbot());
     });
 
     this.router.events
