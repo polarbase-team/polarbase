@@ -86,7 +86,7 @@
           }
         </div>
       } @else {
-        <div class="flex flex-col items-center py-10">
+        <div class="flex flex-col items-center">
           <video
             autoplay
             muted
@@ -105,7 +105,7 @@
             <p-tabs [value]="0">
               <p-tablist class="w-fit self-center">
                 @for (promptTmp of promptTemplates; track promptTmp.label; let i = $index) {
-                  <p-tab [value]="i">{{ promptTmp.label }}</p-tab>
+                  <p-tab [value]="i" class="text-sm">{{ promptTmp.label }}</p-tab>
                 }
               </p-tablist>
               <p-tabpanels>
@@ -148,14 +148,12 @@
           </div>
         </ng-template>
       </p-menu>
-      <div
-        class="px-2 py-1.5 bg-white rounded-lg border-1 border-surface-300 flex flex-col gap-1.5"
-      >
+      <div class="px-2 py-1.5 bg-white rounded-lg border-1 border-surface-300 flex flex-col gap-1">
         <div
           #editor
           contenteditable="plaintext-only"
           data-placeholder="Ask anything, @ to mention a table"
-          class="min-w-0 min-h-8 max-h-32 overflow-y-auto p-1 outline-0 empty:before:content-[attr(data-placeholder)] empty:before:text-surface-400 empty:before:pointer-events-none"
+          class="min-w-0 min-h-8 max-h-32 overflow-y-auto p-1 outline-0 text-sm empty:before:content-[attr(data-placeholder)] empty:before:text-surface-400 empty:before:pointer-events-none"
           (input)="onInput($any($event))"
           (keydown.enter)="!isStreaming() ? onEnter($any($event)) : false"
           (contextmenu)="onEditorContextMenu($event)"
