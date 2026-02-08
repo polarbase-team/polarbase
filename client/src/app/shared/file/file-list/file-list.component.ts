@@ -8,8 +8,8 @@ import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 
-import { FileMetadata } from '../file-uploader/file-uploader.component';
 import { formatSize, getFileIcon, getPublicUrl, isImage } from '../utils';
+import { FileMetadata } from '../file-upload.service';
 
 @Component({
   selector: 'file-list',
