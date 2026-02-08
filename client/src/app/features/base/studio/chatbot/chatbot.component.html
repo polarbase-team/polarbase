@@ -1,5 +1,5 @@
 <div class="w-full h-full bg-white">
-  <div class="w-full h-full max-w-250 relative mx-auto">
+  <div class="flex flex-col w-full h-full max-w-250 mx-auto">
     <div class="flex items-center justify-between p-1">
       <p-button
         icon="icon icon-plus"
@@ -9,29 +9,28 @@
         size="small"
         (click)="startNewChat()"
       />
-      <div class="flex">
-        <p-button
-          icon="icon icon-maximize"
-          [rounded]="true"
-          [text]="true"
-          severity="secondary"
-          size="small"
-          (click)="toggleFullscreen()"
-        />
-        <p-button
-          icon="icon icon-x"
-          [rounded]="true"
-          [text]="true"
-          severity="secondary"
-          size="small"
-          (click)="closeChatbot()"
-        />
-      </div>
+      <div class="flex-1 min-w-0"></div>
+      <p-button
+        icon="icon icon-maximize"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        size="small"
+        (click)="toggleFullscreen()"
+      />
+      <p-button
+        icon="icon icon-x"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        size="small"
+        (click)="closeChatbot()"
+      />
     </div>
 
-    <p-scrollpanel #scrollContainer class="w-full h-full">
+    <p-scrollpanel #scrollContainer class="w-full h-full min-h-0">
       @if (messages().length) {
-        <div class="px-6 py-8 mb-30">
+        <div class="px-6 py-8">
           <div class="flex flex-col gap-8">
             @for (msg of messages(); track msg.timestamp) {
               <div
@@ -41,8 +40,20 @@
                 }"
               >
                 @if (msg.role === 'user') {
-                  <div class="px-3.5 py-2.5 rounded-xl bg-primary text-primary-contrast">
-                    <p class="m-0 white-space-pre-wrap">{{ msg.content }}</p>
+                  <div class="flex flex-col items-end">
+                    <div class="p-2.5 rounded-xl bg-primary text-primary-contrast">
+                      <p class="m-0 whitespace-pre-wrap" style="word-break: break-word">
+                        {{ msg.content }}
+                      </p>
+                    </div>
+                    @for (file of msg._selectedFiles; track file.name) {
+                      <div
+                        class="flex items-center gap-2 p-2 rounded-md mt-2 text-[0.85rem] border border-slate-200 bg-slate-50 text-slate-700"
+                      >
+                        <i class="icon icon-file text-sm"></i>
+                        <span>{{ file.name }}</span>
+                      </div>
+                    }
                   </div>
                 } @else {
                   <div class="flex gap-2 leading-6">
@@ -121,7 +132,7 @@
       }
     </p-scrollpanel>
 
-    <div class="absolute z-1 bottom-2 left-4 right-4">
+    <div class="px-4 py-2">
       <p-contextmenu
         #mentionContextMenu
         [model]="mentionMenuItems"
@@ -149,7 +160,28 @@
           (keydown.enter)="!isStreaming() ? onEnter($any($event)) : false"
           (contextmenu)="onEditorContextMenu($event)"
         ></div>
+        @if (selectedFiles().length) {
+          <div class="flex flex-wrap items-center gap-1 overflow-x-auto">
+            @for (file of selectedFiles(); track file) {
+              <div
+                class="flex items-center gap-1 text-xs bg-surface-100 px-2 py-1 rounded border-1 border-surface-200"
+              >
+                <i class="icon icon-file text-sm"></i>
+                {{ file.name }}
+                <i class="icon icon-x cursor-pointer" (click)="removeFile(file)"></i>
+              </div>
+            }
+          </div>
+        }
         <div class="flex items-center gap-1 flex-wrap min-h-6">
+          <p-button
+            icon="icon icon-paperclip"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (click)="fileInput.click()"
+          />
           <p-button
             [label]="selectedModelLabel"
             [text]="true"
@@ -160,12 +192,12 @@
             (click)="modelMenu.show($event)"
           />
           <span class="flex-1 min-w-0"></span>
-          <p-button
-            icon="icon icon-paperclip"
-            [rounded]="true"
-            [text]="true"
-            severity="secondary"
-            size="small"
+          <input
+            #fileInput
+            type="file"
+            class="hidden"
+            (change)="onFilesSelected($event)"
+            multiple
           />
           @if (inputText.length && !isStreaming()) {
             <p-button icon="icon icon-send" [rounded]="true" size="small" (click)="sendMessage()" />

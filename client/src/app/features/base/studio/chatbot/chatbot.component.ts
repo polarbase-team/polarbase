@@ -2,12 +2,10 @@ import {
   Component,
   signal,
   effect,
-  computed,
   viewChild,
   ElementRef,
   DestroyRef,
   output,
-  input,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -69,10 +67,12 @@ export class ChatBotComponent {
       this.selectedModelLabel = opt.label;
     },
   }));
+  protected selectedFiles = signal<File[]>([]);
 
   private scrollContainer = viewChild<ScrollPanel>('scrollContainer');
   private editor = viewChild<ElementRef>('editor');
   private mentionContextMenu = viewChild<ContextMenu>('mentionContextMenu');
+  private fileInput = viewChild<ElementRef>('fileInput');
 
   constructor(
     private destroyRef: DestroyRef,
@@ -133,13 +133,36 @@ export class ChatBotComponent {
     this.focus();
   }
 
+  protected onFilesSelected(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const files = target.files;
+    if (!files) return;
+    this.selectedFiles.set([...files]);
+  }
+
+  protected removeFile(file: File) {
+    this.selectedFiles.update((files) => files.filter((f) => f !== file));
+  }
+
+  protected clearFiles() {
+    this.selectedFiles.set([]);
+    this.fileInput().nativeElement.value = '';
+  }
+
   protected sendMessage() {
     const text = this.inputText;
-    if (!text) return;
+    const files = this.selectedFiles();
+    if (!text && !files.length) return;
 
     this.inputText = this.editor().nativeElement.innerHTML = '';
+    this.clearFiles();
 
-    const userMessage: ChatMessage = { role: 'user', content: text, timestamp: new Date() };
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: text,
+      timestamp: new Date(),
+      _selectedFiles: files,
+    };
     const messages = [...this.messages(), userMessage];
     this.messages.set(messages);
     this.scrollToBottom();
@@ -149,7 +172,7 @@ export class ChatBotComponent {
 
     const botMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date() };
     this.agentService
-      .chat(this.messages())
+      .chat(messages, files)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (events: StreamEvent[]) => {

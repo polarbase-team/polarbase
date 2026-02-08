@@ -1,4 +1,4 @@
-import { ModelMessage } from 'ai';
+import { FilePart, ImagePart, ModelMessage } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
@@ -53,20 +53,54 @@ export function resolveModel(modelId: string) {
 
 export async function generateAIResponse({
   messages,
+  attachments,
   model = DEFAULT_MODEL,
   temperature = 0.7,
 }: {
   messages: ModelMessage[];
+  attachments?: File[];
   model?: string;
   temperature?: number;
 }) {
-  const selectedModel = resolveModel(model);
-
   // Initialize orchestrator with capability to call worker agents and temperature
+  const selectedModel = resolveModel(model);
   const orchestrator = createOrchestratorAgent(selectedModel, temperature);
 
+  // Attach files to the last message
+  if (attachments?.length) {
+    const attachmentParts: (ImagePart | FilePart)[] = await Promise.all(
+      attachments.map(async (file): Promise<ImagePart | FilePart> => {
+        const arrayBuffer = await file.arrayBuffer();
+        const isImage = file.type.startsWith('image/');
+
+        if (isImage) {
+          return {
+            type: 'image',
+            image: new Uint8Array(arrayBuffer),
+            mediaType: file.type,
+          };
+        } else {
+          return {
+            type: 'file',
+            data: new Uint8Array(arrayBuffer),
+            mediaType: file.type,
+            filename: file.name,
+          };
+        }
+      })
+    );
+
+    // Get the last message and convert its content to the array format
+    const lastMessage = messages[messages.length - 1];
+    const textContent =
+      typeof lastMessage.content === 'string' ? lastMessage.content : '';
+
+    lastMessage.content = [
+      { type: 'text', text: textContent },
+      ...attachmentParts,
+    ];
+  }
+
   // Use the orchestrator agent to stream the response
-  return orchestrator.stream({
-    messages,
-  });
+  return orchestrator.stream({ messages });
 }

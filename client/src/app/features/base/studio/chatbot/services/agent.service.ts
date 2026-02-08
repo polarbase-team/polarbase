@@ -4,10 +4,14 @@ import { map } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
+import { FileMetadata } from '@app/shared/file/file-upload.service';
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  attachments?: FileMetadata[];
+  _selectedFiles?: File[];
 }
 
 export interface StreamEvent {
@@ -25,20 +29,22 @@ export class AgentService {
 
   constructor(private http: HttpClient) {}
 
-  chat(messages: ChatMessage[]) {
+  chat(messages: ChatMessage[], attachments?: File[]) {
     this.lastReadIndex = 0;
     this.buffer = '';
 
+    const formData = new FormData();
+    formData.append('messages', JSON.stringify(messages));
+    if (attachments?.length) {
+      attachments.forEach((file) => formData.append('attachments', file, file.name));
+    }
+
     return this.http
-      .post(
-        `${this.apiUrl}/chat`,
-        { messages },
-        {
-          observe: 'events',
-          responseType: 'text',
-          reportProgress: true,
-        },
-      )
+      .post(`${this.apiUrl}/chat`, formData, {
+        observe: 'events',
+        responseType: 'text',
+        reportProgress: true,
+      })
       .pipe(
         map((event: any) => {
           let content: string | null = null;

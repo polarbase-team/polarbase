@@ -44,10 +44,10 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
 
   .post(
     '/chat',
-    async ({ body }) => {
-      const { messages, model, temperature } = body;
+    async ({ body: { messages, attachments, model, temperature } }) => {
       const result = await generateAIResponse({
         messages: messages as any,
+        attachments,
         model,
         temperature,
       });
@@ -69,6 +69,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
             toolInvocations: t.Optional(t.Any()),
           })
         ),
+        attachments: t.Optional(t.Files()),
         model: t.Optional(t.String()),
         temperature: t.Optional(t.Number({ minimum: 0, maximum: 2 })),
       }),
