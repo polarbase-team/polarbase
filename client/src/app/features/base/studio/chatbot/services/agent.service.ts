@@ -95,6 +95,8 @@ export class AgentService {
                 events.push({ type: 'text', value: obj.delta ?? '' });
               } else if (obj.type === 'tool-input-start') {
                 events.push({ type: 'tool', value: obj.toolName ?? '' });
+              } else if (obj.type === 'error') {
+                events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
               }
             } catch {
               // Ignore parse errors

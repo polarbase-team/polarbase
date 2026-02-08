@@ -178,7 +178,7 @@ export class ChatBotComponent {
           events.forEach((event) => {
             if (event.type === 'text') {
               botMessage.content += event.value;
-              this.messages.set([...messages, botMessage]);
+              this.messages.update((messages) => [...messages, botMessage]);
               this.scrollToBottom();
             } else if (event.type === 'tool') {
               this.callingTool.set(event.value);

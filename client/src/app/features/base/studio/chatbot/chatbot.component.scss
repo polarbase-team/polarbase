@@ -1,6 +1,8 @@
 @import 'highlight.js/styles/atom-one-dark.css';
 
 .chatbot-prose {
+  word-break: break-word;
+
   ul {
     list-style-type: disc;
     margin-left: 1.5rem;

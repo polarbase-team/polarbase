@@ -138,7 +138,7 @@ export function createQueryAgent(model: any, temperature?: number) {
     id: 'query-agent',
     model,
     temperature,
-    toolChoice: 'required',
+    toolChoice: 'auto',
     instructions: `You are a Database Query Assistant. 
     You can insert, update, delete, select, and aggregate records from tables.
     Always verify table names and column names before performing operations.

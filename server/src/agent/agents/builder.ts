@@ -269,7 +269,7 @@ export function createBuilderAgent(model: any, temperature?: number) {
     id: 'builder-agent',
     model,
     temperature,
-    toolChoice: 'required',
+    toolChoice: 'auto',
     instructions: `You are a Database Schema Builder. 
     You can create new tables, add columns to existing tables, and manage the database structure (including updating and deleting tables or columns).
     
