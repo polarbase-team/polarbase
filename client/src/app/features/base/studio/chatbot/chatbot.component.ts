@@ -29,23 +29,6 @@ import { AgentService, ChatMessage, StreamEvent } from './services/agent.service
 import { models } from './resources/models';
 import { promptTemplates } from './resources/prompt-templates';
 
-const setSelectionRangeCE = (element: HTMLElement, startOffset: number, endOffset: number) => {
-  element.focus();
-  const range = document.createRange();
-  const selection = window.getSelection();
-
-  if (element.firstChild && element.firstChild.nodeType === Node.TEXT_NODE) {
-    range.setStart(element.firstChild, startOffset);
-    range.setEnd(element.firstChild, endOffset);
-  } else {
-    console.error('Content is complex. Cannot set selection with simple logic.');
-    return;
-  }
-
-  selection.removeAllRanges();
-  selection.addRange(range);
-};
-
 @Component({
   selector: 'chatbot',
   templateUrl: './chatbot.component.html',
@@ -66,8 +49,6 @@ const setSelectionRangeCE = (element: HTMLElement, startOffset: number, endOffse
   providers: [AgentService],
 })
 export class ChatBotComponent {
-  visible = input(false);
-
   fullscreen = output<boolean>();
   onClose = output<void>();
 
@@ -105,12 +86,10 @@ export class ChatBotComponent {
     });
 
     effect(() => {
-      if (this.visible()) {
-        setTimeout(() => {
-          this.scrollToBottom();
-          this.focus();
-        }, 100);
-      }
+      setTimeout(() => {
+        this.scrollToBottom();
+        this.focus();
+      }, 100);
     });
   }
 
@@ -119,13 +98,15 @@ export class ChatBotComponent {
   }
 
   focus() {
-    const el = this.editor().nativeElement;
-    el.focus();
-    setSelectionRangeCE(el, el.innerText.length, el.innerText.length);
+    const el = this.editor()?.nativeElement;
+    if (!el) return;
+    this.focusEditorAtOffset(el.innerText.length);
   }
 
   blur() {
-    this.editor().nativeElement.blur();
+    const el = this.editor()?.nativeElement;
+    if (!el) return;
+    el.blur();
   }
 
   protected toggleFullscreen() {
@@ -146,7 +127,8 @@ export class ChatBotComponent {
   }
 
   protected setPrompt(prompt: string) {
-    const el = this.editor().nativeElement;
+    const el = this.editor()?.nativeElement;
+    if (!el) return;
     el.innerHTML = this.inputText = prompt;
     this.focus();
   }
@@ -277,5 +259,21 @@ export class ChatBotComponent {
     range.insertNode(document.createTextNode(`@${tableName} `));
     range.collapse(false);
     this.onInput({ target: el } as InputEvent);
+  }
+
+  private focusEditorAtOffset(offset: number) {
+    const el = this.editor()?.nativeElement;
+    if (!el) return;
+    el.focus();
+    const range = document.createRange();
+    const selection = window.getSelection();
+    if (el.firstChild && el.firstChild.nodeType === Node.TEXT_NODE) {
+      range.setStart(el.firstChild, offset);
+      range.setEnd(el.firstChild, offset);
+    } else {
+      return;
+    }
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
 }
