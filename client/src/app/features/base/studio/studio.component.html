@@ -69,8 +69,12 @@
     class="base-studio-chatbot border-l border-surface-200"
     [class.fullscreen]="chatbotFullscreen()"
   >
-    @if (chatbotVisible()) {
-      <chatbot (fullscreen)="chatbotFullscreen.set($event)" (onClose)="onCloseChatbot()" />
+    @if (chatbotInitialized()) {
+      <chatbot
+        [visible]="chatbotVisible()"
+        (fullscreen)="chatbotFullscreen.set($event)"
+        (onClose)="onCloseChatbot()"
+      />
     }
   </div>
 </div>

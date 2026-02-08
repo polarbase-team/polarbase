@@ -1,4 +1,4 @@
-import { ToolLoopAgent, stepCountIs, tool } from 'ai';
+import { ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
 import { TableRecordService } from '../../rest/services/table-record.service';
@@ -144,6 +144,5 @@ export function createQueryAgent(model: any, temperature?: number) {
     Always verify table names and column names before performing operations.
     Use the provided tools to interact with the data.`,
     tools: queryAgentTools,
-    stopWhen: stepCountIs(5),
   });
 }

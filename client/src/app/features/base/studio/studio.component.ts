@@ -44,6 +44,7 @@ const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
 export class BaseStudioComponent {
   protected sidebarVisible = signal(true);
   protected chatbotVisible = signal(false);
+  protected chatbotInitialized = signal(false);
   protected chatbotFullscreen = signal(false);
 
   constructor(
@@ -68,7 +69,11 @@ export class BaseStudioComponent {
     });
 
     effect(() => {
-      this.chatbotVisible.set(this.agentService.openAIChatbot());
+      const chatbotVisible = this.agentService.openAIChatbot();
+      this.chatbotVisible.set(chatbotVisible);
+      if (chatbotVisible) {
+        this.chatbotInitialized.set(true);
+      }
     });
 
     this.router.events

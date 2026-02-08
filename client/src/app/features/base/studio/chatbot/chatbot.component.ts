@@ -7,6 +7,7 @@ import {
   DestroyRef,
   output,
   ChangeDetectionStrategy,
+  input,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -14,7 +15,6 @@ import { FormsModule } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
 import { ScrollPanel, ScrollPanelModule } from 'primeng/scrollpanel';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ImageModule } from 'primeng/image';
 import { TabsModule } from 'primeng/tabs';
 import { MenuModule } from 'primeng/menu';
@@ -37,7 +37,6 @@ import { promptTemplates } from './resources/prompt-templates';
     FormsModule,
     ButtonModule,
     ScrollPanelModule,
-    ProgressSpinnerModule,
     ImageModule,
     TabsModule,
     MenuModule,
@@ -47,6 +46,8 @@ import { promptTemplates } from './resources/prompt-templates';
   providers: [AgentService],
 })
 export class ChatBotComponent {
+  visible = input(false);
+
   fullscreen = output<boolean>();
   onClose = output<void>();
 
@@ -86,10 +87,12 @@ export class ChatBotComponent {
     });
 
     effect(() => {
-      setTimeout(() => {
-        this.scrollToBottom();
-        this.focus();
-      }, 100);
+      if (this.visible()) {
+        setTimeout(() => {
+          this.scrollToBottom();
+          this.focus();
+        }, 100);
+      }
     });
   }
 

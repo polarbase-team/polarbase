@@ -1,4 +1,4 @@
-import { ToolLoopAgent, stepCountIs, tool } from 'ai';
+import { ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
 import { TableService } from '../../rest/services/table.service';
@@ -12,6 +12,69 @@ import {
 const tableService = new TableService();
 
 export const builderAgentTools = {
+  createSchema: tool({
+    description:
+      'Create multiple tables and their columns in a single batch operation. Best for initial system setup fully.',
+    inputSchema: z.object({
+      tables: z.array(
+        z.object({
+          name: z.string(),
+          comment: z.string().optional(),
+          idType: z
+            .enum(['integer', 'biginteger', 'uuid', 'shortid'])
+            .optional(),
+          timestamps: z.boolean().optional(),
+          columns: z.array(
+            z.object({
+              name: z.string(),
+              dataType: z.enum(
+                Object.values(DataType) as [string, ...string[]]
+              ),
+              nullable: z.boolean().optional(),
+              unique: z.boolean().optional(),
+              defaultValue: z.any().optional(),
+              foreignKey: z
+                .object({
+                  table: z.string(),
+                  column: z.object({
+                    name: z.string(),
+                    type: z.string(),
+                  }),
+                })
+                .optional(),
+            })
+          ),
+        })
+      ),
+    }),
+    execute: async (args) => {
+      const results = [];
+      for (const tableDef of args.tables) {
+        await tableService.createTable({
+          table: {
+            name: tableDef.name,
+            comment: tableDef.comment,
+            idType: tableDef.idType,
+            timestamps: tableDef.timestamps,
+          },
+        });
+
+        for (const col of tableDef.columns) {
+          await tableService.createColumn({
+            tableName: tableDef.name,
+            column: col as any,
+          });
+        }
+        results.push(tableDef.name);
+      }
+      return {
+        status: 'success',
+        message: `Successfully created ${results.length} tables.`,
+        tables: results,
+      };
+    },
+  }),
+
   createTable: tool({
     description:
       'Create a new table with a primary key column (id) and optional timestamps.',
@@ -43,6 +106,65 @@ export const builderAgentTools = {
         table: args,
       });
       return { status: 'success', table: result };
+    },
+  }),
+
+  createTableWithColumns: tool({
+    description:
+      'Create a new table along with multiple columns in a single operation.',
+    inputSchema: z.object({
+      name: z.string().describe('The name of the table.'),
+      comment: z.string().optional(),
+      columns: z
+        .array(
+          z.object({
+            name: z.string(),
+            dataType: z.enum(Object.values(DataType) as [string, ...string[]]),
+            nullable: z.boolean().optional(),
+            unique: z.boolean().optional(),
+            defaultValue: z.any().optional(),
+            foreignKey: z
+              .object({
+                table: z.string(),
+                column: z.object({
+                  name: z.string(),
+                  type: z.string(),
+                }),
+              })
+              .optional(),
+            presentation: z
+              .object({
+                uiName: z.string().optional(),
+              })
+              .optional(),
+          })
+        )
+        .describe('List of columns to create along with the table.'),
+      idType: z.enum(['integer', 'biginteger', 'uuid', 'shortid']).optional(),
+      timestamps: z.boolean().optional(),
+    }),
+    execute: async (args) => {
+      await tableService.createTable({
+        table: {
+          name: args.name,
+          comment: args.comment,
+          idType: args.idType,
+          timestamps: args.timestamps,
+        },
+      });
+
+      for (const col of args.columns) {
+        await tableService.createColumn({
+          tableName: args.name,
+          column: col as any,
+        });
+      }
+
+      return {
+        status: 'success',
+        table: args.name,
+        columnsCreated: args.columns.length,
+      };
     },
   }),
 
@@ -282,6 +404,5 @@ export function createBuilderAgent(model: any, temperature?: number) {
     When a user asks for a complex schema or a specific solution, design a comprehensive set of tables with appropriate columns and relationships, and explain your design choices in the plan.
     Use the provided tools to implement the schema only after stating your plan.`,
     tools: builderAgentTools,
-    stopWhen: stepCountIs(5),
   });
 }
