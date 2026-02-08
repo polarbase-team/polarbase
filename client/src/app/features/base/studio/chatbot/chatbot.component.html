@@ -121,24 +121,66 @@
       }
     </p-scrollpanel>
 
-    <div
-      class="px-4 py-2 bg-white rounded-4xl border-1 border-surface-300 absolute z-1 bottom-8 left-6 right-6 flex gap-3 items-center"
-    >
-      <p-button icon="icon icon-paperclip" [rounded]="true" [text]="true" severity="secondary" />
-      <div
-        #editor
-        contenteditable="plaintext-only"
-        data-placeholder="How can I help?"
-        class="w-full min-w-0 h-fit outline-0 empty:before:content-[attr(data-placeholder)] empty:before:text-surface-500 empty:before:pointer-events-none"
-        (input)="onInput($any($event))"
-        (keydown.enter)="!isStreaming() ? onEnter($any($event)) : false"
-      ></div>
-      <p-button
-        icon="icon icon-send"
-        [rounded]="true"
-        [disabled]="!inputText.length || isStreaming()"
-        (click)="sendMessage()"
+    <div class="absolute z-1 bottom-2 left-4 right-4">
+      <p-contextmenu
+        #mentionContextMenu
+        [model]="mentionMenuItems"
+        (onShow)="onMentionContextMenuShow()"
+        appendTo="body"
       />
+      <p-menu #modelMenu [model]="modelMenuItems" [popup]="true" appendTo="body">
+        <ng-template #start>
+          <div class="px-3 py-2 text-xs font-semibold text-surface-500 uppercase tracking-wide">
+            Models
+          </div>
+        </ng-template>
+      </p-menu>
+      <div
+        class="px-2 py-1.5 bg-white rounded-lg border-1 border-surface-300 flex flex-col gap-1.5"
+      >
+        <div
+          #editor
+          contenteditable="plaintext-only"
+          data-placeholder="Ask anything, @ to mention a table"
+          class="min-w-0 min-h-8 max-h-32 overflow-y-auto p-1 outline-0 empty:before:content-[attr(data-placeholder)] empty:before:text-surface-400 empty:before:pointer-events-none"
+          (input)="onInput($any($event))"
+          (keydown.enter)="!isStreaming() ? onEnter($any($event)) : false"
+          (contextmenu)="onEditorContextMenu($event)"
+        ></div>
+        <div class="flex items-center gap-1 flex-wrap min-h-6">
+          <p-button
+            [label]="selectedModelLabel"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            iconPos="right"
+            icon="icon icon-chevron-down"
+            (click)="modelMenu.show($event)"
+          />
+          <span class="flex-1 min-w-0"></span>
+          <p-button
+            icon="icon icon-paperclip"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            size="small"
+          />
+          @if (inputText.length && !isStreaming()) {
+            <p-button icon="icon icon-send" [rounded]="true" size="small" (click)="sendMessage()" />
+          } @else {
+            <p-button
+              icon="icon icon-mic"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              size="small"
+            />
+          }
+        </div>
+      </div>
+      <p class="text-xs text-surface-500 mt-2 text-center">
+        AI can make mistakes. Please verify the results.
+      </p>
     </div>
   </div>
 </div>

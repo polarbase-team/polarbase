@@ -2,6 +2,7 @@ import {
   Component,
   signal,
   effect,
+  computed,
   viewChild,
   ElementRef,
   DestroyRef,
@@ -18,9 +19,15 @@ import { ScrollPanel, ScrollPanelModule } from 'primeng/scrollpanel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ImageModule } from 'primeng/image';
 import { TabsModule } from 'primeng/tabs';
+import { MenuModule } from 'primeng/menu';
+import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
+import { MenuItem } from 'primeng/api';
 
+import { TableService } from '../table/services/table.service';
 import { MarkdownPipe } from './pipes/markdown.pipe';
 import { AgentService, ChatMessage, StreamEvent } from './services/agent.service';
+import { models } from './resources/models';
+import { promptTemplates } from './resources/prompt-templates';
 
 const setSelectionRangeCE = (element: HTMLElement, startOffset: number, endOffset: number) => {
   element.focus();
@@ -52,6 +59,8 @@ const setSelectionRangeCE = (element: HTMLElement, startOffset: number, endOffse
     ProgressSpinnerModule,
     ImageModule,
     TabsModule,
+    MenuModule,
+    ContextMenuModule,
     MarkdownPipe,
   ],
   providers: [AgentService],
@@ -68,32 +77,26 @@ export class ChatBotComponent {
   protected callingTool = signal('');
   protected inputText = '';
   protected isFullscreen = false;
-  protected promptTemplates = [
-    {
-      label: 'Structure',
-      prompts: [
-        'Build a table for sales leads',
-        'Add a "Priority" column to my tasks',
-        'Create a new database for my team',
-      ],
+  protected readonly promptTemplates = promptTemplates;
+  protected mentionMenuItems: MenuItem[];
+  protected selectedModel = 'default';
+  protected selectedModelLabel = 'Default';
+  protected modelMenuItems: MenuItem[] = models.map((opt) => ({
+    label: opt.label,
+    command: () => {
+      this.selectedModel = opt.value;
+      this.selectedModelLabel = opt.label;
     },
-    {
-      label: 'Manage',
-      prompts: [
-        'List all overdue invoices',
-        'Add a new customer named Jane Doe',
-        'Update my last order to "Paid"',
-        'Remove all completed projects',
-      ],
-    },
-  ];
+  }));
 
   private scrollContainer = viewChild<ScrollPanel>('scrollContainer');
   private editor = viewChild<ElementRef>('editor');
+  private mentionContextMenu = viewChild<ContextMenu>('mentionContextMenu');
 
   constructor(
     private destroyRef: DestroyRef,
     private agentService: AgentService,
+    private tableService: TableService,
   ) {
     effect(() => {
       if (this.messages().length > 0) {
@@ -197,6 +200,10 @@ export class ChatBotComponent {
     if (trimmed === '') target.innerText = '';
 
     this.inputText = trimmed;
+
+    if (target.innerText.endsWith('@')) {
+      setTimeout(() => this.showMentionContextMenuAtCaret(), 0);
+    }
   }
 
   protected onEnter(event: KeyboardEvent) {
@@ -204,5 +211,71 @@ export class ChatBotComponent {
       event.preventDefault();
       this.sendMessage();
     }
+  }
+
+  protected onEditorContextMenu(event: MouseEvent) {
+    event.preventDefault();
+    this.mentionContextMenu()?.show(event);
+  }
+
+  protected onMentionContextMenuShow() {
+    this.mentionMenuItems = this.tableService.tables().map((table) => ({
+      label: table.presentation?.uiName ?? table.name,
+      icon: 'icon icon-table-2',
+      command: () => this.insertTableMention(table.name),
+    }));
+  }
+
+  private showMentionContextMenu() {
+    const el = this.editor()?.nativeElement;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const ev = new MouseEvent('contextmenu', {
+      bubbles: true,
+      clientX: rect.left,
+      clientY: rect.bottom - 4,
+    });
+    this.mentionContextMenu()?.show(ev);
+  }
+
+  private showMentionContextMenuAtCaret() {
+    const el = this.editor()?.nativeElement;
+    const selection = window.getSelection();
+    if (!el || !selection || selection.rangeCount === 0) return;
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) {
+      this.showMentionContextMenu();
+      return;
+    }
+    const ev = new MouseEvent('contextmenu', {
+      bubbles: true,
+      clientX: rect.left,
+      clientY: rect.bottom + 2,
+    });
+    this.mentionContextMenu()?.show(ev);
+  }
+
+  private insertTableMention(tableName: string) {
+    const el = this.editor()?.nativeElement;
+    if (!el) return;
+    el.focus();
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    const range = selection.getRangeAt(0);
+    const node = range.startContainer;
+    const offset = range.startOffset;
+    if (
+      node.nodeType === Node.TEXT_NODE &&
+      offset > 0 &&
+      node.textContent?.charAt(offset - 1) === '@'
+    ) {
+      range.setStart(node, offset - 1);
+      range.setEnd(node, offset);
+      range.deleteContents();
+    }
+    range.insertNode(document.createTextNode(`@${tableName} `));
+    range.collapse(false);
+    this.onInput({ target: el } as InputEvent);
   }
 }

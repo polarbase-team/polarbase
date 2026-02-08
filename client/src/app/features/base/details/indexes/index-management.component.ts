@@ -31,7 +31,11 @@ import { TooltipModule } from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
 
-import { ColumnDefinition, TableService } from '../../studio/table/services/table.service';
+import {
+  ColumnDefinition,
+  TableDefinition,
+  TableService,
+} from '../../studio/table/services/table.service';
 import { Index, IndexService } from './index.service';
 
 const DEFAULT_VALUE = {
@@ -78,7 +82,7 @@ export class IndexManagementComponent implements OnInit {
   protected isViewMode = signal(false);
 
   // Data
-  protected tables = computed(() => this.tableService.tables());
+  protected tables = signal<TableDefinition[]>([]);
   protected columns = signal<ColumnDefinition[]>([]);
   protected indexTypes = [
     {
@@ -194,7 +198,12 @@ export class IndexManagementComponent implements OnInit {
   }
 
   protected onEditorOpen() {
-    this.tableService.getTables().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+    this.tableService
+      .getTables()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((tables) => {
+        this.tables.set(tables);
+      });
   }
 
   protected onEditorClose() {
