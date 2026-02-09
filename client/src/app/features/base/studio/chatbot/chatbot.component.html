@@ -32,7 +32,7 @@
       @if (messages().length) {
         <div class="px-6 py-8">
           <div class="flex flex-col gap-8">
-            @for (msg of messages(); track msg.timestamp) {
+            @for (msg of messages(); track msg.timestamp; let last = $last) {
               <div
                 class="flex"
                 [ngClass]="{
@@ -58,27 +58,21 @@
                 } @else {
                   <div class="flex gap-2 leading-6">
                     <i class="icon icon-sparkles" style="color: var(--p-primary-color)"></i>
-                    <div class="chatbot-prose" [innerHTML]="msg.content | markdown"></div>
+                    @if (last && isGenerating()) {
+                      <p class="text-surface-500 italic">Generating...</p>
+                    } @else if (last && callingTool()) {
+                      <p class="text-surface-500 italic">
+                        Tool calling: <span class="font-medium">{{ callingTool() }}</span
+                        >...
+                      </p>
+                    } @else {
+                      <div class="chatbot-prose" [innerHTML]="msg.content | markdown"></div>
+                    }
                   </div>
                 }
               </div>
             }
           </div>
-
-          @if (isTyping()) {
-            <div class="mt-4">
-              <p class="text-sm text-gray-700 italic">Generating...</p>
-            </div>
-          }
-
-          @if (callingTool()) {
-            <div class="mt-4">
-              <p class="text-sm text-gray-700 italic">
-                Tool calling: <span class="font-medium">{{ callingTool() }}</span
-                >...
-              </p>
-            </div>
-          }
         </div>
       } @else {
         <div class="flex flex-col items-center">

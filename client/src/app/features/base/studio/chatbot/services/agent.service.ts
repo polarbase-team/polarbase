@@ -1,10 +1,10 @@
 import { Injectable, signal } from '@angular/core';
-import { HttpClient, HttpEventType } from '@angular/common/http';
-import { map } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
 import { FileMetadata } from '@app/shared/file/file-upload.service';
+import { getApiKey } from '@app/core/guards/api-key.guard';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -24,98 +24,73 @@ export class AgentService {
   openAIChatbot = signal(false);
 
   private apiUrl = `${environment.apiUrl}/agent`;
-  private lastReadIndex = 0;
-  private buffer = '';
 
-  constructor(private http: HttpClient) {}
-
-  chat(messages: ChatMessage[], attachments?: File[]) {
-    this.lastReadIndex = 0;
-    this.buffer = '';
-
-    const formData = new FormData();
-    formData.append('messages', JSON.stringify(messages));
-    if (attachments?.length) {
-      attachments.forEach((file) => formData.append('attachments', file, file.name));
-    }
-
-    return this.http
-      .post(`${this.apiUrl}/chat`, formData, {
-        observe: 'events',
-        responseType: 'text',
-        reportProgress: true,
-      })
-      .pipe(
-        map((event: any) => {
-          let content: string | null = null;
-          if (event.type === HttpEventType.DownloadProgress) {
-            const fullContent = event.partialText as string;
-            content = fullContent.substring(this.lastReadIndex);
-            this.lastReadIndex = fullContent.length;
-          } else if (event.type === HttpEventType.Response && event.body) {
-            const fullContent = typeof event.body === 'string' ? event.body : '';
-            content = fullContent.substring(this.lastReadIndex);
-            this.lastReadIndex = fullContent.length;
-          }
-          return content ? this.parseComplexChunk(content) : [];
-        }),
-      );
-  }
-
-  private parseComplexChunk(chunk: string) {
-    const events: StreamEvent[] = [];
-    this.buffer += chunk;
-
-    let start = 0;
-    let depth = 0;
-    let inString = false;
-    let escape = false;
-    const quote = '"';
-
-    for (let i = 0; i < this.buffer.length; i++) {
-      const c = this.buffer[i];
-      if (escape) {
-        escape = false;
-        continue;
+  chat(messages: ChatMessage[], attachments?: File[]): Observable<StreamEvent[]> {
+    return new Observable((observer) => {
+      const formData = new FormData();
+      formData.append('messages', JSON.stringify(messages));
+      if (attachments?.length) {
+        attachments.forEach((file) => formData.append('attachments', file, file.name));
       }
-      if (c === '\\' && inString) {
-        escape = true;
-        continue;
-      }
-      if (!inString) {
-        if (c === quote) {
-          inString = true;
-          continue;
-        }
-        if (c === '{') {
-          if (depth === 0) start = i;
-          depth++;
-          continue;
-        }
-        if (c === '}') {
-          depth--;
-          if (depth === 0) {
-            try {
-              const obj = JSON.parse(this.buffer.slice(start, i + 1));
-              if (obj.type === 'text-delta') {
-                events.push({ type: 'text', value: obj.delta ?? '' });
-              } else if (obj.type === 'tool-input-start') {
-                events.push({ type: 'tool', value: obj.toolName ?? '' });
-              } else if (obj.type === 'error') {
-                events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
+
+      const abortController = new AbortController();
+
+      (async () => {
+        try {
+          const apiKey = getApiKey();
+          const response = await fetch(`${this.apiUrl}/chat`, {
+            method: 'POST',
+            body: formData,
+            signal: abortController.signal,
+            headers: { 'x-api-key': apiKey },
+          });
+
+          if (!response.body) throw new Error('No response body');
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            const events: StreamEvent[] = [];
+
+            let boundary = buffer.lastIndexOf('}');
+            if (boundary !== -1) {
+              const completeData = buffer.substring(0, boundary + 1);
+              buffer = buffer.substring(boundary + 1);
+
+              const regex = /{[^}]+}/g;
+              let match: RegExpExecArray | null;
+              while ((match = regex.exec(completeData)) !== null) {
+                try {
+                  const obj = JSON.parse(match[0]);
+                  if (obj.type === 'text-delta') {
+                    events.push({ type: 'text', value: obj.delta });
+                  } else if (obj.type === 'tool-input-start') {
+                    events.push({ type: 'tool', value: obj.toolName });
+                  } else if (obj.type === 'error') {
+                    events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
+                  }
+                } catch (e) {}
               }
-            } catch {
-              // Ignore parse errors
+
+              if (events.length > 0) {
+                observer.next(events);
+              }
             }
           }
-          continue;
+          observer.complete();
+        } catch (error) {
+          observer.error(error);
         }
-      } else if (c === quote) {
-        inString = false;
-      }
-    }
+      })();
 
-    this.buffer = depth > 0 ? this.buffer.slice(start) : '';
-    return events;
+      return () => abortController.abort();
+    });
   }
 }

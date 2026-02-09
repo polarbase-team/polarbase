@@ -11,41 +11,77 @@ import {
 
 const tableService = new TableService();
 
+export const createColumnSchema = z.object({
+  name: z.string().describe('The name of the column.'),
+  dataType: z
+    .enum(Object.values(DataType) as [string, ...string[]])
+    .describe('The data type of the column.'),
+  nullable: z.boolean().optional().describe('Whether the column can be null.'),
+  unique: z
+    .boolean()
+    .optional()
+    .describe('Whether the column values must be unique.'),
+  defaultValue: z
+    .any()
+    .optional()
+    .describe('The default value for the column.'),
+  comment: z.string().optional().describe('A comment for the column.'),
+  options: z
+    .array(z.string())
+    .optional()
+    .describe('Available options for Select or MultiSelect types.'),
+  foreignKey: z
+    .object({
+      table: z.string().describe('The referenced table name.'),
+      column: z.object({
+        name: z.string().describe('The referenced column name.'),
+        type: z.string().describe('The referenced column type.'),
+      }),
+      onUpdate: z
+        .enum(Object.values(ReferentialAction) as [string, ...string[]])
+        .optional(),
+      onDelete: z
+        .enum(Object.values(ReferentialAction) as [string, ...string[]])
+        .optional(),
+    })
+    .optional()
+    .describe('Foreign key configuration for Reference type.'),
+  formula: z
+    .object({
+      expression: z
+        .string()
+        .describe('The SQL-like expression for the formula.'),
+      resultType: z
+        .enum(Object.values(FormulaResultType) as [string, ...string[]])
+        .describe('The result type of the formula.'),
+      strategy: z
+        .enum(Object.values(FormulaStrategy) as [string, ...string[]])
+        .optional(),
+    })
+    .optional()
+    .describe('Formula configuration for Formula type.'),
+  presentation: z
+    .object({
+      uiName: z.string().optional(),
+      format: z.string().optional(),
+    })
+    .optional(),
+});
+
+export const createTableSchema = z.object({
+  name: z.string(),
+  comment: z.string().optional(),
+  idType: z.enum(['integer', 'biginteger', 'uuid', 'shortid']).optional(),
+  timestamps: z.boolean().optional(),
+  columns: z.array(createColumnSchema).optional(),
+});
+
 export const builderAgentTools = {
   createSchema: tool({
     description:
       'Create multiple tables and their columns in a single batch operation. Best for initial system setup fully.',
     inputSchema: z.object({
-      tables: z.array(
-        z.object({
-          name: z.string(),
-          comment: z.string().optional(),
-          idType: z
-            .enum(['integer', 'biginteger', 'uuid', 'shortid'])
-            .optional(),
-          timestamps: z.boolean().optional(),
-          columns: z.array(
-            z.object({
-              name: z.string(),
-              dataType: z.enum(
-                Object.values(DataType) as [string, ...string[]]
-              ),
-              nullable: z.boolean().optional(),
-              unique: z.boolean().optional(),
-              defaultValue: z.any().optional(),
-              foreignKey: z
-                .object({
-                  table: z.string(),
-                  column: z.object({
-                    name: z.string(),
-                    type: z.string(),
-                  }),
-                })
-                .optional(),
-            })
-          ),
-        })
-      ),
+      tables: z.array(createTableSchema),
     }),
     execute: async (args) => {
       const results = [];
@@ -59,7 +95,7 @@ export const builderAgentTools = {
           },
         });
 
-        for (const col of tableDef.columns) {
+        for (const col of tableDef.columns || []) {
           await tableService.createColumn({
             tableName: tableDef.name,
             column: col as any,
@@ -77,72 +113,8 @@ export const builderAgentTools = {
 
   createTable: tool({
     description:
-      'Create a new table with a primary key column (id) and optional timestamps.',
-    inputSchema: z.object({
-      name: z.string().describe('The name of the table to create.'),
-      comment: z
-        .string()
-        .optional()
-        .describe('A comment or description for the table.'),
-      idType: z
-        .enum(['integer', 'biginteger', 'uuid', 'shortid'])
-        .optional()
-        .describe('The type of the primary key column.'),
-      timestamps: z
-        .boolean()
-        .optional()
-        .describe('Whether to include created_at and updated_at columns.'),
-      presentation: z
-        .object({
-          uiName: z
-            .string()
-            .optional()
-            .describe('The display name for the table in the UI.'),
-        })
-        .optional(),
-    }),
-    execute: async (args) => {
-      const result = await tableService.createTable({
-        table: args,
-      });
-      return { status: 'success', table: result };
-    },
-  }),
-
-  createTableWithColumns: tool({
-    description:
       'Create a new table along with multiple columns in a single operation.',
-    inputSchema: z.object({
-      name: z.string().describe('The name of the table.'),
-      comment: z.string().optional(),
-      columns: z
-        .array(
-          z.object({
-            name: z.string(),
-            dataType: z.enum(Object.values(DataType) as [string, ...string[]]),
-            nullable: z.boolean().optional(),
-            unique: z.boolean().optional(),
-            defaultValue: z.any().optional(),
-            foreignKey: z
-              .object({
-                table: z.string(),
-                column: z.object({
-                  name: z.string(),
-                  type: z.string(),
-                }),
-              })
-              .optional(),
-            presentation: z
-              .object({
-                uiName: z.string().optional(),
-              })
-              .optional(),
-          })
-        )
-        .describe('List of columns to create along with the table.'),
-      idType: z.enum(['integer', 'biginteger', 'uuid', 'shortid']).optional(),
-      timestamps: z.boolean().optional(),
-    }),
+    inputSchema: createTableSchema,
     execute: async (args) => {
       await tableService.createTable({
         table: {
@@ -153,7 +125,7 @@ export const builderAgentTools = {
         },
       });
 
-      for (const col of args.columns) {
+      for (const col of args.columns || []) {
         await tableService.createColumn({
           tableName: args.name,
           column: col as any,
@@ -163,7 +135,7 @@ export const builderAgentTools = {
       return {
         status: 'success',
         table: args.name,
-        columnsCreated: args.columns.length,
+        columnsCreated: args.columns?.length || 0,
       };
     },
   }),
@@ -253,65 +225,7 @@ export const builderAgentTools = {
       tableName: z
         .string()
         .describe('The name of the table to add the column to.'),
-      column: z.object({
-        name: z.string().describe('The name of the column.'),
-        dataType: z
-          .enum(Object.values(DataType) as [string, ...string[]])
-          .describe('The data type of the column.'),
-        nullable: z
-          .boolean()
-          .optional()
-          .describe('Whether the column can be null.'),
-        unique: z
-          .boolean()
-          .optional()
-          .describe('Whether the column values must be unique.'),
-        defaultValue: z
-          .any()
-          .optional()
-          .describe('The default value for the column.'),
-        comment: z.string().optional().describe('A comment for the column.'),
-        options: z
-          .array(z.string())
-          .optional()
-          .describe('Available options for Select or MultiSelect types.'),
-        foreignKey: z
-          .object({
-            table: z.string().describe('The referenced table name.'),
-            column: z.object({
-              name: z.string().describe('The referenced column name.'),
-              type: z.string().describe('The referenced column type.'),
-            }),
-            onUpdate: z
-              .enum(Object.values(ReferentialAction) as [string, ...string[]])
-              .optional(),
-            onDelete: z
-              .enum(Object.values(ReferentialAction) as [string, ...string[]])
-              .optional(),
-          })
-          .optional()
-          .describe('Foreign key configuration for Reference type.'),
-        formula: z
-          .object({
-            expression: z
-              .string()
-              .describe('The SQL-like expression for the formula.'),
-            resultType: z
-              .enum(Object.values(FormulaResultType) as [string, ...string[]])
-              .describe('The result type of the formula.'),
-            strategy: z
-              .enum(Object.values(FormulaStrategy) as [string, ...string[]])
-              .optional(),
-          })
-          .optional()
-          .describe('Formula configuration for Formula type.'),
-        presentation: z
-          .object({
-            uiName: z.string().optional(),
-            format: z.string().optional(),
-          })
-          .optional(),
-      }),
+      column: createColumnSchema,
     }),
     execute: async (args) => {
       const result = await tableService.createColumn({

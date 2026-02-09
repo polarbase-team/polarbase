@@ -51,8 +51,13 @@ export class ChatBotComponent {
   fullscreen = output<boolean>();
   onClose = output<void>();
 
+  scrollContainer = viewChild<ScrollPanel>('scrollContainer');
+  editor = viewChild<ElementRef>('editor');
+  mentionContextMenu = viewChild<ContextMenu>('mentionContextMenu');
+  fileInput = viewChild<ElementRef>('fileInput');
+
   protected messages = signal<ChatMessage[]>([]);
-  protected isTyping = signal(false);
+  protected isGenerating = signal(false);
   protected isStreaming = signal(false);
   protected callingTool = signal('');
   protected inputText = '';
@@ -69,11 +74,6 @@ export class ChatBotComponent {
     },
   }));
   protected selectedFiles = signal<File[]>([]);
-
-  private scrollContainer = viewChild<ScrollPanel>('scrollContainer');
-  private editor = viewChild<ElementRef>('editor');
-  private mentionContextMenu = viewChild<ContextMenu>('mentionContextMenu');
-  private fileInput = viewChild<ElementRef>('fileInput');
 
   constructor(
     private destroyRef: DestroyRef,
@@ -170,10 +170,12 @@ export class ChatBotComponent {
     this.messages.set(messages);
     this.scrollToBottom();
 
-    this.isTyping.set(true);
+    this.isGenerating.set(true);
     this.isStreaming.set(true);
 
     const botMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date() };
+    this.messages.update((prev) => [...prev, botMessage]);
+
     this.agentService
       .chat(messages, files)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -181,12 +183,14 @@ export class ChatBotComponent {
         next: (events: StreamEvent[]) => {
           if (!events.length) return;
 
-          this.isTyping.set(false);
+          if (this.isGenerating()) {
+            this.isGenerating.set(false);
+          }
 
           events.forEach((event) => {
             if (event.type === 'text') {
               botMessage.content += event.value;
-              this.messages.update((messages) => [...messages, botMessage]);
+              this.messages.update((messages) => [...messages]);
               this.scrollToBottom();
             } else if (event.type === 'tool') {
               this.callingTool.set(event.value);
@@ -194,7 +198,7 @@ export class ChatBotComponent {
           });
         },
         complete: () => {
-          this.isTyping.set(false);
+          this.isGenerating.set(false);
           this.isStreaming.set(false);
           this.callingTool.set('');
         },

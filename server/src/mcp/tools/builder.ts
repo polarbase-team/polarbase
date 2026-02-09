@@ -45,6 +45,26 @@ export default function registerBuilderTools(server: FastMCP) {
     },
   });
 
+  // createSchema
+  server.addTool({
+    name: 'createSchema',
+    description: builderAgentTools.createSchema.description,
+    parameters: builderAgentTools.createSchema.inputSchema as any,
+    annotations: {
+      title: 'Create Database Schema',
+    },
+    async execute(args) {
+      try {
+        return (await builderAgentTools.createSchema.execute!(
+          args as any,
+          {} as any
+        )) as any;
+      } catch (error) {
+        throw new UserError((error as Error).message);
+      }
+    },
+  });
+
   // createTable
   server.addTool({
     name: 'createTable',
