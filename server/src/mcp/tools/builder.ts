@@ -3,59 +3,17 @@ import { FastMCP, UserError } from 'fastmcp';
 import { builderAgentTools } from '../../agent/agents/builder';
 
 export default function registerBuilderTools(server: FastMCP) {
-  // listTables
+  // createMultipleTables
   server.addTool({
-    name: 'listTables',
-    description: builderAgentTools.listTables.description,
-    parameters: builderAgentTools.listTables.inputSchema as any,
+    name: 'createMultipleTables',
+    description: builderAgentTools.createMultipleTables.description,
+    parameters: builderAgentTools.createMultipleTables.inputSchema as any,
     annotations: {
-      title: 'List Database Tables',
-      readOnlyHint: true,
+      title: 'Create Multiple Tables',
     },
     async execute(args) {
       try {
-        return (await builderAgentTools.listTables.execute!(
-          args as any,
-          {} as any
-        )) as any;
-      } catch (error) {
-        throw new UserError((error as Error).message);
-      }
-    },
-  });
-
-  // findColumns
-  server.addTool({
-    name: 'findColumns',
-    description: builderAgentTools.findColumns.description,
-    parameters: builderAgentTools.findColumns.inputSchema as any,
-    annotations: {
-      title: 'Find Table Columns',
-      readOnlyHint: true,
-    },
-    async execute(args) {
-      try {
-        return (await builderAgentTools.findColumns.execute!(
-          args as any,
-          {} as any
-        )) as any;
-      } catch (error) {
-        throw new UserError((error as Error).message);
-      }
-    },
-  });
-
-  // createSchema
-  server.addTool({
-    name: 'createSchema',
-    description: builderAgentTools.createSchema.description,
-    parameters: builderAgentTools.createSchema.inputSchema as any,
-    annotations: {
-      title: 'Create Database Schema',
-    },
-    async execute(args) {
-      try {
-        return (await builderAgentTools.createSchema.execute!(
+        return (await builderAgentTools.createMultipleTables.execute!(
           args as any,
           {} as any
         )) as any;

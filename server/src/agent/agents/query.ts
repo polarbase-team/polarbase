@@ -41,6 +41,43 @@ export const queryAgentTools = {
     },
   }),
 
+  aggregateRecords: tool({
+    description:
+      'Perform aggregation queries on a table (COUNT, SUM, AVG, GROUP BY, etc.).',
+    inputSchema: z.object({
+      tableName: z.string().describe('The name of the table to aggregate.'),
+      query: z.object({
+        select: z
+          .array(z.string())
+          .describe(
+            "Array of fields and aggregation functions (e.g., ['count(*) as total', 'sum(price) as revenue'])."
+          ),
+        where: z
+          .record(z.string(), z.any())
+          .optional()
+          .describe('Filter conditions.'),
+        group: z
+          .array(z.string())
+          .optional()
+          .describe('Fields to group by (e.g., status).'),
+        having: z
+          .record(z.string(), z.any())
+          .optional()
+          .describe('HAVING clause conditions.'),
+        order: z.string().optional().describe('Ordering string.'),
+        page: z.number().optional(),
+        limit: z.number().optional(),
+      }),
+    }),
+    execute: async (args) => {
+      const result = await recordService.aggregate({
+        tableName: args.tableName,
+        query: args.query,
+      });
+      return result;
+    },
+  }),
+
   insertRecords: tool({
     description: 'Insert new records into a table.',
     inputSchema: z.object({
@@ -92,43 +129,6 @@ export const queryAgentTools = {
         condition: { where: args.where },
       });
       return { status: 'success', ...result };
-    },
-  }),
-
-  aggregateRecords: tool({
-    description:
-      'Perform aggregation queries on a table (COUNT, SUM, AVG, GROUP BY, etc.).',
-    inputSchema: z.object({
-      tableName: z.string().describe('The name of the table to aggregate.'),
-      query: z.object({
-        select: z
-          .array(z.string())
-          .describe(
-            "Array of fields and aggregation functions (e.g., ['count(*) as total', 'sum(price) as revenue'])."
-          ),
-        where: z
-          .record(z.string(), z.any())
-          .optional()
-          .describe('Filter conditions.'),
-        group: z
-          .array(z.string())
-          .optional()
-          .describe('Fields to group by (e.g., status).'),
-        having: z
-          .record(z.string(), z.any())
-          .optional()
-          .describe('HAVING clause conditions.'),
-        order: z.string().optional().describe('Ordering string.'),
-        page: z.number().optional(),
-        limit: z.number().optional(),
-      }),
-    }),
-    execute: async (args) => {
-      const result = await recordService.aggregate({
-        tableName: args.tableName,
-        query: args.query,
-      });
-      return result;
     },
   }),
 };

@@ -25,12 +25,28 @@ export class AgentService {
 
   private apiUrl = `${environment.apiUrl}/agent`;
 
-  chat(messages: ChatMessage[], attachments?: File[]): Observable<StreamEvent[]> {
+  chat({
+    messages,
+    attachments,
+    mentionedTables,
+    model,
+  }: {
+    messages: ChatMessage[];
+    attachments?: File[];
+    mentionedTables?: string[];
+    model?: string;
+  }): Observable<StreamEvent[]> {
     return new Observable((observer) => {
       const formData = new FormData();
       formData.append('messages', JSON.stringify(messages));
       if (attachments?.length) {
         attachments.forEach((file) => formData.append('attachments', file, file.name));
+      }
+      if (mentionedTables?.length) {
+        formData.append('mentionedTables', JSON.stringify(mentionedTables));
+      }
+      if (model) {
+        formData.append('model', model);
       }
 
       const abortController = new AbortController();

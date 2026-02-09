@@ -1,17 +1,37 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { builderAgentTools } from '../../agent/agents/builder';
+import { lookupAgentTools } from '../../agent/agents/lookup';
 
 export default function register(server: FastMCP) {
+  server.addResource({
+    uri: 'db://tables',
+    name: 'Database Tables',
+    mimeType: 'application/json',
+    async load() {
+      try {
+        const result = (await lookupAgentTools.listTables.execute!(
+          {},
+          {} as any
+        )) as any;
+        return {
+          text: JSON.stringify(result.tables, null, 2),
+        };
+      } catch (error) {
+        const err = error as Error;
+        throw new UserError(`Failed to fetch tables: ${err.message}`);
+      }
+    },
+  });
+
   server.addResourceTemplate({
-    uriTemplate: 'db://table/{tableName}/columns',
-    name: 'Table Columns',
+    uriTemplate: 'db://table/{tableName}/schema',
+    name: 'Table Schema',
     mimeType: 'application/json',
     arguments: [
       {
         name: 'tableName',
         description:
-          "Name of the table to get columns from. Must be a valid table name from 'db://tables'.",
+          "Name of the table to get schema from. Must be a valid table name from 'db://tables'.",
         required: true,
         async complete() {
           try {
@@ -29,7 +49,7 @@ export default function register(server: FastMCP) {
     ],
     async load({ tableName }) {
       try {
-        const result = (await builderAgentTools.findColumns.execute!(
+        const result = (await lookupAgentTools.getTableSchema.execute!(
           { tableName },
           {} as any
         )) as any;
@@ -39,7 +59,7 @@ export default function register(server: FastMCP) {
       } catch (error) {
         const err = error as any;
         throw new UserError(
-          `Failed to fetch columns for table ${tableName}: ${err.message}`
+          `Failed to fetch schema for table ${tableName}: ${err.message}`
         );
       }
     },

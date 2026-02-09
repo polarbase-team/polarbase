@@ -44,28 +44,22 @@ export function resolveModel(modelId: string) {
     'grok-4': xai('grok-4-1-fast-reasoning'),
   };
 
-  if (!map[modelId]) {
-    return google(DEFAULT_MODEL);
-  }
-
   return map[modelId];
 }
 
 export async function generateAIResponse({
   messages,
   attachments,
+  mentionedTables,
   model = DEFAULT_MODEL,
   temperature = 0.7,
 }: {
   messages: ModelMessage[];
   attachments?: File[];
+  mentionedTables?: string[];
   model?: string;
   temperature?: number;
 }) {
-  // Initialize orchestrator with capability to call worker agents and temperature
-  const selectedModel = resolveModel(model);
-  const orchestrator = createOrchestratorAgent(selectedModel, temperature);
-
   // Attach files to the last message
   if (attachments?.length) {
     const attachmentParts: (ImagePart | FilePart)[] = await Promise.all(
@@ -100,6 +94,23 @@ export async function generateAIResponse({
       ...attachmentParts,
     ];
   }
+
+  // Add mentioned tables to the last message
+  if (mentionedTables?.length) {
+    messages.unshift({
+      role: 'system',
+      content: `Tables mentioned in this conversation: ${mentionedTables.join(', ')}`,
+    });
+  }
+
+  // If model is default, use the default model
+  if (model === 'default') {
+    model = DEFAULT_MODEL;
+  }
+
+  // Initialize orchestrator with capability to call worker agents and temperature
+  const selectedModel = resolveModel(model);
+  const orchestrator = createOrchestratorAgent(selectedModel, temperature);
 
   // Use the orchestrator agent to stream the response
   return orchestrator.stream({ messages });

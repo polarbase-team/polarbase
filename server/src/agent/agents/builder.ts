@@ -77,7 +77,7 @@ export const createTableSchema = z.object({
 });
 
 export const builderAgentTools = {
-  createSchema: tool({
+  createMultipleTables: tool({
     description:
       'Create multiple tables and their columns in a single batch operation. Best for initial system setup fully.',
     inputSchema: z.object({
@@ -184,38 +184,6 @@ export const builderAgentTools = {
     execute: async (args) => {
       await tableService.deleteTable(args);
       return { status: 'success', message: `Table ${args.tableName} deleted.` };
-    },
-  }),
-
-  listTables: tool({
-    description: 'List all tables in the database.',
-    inputSchema: z.object({}),
-    execute: async () => {
-      const tables = await tableService.getAll({ includeSchema: true });
-      const blacklist = (process.env.AGENT_BLACKLISTED_TABLES || '').split(',');
-      return {
-        tables: tables.filter((t) => !blacklist.includes(t.name)),
-      };
-    },
-  }),
-
-  findColumns: tool({
-    description: 'Get detailed column information for a specific table.',
-    inputSchema: z.object({
-      tableName: z
-        .string()
-        .describe('The name of the table to get columns for.'),
-    }),
-    execute: async ({ tableName }) => {
-      const tables = await tableService.getAll({ includeSchema: true });
-      const table = tables.find((t) => t.name === tableName);
-      if (!table) {
-        throw new Error(`Table ${tableName} not found.`);
-      }
-      return {
-        tableName: table.name,
-        columns: table.schema,
-      };
     },
   }),
 

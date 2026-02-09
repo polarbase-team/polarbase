@@ -64,6 +64,7 @@ export class ChatBotComponent {
   protected isFullscreen = false;
   protected readonly promptTemplates = promptTemplates;
   protected mentionMenuItems: MenuItem[];
+  protected mentionedTables: string[] = [];
   protected selectedModel = 'default';
   protected selectedModelLabel = 'Default';
   protected modelMenuItems: MenuItem[] = models.map((opt) => ({
@@ -154,17 +155,13 @@ export class ChatBotComponent {
 
   protected sendMessage() {
     const text = this.inputText;
-    const files = this.selectedFiles();
-    if (!text && !files.length) return;
-
-    this.inputText = this.editor().nativeElement.innerHTML = '';
-    this.clearFiles();
+    if (!text) return;
 
     const userMessage: ChatMessage = {
       role: 'user',
       content: text,
       timestamp: new Date(),
-      _selectedFiles: files,
+      _selectedFiles: this.selectedFiles(),
     };
     const messages = [...this.messages(), userMessage];
     this.messages.set(messages);
@@ -177,7 +174,12 @@ export class ChatBotComponent {
     this.messages.update((prev) => [...prev, botMessage]);
 
     this.agentService
-      .chat(messages, files)
+      .chat({
+        messages,
+        attachments: this.selectedFiles(),
+        mentionedTables: this.mentionedTables,
+        model: this.selectedModel,
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (events: StreamEvent[]) => {
@@ -203,6 +205,10 @@ export class ChatBotComponent {
           this.callingTool.set('');
         },
       });
+
+    this.inputText = this.editor().nativeElement.innerHTML = '';
+    this.mentionedTables = [];
+    this.clearFiles();
   }
 
   protected onInput(event: InputEvent) {
@@ -234,7 +240,10 @@ export class ChatBotComponent {
     this.mentionMenuItems = this.tableService.tables().map((table) => ({
       label: table.presentation?.uiName ?? table.name,
       icon: 'icon icon-table-2',
-      command: () => this.insertTableMention(table.name),
+      command: () => {
+        this.insertTableMention(table.name);
+        this.mentionedTables.push(table.name);
+      },
     }));
   }
 

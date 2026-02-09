@@ -3,9 +3,9 @@ import { FastMCP } from 'fastmcp';
 import { log } from '../utils/logger';
 import { apiKeyAuth } from '../api-keys/auth';
 import instructions from './instructions';
-import registerTablesResource from './resources/tables';
-import registerColumnsResource from './resources/columns';
+import registerTableResource from './resources/table';
 import registerSuggestTableStructurePrompt from './prompts/suggest-table-structure';
+import registerLookupTools from './tools/lookup';
 import registerBuilderTools from './tools/builder';
 import registerQueryTools from './tools/query';
 
@@ -35,12 +35,12 @@ export const mcpServer = new FastMCP({
 });
 
 // Register resources
-registerTablesResource(mcpServer);
-registerColumnsResource(mcpServer);
+registerTableResource(mcpServer);
 
 // Register prompts
 registerSuggestTableStructurePrompt(mcpServer);
 
 // Register tools
+registerLookupTools(mcpServer);
 registerBuilderTools(mcpServer);
 registerQueryTools(mcpServer);
