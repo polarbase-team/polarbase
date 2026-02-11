@@ -9,7 +9,9 @@ export const editorAgentTools = {
   insertRecords: tool({
     description: 'Insert new records into a table.',
     inputSchema: z.object({
-      tableName: z.string().describe('The name of the table to insert into.'),
+      tableName: z
+        .string()
+        .describe('The name of the table to insert into. (e.g., "users")'),
       records: z
         .array(z.record(z.string(), z.any()))
         .describe('An array of objects representing the records to insert.'),
@@ -23,7 +25,9 @@ export const editorAgentTools = {
   updateRecords: tool({
     description: 'Update existing records in a table.',
     inputSchema: z.object({
-      tableName: z.string().describe('The name of the table to update.'),
+      tableName: z
+        .string()
+        .describe('The name of the table to update. (e.g., "users")'),
       updates: z
         .array(
           z.object({
@@ -46,7 +50,9 @@ export const editorAgentTools = {
   deleteRecords: tool({
     description: 'Delete records from a table.',
     inputSchema: z.object({
-      tableName: z.string().describe('The name of the table to delete from.'),
+      tableName: z
+        .string()
+        .describe('The name of the table to delete from. (e.g., "users")'),
       where: z
         .record(z.string(), z.any())
         .describe('Conditions to identify records to delete.'),

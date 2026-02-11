@@ -31,7 +31,7 @@ export const createColumnSchema = z.object({
     .any()
     .optional()
     .describe('The default value for the column.'),
-  comment: z.string().optional().describe('A comment for the column.'),
+  comment: z.string().optional().describe('The comment for the column.'),
   options: z
     .array(z.string())
     .optional()
@@ -72,18 +72,33 @@ export const createColumnSchema = z.object({
     .describe('Formula configuration for Formula type.'),
   presentation: z
     .object({
-      uiName: z.string().optional(),
+      uiName: z
+        .string()
+        .optional()
+        .describe('The display name for the column (e.g., "First Name").'),
       format: z.string().optional(),
     })
     .optional(),
 });
 
 export const createTableSchema = z.object({
-  name: z.string(),
-  comment: z.string().optional(),
+  name: z
+    .string()
+    .describe(
+      'The unique technical name for the table (e.g., "users"). Avoid spaces.'
+    ),
+  comment: z.string().optional().describe('The comment for the table.'),
   idType: z.enum(['integer', 'biginteger', 'uuid', 'shortid']).optional(),
   timestamps: z.boolean().optional(),
   columns: z.array(createColumnSchema).optional(),
+  presentation: z
+    .object({
+      uiName: z
+        .string()
+        .optional()
+        .describe('The display name for the table (e.g., "Users").'),
+    })
+    .optional(),
 });
 
 export const builderAgentTools = {
@@ -107,6 +122,7 @@ export const builderAgentTools = {
               comment: tableDef.comment,
               idType: tableDef.idType,
               timestamps: tableDef.timestamps,
+              presentation: tableDef.presentation,
             },
           });
 
@@ -174,7 +190,12 @@ export const builderAgentTools = {
         .string()
         .describe('The current name of the table to update.'),
       table: z.object({
-        name: z.string().optional().describe('The new name for the table.'),
+        name: z
+          .string()
+          .optional()
+          .describe(
+            'The new technical name for the table (e.g., "users"). Avoid spaces.'
+          ),
         comment: z
           .string()
           .optional()
@@ -184,7 +205,7 @@ export const builderAgentTools = {
             uiName: z
               .string()
               .optional()
-              .describe('The new display name for the table.'),
+              .describe('The new display name for the table (e.g., "Users").'),
           })
           .optional(),
       }),
@@ -268,7 +289,12 @@ export const builderAgentTools = {
           .describe('Available options for Select or MultiSelect types.'),
         presentation: z
           .object({
-            uiName: z.string().optional(),
+            uiName: z
+              .string()
+              .optional()
+              .describe(
+                'The display name for the column (e.g., "First Name").'
+              ),
             format: z.string().optional(),
           })
           .optional(),
