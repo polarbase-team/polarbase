@@ -189,6 +189,7 @@ export const builderAgentTools = {
           comment: args.comment,
           idType: args.idType,
           timestamps: args.timestamps,
+          presentation: args.presentation,
         },
       });
 
@@ -206,6 +207,7 @@ export const builderAgentTools = {
       return {
         status: 'success',
         table: args.name,
+        presentation: args.presentation,
         columnsCreated: filteredColumns.length,
       };
     },
