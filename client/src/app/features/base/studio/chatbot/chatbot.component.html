@@ -1,4 +1,20 @@
-<div class="w-full h-full bg-white">
+<div
+  class="w-full h-full bg-white relative"
+  (dragenter)="onDragEnter($event)"
+  (dragover)="$event.preventDefault()"
+>
+  @if (isDragging()) {
+    <div
+      class="absolute inset-0 z-50 bg-white/95 flex flex-col items-center justify-center text-surface-900 border-2 border-dashed border-primary-500 rounded-xl m-4"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+      (dragover)="$event.preventDefault()"
+    >
+      <i class="icon icon-upload text-3xl! mb-4 text-primary-500 pointer-events-none"></i>
+      <h3 class="text-xl font-semibold pointer-events-none">Drop files here</h3>
+      <p class="text-surface-500 mt-2 pointer-events-none">Upload files to chat context</p>
+    </div>
+  }
   <div class="flex flex-col w-full h-full max-w-250 mx-auto">
     <div class="flex items-center justify-between p-1">
       <p-button
@@ -32,7 +48,7 @@
       @if (messages().length) {
         <div class="px-6 py-8">
           <div class="flex flex-col gap-8">
-            @for (msg of messages(); track msg.timestamp; let last = $last) {
+            @for (msg of messages(); track msg.timestamp) {
               <div
                 class="flex"
                 [ngClass]="{
@@ -46,7 +62,7 @@
                         {{ msg.content }}
                       </p>
                     </div>
-                    @for (file of msg._selectedFiles; track file.name) {
+                    @for (file of $any(msg)._selectedFiles; track file.name) {
                       <div
                         class="flex items-center gap-2 p-2 rounded-md mt-2 text-[0.85rem] border border-slate-200 bg-slate-50 text-slate-700"
                       >
@@ -58,15 +74,19 @@
                 } @else {
                   <div class="flex gap-2 leading-6">
                     <i class="icon icon-sparkles" style="color: var(--p-primary-color)"></i>
-                    @if (last && isGenerating()) {
+                    @if ($any(msg)._isGenerating) {
                       <p class="text-surface-500 italic">Generating...</p>
-                    } @else if (last && callingTool()) {
-                      <p class="text-surface-500 italic">
-                        Tool calling: <span class="font-medium">{{ callingTool() }}</span
-                        >...
-                      </p>
                     } @else {
-                      <div class="chatbot-prose" [innerHTML]="msg.content | markdown"></div>
+                      <div class="space-y-2">
+                        <div class="chatbot-prose" [innerHTML]="msg.content | markdown"></div>
+                        @if ($any(msg)._toolCallId) {
+                          <p class="text-surface-500 italic">
+                            Tool calling:
+                            <span class="font-medium">{{ $any(msg)._toolCallId }}</span
+                            >...
+                          </p>
+                        }
+                      </div>
                     }
                   </div>
                 }
@@ -223,7 +243,16 @@
             icon="icon icon-settings-2"
             (click)="agentSelector.show($event)"
           />
-          @if (inputText.length && !isStreaming()) {
+          @if (isStreaming()) {
+            <p-button
+              icon="icon icon-circle-stop"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              size="small"
+              (click)="stopGeneration()"
+            />
+          } @else if (inputText.length) {
             <p-button icon="icon icon-send" [rounded]="true" size="small" (click)="sendMessage()" />
           } @else {
             <p-button

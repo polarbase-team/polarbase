@@ -63,7 +63,6 @@ export function createEditorAgent(model: any, temperature?: number) {
     id: 'editor-agent',
     model,
     temperature,
-    toolChoice: 'auto',
     instructions: `You are a Database Editor Assistant. 
     You can insert, update, delete records from tables.
     Always verify table names and column names before performing operations.

@@ -11,7 +11,6 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   attachments?: FileMetadata[];
-  _selectedFiles?: File[];
 }
 
 export interface StreamEvent {
@@ -83,39 +82,49 @@ export class AgentService {
             buffer += decoder.decode(value, { stream: true });
 
             const events: StreamEvent[] = [];
-            let startIdx = 0;
-            let depth = 0;
 
-            for (let i = 0; i < buffer.length; i++) {
-              if (buffer[i] === '{') {
-                depth++;
-              } else if (buffer[i] === '}') {
-                depth--;
+            // Attempt to extract all complete JSON objects from the buffer
+            while (buffer.includes('{') && buffer.includes('}')) {
+              let lastIndex = -1;
+              let depth = 0;
+              let found = false;
 
-                // When depth reaches 0, we've found a complete JSON object
-                if (depth === 0) {
-                  const jsonStr = buffer.substring(startIdx, i + 1);
-                  try {
-                    const obj = JSON.parse(jsonStr);
-
-                    if (obj.type === 'text-delta') {
-                      events.push({ type: 'text', value: obj.delta });
-                    } else if (obj.type === 'tool-input-start') {
-                      events.push({ type: 'tool', value: obj.toolName });
-                    } else if (obj.type === 'error') {
-                      events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
-                    }
-                  } catch (e) {
-                    console.error('Parsing error:', e, jsonStr);
+              // Find the bounds of the FIRST complete JSON object
+              for (let i = 0; i < buffer.length; i++) {
+                if (buffer[i] === '{') depth++;
+                if (buffer[i] === '}') {
+                  depth--;
+                  if (depth === 0) {
+                    lastIndex = i;
+                    found = true;
+                    break;
                   }
-                  // Move the start index to the next character
-                  startIdx = i + 1;
                 }
               }
-            }
 
-            // Keep only the remaining partial JSON in the buffer
-            buffer = buffer.substring(startIdx);
+              if (found) {
+                const jsonStr = buffer.substring(0, lastIndex + 1);
+                buffer = buffer.substring(lastIndex + 1); // Remove processed part from buffer
+
+                try {
+                  const obj = JSON.parse(jsonStr);
+                  if (obj.type === 'text-delta') {
+                    events.push({ type: 'text', value: obj.delta });
+                  } else if (obj.type === 'tool-input-start' || obj.type === 'tool-call') {
+                    // Added 'tool-call' as a common variant
+                    events.push({ type: 'tool', value: obj.toolName ?? obj.method });
+                  } else if (obj.type === 'error') {
+                    events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
+                  }
+                } catch (e) {
+                  // If it fails, it's likely a partial chunk; log it and keep moving
+                  console.warn('Skipping invalid chunk:', jsonStr);
+                }
+              } else {
+                // If we have braces but depth never hit 0, we're waiting for more data
+                break;
+              }
+            }
 
             if (events.length > 0) {
               observer.next(events);

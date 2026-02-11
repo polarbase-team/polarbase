@@ -12,6 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { ScrollPanel, ScrollPanelModule } from 'primeng/scrollpanel';
@@ -28,6 +29,17 @@ import { MarkdownPipe } from './pipes/markdown.pipe';
 import { AgentService, ChatMessage, StreamEvent } from './services/agent.service';
 import { models } from './resources/models';
 import { promptTemplates } from './resources/prompt-templates';
+
+interface UserChatMessage extends ChatMessage {
+  role: 'user';
+  _selectedFiles?: File[];
+}
+
+interface AssistantChatMessage extends ChatMessage {
+  role: 'assistant';
+  _isGenerating?: boolean;
+  _toolCallId?: string | null;
+}
 
 @Component({
   selector: 'chatbot',
@@ -62,9 +74,8 @@ export class ChatBotComponent {
 
   protected messages = signal<ChatMessage[]>([]);
   protected selectedFiles = signal<File[]>([]);
-  protected isGenerating = signal(false);
+  protected isDragging = signal(false);
   protected isStreaming = signal(false);
-  protected callingTool = signal('');
   protected inputText = '';
   protected isFullscreen = false;
 
@@ -88,6 +99,8 @@ export class ChatBotComponent {
       this.selectedModelLabel = opt.label;
     },
   }));
+
+  private currentChatSubscription?: Subscription;
 
   constructor(
     private destroyRef: DestroyRef,
@@ -157,6 +170,29 @@ export class ChatBotComponent {
     this.selectedFiles.set([...files]);
   }
 
+  protected onDragEnter(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(true);
+  }
+
+  protected onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+  }
+
+  protected onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+
+    const files = event.dataTransfer?.files;
+    if (files?.length > 0) {
+      this.selectedFiles.update((current) => [...current, ...Array.from(files)]);
+    }
+  }
+
   protected removeFile(file: File) {
     this.selectedFiles.update((files) => files.filter((f) => f !== file));
   }
@@ -175,7 +211,7 @@ export class ChatBotComponent {
     const subAgents = this.subAgents;
     const model = this.selectedModel === 'default' ? undefined : this.selectedModel;
 
-    const userMessage: ChatMessage = {
+    const userMessage: UserChatMessage = {
       role: 'user',
       content: text,
       timestamp: new Date(),
@@ -185,13 +221,18 @@ export class ChatBotComponent {
     this.messages.set(messages);
     this.scrollToBottom();
 
-    this.isGenerating.set(true);
     this.isStreaming.set(true);
 
-    const botMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date() };
+    const botMessage: AssistantChatMessage = {
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      _isGenerating: true,
+      _toolCallId: null,
+    };
     this.messages.update((prev) => [...prev, botMessage]);
 
-    this.agentService
+    this.currentChatSubscription = this.agentService
       .chat({
         messages,
         attachments,
@@ -204,9 +245,7 @@ export class ChatBotComponent {
         next: (events: StreamEvent[]) => {
           if (!events.length) return;
 
-          if (this.isGenerating()) {
-            this.isGenerating.set(false);
-          }
+          botMessage._isGenerating = false;
 
           events.forEach((event) => {
             if (event.type === 'text') {
@@ -214,20 +253,44 @@ export class ChatBotComponent {
               this.messages.update((messages) => [...messages]);
               this.scrollToBottom();
             } else if (event.type === 'tool') {
-              this.callingTool.set(event.value);
+              botMessage._toolCallId = event.value;
+              this.messages.update((messages) => [...messages]);
+              this.scrollToBottom();
             }
           });
         },
         complete: () => {
-          this.isGenerating.set(false);
           this.isStreaming.set(false);
-          this.callingTool.set('');
+          botMessage._isGenerating = false;
+          botMessage._toolCallId = null;
+          this.messages.update((messages) => [...messages]);
         },
       });
 
     this.inputText = this.editor().nativeElement.innerHTML = '';
     this.mentionedTables = [];
     this.clearFiles();
+  }
+
+  protected stopGeneration() {
+    if (this.currentChatSubscription) {
+      this.currentChatSubscription.unsubscribe();
+      this.currentChatSubscription = undefined;
+    }
+    this.isStreaming.set(false);
+
+    // Update the last message state
+    const messages = this.messages();
+    const lastMessage = messages[messages.length - 1] as AssistantChatMessage;
+    if (lastMessage?.role === 'assistant') {
+      if (lastMessage._isGenerating) {
+        messages.pop();
+      } else {
+        lastMessage._isGenerating = false;
+        lastMessage._toolCallId = null;
+      }
+      this.messages.set(messages);
+    }
   }
 
   protected onInput(event: InputEvent) {
