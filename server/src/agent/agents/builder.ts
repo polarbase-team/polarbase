@@ -12,10 +12,16 @@ import {
 const tableService = new TableService();
 
 export const createColumnSchema = z.object({
-  name: z.string().describe('The name of the column.'),
+  name: z
+    .string()
+    .describe(
+      'The unique technical name for the column (e.g., "first_name"). Avoid spaces.'
+    ),
   dataType: z
     .enum(Object.values(DataType) as [string, ...string[]])
-    .describe('The data type of the column.'),
+    .describe(
+      'Must be one of: text, long-text, integer, number, date, checkbox, select, multi-select, email, url, json, geo-point, reference, attachment, auto-number, auto-date, formula.'
+    ),
   nullable: z.boolean().optional().describe('Whether the column can be null.'),
   unique: z
     .boolean()
@@ -32,7 +38,9 @@ export const createColumnSchema = z.object({
     .describe('Available options for Select or MultiSelect types.'),
   foreignKey: z
     .object({
-      table: z.string().describe('The referenced table name.'),
+      table: z
+        .string()
+        .describe('The exact name of the existing table to link to.'),
       column: z.object({
         name: z.string().describe('The referenced column name.'),
         type: z.string().describe('The referenced column type.'),
@@ -50,7 +58,9 @@ export const createColumnSchema = z.object({
     .object({
       expression: z
         .string()
-        .describe('The SQL-like expression for the formula.'),
+        .describe(
+          'SQL-like string using other column names (e.g., "price * 1.1").'
+        ),
       resultType: z
         .enum(Object.values(FormulaResultType) as [string, ...string[]])
         .describe('The result type of the formula.'),
@@ -79,34 +89,46 @@ export const createTableSchema = z.object({
 export const builderAgentTools = {
   createMultipleTables: tool({
     description:
-      'Create multiple tables and their columns in a single batch operation. Best for initial system setup fully.',
+      'Create a full database schema from scratch. Use this when the user describes an entire app or system (e.g., Build an e-commerce backend).',
     inputSchema: z.object({
       tables: z.array(createTableSchema),
     }),
     execute: async (args) => {
-      const results = [];
-      for (const tableDef of args.tables) {
-        await tableService.createTable({
-          table: {
-            name: tableDef.name,
-            comment: tableDef.comment,
-            idType: tableDef.idType,
-            timestamps: tableDef.timestamps,
-          },
-        });
+      const summary = {
+        created: [] as string[],
+        failed: [] as { name: string; error: string }[],
+      };
 
-        for (const col of tableDef.columns || []) {
-          await tableService.createColumn({
-            tableName: tableDef.name,
-            column: col as any,
+      for (const tableDef of args.tables) {
+        try {
+          await tableService.createTable({
+            table: {
+              name: tableDef.name,
+              comment: tableDef.comment,
+              idType: tableDef.idType,
+              timestamps: tableDef.timestamps,
+            },
+          });
+
+          for (const col of tableDef.columns || []) {
+            await tableService.createColumn({
+              tableName: tableDef.name,
+              column: col as any,
+            });
+          }
+          summary.created.push(tableDef.name);
+        } catch (err: any) {
+          summary.failed.push({
+            name: tableDef.name,
+            error: err.message || 'Unknown error',
           });
         }
-        results.push(tableDef.name);
       }
+
       return {
-        status: 'success',
-        message: `Successfully created ${results.length} tables.`,
-        tables: results,
+        status: summary.failed.length === 0 ? 'success' : 'partial_failure',
+        message: `Created ${summary.created.length} tables. ${summary.failed.length} failed.`,
+        details: summary,
       };
     },
   }),
@@ -125,7 +147,11 @@ export const builderAgentTools = {
         },
       });
 
-      for (const col of args.columns || []) {
+      const filteredColumns = (args.columns || []).filter(
+        (col) => col.name.toLowerCase() !== 'id'
+      );
+
+      for (const col of filteredColumns) {
         await tableService.createColumn({
           tableName: args.name,
           column: col as any,
@@ -135,7 +161,7 @@ export const builderAgentTools = {
       return {
         status: 'success',
         table: args.name,
-        columnsCreated: args.columns?.length || 0,
+        columnsCreated: filteredColumns.length,
       };
     },
   }),
@@ -212,11 +238,17 @@ export const builderAgentTools = {
         .string()
         .describe('The current name of the column to update.'),
       column: z.object({
-        name: z.string().describe('The new name for the column.'),
+        name: z
+          .string()
+          .describe(
+            'The unique technical name for the column (e.g., "first_name"). Avoid spaces.'
+          ),
         dataType: z
           .enum(Object.values(DataType) as [string, ...string[]])
           .optional()
-          .describe('The data type of the column.'),
+          .describe(
+            'Must be one of: text, long-text, integer, number, date, checkbox, select, multi-select, email, url, json, geo-point, reference, attachment, auto-number, auto-date, formula.'
+          ),
         nullable: z
           .boolean()
           .optional()
@@ -273,18 +305,30 @@ export function createBuilderAgent(model: any, temperature?: number) {
     id: 'builder-agent',
     model,
     temperature,
-    toolChoice: 'auto',
-    instructions: `You are a Database Schema Builder. 
-    You can create new tables, add columns to existing tables, and manage the database structure (including updating and deleting tables or columns).
+    instructions: `You are a Database Schema Builder.
+
+    IMPORTANT RULES FOR PRIMARY KEYS:
+    1. Do NOT include an "id" column in the "columns" array when creating a table.
+    2. Use the "idType" property (integer, biginteger, uuid, shortid) to define the primary key format.
+    3. The system will automatically create the primary key "id" based on that "idType".
     
-    CRITICAL: ALWAYS follow these steps for every request:
-    1. ANALYZE the user's request and the current database schema using listTables if necessary.
-    2. FORMULATE a detailed plan describing exactly which tables and columns you will create, update, or delete.
-    3. SHOW the plan to the user clearly (e.g., using a list or markdown table).
-    4. EXECUTE the plan by calling the appropriate tools.
+    CRITICAL SAFETY RULES:
+    1. If a request involves DELETING or DROPPING (tables or columns), you MUST present the plan and explicitly ask: "Do you want me to proceed with these deletions?" 
+    2. Do NOT call the delete tools until the user explicitly confirms in the next turn.
     
-    When a user asks for a complex schema or a specific solution, design a comprehensive set of tables with appropriate columns and relationships, and explain your design choices in the plan.
-    Use the provided tools to implement the schema only after stating your plan.`,
+    ### DATA TYPE RULES:
+    - Use 'text' for short strings and 'long-text' for descriptions.
+    - Use 'number' for decimals and 'integer' for whole numbers.
+    - Use 'checkbox' instead of 'boolean'.
+    - For relationships, use 'reference'.
+    - For primary keys (if not using idType), use 'auto-number'.
+    - For timestamps, use 'auto-date'.
+
+    ### WORKFLOW:
+    1. Analyze the requirement.
+    2. Select the correct system DataType from the allowed list.
+    3. Propose the schema to the user.
+    4. Execute after confirmation.`,
     tools: builderAgentTools,
   });
 }

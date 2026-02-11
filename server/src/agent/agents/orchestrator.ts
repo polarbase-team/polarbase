@@ -41,8 +41,7 @@ export function createOrchestratorAgent(
     }),
   };
 
-  const isBuilderAgentEnabled = subAgents?.builder;
-  if (isBuilderAgentEnabled) {
+  if (subAgents?.builder) {
     const builderAgent = createBuilderAgent(model, temperature);
     tools.callBuilderAgent = tool({
       description:
@@ -68,8 +67,7 @@ export function createOrchestratorAgent(
     });
   }
 
-  const isEditorAgentEnabled = subAgents?.editor;
-  if (isEditorAgentEnabled) {
+  if (subAgents?.editor) {
     const editorAgent = createEditorAgent(model, temperature);
     tools.callEditorAgent = tool({
       description:
@@ -92,8 +90,7 @@ export function createOrchestratorAgent(
     });
   }
 
-  const isQueryAgentEnabled = subAgents?.query;
-  if (isQueryAgentEnabled) {
+  if (subAgents?.query) {
     const queryAgent = createQueryAgent(model, temperature);
     tools.callQueryAgent = tool({
       description: 'Call the Query Agent for data analysis and querying.',
@@ -119,15 +116,27 @@ export function createOrchestratorAgent(
     id: 'orchestrator-agent',
     model,
     temperature,
-    instructions: `You are a helpful database assistant. 
-    Your job is to understand the user request and route it to the appropriate specialized agent.
-    - Use the "lookup" agent for tasks related to fetching information about the database schema.
+    instructions: `You are a professional Database Architect and Orchestrator. 
+    Your goal is to manage the database by routing user requests to specialized sub-agents.
 
-    ${isBuilderAgentEnabled ? '- Use the "builder" agent for tasks related to creating, updating, or deleting tables and columns (schema changes).\n' : ''}
-    ${isEditorAgentEnabled ? '- Use the "editor" agent for tasks related to data manipulation (insert, update, delete records).\n' : ''}
-    ${isQueryAgentEnabled ? '- Use the "query" agent for tasks related to data analysis and querying.\n' : ''}
-    
-    You have tools that allow you to "call" these agents. Use them when needed.`,
+    ### OPERATIONAL PRIORITIES:
+    1. SCHEMA VERIFICATION: Before calling the "builder", "editor", or "query" agents, you MUST verify if the tables/columns exist using the "lookup" agent, unless the table names were explicitly provided in the recent conversation context.
+    2. AMBIGUITY RESOLUTION: If a user's request is vague (e.g., "add a field"), use the "lookup" agent to find the most relevant table before proceeding.
+    3. DATA VS. SCHEMA: 
+    - Use "builder" ONLY for structural changes (CREATE, ALTER, DROP).
+    - Use "editor" ONLY for row-level changes (INSERT, UPDATE, DELETE records).
+    - Use "query" ONLY for reading or analyzing data.
+
+    ### SAFETY GUARDRAILS:
+    - NEVER guess table or column names. 
+    - If the "lookup" agent returns no results for a table the user wants to "edit", inform the user rather than calling the "editor" agent blindly.
+    - For destructive requests (dropping tables), ensure the "builder" agent is called with a task that emphasizes a confirmation step.
+
+    ### ROUTING LOGIC:
+    - lookup: Use when the user asks "What tables do I have?", "Show me the columns in X", or when you need to verify existence.
+    - builder: Use for "Create a new system for...", "Add a category column to products", or "Remove the old logs table".
+    - editor: Use for "Add a new user named Bob", "Change the price of Item 5 to $20", or "Clear the shopping cart".
+    - query: Use for "How many orders were made today?", "Find the top 5 customers", or "Show me all active users".`,
     tools,
   });
 }

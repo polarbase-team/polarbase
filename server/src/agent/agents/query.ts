@@ -7,19 +7,22 @@ const recordService = new TableRecordService();
 
 export const queryAgentTools = {
   queryRecords: tool({
-    description:
-      'Query records from a table with filtering, searching, and pagination.',
+    description: 'Fetch raw rows for viewing. Use for lists or searching.',
     inputSchema: z.object({
       tableName: z.string().describe('The name of the table to query.'),
       query: z.object({
         where: z
           .record(z.string(), z.any())
           .optional()
-          .describe('Filter object (e.g., { name: "Alice" }).'),
+          .describe(
+            'Exact filter matches, e.g., {"status": "active"}. Do not use SQL syntax here.'
+          ),
         search: z
           .string()
           .optional()
-          .describe('Search term to look for across text columns.'),
+          .describe(
+            'Fuzzy text search string that scans all searchable text columns.'
+          ),
         fields: z
           .string()
           .optional()
@@ -43,7 +46,7 @@ export const queryAgentTools = {
 
   aggregateRecords: tool({
     description:
-      'Perform aggregation queries on a table (COUNT, SUM, AVG, GROUP BY, etc.).',
+      'Calculate totals, averages, or counts. Use for dashboards or reporting.',
     inputSchema: z.object({
       tableName: z.string().describe('The name of the table to aggregate.'),
       query: z.object({
@@ -55,7 +58,9 @@ export const queryAgentTools = {
         where: z
           .record(z.string(), z.any())
           .optional()
-          .describe('Filter conditions.'),
+          .describe(
+            'Exact filter matches, e.g., {"status": "active"}. Do not use SQL syntax here.'
+          ),
         group: z
           .array(z.string())
           .optional()
