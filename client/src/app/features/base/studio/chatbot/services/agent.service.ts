@@ -29,11 +29,17 @@ export class AgentService {
     messages,
     attachments,
     mentionedTables,
+    subAgents,
     model,
   }: {
     messages: ChatMessage[];
     attachments?: File[];
     mentionedTables?: string[];
+    subAgents?: {
+      builder: boolean;
+      editor: boolean;
+      query: boolean;
+    };
     model?: string;
   }): Observable<StreamEvent[]> {
     return new Observable((observer) => {
@@ -44,6 +50,9 @@ export class AgentService {
       }
       if (mentionedTables?.length) {
         formData.append('mentionedTables', JSON.stringify(mentionedTables));
+      }
+      if (subAgents) {
+        formData.append('subAgents', JSON.stringify(subAgents));
       }
       if (model) {
         formData.append('model', model);

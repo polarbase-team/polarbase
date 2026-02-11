@@ -6,7 +6,7 @@ import { TableRecordService } from '../../rest/services/table-record.service';
 const recordService = new TableRecordService();
 
 export const queryAgentTools = {
-  selectRecords: tool({
+  queryRecords: tool({
     description:
       'Query records from a table with filtering, searching, and pagination.',
     inputSchema: z.object({
@@ -77,60 +77,6 @@ export const queryAgentTools = {
       return result;
     },
   }),
-
-  insertRecords: tool({
-    description: 'Insert new records into a table.',
-    inputSchema: z.object({
-      tableName: z.string().describe('The name of the table to insert into.'),
-      records: z
-        .array(z.record(z.string(), z.any()))
-        .describe('An array of objects representing the records to insert.'),
-    }),
-    execute: async (args) => {
-      const result = await recordService.insert(args);
-      return { status: 'success', ...result };
-    },
-  }),
-
-  updateRecords: tool({
-    description: 'Update existing records in a table.',
-    inputSchema: z.object({
-      tableName: z.string().describe('The name of the table to update.'),
-      updates: z
-        .array(
-          z.object({
-            where: z
-              .record(z.string(), z.any())
-              .describe('Conditions to identify records to update.'),
-            data: z
-              .record(z.string(), z.any())
-              .describe('New values for the records.'),
-          })
-        )
-        .describe('An array of update operations.'),
-    }),
-    execute: async (args) => {
-      const result = await recordService.update(args as any);
-      return { status: 'success', ...result };
-    },
-  }),
-
-  deleteRecords: tool({
-    description: 'Delete records from a table.',
-    inputSchema: z.object({
-      tableName: z.string().describe('The name of the table to delete from.'),
-      where: z
-        .record(z.string(), z.any())
-        .describe('Conditions to identify records to delete.'),
-    }),
-    execute: async (args) => {
-      const result = await recordService.delete({
-        tableName: args.tableName,
-        condition: { where: args.where },
-      });
-      return { status: 'success', ...result };
-    },
-  }),
 };
 
 export function createQueryAgent(model: any, temperature?: number) {
@@ -140,7 +86,7 @@ export function createQueryAgent(model: any, temperature?: number) {
     temperature,
     toolChoice: 'auto',
     instructions: `You are a Database Query Assistant. 
-    You can insert, update, delete, select, and aggregate records from tables.
+    You can query, and aggregate records from tables.
     Always verify table names and column names before performing operations.
     Use the provided tools to interact with the data.`,
     tools: queryAgentTools,

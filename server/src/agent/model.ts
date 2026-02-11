@@ -1,11 +1,13 @@
-import { FilePart, ImagePart, ModelMessage } from 'ai';
+import { FilePart, ImagePart, ModelMessage, wrapLanguageModel } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
+import { devToolsMiddleware } from '@ai-sdk/devtools';
 
 import { createOrchestratorAgent } from './agents/orchestrator';
 
+const NODE_ENV = process.env.NODE_ENV || 'development';
 const DEFAULT_MODEL = process.env.LLM_DEFAULT_MODEL || 'gemini-3-pro-preview';
 
 const openai = createOpenAI({
@@ -44,21 +46,42 @@ export function resolveModel(modelId: string) {
     'grok-4': xai('grok-4-1-fast-reasoning'),
   };
 
-  return map[modelId];
+  const model = map[modelId];
+
+  if (NODE_ENV === 'development') {
+    return wrapLanguageModel({
+      model,
+      middleware: [devToolsMiddleware()],
+    });
+  }
+
+  return model;
 }
 
 export async function generateAIResponse({
   messages,
   attachments,
   mentionedTables,
+  subAgents = {
+    builder: true,
+    editor: true,
+    query: true,
+  },
   model = DEFAULT_MODEL,
   temperature = 0.7,
+  abortSignal,
 }: {
   messages: ModelMessage[];
   attachments?: File[];
   mentionedTables?: string[];
+  subAgents?: {
+    builder?: boolean;
+    editor?: boolean;
+    query?: boolean;
+  };
   model?: string;
   temperature?: number;
+  abortSignal?: AbortSignal;
 }) {
   // Attach files to the last message
   if (attachments?.length) {
@@ -103,15 +126,14 @@ export async function generateAIResponse({
     });
   }
 
-  // If model is default, use the default model
-  if (model === 'default') {
-    model = DEFAULT_MODEL;
-  }
-
   // Initialize orchestrator with capability to call worker agents and temperature
   const selectedModel = resolveModel(model);
-  const orchestrator = createOrchestratorAgent(selectedModel, temperature);
+  const orchestrator = createOrchestratorAgent(
+    selectedModel,
+    temperature,
+    subAgents
+  );
 
   // Use the orchestrator agent to stream the response
-  return orchestrator.stream({ messages });
+  return orchestrator.stream({ messages, abortSignal });
 }

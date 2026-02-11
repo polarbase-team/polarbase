@@ -7,6 +7,7 @@ import registerTableResource from './resources/table';
 import registerSuggestTableStructurePrompt from './prompts/suggest-table-structure';
 import registerLookupTools from './tools/lookup';
 import registerBuilderTools from './tools/builder';
+import registerEditorTools from './tools/editor';
 import registerQueryTools from './tools/query';
 
 export const mcpServer = new FastMCP({
@@ -43,4 +44,5 @@ registerSuggestTableStructurePrompt(mcpServer);
 // Register tools
 registerLookupTools(mcpServer);
 registerBuilderTools(mcpServer);
+registerEditorTools(mcpServer);
 registerQueryTools(mcpServer);

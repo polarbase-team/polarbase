@@ -128,6 +128,36 @@
         (onShow)="onMentionContextMenuShow()"
         appendTo="body"
       />
+      <p-popover #agentSelector appendTo="body">
+        <ng-template #content>
+          <div class="text-xs mb-2 font-semibold text-surface-500 uppercase tracking-wide">
+            Agents
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-sm font-medium">Builder</p>
+                <p class="text-xs text-surface-500">Manage tables and database structure.</p>
+              </div>
+              <p-toggleswitch [ngModel]="subAgents.builder" size="small" class="scale-80" />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-sm font-medium">Editor</p>
+                <p class="text-xs text-surface-500">Add, update, or remove database records.</p>
+              </div>
+              <p-toggleswitch [ngModel]="subAgents.editor" size="small" class="scale-80" />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-sm font-medium">Query</p>
+                <p class="text-xs text-surface-500">Search, aggregate, and analyze data.</p>
+              </div>
+              <p-toggleswitch [ngModel]="subAgents.query" size="small" class="scale-80" />
+            </div>
+          </div>
+        </ng-template>
+      </p-popover>
       <p-menu #modelMenu [model]="modelMenuItems" [popup]="true" appendTo="body">
         <ng-template #start>
           <div
@@ -161,6 +191,13 @@
           </div>
         }
         <div class="flex items-center gap-1 flex-wrap min-h-6">
+          <input
+            #fileInput
+            type="file"
+            class="hidden"
+            (change)="onFilesSelected($event)"
+            multiple
+          />
           <p-button
             icon="icon icon-paperclip"
             [rounded]="true"
@@ -179,12 +216,12 @@
             (click)="modelMenu.show($event)"
           />
           <span class="flex-1 min-w-0"></span>
-          <input
-            #fileInput
-            type="file"
-            class="hidden"
-            (change)="onFilesSelected($event)"
-            multiple
+          <p-button
+            [text]="true"
+            severity="secondary"
+            size="small"
+            icon="icon icon-settings-2"
+            (click)="agentSelector.show($event)"
           />
           @if (inputText.length && !isStreaming()) {
             <p-button icon="icon icon-send" [rounded]="true" size="small" (click)="sendMessage()" />

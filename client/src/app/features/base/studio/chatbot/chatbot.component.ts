@@ -20,6 +20,8 @@ import { TabsModule } from 'primeng/tabs';
 import { MenuModule } from 'primeng/menu';
 import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
+import { PopoverModule } from 'primeng/popover';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 import { TableService } from '../table/services/table.service';
 import { MarkdownPipe } from './pipes/markdown.pipe';
@@ -41,6 +43,8 @@ import { promptTemplates } from './resources/prompt-templates';
     TabsModule,
     MenuModule,
     ContextMenuModule,
+    PopoverModule,
+    ToggleSwitchModule,
     MarkdownPipe,
   ],
   providers: [AgentService],
@@ -57,14 +61,24 @@ export class ChatBotComponent {
   fileInput = viewChild<ElementRef>('fileInput');
 
   protected messages = signal<ChatMessage[]>([]);
+  protected selectedFiles = signal<File[]>([]);
   protected isGenerating = signal(false);
   protected isStreaming = signal(false);
   protected callingTool = signal('');
   protected inputText = '';
   protected isFullscreen = false;
+
   protected readonly promptTemplates = promptTemplates;
+
   protected mentionMenuItems: MenuItem[];
   protected mentionedTables: string[] = [];
+
+  protected subAgents = {
+    builder: true,
+    editor: true,
+    query: true,
+  };
+
   protected selectedModel = 'default';
   protected selectedModelLabel = 'Default';
   protected modelMenuItems: MenuItem[] = models.map((opt) => ({
@@ -74,7 +88,6 @@ export class ChatBotComponent {
       this.selectedModelLabel = opt.label;
     },
   }));
-  protected selectedFiles = signal<File[]>([]);
 
   constructor(
     private destroyRef: DestroyRef,
@@ -157,11 +170,16 @@ export class ChatBotComponent {
     const text = this.inputText;
     if (!text) return;
 
+    const attachments = this.selectedFiles();
+    const mentionedTables = this.mentionedTables;
+    const subAgents = this.subAgents;
+    const model = this.selectedModel === 'default' ? undefined : this.selectedModel;
+
     const userMessage: ChatMessage = {
       role: 'user',
       content: text,
       timestamp: new Date(),
-      _selectedFiles: this.selectedFiles(),
+      _selectedFiles: attachments,
     };
     const messages = [...this.messages(), userMessage];
     this.messages.set(messages);
@@ -176,9 +194,10 @@ export class ChatBotComponent {
     this.agentService
       .chat({
         messages,
-        attachments: this.selectedFiles(),
-        mentionedTables: this.mentionedTables,
-        model: this.selectedModel,
+        attachments,
+        mentionedTables,
+        subAgents,
+        model,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

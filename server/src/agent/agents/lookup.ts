@@ -13,9 +13,7 @@ export const lookupAgentTools = {
       const tables = await tableService.getAll();
       const blacklist = (process.env.AGENT_BLACKLISTED_TABLES || '').split(',');
       return {
-        tables: tables
-          .filter((t) => !blacklist.includes(t.name))
-          .map((t) => t.name),
+        tables: tables.filter((t) => !blacklist.includes(t.name)),
       };
     },
   }),
@@ -28,13 +26,10 @@ export const lookupAgentTools = {
         .describe('The name of the table to get columns for.'),
     }),
     execute: async ({ tableName }) => {
-      const table = await tableService.getSchema({ tableName });
-      if (!table) {
-        throw new Error(`Table ${tableName} not found.`);
-      }
+      const columns = await tableService.getSchema({ tableName });
       return {
         tableName,
-        columns: table,
+        columns: columns.map(({ metadata, ...rest }) => rest),
       };
     },
   }),

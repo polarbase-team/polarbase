@@ -5,14 +5,14 @@ export default `
   ### 🔍 Discovery & Context
   Before making changes or querying data, always understand the environment:
   - **Tool 'listTables'**: Lists all accessible tables in the 'public' schema.
-  - **Tool 'findColumns'**: Provides the full schema of a specific table, including data types, unique constraints, and foreign keys.
+  - **Tool 'getTableSchema'**: Provides the full schema of a specific table, including data types, unique constraints, and foreign keys.
   - **Resource 'db://tables'**: A quick JSON overview of all tables.
-  - **Resource Template 'db://table/{tableName}/columns'**: Real-time schema details.
+  - **Resource Template 'db://table/{tableName}/schema'**: Real-time schema details.
 
   ### 🏗️ Schema Building (The Builder Group)
   Manage your structural changes with precision:
   - **Planning**: For complex requirements, use the **'suggestTableStructure'** prompt to get a recommended JSON schema draft.
-  - **Execution**: Use 'createTable', 'updateTable', 'deleteTable', 'createColumn', 'updateColumn', and 'deleteColumn'.
+  - **Execution**: Use 'createMultipleTables', 'createTable', 'updateTable', 'deleteTable', 'createColumn', 'updateColumn', and 'deleteColumn'.
   - **Workflow**: 1. Discover existing items -> 2. Propose a plan -> 3. Execute change tools.
 
   ### 📊 Data Operations (The Query Group)
@@ -22,7 +22,7 @@ export default `
   - **Filtering**: All query tools support advanced 'where' filters. You can use simple equality { status: "active" } or complex operators { age: { gt: 18 } }.
 
   ### 🛡️ Safety & Best Practices
-  - **Validation**: Never assume column names. Call 'findColumns' first.
+  - **Validation**: Never assume column names. Call 'getTableSchema' first.
   - **Precision**: Prefer filtering by primary keys (usually 'id') for updates and deletions.
   - **Blacklisting**: Some tables are restricted for safety; 'listTables' will only show what you are permitted to see.
   - **Atomic Changes**: Perform one structural change at a time to maintain database integrity.
