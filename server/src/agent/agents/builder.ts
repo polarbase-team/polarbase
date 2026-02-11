@@ -11,6 +11,35 @@ import {
 
 const tableService = new TableService();
 
+const presentationFormatSchema = z
+  .object({
+    // Number and Formula (Number) fields
+    numberFormat: z
+      .enum(['comma', 'percentage', 'currency'])
+      .optional()
+      .describe('Used for Number or Formula(Number).'),
+
+    // Date and AutoDate fields
+    dateFormat: z
+      .string()
+      .optional()
+      .describe('Standard: YYYY-MM-DD, DD/MM/YYYY, etc.'),
+    showTime: z
+      .boolean()
+      .optional()
+      .describe('Whether to include time in date display.'),
+
+    // Reference fields
+    displayColumn: z
+      .string()
+      .nullable()
+      .optional()
+      .describe(
+        'The column name from the referenced table to show as the label.'
+      ),
+  })
+  .describe('UI-specific display settings.');
+
 export const createColumnSchema = z.object({
   name: z
     .string()
@@ -76,7 +105,7 @@ export const createColumnSchema = z.object({
         .string()
         .optional()
         .describe('The display name for the column (e.g., "First Name").'),
-      format: z.string().optional(),
+      format: presentationFormatSchema.optional(),
     })
     .optional(),
 });
@@ -295,7 +324,7 @@ export const builderAgentTools = {
               .describe(
                 'The display name for the column (e.g., "First Name").'
               ),
-            format: z.string().optional(),
+            format: presentationFormatSchema.optional(),
           })
           .optional(),
       }),
@@ -349,6 +378,18 @@ export function createBuilderAgent(model: any, temperature?: number) {
     - For relationships, use 'reference'.
     - For primary keys (if not using idType), use 'auto-number'.
     - For timestamps, use 'auto-date'.
+
+    ### PRESENTATION FORMAT RULES:
+    Apply the "presentation.format" object based on the "dataType":
+    1. **Number / Formula (Number)**: 
+      - Set "numberFormat" to 'comma', 'percentage', or 'currency'.
+    2. **Date / AutoDate / Formula (Date)**: 
+      - Set "dateFormat" (e.g., 'YYYY-MM-DD').
+      - Set "showTime" (true/false).
+    3. **Reference**: 
+      - Set "displayColumn" to the name of the column in the target table you want the user to see (e.g., "name" or "title").
+    4. **Formula**:
+      - Check the "formula.resultType" first. If it's 'number', use numberFormat. If it's 'date', use dateFormat.
 
     ### WORKFLOW:
     1. Analyze the requirement.

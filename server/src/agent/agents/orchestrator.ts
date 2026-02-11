@@ -123,9 +123,9 @@ export function createOrchestratorAgent(
     1. SCHEMA VERIFICATION: Before calling the "builder", "editor", or "query" agents, you MUST verify if the tables/columns exist using the "lookup" agent, unless the table names were explicitly provided in the recent conversation context.
     2. AMBIGUITY RESOLUTION: If a user's request is vague (e.g., "add a field"), use the "lookup" agent to find the most relevant table before proceeding.
     3. DATA VS. SCHEMA: 
-    - Use "builder" ONLY for structural changes (CREATE, ALTER, DROP).
-    - Use "editor" ONLY for row-level changes (INSERT, UPDATE, DELETE records).
-    - Use "query" ONLY for reading or analyzing data.
+      - Use "builder" ONLY for structural changes (CREATE, ALTER, DROP).
+      - Use "editor" ONLY for row-level changes (INSERT, UPDATE, DELETE records).
+      - Use "query" ONLY for reading or analyzing data.
 
     ### SAFETY GUARDRAILS:
     - NEVER guess table or column names. 
