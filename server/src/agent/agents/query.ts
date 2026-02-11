@@ -2,6 +2,7 @@ import { ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
 import { TableRecordService } from '../../rest/services/table-record.service';
+import { whereFilterSchema } from '../schemas/where-filter';
 
 const recordService = new TableRecordService();
 
@@ -11,12 +12,7 @@ export const queryAgentTools = {
     inputSchema: z.object({
       tableName: z.string().describe('The name of the table to query.'),
       query: z.object({
-        where: z
-          .record(z.string(), z.any())
-          .optional()
-          .describe(
-            'Exact filter matches, e.g., {"status": "active"}. Do not use SQL syntax here.'
-          ),
+        where: whereFilterSchema.optional(),
         search: z
           .string()
           .optional()
@@ -55,21 +51,20 @@ export const queryAgentTools = {
           .describe(
             "Array of fields and aggregation functions (e.g., ['count(*) as total', 'sum(price) as revenue'])."
           ),
-        where: z
-          .record(z.string(), z.any())
+        where: whereFilterSchema
           .optional()
-          .describe(
-            'Exact filter matches, e.g., {"status": "active"}. Do not use SQL syntax here.'
-          ),
+          .describe('Filters raw data before aggregation.'),
         group: z
           .array(z.string())
           .optional()
           .describe('Fields to group by (e.g., status).'),
-        having: z
-          .record(z.string(), z.any())
+        having: whereFilterSchema
           .optional()
-          .describe('HAVING clause conditions.'),
-        order: z.string().optional().describe('Ordering string.'),
+          .describe('Filters groups after aggregation.'),
+        order: z
+          .string()
+          .optional()
+          .describe('Ordering string (e.g., "id:asc" or "createdAt:desc").'),
         page: z.number().optional(),
         limit: z.number().optional(),
       }),
@@ -93,7 +88,17 @@ export function createQueryAgent(model: any, temperature?: number) {
     instructions: `You are a Database Query Assistant. 
     You can query, and aggregate records from tables.
     Always verify table names and column names before performing operations.
-    Use the provided tools to interact with the data.`,
+    Use the provided tools to interact with the data.
+
+    ### FILTERING RULES:
+    1. **WHERE vs HAVING**: 
+      - Use 'where' to filter base rows (e.g., {"status": "active"}).
+      - Use 'having' ONLY for filtering results of calculations/aggregations (e.g., {"count(*)": {"gt": 5}}).
+    2. **OPERATOR MAPPING**: 
+      - For partial matches, use {"column": {"ilike": "%term%"}}.
+      - For ranges, use {"column": {"gte": 10, "lte": 50}}.
+      - For multiple values, use {"column": {"in": [1, 2, 3]}}.
+    3. **LOGIC**: Always use "and" or "or" arrays for combining multiple distinct conditions.`,
     tools: queryAgentTools,
   });
 }

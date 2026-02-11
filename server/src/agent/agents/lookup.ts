@@ -23,7 +23,7 @@ export const lookupAgentTools = {
     inputSchema: z.object({
       tableName: z
         .string()
-        .describe('The name of the table to get columns for. (e.g., "users")'),
+        .describe('The name of the table to get columns for.'),
     }),
     execute: async ({ tableName }) => {
       const columns = await tableService.getSchema({ tableName });

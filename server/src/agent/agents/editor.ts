@@ -2,6 +2,7 @@ import { ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
 import { TableRecordService } from '../../rest/services/table-record.service';
+import { whereFilterSchema } from '../schemas/where-filter';
 
 const recordService = new TableRecordService();
 
@@ -9,9 +10,7 @@ export const editorAgentTools = {
   insertRecords: tool({
     description: 'Insert new records into a table.',
     inputSchema: z.object({
-      tableName: z
-        .string()
-        .describe('The name of the table to insert into. (e.g., "users")'),
+      tableName: z.string().describe('The name of the table to insert into.'),
       records: z
         .array(z.record(z.string(), z.any()))
         .describe('An array of objects representing the records to insert.'),
@@ -25,15 +24,11 @@ export const editorAgentTools = {
   updateRecords: tool({
     description: 'Update existing records in a table.',
     inputSchema: z.object({
-      tableName: z
-        .string()
-        .describe('The name of the table to update. (e.g., "users")'),
+      tableName: z.string().describe('The name of the table to update.'),
       updates: z
         .array(
           z.object({
-            where: z
-              .record(z.string(), z.any())
-              .describe('Conditions to identify records to update.'),
+            where: whereFilterSchema,
             data: z
               .record(z.string(), z.any())
               .describe('New values for the records.'),
@@ -50,12 +45,8 @@ export const editorAgentTools = {
   deleteRecords: tool({
     description: 'Delete records from a table.',
     inputSchema: z.object({
-      tableName: z
-        .string()
-        .describe('The name of the table to delete from. (e.g., "users")'),
-      where: z
-        .record(z.string(), z.any())
-        .describe('Conditions to identify records to delete.'),
+      tableName: z.string().describe('The name of the table to delete from.'),
+      where: whereFilterSchema,
     }),
     execute: async (args) => {
       const result = await recordService.delete({
