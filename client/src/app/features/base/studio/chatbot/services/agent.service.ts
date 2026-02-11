@@ -83,30 +83,42 @@ export class AgentService {
             buffer += decoder.decode(value, { stream: true });
 
             const events: StreamEvent[] = [];
+            let startIdx = 0;
+            let depth = 0;
 
-            let boundary = buffer.lastIndexOf('}');
-            if (boundary !== -1) {
-              const completeData = buffer.substring(0, boundary + 1);
-              buffer = buffer.substring(boundary + 1);
+            for (let i = 0; i < buffer.length; i++) {
+              if (buffer[i] === '{') {
+                depth++;
+              } else if (buffer[i] === '}') {
+                depth--;
 
-              const regex = /{[^}]+}/g;
-              let match: RegExpExecArray | null;
-              while ((match = regex.exec(completeData)) !== null) {
-                try {
-                  const obj = JSON.parse(match[0]);
-                  if (obj.type === 'text-delta') {
-                    events.push({ type: 'text', value: obj.delta });
-                  } else if (obj.type === 'tool-input-start') {
-                    events.push({ type: 'tool', value: obj.toolName });
-                  } else if (obj.type === 'error') {
-                    events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
+                // When depth reaches 0, we've found a complete JSON object
+                if (depth === 0) {
+                  const jsonStr = buffer.substring(startIdx, i + 1);
+                  try {
+                    const obj = JSON.parse(jsonStr);
+
+                    if (obj.type === 'text-delta') {
+                      events.push({ type: 'text', value: obj.delta });
+                    } else if (obj.type === 'tool-input-start') {
+                      events.push({ type: 'tool', value: obj.toolName });
+                    } else if (obj.type === 'error') {
+                      events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
+                    }
+                  } catch (e) {
+                    console.error('Parsing error:', e, jsonStr);
                   }
-                } catch (e) {}
+                  // Move the start index to the next character
+                  startIdx = i + 1;
+                }
               }
+            }
 
-              if (events.length > 0) {
-                observer.next(events);
-              }
+            // Keep only the remaining partial JSON in the buffer
+            buffer = buffer.substring(startIdx);
+
+            if (events.length > 0) {
+              observer.next(events);
             }
           }
           observer.complete();

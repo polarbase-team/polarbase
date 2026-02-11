@@ -14,20 +14,27 @@
   }
 
   table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-  }
+    margin: 1.5rem 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
 
-  th,
-  td {
-    border: 1px solid var(--p-surface-300);
-    padding: 0.5rem;
-    text-align: left;
-  }
+    th {
+      background-color: var(--p-primary-50);
+      color: var(--p-primary-900);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
 
-  th {
-    background-color: var(--p-surface-100);
+    tr:nth-child(even) {
+      background-color: var(--p-surface-50);
+    }
+
+    tr:hover {
+      background-color: var(--p-primary-50);
+    }
   }
 
   pre {
@@ -59,5 +66,16 @@
     &:last-child {
       margin-bottom: 0;
     }
+  }
+}
+
+::ng-deep {
+  .mention-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 3px;
+    border-radius: 6px;
+    background-color: var(--p-surface-200);
   }
 }

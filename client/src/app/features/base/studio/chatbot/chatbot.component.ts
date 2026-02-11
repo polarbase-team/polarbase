@@ -269,6 +269,7 @@ export class ChatBotComponent {
   private showMentionContextMenu() {
     const el = this.editor()?.nativeElement;
     if (!el) return;
+
     const rect = el.getBoundingClientRect();
     const ev = new MouseEvent('contextmenu', {
       bubbles: true,
@@ -282,12 +283,14 @@ export class ChatBotComponent {
     const el = this.editor()?.nativeElement;
     const selection = window.getSelection();
     if (!el || !selection || selection.rangeCount === 0) return;
+
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) {
       this.showMentionContextMenu();
       return;
     }
+
     const ev = new MouseEvent('contextmenu', {
       bubbles: true,
       clientX: rect.left,
@@ -299,9 +302,12 @@ export class ChatBotComponent {
   private insertTableMention(tableName: string) {
     const el = this.editor()?.nativeElement;
     if (!el) return;
+
     el.focus();
+
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
+
     const range = selection.getRangeAt(0);
     const node = range.startContainer;
     const offset = range.startOffset;
@@ -314,15 +320,25 @@ export class ChatBotComponent {
       range.setEnd(node, offset);
       range.deleteContents();
     }
-    range.insertNode(document.createTextNode(`@${tableName} `));
+
+    const mentionSpan = document.createElement('span');
+    mentionSpan.className = 'mention-chip';
+    mentionSpan.textContent = `@${tableName}`;
+    mentionSpan.setAttribute('contenteditable', 'false');
+    range.insertNode(mentionSpan);
     range.collapse(false);
+    range.insertNode(document.createTextNode(' '));
+    range.collapse(false);
+
     this.onInput({ target: el } as InputEvent);
   }
 
   private focusEditorAtOffset(offset: number) {
     const el = this.editor()?.nativeElement;
     if (!el) return;
+
     el.focus();
+
     const range = document.createRange();
     const selection = window.getSelection();
     if (el.firstChild && el.firstChild.nodeType === Node.TEXT_NODE) {
