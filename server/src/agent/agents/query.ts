@@ -79,11 +79,22 @@ export const queryAgentTools = {
   }),
 };
 
-export function createQueryAgent(model: any, temperature?: number) {
+export function createQueryAgent(
+  model: any,
+  generationConfig?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxOutputTokens?: number;
+  }
+) {
   return new ToolLoopAgent({
     id: 'query-agent',
     model,
-    temperature,
+    temperature: generationConfig?.temperature,
+    topK: generationConfig?.topK,
+    topP: generationConfig?.topP,
+    maxOutputTokens: generationConfig?.maxOutputTokens,
     instructions: `You are a Database Query Assistant. 
     You can query, and aggregate records from tables.
     Always verify table names and column names before performing operations.

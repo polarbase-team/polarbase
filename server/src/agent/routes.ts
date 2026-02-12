@@ -49,19 +49,19 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
       body: {
         messages,
         attachments,
-        mentionedTables,
-        subAgents,
+        mentions,
         model,
-        temperature,
+        subAgents,
+        generationConfig,
       },
     }) => {
       const result = await generateAIResponse({
         messages: messages as any,
         attachments,
-        mentionedTables,
-        subAgents,
+        mentions,
         model,
-        temperature,
+        subAgents,
+        generationConfig,
         abortSignal: signal,
       });
       return result.toUIMessageStream();
@@ -83,7 +83,12 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
           })
         ),
         attachments: t.Optional(t.Files()),
-        mentionedTables: t.Optional(t.Array(t.String())),
+        mentions: t.Optional(
+          t.Object({
+            tables: t.Optional(t.Array(t.String())),
+          })
+        ),
+        model: t.Optional(t.String()),
         subAgents: t.Optional(
           t.Object({
             builder: t.Optional(t.Boolean()),
@@ -91,8 +96,14 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
             query: t.Optional(t.Boolean()),
           })
         ),
-        model: t.Optional(t.String()),
-        temperature: t.Optional(t.Number({ minimum: 0, maximum: 2 })),
+        generationConfig: t.Optional(
+          t.Object({
+            temperature: t.Optional(t.Number()),
+            topP: t.Optional(t.Number()),
+            topK: t.Optional(t.Number()),
+            maxOutputTokens: t.Optional(t.Number()),
+          })
+        ),
       }),
     }
   );

@@ -23,6 +23,8 @@ import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
 import { PopoverModule } from 'primeng/popover';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { DividerModule } from 'primeng/divider';
 
 import { TableService } from '../table/services/table.service';
 import { MarkdownPipe } from './pipes/markdown.pipe';
@@ -57,6 +59,8 @@ interface AssistantChatMessage extends ChatMessage {
     ContextMenuModule,
     PopoverModule,
     ToggleSwitchModule,
+    InputNumberModule,
+    DividerModule,
     MarkdownPipe,
   ],
   providers: [AgentService],
@@ -72,6 +76,7 @@ export class ChatBotComponent {
   mentionContextMenu = viewChild<ContextMenu>('mentionContextMenu');
   fileInput = viewChild<ElementRef>('fileInput');
 
+  protected readonly promptTemplates = promptTemplates;
   protected messages = signal<ChatMessage[]>([]);
   protected selectedFiles = signal<File[]>([]);
   protected isDragging = signal(false);
@@ -79,16 +84,8 @@ export class ChatBotComponent {
   protected inputText = '';
   protected isFullscreen = false;
 
-  protected readonly promptTemplates = promptTemplates;
-
   protected mentionMenuItems: MenuItem[];
-  protected mentionedTables: string[] = [];
-
-  protected subAgents = {
-    builder: true,
-    editor: true,
-    query: true,
-  };
+  protected mentions: { tables: string[] } = { tables: [] };
 
   protected selectedModel = 'default';
   protected selectedModelLabel = 'Default';
@@ -99,6 +96,19 @@ export class ChatBotComponent {
       this.selectedModelLabel = opt.label;
     },
   }));
+
+  protected subAgents = {
+    builder: true,
+    editor: true,
+    query: true,
+  };
+
+  protected generation = {
+    temperature: 0.7,
+    topP: 0.9,
+    topK: 40,
+    maxOutputTokens: 2048,
+  };
 
   private currentChatSubscription?: Subscription;
 
@@ -207,9 +217,10 @@ export class ChatBotComponent {
     if (!text) return;
 
     const attachments = this.selectedFiles();
-    const mentionedTables = this.mentionedTables;
-    const subAgents = this.subAgents;
+    const mentions = this.mentions;
     const model = this.selectedModel === 'default' ? undefined : this.selectedModel;
+    const subAgents = this.subAgents;
+    const generationConfig = this.generation;
 
     const userMessage: UserChatMessage = {
       role: 'user',
@@ -236,9 +247,10 @@ export class ChatBotComponent {
       .chat({
         messages,
         attachments,
-        mentionedTables,
-        subAgents,
+        mentions,
         model,
+        subAgents,
+        generationConfig,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -268,7 +280,7 @@ export class ChatBotComponent {
       });
 
     this.inputText = this.editor().nativeElement.innerHTML = '';
-    this.mentionedTables = [];
+    this.mentions = { tables: [] };
     this.clearFiles();
   }
 
@@ -324,7 +336,7 @@ export class ChatBotComponent {
       icon: 'icon icon-table-2',
       command: () => {
         this.insertTableMention(table.name);
-        this.mentionedTables.push(table.name);
+        this.mentions.tables.push(table.name);
       },
     }));
   }

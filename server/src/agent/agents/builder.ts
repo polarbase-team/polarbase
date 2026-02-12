@@ -357,11 +357,22 @@ export const builderAgentTools = {
   }),
 };
 
-export function createBuilderAgent(model: any, temperature?: number) {
+export function createBuilderAgent(
+  model: any,
+  generationConfig?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxOutputTokens?: number;
+  }
+) {
   return new ToolLoopAgent({
     id: 'builder-agent',
     model,
-    temperature,
+    temperature: generationConfig?.temperature,
+    topK: generationConfig?.topK,
+    topP: generationConfig?.topP,
+    maxOutputTokens: generationConfig?.maxOutputTokens,
     instructions: `You are a Database Schema Builder.
 
     IMPORTANT RULES FOR PRIMARY KEYS:

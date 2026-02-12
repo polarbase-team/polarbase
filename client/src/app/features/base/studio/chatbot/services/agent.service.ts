@@ -27,19 +27,28 @@ export class AgentService {
   chat({
     messages,
     attachments,
-    mentionedTables,
-    subAgents,
+    mentions,
     model,
+    subAgents,
+    generationConfig,
   }: {
     messages: ChatMessage[];
     attachments?: File[];
-    mentionedTables?: string[];
+    mentions?: {
+      tables: string[];
+    };
+    model?: string;
     subAgents?: {
       builder: boolean;
       editor: boolean;
       query: boolean;
     };
-    model?: string;
+    generationConfig?: {
+      temperature?: number;
+      topP?: number;
+      topK?: number;
+      maxOutputTokens?: number;
+    };
   }): Observable<StreamEvent[]> {
     return new Observable((observer) => {
       const formData = new FormData();
@@ -47,14 +56,17 @@ export class AgentService {
       if (attachments?.length) {
         attachments.forEach((file) => formData.append('attachments', file, file.name));
       }
-      if (mentionedTables?.length) {
-        formData.append('mentionedTables', JSON.stringify(mentionedTables));
+      if (mentions?.tables?.length) {
+        formData.append('mentions', JSON.stringify(mentions));
+      }
+      if (model) {
+        formData.append('model', model);
       }
       if (subAgents) {
         formData.append('subAgents', JSON.stringify(subAgents));
       }
-      if (model) {
-        formData.append('model', model);
+      if (generationConfig) {
+        formData.append('generationConfig', JSON.stringify(generationConfig));
       }
 
       const abortController = new AbortController();

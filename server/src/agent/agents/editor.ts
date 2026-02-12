@@ -58,11 +58,22 @@ export const editorAgentTools = {
   }),
 };
 
-export function createEditorAgent(model: any, temperature?: number) {
+export function createEditorAgent(
+  model: any,
+  generationConfig?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxOutputTokens?: number;
+  }
+) {
   return new ToolLoopAgent({
     id: 'editor-agent',
     model,
-    temperature,
+    temperature: generationConfig?.temperature,
+    topK: generationConfig?.topK,
+    topP: generationConfig?.topP,
+    maxOutputTokens: generationConfig?.maxOutputTokens,
     instructions: `You are a Database Editor Assistant. 
     You can insert, update, delete records from tables.
     Always verify table names and column names before performing operations.

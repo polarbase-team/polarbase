@@ -35,11 +35,22 @@ export const lookupAgentTools = {
   }),
 };
 
-export function createLookupAgent(model: any, temperature?: number) {
+export function createLookupAgent(
+  model: any,
+  generationConfig?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxOutputTokens?: number;
+  }
+) {
   return new ToolLoopAgent({
     id: 'lookup-agent',
     model,
-    temperature,
+    temperature: generationConfig?.temperature,
+    topK: generationConfig?.topK,
+    topP: generationConfig?.topP,
+    maxOutputTokens: generationConfig?.maxOutputTokens,
     toolChoice: 'required',
     instructions: `You are a Database Schema Lookup Agent. 
     You can find tables and columns in the database.`,

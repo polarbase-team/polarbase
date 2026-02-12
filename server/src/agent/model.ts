@@ -61,26 +61,38 @@ export function resolveModel(modelId: string) {
 export async function generateAIResponse({
   messages,
   attachments,
-  mentionedTables,
+  mentions,
+  model = DEFAULT_MODEL,
   subAgents = {
     builder: true,
     editor: true,
     query: true,
   },
-  model = DEFAULT_MODEL,
-  temperature = 0.7,
+  generationConfig = {
+    temperature: 0.7,
+    topP: 0.9,
+    topK: 40,
+    maxOutputTokens: 2048,
+  },
   abortSignal,
 }: {
   messages: ModelMessage[];
   attachments?: File[];
-  mentionedTables?: string[];
+  model?: string;
+  mentions?: {
+    tables?: string[];
+  };
   subAgents?: {
     builder?: boolean;
     editor?: boolean;
     query?: boolean;
   };
-  model?: string;
-  temperature?: number;
+  generationConfig?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxOutputTokens?: number;
+  };
   abortSignal?: AbortSignal;
 }) {
   // Attach files to the last message
@@ -119,18 +131,18 @@ export async function generateAIResponse({
   }
 
   // Add mentioned tables to the last message
-  if (mentionedTables?.length) {
+  if (mentions?.tables?.length) {
     messages.unshift({
       role: 'system',
-      content: `Tables mentioned in this conversation: ${mentionedTables.join(', ')}`,
+      content: `Tables mentioned in this conversation: ${mentions.tables.join(', ')}`,
     });
   }
 
-  // Initialize orchestrator with capability to call worker agents and temperature
+  // Initialize orchestrator with capability to call worker agents and generation config
   const selectedModel = resolveModel(model);
   const orchestrator = createOrchestratorAgent(
     selectedModel,
-    temperature,
+    generationConfig,
     subAgents
   );
 

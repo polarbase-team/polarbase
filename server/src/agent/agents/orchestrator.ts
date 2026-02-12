@@ -8,14 +8,19 @@ import { createQueryAgent } from './query';
 
 export function createOrchestratorAgent(
   model: any,
-  temperature?: number,
+  generationConfig?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxOutputTokens?: number;
+  },
   subAgents?: {
     builder?: boolean;
     editor?: boolean;
     query?: boolean;
   }
 ) {
-  const lookupAgentTools = createLookupAgent(model, temperature);
+  const lookupAgentTools = createLookupAgent(model, generationConfig);
   const tools: any = {
     callLookupAgent: tool({
       description:
@@ -42,7 +47,7 @@ export function createOrchestratorAgent(
   };
 
   if (subAgents?.builder) {
-    const builderAgent = createBuilderAgent(model, temperature);
+    const builderAgent = createBuilderAgent(model, generationConfig);
     tools.callBuilderAgent = tool({
       description:
         'Call the Builder Agent for schema management (creating/updating tables and columns).',
@@ -68,7 +73,7 @@ export function createOrchestratorAgent(
   }
 
   if (subAgents?.editor) {
-    const editorAgent = createEditorAgent(model, temperature);
+    const editorAgent = createEditorAgent(model, generationConfig);
     tools.callEditorAgent = tool({
       description:
         'Call the Editor Agent for data manipulation (insert, update, delete records).',
@@ -91,7 +96,7 @@ export function createOrchestratorAgent(
   }
 
   if (subAgents?.query) {
-    const queryAgent = createQueryAgent(model, temperature);
+    const queryAgent = createQueryAgent(model, generationConfig);
     tools.callQueryAgent = tool({
       description: 'Call the Query Agent for data analysis and querying.',
       inputSchema: z.object({
@@ -115,7 +120,10 @@ export function createOrchestratorAgent(
   return new ToolLoopAgent({
     id: 'orchestrator-agent',
     model,
-    temperature,
+    temperature: generationConfig?.temperature,
+    topK: generationConfig?.topK,
+    topP: generationConfig?.topP,
+    maxOutputTokens: generationConfig?.maxOutputTokens,
     instructions: `You are a professional Database Architect and Orchestrator. 
     Your goal is to manage the database by routing user requests to specialized sub-agents.
 
