@@ -318,6 +318,40 @@ export const builderAgentTools = {
           .array(z.string())
           .optional()
           .describe('Available options for Select or MultiSelect types.'),
+        foreignKey: z
+          .object({
+            table: z
+              .string()
+              .describe('The exact name of the existing table to link to.'),
+            column: z.object({
+              name: z.string().describe('The referenced column name.'),
+              type: z.string().describe('The referenced column type.'),
+            }),
+            onUpdate: z
+              .enum(Object.values(ReferentialAction) as [string, ...string[]])
+              .optional(),
+            onDelete: z
+              .enum(Object.values(ReferentialAction) as [string, ...string[]])
+              .optional(),
+          })
+          .optional()
+          .describe('Foreign key configuration for Reference type.'),
+        formula: z
+          .object({
+            expression: z
+              .string()
+              .describe(
+                'SQL-like string using other column names (e.g., "price * 1.1").'
+              ),
+            resultType: z
+              .enum(Object.values(FormulaResultType) as [string, ...string[]])
+              .describe('The result type of the formula.'),
+            strategy: z
+              .enum(Object.values(FormulaStrategy) as [string, ...string[]])
+              .optional(),
+          })
+          .optional()
+          .describe('Formula configuration for Formula type.'),
         presentation: z
           .object({
             uiName: z
