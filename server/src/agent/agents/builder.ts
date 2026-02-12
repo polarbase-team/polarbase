@@ -137,6 +137,66 @@ export const builderAgentTools = {
     inputSchema: z.object({
       tables: z.array(createTableSchema),
     }),
+    inputExamples: [
+      {
+        input: {
+          tables: [
+            {
+              name: 'users',
+              comment: 'Application users',
+              idType: 'uuid',
+              timestamps: true,
+              presentation: { uiName: 'Users' },
+              columns: [
+                {
+                  name: 'email',
+                  dataType: 'email',
+                  nullable: false,
+                  unique: true,
+                  presentation: { uiName: 'Email Address' },
+                },
+                {
+                  name: 'name',
+                  dataType: 'text',
+                  nullable: false,
+                  presentation: { uiName: 'Full Name' },
+                },
+              ],
+            },
+            {
+              name: 'posts',
+              comment: 'User posts',
+              idType: 'integer',
+              timestamps: true,
+              presentation: { uiName: 'Posts' },
+              columns: [
+                {
+                  name: 'title',
+                  dataType: 'text',
+                  nullable: false,
+                  presentation: { uiName: 'Title' },
+                },
+                {
+                  name: 'user_id',
+                  dataType: 'reference',
+                  nullable: false,
+                  foreignKey: {
+                    table: 'users',
+                    column: { name: 'id', type: 'uuid' },
+                    onDelete: 'cascade',
+                  },
+                  presentation: {
+                    uiName: 'Author',
+                    format: { displayColumn: 'name' },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+    strict: true,
     execute: async (args) => {
       const summary = {
         created: [] as string[],
@@ -182,6 +242,41 @@ export const builderAgentTools = {
     description:
       'Create a new table along with multiple columns in a single operation.',
     inputSchema: createTableSchema,
+    inputExamples: [
+      {
+        input: {
+          name: 'products',
+          comment: 'Product catalog',
+          idType: 'integer',
+          timestamps: true,
+          presentation: { uiName: 'Products' },
+          columns: [
+            {
+              name: 'name',
+              dataType: 'text',
+              nullable: false,
+              presentation: { uiName: 'Product Name' },
+            },
+            {
+              name: 'price',
+              dataType: 'number',
+              nullable: false,
+              presentation: {
+                uiName: 'Price',
+                format: { numberFormat: 'currency' },
+              },
+            },
+            {
+              name: 'in_stock',
+              dataType: 'checkbox',
+              defaultValue: true,
+              presentation: { uiName: 'In Stock' },
+            },
+          ],
+        },
+      },
+    ],
+    strict: true,
     execute: async (args) => {
       await tableService.createTable({
         table: {
@@ -241,6 +336,27 @@ export const builderAgentTools = {
           .optional(),
       }),
     }),
+    inputExamples: [
+      {
+        input: {
+          tableName: 'users',
+          table: {
+            presentation: { uiName: 'System Users' },
+          },
+        },
+      },
+      {
+        input: {
+          tableName: 'old_products',
+          table: {
+            name: 'products',
+            comment: 'Updated product catalog',
+            presentation: { uiName: 'Products' },
+          },
+        },
+      },
+    ],
+    strict: true,
     execute: async (args) => {
       const result = await tableService.updateTable({
         tableName: args.tableName,
@@ -259,6 +375,11 @@ export const builderAgentTools = {
         .optional()
         .describe('Whether to drop dependent objects (CASCADE).'),
     }),
+    inputExamples: [
+      { input: { tableName: 'temp_data' } },
+      { input: { tableName: 'old_logs', cascade: true } },
+    ],
+    strict: true,
     execute: async (args) => {
       await tableService.deleteTable(args);
       return { status: 'success', message: `Table ${args.tableName} deleted.` };
@@ -273,6 +394,38 @@ export const builderAgentTools = {
         .describe('The name of the table to add the column to.'),
       column: createColumnSchema,
     }),
+    inputExamples: [
+      {
+        input: {
+          tableName: 'users',
+          column: {
+            name: 'bio',
+            dataType: 'long-text',
+            nullable: true,
+            presentation: { uiName: 'Biography' },
+          },
+        },
+      },
+      {
+        input: {
+          tableName: 'orders',
+          column: {
+            name: 'total_price',
+            dataType: 'formula',
+            formula: {
+              expression: 'quantity * unit_price',
+              resultType: 'number',
+              strategy: 'stored',
+            },
+            presentation: {
+              uiName: 'Total Price',
+              format: { numberFormat: 'currency' },
+            },
+          },
+        },
+      },
+    ],
+    strict: true,
     execute: async (args) => {
       const result = await tableService.createColumn({
         tableName: args.tableName,
@@ -365,6 +518,41 @@ export const builderAgentTools = {
           .optional(),
       }),
     }),
+    inputExamples: [
+      {
+        input: {
+          tableName: 'users',
+          columnName: 'email',
+          column: {
+            name: 'email',
+            dataType: 'email',
+            nullable: false,
+            unique: true,
+            presentation: { uiName: 'Email Address' },
+          },
+        },
+      },
+      {
+        input: {
+          tableName: 'products',
+          columnName: 'discount_price',
+          column: {
+            name: 'discount_price',
+            dataType: 'formula',
+            formula: {
+              expression: 'price * 0.9',
+              resultType: 'number',
+              strategy: 'virtual',
+            },
+            presentation: {
+              uiName: 'Discounted Price',
+              format: { numberFormat: 'currency' },
+            },
+          },
+        },
+      },
+    ],
+    strict: true,
     execute: async (args) => {
       const result = await tableService.updateColumn({
         tableName: args.tableName,
@@ -381,6 +569,11 @@ export const builderAgentTools = {
       tableName: z.string().describe('The name of the table.'),
       columnName: z.string().describe('The name of the column to delete.'),
     }),
+    inputExamples: [
+      { input: { tableName: 'users', columnName: 'deprecated_field' } },
+      { input: { tableName: 'products', columnName: 'old_price' } },
+    ],
+    strict: true,
     execute: async (args) => {
       await tableService.deleteColumn(args);
       return {

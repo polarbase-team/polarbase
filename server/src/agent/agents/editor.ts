@@ -15,6 +15,24 @@ export const editorAgentTools = {
         .array(z.record(z.string(), z.any()))
         .describe('An array of objects representing the records to insert.'),
     }),
+    inputExamples: [
+      {
+        input: {
+          tableName: 'users',
+          records: [
+            { email: 'john@example.com', name: 'John Doe' },
+            { email: 'jane@example.com', name: 'Jane Smith' },
+          ],
+        },
+      },
+      {
+        input: {
+          tableName: 'products',
+          records: [{ name: 'Laptop', price: 999.99, in_stock: true }],
+        },
+      },
+    ],
+    strict: true,
     execute: async (args) => {
       const result = await recordService.insert(args);
       return { status: 'success', ...result };
@@ -36,6 +54,31 @@ export const editorAgentTools = {
         )
         .describe('An array of update operations.'),
     }),
+    inputExamples: [
+      {
+        input: {
+          tableName: 'users',
+          updates: [
+            {
+              where: { email: 'john@example.com' },
+              data: { name: 'John Updated' },
+            },
+          ],
+        },
+      },
+      {
+        input: {
+          tableName: 'products',
+          updates: [
+            {
+              where: { in_stock: false },
+              data: { in_stock: true },
+            },
+          ],
+        },
+      },
+    ],
+    strict: true,
     execute: async (args) => {
       const result = await recordService.update(args as any);
       return { status: 'success', ...result };
@@ -48,6 +91,21 @@ export const editorAgentTools = {
       tableName: z.string().describe('The name of the table to delete from.'),
       where: whereFilterSchema,
     }),
+    inputExamples: [
+      {
+        input: {
+          tableName: 'users',
+          where: { email: 'old@example.com' },
+        },
+      },
+      {
+        input: {
+          tableName: 'logs',
+          where: { created_at: { lt: '2024-01-01' } },
+        },
+      },
+    ],
+    strict: true,
     execute: async (args) => {
       const result = await recordService.delete({
         tableName: args.tableName,

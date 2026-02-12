@@ -31,6 +31,31 @@ export const queryAgentTools = {
         limit: z.number().optional(),
       }),
     }),
+    inputExamples: [
+      {
+        input: {
+          tableName: 'users',
+          query: {
+            where: { status: 'active' },
+            order: 'created_at:desc',
+            limit: 10,
+          },
+        },
+      },
+      {
+        input: {
+          tableName: 'products',
+          query: {
+            search: 'laptop',
+            fields: 'id,name,price',
+            order: 'price:asc',
+            page: 1,
+            limit: 20,
+          },
+        },
+      },
+    ],
+    strict: true,
     execute: async (args) => {
       const result = await recordService.select({
         tableName: args.tableName,
@@ -69,6 +94,36 @@ export const queryAgentTools = {
         limit: z.number().optional(),
       }),
     }),
+    inputExamples: [
+      {
+        input: {
+          tableName: 'orders',
+          query: {
+            select: ['count(*) as total_orders', 'sum(amount) as revenue'],
+            where: { status: 'completed' },
+            group: ['user_id'],
+            order: 'revenue:desc',
+            limit: 10,
+          },
+        },
+      },
+      {
+        input: {
+          tableName: 'products',
+          query: {
+            select: [
+              'category',
+              'avg(price) as avg_price',
+              'count(*) as count',
+            ],
+            group: ['category'],
+            having: { 'count(*)': { gt: 5 } },
+            order: 'avg_price:desc',
+          },
+        },
+      },
+    ],
+    strict: true,
     execute: async (args) => {
       const result = await recordService.aggregate({
         tableName: args.tableName,

@@ -30,6 +30,12 @@ export function createOrchestratorAgent(
           .string()
           .describe('The specific database schema task to perform'),
       }),
+      inputExamples: [
+        { input: { task: 'List all tables in the database' } },
+        { input: { task: 'Show me the schema for the users table' } },
+        { input: { task: 'What columns does the products table have?' } },
+      ],
+      strict: true,
       execute: async function* ({ task }, { abortSignal }) {
         const result = await lookupAgentTools.stream({
           prompt: task,
@@ -56,6 +62,13 @@ export function createOrchestratorAgent(
           .string()
           .describe('The specific database schema task to perform'),
       }),
+      inputExamples: [
+        { input: { task: 'Create a users table with email and name columns' } },
+        { input: { task: 'Add a bio column to the users table' } },
+        { input: { task: 'Update the price column to use currency format' } },
+        { input: { task: 'Delete the deprecated_logs table' } },
+      ],
+      strict: true,
       execute: async function* ({ task }, { abortSignal }) {
         const result = await builderAgent.stream({
           prompt: task,
@@ -82,6 +95,12 @@ export function createOrchestratorAgent(
           .string()
           .describe('The specific data manipulation task to perform'),
       }),
+      inputExamples: [
+        { input: { task: 'Insert a new user with email john@example.com' } },
+        { input: { task: 'Update all inactive products to active status' } },
+        { input: { task: 'Delete all logs older than 2024-01-01' } },
+      ],
+      strict: true,
       execute: async function* ({ task }, { abortSignal }) {
         const result = await editorAgent.stream({ prompt: task, abortSignal });
 
@@ -104,6 +123,13 @@ export function createOrchestratorAgent(
           .string()
           .describe('The specific data query or analysis task to perform'),
       }),
+      inputExamples: [
+        { input: { task: 'Show me all active users' } },
+        { input: { task: 'Count total orders by status' } },
+        { input: { task: 'Find the top 10 products by revenue' } },
+        { input: { task: 'Search for products containing laptop' } },
+      ],
+      strict: true,
       execute: async function* ({ task }, { abortSignal }) {
         const result = await queryAgent.stream({ prompt: task, abortSignal });
 

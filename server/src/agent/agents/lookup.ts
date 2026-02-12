@@ -9,6 +9,8 @@ export const lookupAgentTools = {
   listTables: tool({
     description: 'List all tables in the database.',
     inputSchema: z.object({}),
+    inputExamples: [{ input: {} }],
+    strict: true,
     execute: async () => {
       const tables = await tableService.getAll();
       const blacklist = (process.env.AGENT_BLACKLISTED_TABLES || '').split(',');
@@ -25,6 +27,11 @@ export const lookupAgentTools = {
         .string()
         .describe('The name of the table to get columns for.'),
     }),
+    inputExamples: [
+      { input: { tableName: 'users' } },
+      { input: { tableName: 'products' } },
+    ],
+    strict: true,
     execute: async ({ tableName }) => {
       const columns = await tableService.getSchema({ tableName });
       return {
