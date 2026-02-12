@@ -87,15 +87,17 @@ export class ChatBotComponent {
   protected mentionMenuItems: MenuItem[];
   protected mentions: { tables: string[] } = { tables: [] };
 
-  protected selectedModel = 'default';
-  protected selectedModelLabel = 'Default';
-  protected modelMenuItems: MenuItem[] = models.map((opt) => ({
-    label: opt.label,
-    command: () => {
-      this.selectedModel = opt.value;
-      this.selectedModelLabel = opt.label;
-    },
-  }));
+  protected selectedModel: string;
+  protected selectedModelLabel: string;
+  protected modelMenuItems: MenuItem[] = [{ label: 'Default', value: undefined }, ...models].map(
+    (opt) => ({
+      label: opt.label,
+      command: () => {
+        this.selectedModel = opt.value;
+        this.selectedModelLabel = opt.label;
+      },
+    }),
+  );
 
   protected subAgents = {
     builder: true,
@@ -218,7 +220,7 @@ export class ChatBotComponent {
 
     const attachments = this.selectedFiles();
     const mentions = this.mentions;
-    const model = this.selectedModel === 'default' ? undefined : this.selectedModel;
+    const model = this.selectedModel;
     const subAgents = this.subAgents;
     const generationConfig = this.generation;
 

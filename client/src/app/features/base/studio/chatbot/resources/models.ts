@@ -1,6 +1,4 @@
 export const models = [
-  { label: 'Default', value: 'default' },
-
   // OpenAI
   { label: 'GPT-5', value: 'gpt-5' },
   { label: 'GPT-5.1', value: 'gpt-5.1' },
