@@ -23,7 +23,7 @@ import { TableRealtimeService } from './table/services/table-realtime.service';
 import { ChatBotComponent } from './chatbot/chatbot.component';
 import { AgentService } from './chatbot/services/agent.service';
 
-const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
+const SIDEBAR_VISIBILITY_KEY = 'sidebar_visibility';
 
 @Component({
   selector: 'base-studio',
@@ -56,7 +56,7 @@ export class BaseStudioComponent {
     private agentService: AgentService,
   ) {
     this.sidebarVisible.set(
-      Boolean(JSON.parse(localStorage.getItem(SIDEBAR_VISIBLE_KEY) || 'true')),
+      Boolean(JSON.parse(localStorage.getItem(SIDEBAR_VISIBILITY_KEY) || 'true')),
     );
 
     effect(() => {
@@ -93,7 +93,7 @@ export class BaseStudioComponent {
 
   protected toggleSidebar() {
     this.sidebarVisible.update((v) => !v);
-    localStorage.setItem(SIDEBAR_VISIBLE_KEY, this.sidebarVisible().toString());
+    localStorage.setItem(SIDEBAR_VISIBILITY_KEY, this.sidebarVisible().toString());
   }
 
   protected toggleChatbot() {

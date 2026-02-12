@@ -159,21 +159,36 @@
                 <p class="text-sm font-medium">Builder</p>
                 <p class="text-xs text-surface-500">Manage tables and database schema.</p>
               </div>
-              <p-toggleswitch [(ngModel)]="subAgents.builder" size="small" class="scale-80" />
+              <p-toggleswitch
+                [(ngModel)]="subAgents.builder"
+                (ngModelChange)="saveSubAgents()"
+                size="small"
+                class="scale-80"
+              />
             </div>
             <div class="flex items-center justify-between gap-2">
               <div>
                 <p class="text-sm font-medium">Editor</p>
                 <p class="text-xs text-surface-500">Insert, update, and delete records.</p>
               </div>
-              <p-toggleswitch [(ngModel)]="subAgents.editor" size="small" class="scale-80" />
+              <p-toggleswitch
+                [(ngModel)]="subAgents.editor"
+                (ngModelChange)="saveSubAgents()"
+                size="small"
+                class="scale-80"
+              />
             </div>
             <div class="flex items-center justify-between gap-2">
               <div>
                 <p class="text-sm font-medium">Query</p>
                 <p class="text-xs text-surface-500">Search, filter, and analyze data.</p>
               </div>
-              <p-toggleswitch [(ngModel)]="subAgents.query" size="small" class="scale-80" />
+              <p-toggleswitch
+                [(ngModel)]="subAgents.query"
+                (ngModelChange)="saveSubAgents()"
+                size="small"
+                class="scale-80"
+              />
             </div>
           </div>
 
@@ -186,7 +201,8 @@
             <div class="flex items-center justify-between gap-2">
               <label class="text-sm font-medium">Temperature</label>
               <p-inputnumber
-                [(ngModel)]="generation.temperature"
+                [(ngModel)]="generationConfig.temperature"
+                (ngModelChange)="saveGenerationConfig()"
                 mode="decimal"
                 [min]="0"
                 [max]="2"
@@ -202,7 +218,8 @@
             <div class="flex items-center justify-between gap-2">
               <label class="text-sm font-medium">Top P</label>
               <p-inputnumber
-                [(ngModel)]="generation.topP"
+                [(ngModel)]="generationConfig.topP"
+                (ngModelChange)="saveGenerationConfig()"
                 mode="decimal"
                 [min]="0"
                 [max]="1"
@@ -218,7 +235,8 @@
             <div class="flex items-center justify-between gap-2">
               <label class="text-sm font-medium">Top K</label>
               <p-inputnumber
-                [(ngModel)]="generation.topK"
+                [(ngModel)]="generationConfig.topK"
+                (ngModelChange)="saveGenerationConfig()"
                 mode="decimal"
                 [min]="0"
                 [showButtons]="true"
@@ -232,7 +250,8 @@
             <div class="flex items-center justify-between gap-2">
               <label class="text-sm font-medium">Max Tokens</label>
               <p-inputnumber
-                [(ngModel)]="generation.maxOutputTokens"
+                [(ngModel)]="generationConfig.maxOutputTokens"
+                (ngModelChange)="saveGenerationConfig()"
                 mode="decimal"
                 [min]="1"
                 [useGrouping]="false"

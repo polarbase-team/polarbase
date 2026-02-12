@@ -14,6 +14,8 @@ import { TopbarComponent } from '@app/core/components/topbar/topbar.component';
 import { LoadingService } from '@app/core/services/loading.service';
 import { AgentService } from './studio/chatbot/services/agent.service';
 
+const CHATBOT_VISIBILITY_KEY = 'chatbot_visibility';
+
 @Component({
   selector: 'base',
   templateUrl: './base.component.html',
@@ -50,6 +52,8 @@ export class BaseComponent {
     private router: Router,
     private agentService: AgentService,
   ) {
+    this.agentService.openAIChatbot.set(localStorage.getItem(CHATBOT_VISIBILITY_KEY) === 'true');
+
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),
@@ -71,5 +75,6 @@ export class BaseComponent {
 
   protected toggleChatbot() {
     this.agentService.openAIChatbot.update((v) => !v);
+    localStorage.setItem(CHATBOT_VISIBILITY_KEY, this.agentService.openAIChatbot().toString());
   }
 }

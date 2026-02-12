@@ -43,6 +43,10 @@ interface AssistantChatMessage extends ChatMessage {
   _toolCallId?: string | null;
 }
 
+const CHATBOT_SELECTED_MODEL_KEY = 'chatbot_selected_model';
+const CHATBOT_SUB_AGENTS_KEY = 'chatbot_sub_agents';
+const CHATBOT_GENERATION_CONFIG_KEY = 'chatbot_generation_config';
+
 @Component({
   selector: 'chatbot',
   templateUrl: './chatbot.component.html',
@@ -95,6 +99,10 @@ export class ChatBotComponent {
       command: () => {
         this.selectedModel = opt.value;
         this.selectedModelLabel = opt.label;
+        localStorage.setItem(
+          CHATBOT_SELECTED_MODEL_KEY,
+          JSON.stringify({ value: opt.value, label: opt.label }),
+        );
       },
     }),
   );
@@ -105,7 +113,7 @@ export class ChatBotComponent {
     query: true,
   };
 
-  protected generation = {
+  protected generationConfig = {
     temperature: 0.7,
     topP: 0.9,
     topK: 40,
@@ -119,6 +127,19 @@ export class ChatBotComponent {
     private agentService: AgentService,
     private tableService: TableService,
   ) {
+    const model = JSON.parse(localStorage.getItem(CHATBOT_SELECTED_MODEL_KEY) || '{}');
+    this.selectedModel = model.value;
+    this.selectedModelLabel = model.label;
+
+    this.subAgents = {
+      ...this.subAgents,
+      ...JSON.parse(localStorage.getItem(CHATBOT_SUB_AGENTS_KEY) || '{}'),
+    };
+    this.generationConfig = {
+      ...this.generationConfig,
+      ...JSON.parse(localStorage.getItem(CHATBOT_GENERATION_CONFIG_KEY) || '{}'),
+    };
+
     effect(() => {
       if (this.messages().length > 0) {
         setTimeout(() => this.scrollToBottom(), 100);
@@ -214,6 +235,14 @@ export class ChatBotComponent {
     this.fileInput().nativeElement.value = '';
   }
 
+  protected saveSubAgents() {
+    localStorage.setItem(CHATBOT_SUB_AGENTS_KEY, JSON.stringify(this.subAgents));
+  }
+
+  protected saveGenerationConfig() {
+    localStorage.setItem(CHATBOT_GENERATION_CONFIG_KEY, JSON.stringify(this.generationConfig));
+  }
+
   protected sendMessage() {
     const text = this.inputText;
     if (!text) return;
@@ -222,7 +251,7 @@ export class ChatBotComponent {
     const mentions = this.mentions;
     const model = this.selectedModel;
     const subAgents = this.subAgents;
-    const generationConfig = this.generation;
+    const generationConfig = this.generationConfig;
 
     const userMessage: UserChatMessage = {
       role: 'user',
