@@ -14,10 +14,18 @@ export default function registerQueryTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return (await queryAgentTools.queryRecords.execute!(
-          args as any,
-          {} as any
-        )) as any;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                await queryAgentTools.queryRecords.execute!(args, {} as any),
+                null,
+                2
+              ),
+            },
+          ],
+        };
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -35,10 +43,21 @@ export default function registerQueryTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return (await queryAgentTools.aggregateRecords.execute!(
-          args as any,
-          {} as any
-        )) as any;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                await queryAgentTools.aggregateRecords.execute!(
+                  args,
+                  {} as any
+                ),
+                null,
+                2
+              ),
+            },
+          ],
+        };
       } catch (error) {
         throw new UserError((error as Error).message);
       }

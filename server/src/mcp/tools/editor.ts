@@ -13,10 +13,9 @@ export default function registerEditorTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return (await editorAgentTools.insertRecords.execute!(
-          args as any,
-          {} as any
-        )) as any;
+        return JSON.stringify(
+          await editorAgentTools.insertRecords.execute!(args as any, {} as any)
+        );
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -33,10 +32,18 @@ export default function registerEditorTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return (await editorAgentTools.updateRecords.execute!(
-          args as any,
-          {} as any
-        )) as any;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                await editorAgentTools.updateRecords.execute!(args, {} as any),
+                null,
+                2
+              ),
+            },
+          ],
+        };
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -54,10 +61,18 @@ export default function registerEditorTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return (await editorAgentTools.deleteRecords.execute!(
-          args as any,
-          {} as any
-        )) as any;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                await editorAgentTools.deleteRecords.execute!(args, {} as any),
+                null,
+                2
+              ),
+            },
+          ],
+        };
       } catch (error) {
         throw new UserError((error as Error).message);
       }

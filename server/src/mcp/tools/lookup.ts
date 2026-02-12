@@ -14,10 +14,18 @@ export default function registerLookupTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return (await lookupAgentTools.listTables.execute!(
-          args as any,
-          {} as any
-        )) as any;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                await lookupAgentTools.listTables.execute!(args, {} as any),
+                null,
+                2
+              ),
+            },
+          ],
+        };
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -35,10 +43,18 @@ export default function registerLookupTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return (await lookupAgentTools.getTableSchema.execute!(
-          args as any,
-          {} as any
-        )) as any;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                await lookupAgentTools.getTableSchema.execute!(args, {} as any),
+                null,
+                2
+              ),
+            },
+          ],
+        };
       } catch (error) {
         throw new UserError((error as Error).message);
       }
