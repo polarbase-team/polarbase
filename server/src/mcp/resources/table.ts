@@ -24,8 +24,8 @@ export default function register(server: FastMCP) {
   });
 
   server.addResourceTemplate({
-    uriTemplate: 'db://table/{tableName}/schema',
-    name: 'Table Schema',
+    uriTemplate: 'db://table/{tableName}',
+    name: 'Table Details',
     mimeType: 'application/json',
     arguments: [
       {
@@ -49,12 +49,12 @@ export default function register(server: FastMCP) {
     ],
     async load({ tableName }) {
       try {
-        const result = (await lookupAgentTools.getTableSchema.execute!(
-          { tableName },
+        const result = (await lookupAgentTools.findTable.execute!(
+          { tableName, includeSchema: true },
           {} as any
         )) as any;
         return {
-          text: JSON.stringify(result.columns, null, 2),
+          text: JSON.stringify(result, null, 2),
         };
       } catch (error) {
         const err = error as any;

@@ -35,7 +35,10 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        const response = await builderAgentTools.createTable.execute!(args, {} as any);
+        const response = await builderAgentTools.createTable.execute!(
+          args,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
@@ -53,7 +56,10 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        const response = await builderAgentTools.updateTable.execute!(args, {} as any);
+        const response = await builderAgentTools.updateTable.execute!(
+          args,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
@@ -72,7 +78,10 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        const response = await builderAgentTools.deleteTable.execute!(args, {} as any);
+        const response = await builderAgentTools.deleteTable.execute!(
+          args,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
@@ -90,7 +99,10 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        const response = await builderAgentTools.createColumn.execute!(args, {} as any);
+        const response = await builderAgentTools.createColumn.execute!(
+          args,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
@@ -108,7 +120,10 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        const response = await builderAgentTools.updateColumn.execute!(args, {} as any);
+        const response = await builderAgentTools.updateColumn.execute!(
+          args,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
@@ -127,7 +142,53 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        const response = await builderAgentTools.deleteColumn.execute!(args, {} as any);
+        const response = await builderAgentTools.deleteColumn.execute!(
+          args,
+          {} as any
+        );
+        return responseToContent(response);
+      } catch (error) {
+        throw new UserError((error as Error).message);
+      }
+    },
+  });
+
+  // createIndex
+  server.addTool({
+    name: 'createIndex',
+    description: builderAgentTools.createIndex.description,
+    parameters: builderAgentTools.createIndex.inputSchema as any,
+    annotations: {
+      title: 'Create Database Index',
+    },
+    async execute(args) {
+      try {
+        const response = await builderAgentTools.createIndex.execute!(
+          args,
+          {} as any
+        );
+        return responseToContent(response);
+      } catch (error) {
+        throw new UserError((error as Error).message);
+      }
+    },
+  });
+
+  // deleteIndex
+  server.addTool({
+    name: 'deleteIndex',
+    description: builderAgentTools.deleteIndex.description,
+    parameters: builderAgentTools.deleteIndex.inputSchema as any,
+    annotations: {
+      title: 'Delete Database Index',
+      destructiveHint: true,
+    },
+    async execute(args) {
+      try {
+        const response = await builderAgentTools.deleteIndex.execute!(
+          args,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);

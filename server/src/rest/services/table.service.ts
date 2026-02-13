@@ -56,6 +56,22 @@ export class TableService {
     return tables;
   }
 
+  async getOne({
+    schemaName = 'public',
+    tableName,
+    includeSchema = true,
+  }: {
+    schemaName?: string;
+    tableName: string;
+    includeSchema?: boolean;
+  }) {
+    const table = await getTable(pg, schemaName, tableName);
+    if (includeSchema) {
+      table.schema = await getTableSchema(pg, schemaName, tableName);
+    }
+    return table;
+  }
+
   async getSchema({
     schemaName = 'public',
     tableName,
