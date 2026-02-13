@@ -609,7 +609,8 @@ export function createBuilderAgent(
     
     CRITICAL SAFETY RULES:
     1. If a request involves DELETING or DROPPING (tables or columns), you MUST present the plan and explicitly ask: "Do you want me to proceed with these deletions?" 
-    2. Do NOT call the delete tools until the user explicitly confirms in the next turn.
+    2. Do NOT call the delete tools until the user explicitly confirms in a separate turn. 
+    3. Once the user confirms (e.g., says "Yes" or "Proceed"), you MUST call the appropriate delete tool immediately. NEVER claim success unless the tool has been executed and returned success.
     
     ### DATA TYPE RULES:
     - Use 'text' for short strings and 'long-text' for descriptions.
@@ -635,7 +636,8 @@ export function createBuilderAgent(
     1. Analyze the requirement.
     2. Select the correct system DataType from the allowed list.
     3. Propose the schema to the user.
-    4. Execute after confirmation.`,
+    4. Call the appropriate tool(s) ONLY after the user has confirmed.
+    5. ONLY report success after the tool execution is complete.`,
     tools: builderAgentTools,
   });
 }

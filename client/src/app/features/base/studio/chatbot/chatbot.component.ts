@@ -172,6 +172,14 @@ export class ChatBotComponent {
     el.blur();
   }
 
+  reset() {
+    this.isStreaming.set(false);
+    this.messages.set([]);
+    this.inputText = this.editor().nativeElement.innerHTML = '';
+    this.mentions = { tables: [] };
+    this.clearFiles();
+  }
+
   protected toggleFullscreen() {
     this.isFullscreen = !this.isFullscreen;
     this.fullscreen.emit(this.isFullscreen);
@@ -184,8 +192,7 @@ export class ChatBotComponent {
   }
 
   protected startNewChat() {
-    this.messages.set([]);
-    this.inputText = this.editor().nativeElement.innerHTML = '';
+    this.reset();
     this.focus();
   }
 
@@ -247,22 +254,20 @@ export class ChatBotComponent {
     const text = this.inputText;
     if (!text) return;
 
-    const attachments = this.selectedFiles();
-    const mentions = this.mentions;
-    const model = this.selectedModel;
-    const subAgents = this.subAgents;
-    const generationConfig = this.generationConfig;
-
     const userMessage: UserChatMessage = {
       role: 'user',
       content: text,
       timestamp: new Date(),
-      _selectedFiles: attachments,
+      _selectedFiles: this.selectedFiles(),
     };
-    const messages = [...this.messages(), userMessage];
-    this.messages.set(messages);
-    this.scrollToBottom();
+    this.startChat(userMessage);
 
+    this.inputText = this.editor().nativeElement.innerHTML = '';
+    this.mentions = { tables: [] };
+    this.clearFiles();
+  }
+
+  private startChat(message: ChatMessage) {
     this.isStreaming.set(true);
 
     const botMessage: AssistantChatMessage = {
@@ -272,16 +277,16 @@ export class ChatBotComponent {
       _isGenerating: true,
       _toolCallId: null,
     };
-    this.messages.update((prev) => [...prev, botMessage]);
+    this.messages.update((messages) => [...messages, message, botMessage]);
 
     this.currentChatSubscription = this.agentService
       .chat({
-        messages,
-        attachments,
-        mentions,
-        model,
-        subAgents,
-        generationConfig,
+        messages: this.messages(),
+        attachments: this.selectedFiles(),
+        mentions: this.mentions,
+        model: this.selectedModel,
+        subAgents: this.subAgents,
+        generationConfig: this.generationConfig,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -289,17 +294,16 @@ export class ChatBotComponent {
           if (!events.length) return;
 
           botMessage._isGenerating = false;
+          botMessage._toolCallId = null;
 
           events.forEach((event) => {
             if (event.type === 'text') {
               botMessage.content += event.value;
-              this.messages.update((messages) => [...messages]);
-              this.scrollToBottom();
             } else if (event.type === 'tool') {
               botMessage._toolCallId = event.value;
-              this.messages.update((messages) => [...messages]);
-              this.scrollToBottom();
             }
+            this.messages.update((messages) => [...messages]);
+            this.scrollToBottom();
           });
         },
         complete: () => {
@@ -309,10 +313,6 @@ export class ChatBotComponent {
           this.messages.update((messages) => [...messages]);
         },
       });
-
-    this.inputText = this.editor().nativeElement.innerHTML = '';
-    this.mentions = { tables: [] };
-    this.clearFiles();
   }
 
   protected stopGeneration() {

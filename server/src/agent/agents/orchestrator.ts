@@ -8,16 +8,16 @@ import { createQueryAgent } from './query';
 
 export function createOrchestratorAgent(
   model: any,
+  subAgents?: {
+    builder?: boolean;
+    editor?: boolean;
+    query?: boolean;
+  },
   generationConfig?: {
     temperature?: number;
     topP?: number;
     topK?: number;
     maxOutputTokens?: number;
-  },
-  subAgents?: {
-    builder?: boolean;
-    editor?: boolean;
-    query?: boolean;
   }
 ) {
   const lookupAgentTools = createLookupAgent(model, generationConfig);
@@ -36,9 +36,9 @@ export function createOrchestratorAgent(
         { input: { task: 'What columns does the products table have?' } },
       ],
       strict: true,
-      execute: async function* ({ task }, { abortSignal }) {
-        const result = await lookupAgentTools.stream({
-          prompt: task,
+      execute: async function* ({ task }, { abortSignal, messages }) {
+        const result = await (lookupAgentTools as any).stream({
+          messages: [...messages, { role: 'user', content: task }],
           abortSignal,
         });
 
@@ -69,9 +69,9 @@ export function createOrchestratorAgent(
         { input: { task: 'Delete the deprecated_logs table' } },
       ],
       strict: true,
-      execute: async function* ({ task }, { abortSignal }) {
-        const result = await builderAgent.stream({
-          prompt: task,
+      execute: async function* ({ task }, { abortSignal, messages }) {
+        const result = await (builderAgent as any).stream({
+          messages: [...messages, { role: 'user', content: task }],
           abortSignal,
         });
 
@@ -101,8 +101,11 @@ export function createOrchestratorAgent(
         { input: { task: 'Delete all logs older than 2024-01-01' } },
       ],
       strict: true,
-      execute: async function* ({ task }, { abortSignal }) {
-        const result = await editorAgent.stream({ prompt: task, abortSignal });
+      execute: async function* ({ task }, { abortSignal, messages }) {
+        const result = await (editorAgent as any).stream({
+          messages: [...messages, { role: 'user', content: task }],
+          abortSignal,
+        });
 
         // Each iteration yields a complete, accumulated UIMessage
         for await (const message of readUIMessageStream({
@@ -130,8 +133,11 @@ export function createOrchestratorAgent(
         { input: { task: 'Search for products containing laptop' } },
       ],
       strict: true,
-      execute: async function* ({ task }, { abortSignal }) {
-        const result = await queryAgent.stream({ prompt: task, abortSignal });
+      execute: async function* ({ task }, { abortSignal, messages }) {
+        const result = await (queryAgent as any).stream({
+          messages: [...messages, { role: 'user', content: task }],
+          abortSignal,
+        });
 
         // Each iteration yields a complete, accumulated UIMessage
         for await (const message of readUIMessageStream({
@@ -156,21 +162,23 @@ export function createOrchestratorAgent(
     ### OPERATIONAL PRIORITIES:
     1. SCHEMA VERIFICATION: Before calling the "builder", "editor", or "query" agents, you MUST verify if the tables/columns exist using the "lookup" agent, unless the table names were explicitly provided in the recent conversation context.
     2. AMBIGUITY RESOLUTION: If a user's request is vague (e.g., "add a field"), use the "lookup" agent to find the most relevant table before proceeding.
-    3. DATA VS. SCHEMA: 
+    3. WORKFLOW CONTINUITY: If a sub-agent has previously been called and is awaiting confirmation or more information (e.g., Builder asking "Are you sure?"), you MUST continue to delegate to that same sub-agent to complete the operation.
+    4. DATA VS. SCHEMA: 
       - Use "builder" ONLY for structural changes (CREATE, ALTER, DROP).
       - Use "editor" ONLY for row-level changes (INSERT, UPDATE, DELETE records).
       - Use "query" ONLY for reading or analyzing data.
 
     ### SAFETY GUARDRAILS:
     - NEVER guess table or column names. 
-    - If the "lookup" agent returns no results for a table the user wants to "edit", inform the user rather than calling the "editor" agent blindly.
-    - For destructive requests (dropping tables), ensure the "builder" agent is called with a task that emphasizes a confirmation step.
+    - NEVER claim a database modification was successful yourself. Success must be reported based on the tool output of the sub-agent you delegated to.
+    - If a sub-agent previously asked for confirmation and the user provides it, call that sub-agent again with the confirmation to trigger the actual tool execution.
+    - For destructive requests (dropping tables), the "builder" agent MUST be the one to perform the final execution after it receives the user's confirmation.
 
     ### ROUTING LOGIC:
     - lookup: Use when the user asks "What tables do I have?", "Show me the columns in X", or when you need to verify existence.
-    - builder: Use for "Create a new system for...", "Add a category column to products", or "Remove the old logs table".
-    - editor: Use for "Add a new user named Bob", "Change the price of Item 5 to $20", or "Clear the shopping cart".
-    - query: Use for "How many orders were made today?", "Find the top 5 customers", or "Show me all active users".`,
+    - builder: Use for any schema changes, including confirmations response related to schema changes.
+    - editor: Use for any data records changes, including confirmations response related to records.
+    - query: Use for data reading or analysis.`,
     tools,
   });
 }

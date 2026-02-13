@@ -123,7 +123,6 @@ export class AgentService {
                   if (obj.type === 'text-delta') {
                     events.push({ type: 'text', value: obj.delta });
                   } else if (obj.type === 'tool-input-start' || obj.type === 'tool-call') {
-                    // Added 'tool-call' as a common variant
                     events.push({ type: 'tool', value: obj.toolName ?? obj.method });
                   } else if (obj.type === 'error') {
                     events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });

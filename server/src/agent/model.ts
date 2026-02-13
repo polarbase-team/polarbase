@@ -119,15 +119,21 @@ export async function generateAIResponse({
       })
     );
 
-    // Get the last message and convert its content to the array format
-    const lastMessage = messages[messages.length - 1];
-    const textContent =
-      typeof lastMessage.content === 'string' ? lastMessage.content : '';
+    // Get the last user message and convert its content to the array format
+    const userMessages = messages.filter((m) => m.role === 'user');
+    const lastUserMessage = userMessages[userMessages.length - 1];
 
-    lastMessage.content = [
-      { type: 'text', text: textContent },
-      ...attachmentParts,
-    ];
+    if (lastUserMessage) {
+      const textContent =
+        typeof lastUserMessage.content === 'string'
+          ? lastUserMessage.content
+          : '';
+
+      lastUserMessage.content = [
+        { type: 'text', text: textContent },
+        ...attachmentParts,
+      ];
+    }
   }
 
   // Add mentioned tables to the last message
@@ -142,8 +148,8 @@ export async function generateAIResponse({
   const selectedModel = resolveModel(model);
   const orchestrator = createOrchestratorAgent(
     selectedModel,
-    generationConfig,
-    subAgents
+    subAgents,
+    generationConfig
   );
 
   // Use the orchestrator agent to stream the response

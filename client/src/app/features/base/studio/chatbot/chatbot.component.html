@@ -46,7 +46,7 @@
 
     <p-scrollpanel #scrollContainer class="w-full h-full min-h-0">
       @if (messages().length) {
-        <div class="px-6 py-8">
+        <div class="px-4 py-6">
           <div class="flex flex-col gap-8">
             @for (msg of messages(); track msg.timestamp) {
               <div
@@ -58,7 +58,7 @@
                 @if (msg.role === 'user') {
                   <div class="flex flex-col items-end">
                     <div class="p-2.5 rounded-xl bg-primary text-primary-contrast">
-                      <p class="m-0 whitespace-pre-wrap" style="word-break: break-word">
+                      <p class="m-0 whitespace-pre-wrap text-sm" style="word-break: break-word">
                         {{ msg.content }}
                       </p>
                     </div>
@@ -72,17 +72,26 @@
                     }
                   </div>
                 } @else {
-                  <div class="flex gap-2 leading-6">
-                    <i class="icon icon-sparkles" style="color: var(--p-primary-color)"></i>
+                  <div class="flex gap-2 leading-6 w-full">
+                    <i
+                      class="icon icon-sparkles mt-[-2.5px]"
+                      style="color: var(--p-primary-color)"
+                    ></i>
                     @if ($any(msg)._isGenerating) {
-                      <p class="text-surface-500 italic">Generating...</p>
+                      <p class="text-surface-500 text-sm italic">Generating...</p>
                     } @else {
-                      <div class="space-y-2">
-                        <div class="chatbot-prose" [innerHTML]="msg.content | markdown"></div>
-                        @if ($any(msg)._toolCallId) {
-                          <p class="text-surface-500 italic">
+                      <div class="space-y-2 flex-1 min-w-0">
+                        @if (msg.content) {
+                          <div
+                            class="chatbot-prose text-sm"
+                            [innerHTML]="msg.content | markdown"
+                          ></div>
+                        }
+
+                        @if ($any(msg)._toolCallId; as toolCallId) {
+                          <p class="text-surface-500 text-sm italic">
                             Tool calling:
-                            <span class="font-medium">{{ $any(msg)._toolCallId }}</span
+                            <span class="font-medium">{{ toolCallId }}</span
                             >...
                           </p>
                         }
