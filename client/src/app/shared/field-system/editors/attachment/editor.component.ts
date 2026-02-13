@@ -1,10 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { FileListComponent } from '@app/shared/file/file-list/file-list.component';
-import {
-  FileUploaderComponent,
-  FileMetadata,
-} from '@app/shared/file/file-uploader/file-uploader.component';
+import { FileUploaderComponent } from '@app/shared/file/file-uploader/file-uploader.component';
+import { FileMetadata } from '@app/shared/file/file-upload.service';
 import { AttachmentField } from '../../models/attachment/field.object';
 import { AttachmentData } from '../../models/attachment/field.interface';
 import { FieldEditorComponent } from '../editor.component';

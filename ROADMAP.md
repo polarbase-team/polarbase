@@ -34,6 +34,11 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **MCP Server for DB:** Native Model Context Protocol server for streamlined database administration.
 - **AI Agent for DB:** Intelligent agent to assist with database operations without manual SQL generation.
 - **Multi-Provider Support:** Integration with Google Gemini (default) and OpenAI.
+- **Natural Language Schema:** Describe requirements and the Agent will update the DB schema.
+- **Local AI Support:** Integration with local inference servers like **LM Studio**.
+- **Agent Orchestration**: Specialized sub-agents (Builder, Query, Lookup, Editor) for improved task accuracy.
+- **Agent Call Approval:** Human-in-the-loop security for high-risk operations (Delete/Drop).
+- **Document Analysis:** Upload files to the Agent for data extraction and analysis.
 
 ### ⚙️ Data & Schema Management
 
@@ -52,10 +57,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 
 ### 🤖 Agentic Backend (AI & MCP)
 
-- **Natural Language Schema:** Describe requirements and the Agent will update the DB schema.
-- **Agent Call Approval:** Human-in-the-loop security for high-risk operations (Delete/Drop).
 - **AI Query View:** Dedicated UI to view full result sets from AI queries.
-- **Document Analysis:** Upload files to the Agent for data extraction and analysis.
 
 ### ⚙️ Data & Schema Management
 

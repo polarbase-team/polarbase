@@ -6,10 +6,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { AttachmentField } from '@app/shared/field-system/models/attachment/field.object';
 import { AttachmentData } from '@app/shared/field-system/models/attachment/field.interface';
 import { FileListComponent } from '@app/shared/file/file-list/file-list.component';
-import {
-  FileUploaderComponent,
-  FileMetadata,
-} from '@app/shared/file/file-uploader/file-uploader.component';
+import { FileUploaderComponent } from '@app/shared/file/file-uploader/file-uploader.component';
+import { FileMetadata } from '@app/shared/file/file-upload.service';
 import { FieldCellEditable } from '../field-cell-editable';
 import { CellTouchEvent } from '../field-cell-touchable';
 

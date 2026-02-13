@@ -44,12 +44,25 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
 
   .post(
     '/chat',
-    async ({ body }) => {
-      const { messages, model, temperature } = body;
+    async ({
+      request: { signal },
+      body: {
+        messages,
+        attachments,
+        mentions,
+        model,
+        subAgents,
+        generationConfig,
+      },
+    }) => {
       const result = await generateAIResponse({
         messages: messages as any,
+        attachments,
+        mentions,
         model,
-        temperature,
+        subAgents,
+        generationConfig,
+        abortSignal: signal,
       });
       return result.toUIMessageStream();
     },
@@ -69,8 +82,28 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
             toolInvocations: t.Optional(t.Any()),
           })
         ),
+        attachments: t.Optional(t.Files()),
+        mentions: t.Optional(
+          t.Object({
+            tables: t.Optional(t.Array(t.String())),
+          })
+        ),
         model: t.Optional(t.String()),
-        temperature: t.Optional(t.Number({ minimum: 0, maximum: 2 })),
+        subAgents: t.Optional(
+          t.Object({
+            builder: t.Optional(t.Boolean()),
+            editor: t.Optional(t.Boolean()),
+            query: t.Optional(t.Boolean()),
+          })
+        ),
+        generationConfig: t.Optional(
+          t.Object({
+            temperature: t.Optional(t.Number()),
+            topP: t.Optional(t.Number()),
+            topK: t.Optional(t.Number()),
+            maxOutputTokens: t.Optional(t.Number()),
+          })
+        ),
       }),
     }
   );

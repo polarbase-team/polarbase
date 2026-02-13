@@ -1,4 +1,4 @@
-import { FileMetadata } from '@app/shared/file/file-uploader/file-uploader.component';
+import { FileMetadata } from '@app/shared/file/file-upload.service';
 import { FieldConfig } from '../field.interface';
 
 export type AttachmentData = FileMetadata[];

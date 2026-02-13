@@ -17,6 +17,18 @@ $transition-duration: 0.2s;
       padding-left $transition-duration,
       padding-right $transition-duration;
 
+    &.is-resizing {
+      transition: none !important;
+
+      .base-studio-chatbot {
+        transition: none !important;
+
+        .chatbot-resize-handle {
+          background-color: var(--p-primary-500);
+        }
+      }
+    }
+
     &.sidebar--visible {
       padding-left: $sidebar-width;
 
@@ -35,8 +47,6 @@ $transition-duration: 0.2s;
     }
 
     &.chatbot--visible {
-      padding-right: $chatbot-width;
-
       .base-studio-chatbot {
         right: 0;
       }
@@ -46,9 +56,24 @@ $transition-duration: 0.2s;
       position: absolute;
       top: 0;
       bottom: 0;
-      right: -$chatbot-width;
-      width: $chatbot-width;
       transition: right $transition-duration;
+      background: #fff;
+      z-index: 100;
+
+      .chatbot-resize-handle {
+        position: absolute;
+        left: -3px;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        cursor: col-resize;
+        z-index: 1000;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: var(--p-primary-500);
+        }
+      }
 
       &.fullscreen {
         position: absolute;
@@ -56,7 +81,7 @@ $transition-duration: 0.2s;
         bottom: 0;
         left: 0;
         right: 0;
-        width: 100%;
+        width: 100% !important;
         height: 100%;
         z-index: 1000;
       }
