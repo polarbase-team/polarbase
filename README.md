@@ -169,8 +169,13 @@ docker run -e GEMINI_API_KEY=<YOUR_GEMINI_KEY> -p 3000:3000 polarbase-team/polar
 
 ## 6. Configuration
 
-- **API Keys for AI**: Polarbase supports multiple AI providers. Use Google Gemini as the default mode by adding `GEMINI_API_KEY=your_api_key_here` to the `.env` file in the `server` folder. Alternatively, configure OpenAI with `OPENAI_API_KEY=your_api_key_here` for compatible features.
-- **PostgreSQL Connection**: Set up database details (host, user, password, etc.) in `server/src/plugins/pg.ts`.
+- **API Keys for AI**: Polarbase supports multiple AI providers (Gemini, OpenAI, Anthropic, xAI). Add your keys (e.g., `GEMINI_API_KEY=your_key`) to the `.env` file in the `server` folder.
+- **Local Models (LM Studio)**: Run models locally using [LM Studio](https://lmstudio.ai/):
+  1. Install LM Studio and download your preferred model.
+  2. Start the **Local Server** in LM Studio (default port: `1234`).
+  3. Polarbase defaults to `http://localhost:1234/v1`. Customize via `LOCAL_LLM_BASE_URL` in `.env` if needed.
+  4. In the Polarbase UI, open the Chatbot and select **Local** from the model menu.
+- **PostgreSQL Connection**: Configured in the `server/.env` file. Set your `POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, etc., to match your database setup.
 - **Super Admin Key**: Use the super admin key for initial login and administration. Generate or set it in the `.env` file as `SUPER_ADMIN_API_KEY=your_secure_key_here`. This key is required to access admin features and manage API keys.
 - **API Key Generation**: Once logged in as super admin, generate API keys via the interface to control access to features like REST API or AI agent.
 

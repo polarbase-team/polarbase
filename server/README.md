@@ -63,7 +63,8 @@ It is designed to be **Postgres-native**, using SQLite only for metadata to ensu
 
 2. Edit `.env` with your credentials:
    - `POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, etc.: Your PostgreSQL connection details.
-   - `GEMINI_API_KEY`: Required for AI Agent features.
+   - `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `XAI_API_KEY`: Provide at least one to enable AI Agent features.
+   - `LOCAL_LLM_BASE_URL`: (Optional) Base URL for local models like LM Studio (defaults to `http://localhost:1234/v1`).
    - `SUPER_ADMIN_API_KEY`: Your master key for initial setup.
 
 ### Development
