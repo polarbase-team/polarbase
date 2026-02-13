@@ -1,6 +1,7 @@
 import { FastMCP, UserError } from 'fastmcp';
 
 import { builderAgentTools } from '../../agent/agents/builder';
+import { responseToContent } from '../utils';
 
 export default function registerBuilderTools(server: FastMCP) {
   // createMultipleTables
@@ -13,21 +14,11 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await builderAgentTools.createMultipleTables.execute!(
-                  args,
-                  {} as any
-                ),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await builderAgentTools.createMultipleTables.execute!(
+          args,
+          {} as any
+        );
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -44,18 +35,8 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await builderAgentTools.createTable.execute!(args, {} as any),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await builderAgentTools.createTable.execute!(args, {} as any);
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -72,18 +53,8 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await builderAgentTools.updateTable.execute!(args, {} as any),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await builderAgentTools.updateTable.execute!(args, {} as any);
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -101,18 +72,8 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await builderAgentTools.deleteTable.execute!(args, {} as any),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await builderAgentTools.deleteTable.execute!(args, {} as any);
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -129,18 +90,8 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await builderAgentTools.createColumn.execute!(args, {} as any),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await builderAgentTools.createColumn.execute!(args, {} as any);
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -157,18 +108,8 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await builderAgentTools.updateColumn.execute!(args, {} as any),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await builderAgentTools.updateColumn.execute!(args, {} as any);
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -186,18 +127,8 @@ export default function registerBuilderTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await builderAgentTools.deleteColumn.execute!(args, {} as any),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await builderAgentTools.deleteColumn.execute!(args, {} as any);
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }

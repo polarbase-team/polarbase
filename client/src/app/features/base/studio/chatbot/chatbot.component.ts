@@ -343,6 +343,7 @@ export class ChatBotComponent {
     if (trimmed === '') target.innerText = '';
 
     this.inputText = trimmed;
+    this.syncMentions();
 
     if (target.innerText.endsWith('@')) {
       setTimeout(() => this.showMentionContextMenuAtCaret(), 0);
@@ -367,7 +368,6 @@ export class ChatBotComponent {
       icon: 'icon icon-table-2',
       command: () => {
         this.insertTableMention(table.name);
-        this.mentions.tables.push(table.name);
       },
     }));
   }
@@ -429,7 +429,7 @@ export class ChatBotComponent {
 
     const mentionSpan = document.createElement('span');
     mentionSpan.className = 'mention-chip';
-    mentionSpan.textContent = `@${tableName}`;
+    mentionSpan.textContent = tableName;
     mentionSpan.setAttribute('contenteditable', 'false');
     range.insertNode(mentionSpan);
     range.collapse(false);
@@ -455,5 +455,15 @@ export class ChatBotComponent {
     }
     selection.removeAllRanges();
     selection.addRange(range);
+  }
+
+  private syncMentions() {
+    const el = this.editor()?.nativeElement as HTMLElement;
+    if (!el) return;
+    const chips = el.querySelectorAll('.mention-chip') as NodeListOf<HTMLElement>;
+    const tableNames = Array.from(chips)
+      .map((chip) => chip.textContent || '')
+      .filter((name) => !!name);
+    this.mentions.tables = [...new Set(tableNames)];
   }
 }

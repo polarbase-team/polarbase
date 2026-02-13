@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, WritableSignal } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
@@ -20,7 +20,7 @@ export interface StreamEvent {
 
 @Injectable()
 export class AgentService {
-  openAIChatbot = signal(false);
+  openAIChatbot: WritableSignal<boolean>;
 
   private apiUrl = `${environment.apiUrl}/agent`;
 

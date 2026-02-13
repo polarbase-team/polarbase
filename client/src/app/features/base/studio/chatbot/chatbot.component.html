@@ -78,7 +78,9 @@
                       style="color: var(--p-primary-color)"
                     ></i>
                     @if ($any(msg)._isGenerating) {
-                      <p class="text-surface-500 text-sm italic">Generating...</p>
+                      <p class="text-surface-500 text-sm italic">
+                        <span class="loading-text">Generating</span>
+                      </p>
                     } @else {
                       <div class="space-y-2 flex-1 min-w-0">
                         @if (msg.content) {
@@ -91,8 +93,7 @@
                         @if ($any(msg)._toolCallId; as toolCallId) {
                           <p class="text-surface-500 text-sm italic">
                             Tool calling:
-                            <span class="font-medium">{{ toolCallId }}</span
-                            >...
+                            <span class="font-medium loading-text">{{ toolCallId }}</span>
                           </p>
                         }
                       </div>

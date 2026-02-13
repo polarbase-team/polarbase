@@ -94,5 +94,9 @@
     padding: 0 3px;
     border-radius: 6px;
     background-color: var(--p-surface-200);
+
+    &::before {
+      content: "@";
+    }
   }
 }

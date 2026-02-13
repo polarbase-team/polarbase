@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  DestroyRef,
-  effect,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, effect, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -24,6 +17,8 @@ import { ChatBotComponent } from './chatbot/chatbot.component';
 import { AgentService } from './chatbot/services/agent.service';
 
 const SIDEBAR_VISIBILITY_KEY = 'sidebar_visibility';
+const CHATBOT_VISIBILITY_KEY = 'chatbot_visibility';
+const CHATBOT_FULLSCREEN_KEY = 'chatbot_fullscreen';
 
 @Component({
   selector: 'base-studio',
@@ -55,8 +50,16 @@ export class BaseStudioComponent {
     private activatedRoute: ActivatedRoute,
     private agentService: AgentService,
   ) {
+    this.agentService.openAIChatbot = this.chatbotVisible;
+
     this.sidebarVisible.set(
       Boolean(JSON.parse(localStorage.getItem(SIDEBAR_VISIBILITY_KEY) || 'true')),
+    );
+    this.chatbotVisible.set(
+      Boolean(JSON.parse(localStorage.getItem(CHATBOT_VISIBILITY_KEY) || 'false')),
+    );
+    this.chatbotFullscreen.set(
+      Boolean(JSON.parse(localStorage.getItem(CHATBOT_FULLSCREEN_KEY) || 'false')),
     );
 
     effect(() => {
@@ -69,11 +72,22 @@ export class BaseStudioComponent {
     });
 
     effect(() => {
-      const chatbotVisible = this.agentService.openAIChatbot();
-      this.chatbotVisible.set(chatbotVisible);
+      const sidebarVisible = this.sidebarVisible();
+      localStorage.setItem(SIDEBAR_VISIBILITY_KEY, sidebarVisible.toString());
+    });
+
+    effect(() => {
+      const chatbotVisible = this.chatbotVisible();
+      localStorage.setItem(CHATBOT_VISIBILITY_KEY, chatbotVisible.toString());
+
       if (chatbotVisible) {
         this.chatbotInitialized.set(true);
       }
+    });
+
+    effect(() => {
+      const chatbotFullscreen = this.chatbotFullscreen();
+      localStorage.setItem(CHATBOT_FULLSCREEN_KEY, chatbotFullscreen.toString());
     });
 
     this.router.events
@@ -93,15 +107,19 @@ export class BaseStudioComponent {
 
   protected toggleSidebar() {
     this.sidebarVisible.update((v) => !v);
-    localStorage.setItem(SIDEBAR_VISIBILITY_KEY, this.sidebarVisible().toString());
   }
 
   protected toggleChatbot() {
-    this.agentService.openAIChatbot.update((v) => !v);
+    this.chatbotVisible.update((v) => !v);
+  }
+
+  protected toggleChatbotFullscreen() {
+    this.chatbotFullscreen.update((v) => !v);
   }
 
   protected onCloseChatbot() {
-    this.agentService.openAIChatbot.set(false);
+    this.chatbotVisible.set(false);
+    this.chatbotFullscreen.set(false);
   }
 
   protected onTabChange(tableName: string) {

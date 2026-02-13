@@ -72,7 +72,7 @@
     @if (chatbotInitialized()) {
       <chatbot
         [visible]="chatbotVisible()"
-        (fullscreen)="chatbotFullscreen.set($event)"
+        (fullscreen)="toggleChatbotFullscreen()"
         (onClose)="onCloseChatbot()"
       />
     }

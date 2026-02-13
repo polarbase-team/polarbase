@@ -1,6 +1,7 @@
 import { FastMCP, UserError } from 'fastmcp';
 
 import { editorAgentTools } from '../../agent/agents/editor';
+import { responseToContent } from '../utils';
 
 export default function registerEditorTools(server: FastMCP) {
   // insertRecords
@@ -13,9 +14,8 @@ export default function registerEditorTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return JSON.stringify(
-          await editorAgentTools.insertRecords.execute!(args as any, {} as any)
-        );
+        const response = await editorAgentTools.insertRecords.execute!(args as any, {} as any);
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -32,18 +32,8 @@ export default function registerEditorTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await editorAgentTools.updateRecords.execute!(args, {} as any),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await editorAgentTools.updateRecords.execute!(args, {} as any);
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -61,18 +51,8 @@ export default function registerEditorTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await editorAgentTools.deleteRecords.execute!(args, {} as any),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await editorAgentTools.deleteRecords.execute!(args, {} as any);
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }

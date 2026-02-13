@@ -1,6 +1,7 @@
 import { FastMCP, UserError } from 'fastmcp';
 
 import { queryAgentTools } from '../../agent/agents/query';
+import { responseToContent } from '../utils';
 
 export default function registerQueryTools(server: FastMCP) {
   // queryRecords
@@ -14,18 +15,11 @@ export default function registerQueryTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await queryAgentTools.queryRecords.execute!(args, {} as any),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await queryAgentTools.queryRecords.execute!(
+          args,
+          {} as any
+        );
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }
@@ -43,21 +37,11 @@ export default function registerQueryTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                await queryAgentTools.aggregateRecords.execute!(
-                  args,
-                  {} as any
-                ),
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        const response = await queryAgentTools.aggregateRecords.execute!(
+          args,
+          {} as any
+        );
+        return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
       }
