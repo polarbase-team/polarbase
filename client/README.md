@@ -1,59 +1,93 @@
-# ChildDbClient
+<div align="center">
+   <img src="../assets/logo.png" width="120" height="120" alt="PolarBase">
+   <br>
+   <b>PolarBase Client</b>
+   <div align="center">✨ ✨ ✨</div>
+   <span>Modern Multi-view UI for Your Data</span> <br>
+   <br>
+</div>
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.9.
+---
 
-## Development server
+## 1. Overview
 
-To start a local development server, run:
+The **PolarBase Client** is the frontend application of the PolarBase ecosystem. Built with **Angular**, it provides an intuitive, high-performance interface for managing PostgreSQL databases through multiple specialized views.
+
+This client is designed to bridge the gap between complex database operations and user-friendly workflows, offering a spreadsheet-like experience with additional power-user features.
+
+## 2. Key Features
+
+- **Multi-View Interface**:
+  - 📊 **Spreadsheet View**: Rapid data editing and filtering.
+  - 📅 **Calendar View**: Manage time-based data effectively.
+  - 🗺️ **Map View**: Visualize geospatial data via Leaflet integration.
+- **AI-Powered Workflows**: Integrated interface for interacting with the PolarBase AI Agent.
+- **Dynamic Theming**: Modern, responsive design powered by PrimeNG and Tailwind CSS.
+- **Real-time Synchronization**: Instant updates reflecting backend changes.
+
+## 3. Tech Stack
+
+- **Framework**: Angular (>= 17.0)
+- **UI Components**: [PrimeNG](https://primeng.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Maps**: [Leaflet](https://leafletjs.com/)
+- **Calendar**: [FullCalendar](https://fullcalendar.io/)
+- **Icons**: Lucide Angular
+- **Runtime/Package Manager**: Bun
+
+## 4. Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh) installed on your machine.
+- A running [PolarBase Server](../server/README.md).
+
+### Installation
+
+1. Navigate to the client directory:
+
+   ```bash
+   cd client
+   ```
+
+2. Install dependencies:
+   ```bash
+   bun install
+   ```
+
+### Development
+
+Start the development server:
 
 ```bash
-ng serve
+bun start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+The application will be available at `http://localhost:4200`.
 
-## Code scaffolding
+### Build
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+To create a production build:
 
 ```bash
-ng generate component component-name
+bun run build
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+The artifacts will be stored in the `dist/` directory.
 
-```bash
-ng generate --help
-```
+## 5. Architecture
 
-## Building
+The client follows a modular Angular architecture:
 
-To build the project run:
+- `src/app/core`: Core services (Authentication, API clients, Guards).
+- `src/app/shared`: Reusable components, pipes, and directives.
+- `src/app/features`: Main application feature modules (Base, Workspace, Settings).
 
-```bash
-ng build
-```
+## 6. Related
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+- [PolarBase Main README](../README.md)
+- [PolarBase Server](../server/README.md)
 
-## Running unit tests
+---
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Made with ❤️ by the **polarbase-team**.

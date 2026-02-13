@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0-beta] - 2026-02-13
+
+### Added
+
+- **AI Agent Orchestration**: Introduced a sophisticated agent orchestration system. The system now utilizes specialized sub-agents (Builder, Query, Lookup, Editor) to handle complex tasks more effectively, replacing simple tool execution.
+- **Tool Execution Approval**: Implemented "Human-in-the-loop" security. Destructive operations like deleting tables, columns, or records now require explicit user approval via a dedicated UI prompt.
+- **Chatbot File Attachments**: Added support for attaching files to chat messages, enabling AI models to process and analyze document content directly.
+- **Local AI Support**: Integrated support for local AI models via **LM Studio**, allowing users to toggle between Cloud and Local inference.
+- **Enhanced Chatbot UI/UX**:
+  - **Table Mentions**: Support for referencing tables using the `@` symbol in chat.
+  - **Prompt Templates**: Quick-access templates for common database operations.
+  - **Generation Settings**: Granular control over AI output with Temperature, Top P, and Top K settings.
+  - **Markdown Integration**: Rich text support in bot responses with syntax highlighting and sanitization.
+  - **Interaction Controls**: Added "Copy" button for bot responses and "Retry" button for user messages.
+- **Advanced Models**: Updated support for the latest Gemini models, including **Gemini 2.5 Flash** and **Gemini 2.5 Pro**.
+
+### Changed
+
+- **Builder Agent Refinement**: Updated the `updateColumn` tool schema to ensure consistency with `createColumn` and added support for `foreignKey` and `formula` updates.
+- **UI Performance**: Refactored chatbot visibility management using Angular's `@if` blocks for better DOM performance and focus handling.
+- **Table Aesthetics**: Improved styling for tables rendered within chatbot responses for better readability.
+
 ## [0.8.0-beta] - 2026-02-06
 
 ### Added
