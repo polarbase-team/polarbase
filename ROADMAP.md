@@ -60,6 +60,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ### 🤖 Agentic Backend (AI & MCP)
 
 - **AI Query View:** Dedicated UI to view full result sets from AI queries.
+- **History:** Chat history for AI sessions.
 
 ### ⚙️ Data & Schema Management
 
@@ -97,8 +98,10 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ### 🛡️ Enterprise & DevOps
 
 - **Open Auth:** Built-in authentication system (OAuth, OTP) stored on-platform.
+- **Multi-User:** Support for multiple users with different roles and permissions.
 - **Database Snapshots:** Backup and restore database schemas and data.
 - **CLI Tool:** Command-line interface for deployments and environment configs.
+- **Monitoring:** Real-time monitoring of database performance and health.
 - **Audit Logs:** Detailed tracking of every change for compliance.
 - **Pglite Integration:** Enabling "One-click Installation" capabilities.
 
