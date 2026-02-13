@@ -3,6 +3,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { devToolsMiddleware } from '@ai-sdk/devtools';
 
 import { createOrchestratorAgent } from './agents/orchestrator';
@@ -12,15 +13,24 @@ const DEFAULT_MODEL = process.env.LLM_DEFAULT_MODEL || 'gemini-3-pro-preview';
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_BASE_URL,
 });
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
+  baseURL: process.env.GEMINI_API_BASE_URL,
 });
 const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
+  baseURL: process.env.ANTHROPIC_BASE_URL,
 });
 const xai = createXai({
   apiKey: process.env.XAI_API_KEY,
+  baseURL: process.env.XAI_BASE_URL,
+});
+const local = createOpenAICompatible({
+  name: 'local',
+  apiKey: process.env.LOCAL_LLM_API_KEY,
+  baseURL: process.env.LOCAL_LLM_BASE_URL || 'http://localhost:1234/v1',
 });
 
 export function resolveModel(modelId: string) {
@@ -44,6 +54,9 @@ export function resolveModel(modelId: string) {
     // xAI
     'grok-3': xai('grok-3'),
     'grok-4': xai('grok-4-1-fast-reasoning'),
+
+    // Local (LM Studio, etc)
+    local: local('local'),
   };
 
   const model = map[modelId];

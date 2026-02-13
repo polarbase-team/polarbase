@@ -29,7 +29,7 @@ import { DividerModule } from 'primeng/divider';
 import { TableService } from '../table/services/table.service';
 import { MarkdownPipe } from './pipes/markdown.pipe';
 import { AgentService, ChatMessage, StreamEvent } from './services/agent.service';
-import { models } from './resources/models';
+import { modelGroups } from './resources/models';
 import { promptTemplates } from './resources/prompt-templates';
 
 interface UserChatMessage extends ChatMessage {
@@ -93,19 +93,35 @@ export class ChatBotComponent {
 
   protected selectedModel: string;
   protected selectedModelLabel: string;
-  protected modelMenuItems: MenuItem[] = [{ label: 'Default', value: undefined }, ...models].map(
-    (opt) => ({
-      label: opt.label,
-      command: () => {
-        this.selectedModel = opt.value;
-        this.selectedModelLabel = opt.label;
-        localStorage.setItem(
-          CHATBOT_SELECTED_MODEL_KEY,
-          JSON.stringify({ value: opt.value, label: opt.label }),
-        );
-      },
-    }),
-  );
+  protected modelMenuItems: MenuItem[] = [
+    {
+      label: 'Models',
+      items: [
+        {
+          label: 'Default',
+          command: () => {
+            this.selectedModel = undefined;
+            this.selectedModelLabel = 'Default';
+            localStorage.removeItem(CHATBOT_SELECTED_MODEL_KEY);
+          },
+        },
+      ],
+    },
+    ...modelGroups.map((group) => ({
+      label: group.label,
+      items: group.items.map((opt) => ({
+        label: opt.label,
+        command: () => {
+          this.selectedModel = opt.value;
+          this.selectedModelLabel = opt.label;
+          localStorage.setItem(
+            CHATBOT_SELECTED_MODEL_KEY,
+            JSON.stringify({ value: opt.value, label: opt.label }),
+          );
+        },
+      })),
+    })),
+  ];
 
   protected subAgents = {
     builder: true,
