@@ -15,7 +15,10 @@ export default function registerLookupTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        const response = await lookupAgentTools.listTables.execute!(args, {} as any);
+        const response = await lookupAgentTools.listTables.execute!(
+          args,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
@@ -23,18 +26,43 @@ export default function registerLookupTools(server: FastMCP) {
     },
   });
 
-  // getTableSchema
+  // findTable
   server.addTool({
-    name: 'getTableSchema',
-    description: lookupAgentTools.getTableSchema.description,
-    parameters: lookupAgentTools.getTableSchema.inputSchema as any,
+    name: 'findTable',
+    description: lookupAgentTools.findTable.description,
+    parameters: lookupAgentTools.findTable.inputSchema as any,
     annotations: {
-      title: 'Get Table Schema',
+      title: 'Find Table Schema',
       readOnlyHint: true,
     },
     async execute(args) {
       try {
-        const response = await lookupAgentTools.getTableSchema.execute!(args, {} as any);
+        const response = await lookupAgentTools.findTable.execute!(
+          args,
+          {} as any
+        );
+        return responseToContent(response);
+      } catch (error) {
+        throw new UserError((error as Error).message);
+      }
+    },
+  });
+
+  // listIndexes
+  server.addTool({
+    name: 'listIndexes',
+    description: lookupAgentTools.listIndexes.description,
+    parameters: lookupAgentTools.listIndexes.inputSchema as any,
+    annotations: {
+      title: 'List Database Indexes',
+      readOnlyHint: true,
+    },
+    async execute(args) {
+      try {
+        const response = await lookupAgentTools.listIndexes.execute!(
+          args,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);

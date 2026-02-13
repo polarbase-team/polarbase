@@ -24,7 +24,7 @@ export function createOrchestratorAgent(
   const tools: any = {
     callLookupAgent: tool({
       description:
-        'Call the Lookup Agent for information about the database schema.',
+        'Call the Lookup Agent for information about the database schema (tables, columns, indexes).',
       inputSchema: z.object({
         task: z
           .string()
@@ -32,8 +32,9 @@ export function createOrchestratorAgent(
       }),
       inputExamples: [
         { input: { task: 'List all tables in the database' } },
-        { input: { task: 'Show me the schema for the users table' } },
+        { input: { task: 'Show me the index for the users table' } },
         { input: { task: 'What columns does the products table have?' } },
+        { input: { task: 'List all indexes' } },
       ],
       strict: true,
       execute: async function* ({ task }, { abortSignal, messages }) {
@@ -56,7 +57,7 @@ export function createOrchestratorAgent(
     const builderAgent = createBuilderAgent(model, generationConfig);
     tools.callBuilderAgent = tool({
       description:
-        'Call the Builder Agent for schema management (creating/updating tables and columns).',
+        'Call the Builder Agent for schema management (creating/updating tables, columns, and indexes).',
       inputSchema: z.object({
         task: z
           .string()
@@ -65,8 +66,12 @@ export function createOrchestratorAgent(
       inputExamples: [
         { input: { task: 'Create a users table with email and name columns' } },
         { input: { task: 'Add a bio column to the users table' } },
-        { input: { task: 'Update the price column to use currency format' } },
-        { input: { task: 'Delete the deprecated_logs table' } },
+        {
+          input: {
+            task: 'Create a unique index on the email column of users table',
+          },
+        },
+        { input: { task: 'Delete the idx_old_index' } },
       ],
       strict: true,
       execute: async function* ({ task }, { abortSignal, messages }) {

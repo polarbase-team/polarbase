@@ -2,6 +2,7 @@ import { ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
 import { TableService } from '../../rest/services/table.service';
+import { IndexService } from '../../rest/services/index.service';
 import {
   DataType,
   FormulaResultType,
@@ -10,6 +11,7 @@ import {
 } from '../../rest/utils/column';
 
 const tableService = new TableService();
+const indexService = new IndexService();
 
 const presentationFormatSchema = z
   .object({
@@ -582,6 +584,62 @@ export const builderAgentTools = {
       };
     },
   }),
+
+  createIndex: tool({
+    description: 'Create a new index on a table for performance optimization.',
+    inputSchema: z.object({
+      name: z
+        .string()
+        .describe('The name of the index (e.g., "idx_users_email").'),
+      tableName: z.string().describe('The name of the table to index.'),
+      columnNames: z
+        .array(z.string())
+        .describe('List of column names to include in the index.'),
+      unique: z
+        .boolean()
+        .optional()
+        .describe('Whether the index should be unique.'),
+      type: z
+        .enum(['btree', 'hash', 'gist', 'gin', 'brin', 'spgist'])
+        .optional()
+        .describe('The type of index to create.'),
+    }),
+    inputExamples: [
+      {
+        input: {
+          name: 'idx_users_email',
+          tableName: 'users',
+          columnNames: ['email'],
+          unique: true,
+        },
+      },
+      {
+        input: {
+          name: 'idx_products_category',
+          tableName: 'products',
+          columnNames: ['category_id'],
+        },
+      },
+    ],
+    strict: true,
+    execute: async (args) => {
+      const result = await indexService.createIndex({ index: args });
+      return { status: 'success', index: result };
+    },
+  }),
+
+  deleteIndex: tool({
+    description: 'Delete an existing index.',
+    inputSchema: z.object({
+      indexName: z.string().describe('The name of the index to delete.'),
+    }),
+    inputExamples: [{ input: { indexName: 'idx_users_email' } }],
+    strict: true,
+    execute: async (args) => {
+      await indexService.deleteIndex(args);
+      return { status: 'success', message: `Index ${args.indexName} deleted.` };
+    },
+  }),
 };
 
 export function createBuilderAgent(
@@ -608,7 +666,7 @@ export function createBuilderAgent(
     3. The system will automatically create the primary key "id" based on that "idType".
     
     CRITICAL SAFETY RULES:
-    1. If a request involves DELETING or DROPPING (tables or columns), you MUST present the plan and explicitly ask: "Do you want me to proceed with these deletions?" 
+    1. If a request involves DELETING or DROPPING (tables, columns, or indexes), you MUST present the plan and explicitly ask: "Do you want me to proceed with these deletions?" 
     2. Do NOT call the delete tools until the user explicitly confirms in a separate turn. 
     3. Once the user confirms (e.g., says "Yes" or "Proceed"), you MUST call the appropriate delete tool immediately. NEVER claim success unless the tool has been executed and returned success.
     

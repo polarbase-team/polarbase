@@ -2,8 +2,10 @@ import { ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
 import { TableService } from '../../rest/services/table.service';
+import { IndexService } from '../../rest/services/index.service';
 
 const tableService = new TableService();
+const indexService = new IndexService();
 
 export const lookupAgentTools = {
   listTables: tool({
@@ -20,24 +22,45 @@ export const lookupAgentTools = {
     },
   }),
 
-  getTableSchema: tool({
-    description: 'Get detailed column information for a specific table.',
+  findTable: tool({
+    description:
+      'Find a specific table and get its detailed information (optionally including columns).',
+    inputSchema: z.object({
+      tableName: z.string().describe('The name of the table to find.'),
+      includeSchema: z
+        .boolean()
+        .default(true)
+        .describe(
+          'Whether to include the full column list (schema) in the result.'
+        ),
+    }),
+    inputExamples: [
+      { input: { tableName: 'users', includeSchema: true } },
+      { input: { tableName: 'products', includeSchema: false } },
+    ],
+    strict: true,
+    execute: async ({ tableName, includeSchema }) => {
+      const table = await tableService.getOne({ tableName, includeSchema });
+      return {
+        ...table,
+        schema: table.schema?.map(({ metadata, ...rest }) => rest),
+      };
+    },
+  }),
+
+  listIndexes: tool({
+    description: 'List all indexes in the database or for a specific table.',
     inputSchema: z.object({
       tableName: z
         .string()
-        .describe('The name of the table to get columns for.'),
+        .optional()
+        .describe('Optional table name to filter indexes.'),
     }),
-    inputExamples: [
-      { input: { tableName: 'users' } },
-      { input: { tableName: 'products' } },
-    ],
+    inputExamples: [{ input: {} }, { input: { tableName: 'users' } }],
     strict: true,
     execute: async ({ tableName }) => {
-      const columns = await tableService.getSchema({ tableName });
-      return {
-        tableName,
-        columns: columns.map(({ metadata, ...rest }) => rest),
-      };
+      const indexes = await indexService.getAll({ tableName });
+      return { indexes };
     },
   }),
 };
@@ -60,7 +83,7 @@ export function createLookupAgent(
     maxOutputTokens: generationConfig?.maxOutputTokens,
     toolChoice: 'required',
     instructions: `You are a Database Schema Lookup Agent. 
-    You can find tables and columns in the database.`,
+    You can find tables, columns and indexes in the database.`,
     tools: lookupAgentTools,
   });
 }
