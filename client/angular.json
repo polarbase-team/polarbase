@@ -43,7 +43,8 @@
               "lodash",
               "quill-delta",
               "jstat",
-              "bessel"
+              "bessel",
+              "leaflet"
             ]
           },
           "configurations": {
@@ -52,7 +53,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "3MB",
-                  "maximumError": "5MB"
+                  "maximumError": "6MB"
                 },
                 {
                   "type": "anyComponentStyle",
