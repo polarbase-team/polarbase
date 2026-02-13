@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -12,7 +12,7 @@ import { environment } from '@environments/environment';
 
 import { TopbarComponent } from '@app/core/components/topbar/topbar.component';
 import { LoadingService } from '@app/core/services/loading.service';
-import { AgentService } from './studio/chatbot/agent.service';
+import { AgentService } from './studio/chatbot/services/agent.service';
 
 @Component({
   selector: 'base',
@@ -30,6 +30,7 @@ import { AgentService } from './studio/chatbot/agent.service';
   providers: [AgentService],
 })
 export class BaseComponent {
+  protected loadingService = inject(LoadingService);
   protected view = signal('studio');
   protected options = [
     {
@@ -48,7 +49,6 @@ export class BaseComponent {
     private destroyRef: DestroyRef,
     private router: Router,
     private agentService: AgentService,
-    protected loadingService: LoadingService,
   ) {
     this.router.events
       .pipe(

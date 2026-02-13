@@ -9,17 +9,7 @@ import { BadgeModule } from 'primeng/badge';
 import { environment } from '@environments/environment';
 
 import { formatSize, getFileIcon, isImage } from '../utils';
-
-export interface FileMetadata {
-  id: string;
-  name: string;
-  key: string;
-  size: number;
-  mimeType: string;
-  provider: 'local' | 's3' | 'gcs';
-  url?: string;
-  uploadedAt: Date;
-}
+import { FileMetadata } from '../file-upload.service';
 
 const UPLOAD_URL = `${environment.apiUrl}/rest${environment.uploadUrl}`;
 

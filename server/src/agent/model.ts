@@ -1,96 +1,170 @@
-import { streamText, ModelMessage, tool, stepCountIs } from 'ai';
+import { FilePart, ImagePart, ModelMessage, wrapLanguageModel } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { devToolsMiddleware } from '@ai-sdk/devtools';
 
-import instructions from './instructions';
-import { findColumnsTool } from './tools/find-columns';
-import { findTablesTool } from './tools/find-tables';
-import { listFromTableTool } from './tools/list-from-table';
-import { aggregateFromTableTool } from './tools/aggregate-from-table';
-import { insertIntoTableTool } from './tools/insert-into-table';
-import { updateFromTableTool } from './tools/update-from-table';
-import { deleteFromTableTool } from './tools/delete-from-table';
+import { createOrchestratorAgent } from './agents/orchestrator';
 
-const DEFAULT_MODEL = process.env.LLM_DEFAULT_MODEL || 'gemini-2.5-flash';
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const DEFAULT_MODEL = process.env.LLM_DEFAULT_MODEL || 'gemini-3-pro-preview';
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_BASE_URL,
 });
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
+  baseURL: process.env.GEMINI_API_BASE_URL,
 });
 const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
+  baseURL: process.env.ANTHROPIC_BASE_URL,
 });
 const xai = createXai({
   apiKey: process.env.XAI_API_KEY,
+  baseURL: process.env.XAI_BASE_URL,
+});
+const local = createOpenAICompatible({
+  name: 'local',
+  apiKey: process.env.LOCAL_LLM_API_KEY,
+  baseURL: process.env.LOCAL_LLM_BASE_URL || 'http://localhost:1234/v1',
 });
 
-function resolveModel(modelId: SupportedModel) {
+export function resolveModel(modelId: string) {
   const map: Record<string, any> = {
     // OpenAI
-    'gpt-4o': openai('gpt-4o'),
-    'gpt-4o-mini': openai('gpt-4o-mini'),
     'gpt-5': openai('gpt-5'),
+    'gpt-5.1': openai('gpt-5.1'),
 
     // Google Gemini
     'gemini-2.5-flash': google('gemini-2.5-flash'),
     'gemini-2.5-pro': google('gemini-2.5-pro'),
+    'gemini-3-flash-preview': google('gemini-3-flash-preview'),
     'gemini-3-pro-preview': google('gemini-3-pro-preview'),
 
     // Anthropic
-    'claude-opus-4-5': anthropic('claude-opus-4-5'),
+    'claude-3-5-sonnet': anthropic('claude-3-5-sonnet-latest'),
     'claude-sonnet-4-5': anthropic('claude-sonnet-4-5'),
+    'claude-opus-4-6': anthropic('claude-opus-4-6'),
+    'claude-3-5-haiku': anthropic('claude-3-5-haiku-latest'),
 
     // xAI
     'grok-3': xai('grok-3'),
-    'grok-4': xai('grok-4'),
-    'grok-4-fast': xai('grok-4-fast'),
+    'grok-4': xai('grok-4-1-fast-reasoning'),
+
+    // Local (LM Studio, etc)
+    local: local('local'),
   };
 
-  if (!map[modelId]) {
-    return google(DEFAULT_MODEL);
+  const model = map[modelId];
+
+  if (NODE_ENV === 'development') {
+    return wrapLanguageModel({
+      model,
+      middleware: [devToolsMiddleware()],
+    });
   }
 
-  return map[modelId];
+  return model;
 }
-
-type SupportedModel =
-  | 'gpt-4o'
-  | 'gpt-4o-mini'
-  | 'gemini-2.5-flash'
-  | 'gemini-2.5-pro'
-  | 'claude-3-5-sonnet'
-  | 'claude-3-opus'
-  | string;
 
 export async function generateAIResponse({
   messages,
+  attachments,
+  mentions,
   model = DEFAULT_MODEL,
-  temperature = 0.7,
+  subAgents = {
+    builder: true,
+    editor: true,
+    query: true,
+  },
+  generationConfig = {
+    temperature: 0.7,
+    topP: 0.9,
+    topK: 40,
+    maxOutputTokens: 2048,
+  },
+  abortSignal,
 }: {
   messages: ModelMessage[];
-  model?: SupportedModel;
-  temperature?: number;
+  attachments?: File[];
+  model?: string;
+  mentions?: {
+    tables?: string[];
+  };
+  subAgents?: {
+    builder?: boolean;
+    editor?: boolean;
+    query?: boolean;
+  };
+  generationConfig?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxOutputTokens?: number;
+  };
+  abortSignal?: AbortSignal;
 }) {
-  const selectedModel = resolveModel(model);
+  // Attach files to the last message
+  if (attachments?.length) {
+    const attachmentParts: (ImagePart | FilePart)[] = await Promise.all(
+      attachments.map(async (file): Promise<ImagePart | FilePart> => {
+        const arrayBuffer = await file.arrayBuffer();
+        const isImage = file.type.startsWith('image/');
 
-  return streamText({
-    model: selectedModel,
-    system: instructions,
-    messages,
-    temperature,
-    stopWhen: [stepCountIs(10)],
-    tools: {
-      findColumnsTool: tool(findColumnsTool),
-      findTablesTool: tool(findTablesTool),
-      listFromTableTool: tool(listFromTableTool),
-      aggregateFromTableTool: tool(aggregateFromTableTool),
-      insertIntoTableTool: tool(insertIntoTableTool),
-      updateFromTableTool: tool(updateFromTableTool),
-      deleteFromTableTool: tool(deleteFromTableTool),
-    },
-  });
+        if (isImage) {
+          return {
+            type: 'image',
+            image: new Uint8Array(arrayBuffer),
+            mediaType: file.type,
+          };
+        } else {
+          return {
+            type: 'file',
+            data: new Uint8Array(arrayBuffer),
+            mediaType: file.type,
+            filename: file.name,
+          };
+        }
+      })
+    );
+
+    // Get the last user message and convert its content to the array format
+    const userMessages = messages.filter((m) => m.role === 'user');
+    const lastUserMessage = userMessages[userMessages.length - 1];
+
+    if (lastUserMessage) {
+      const textContent =
+        typeof lastUserMessage.content === 'string'
+          ? lastUserMessage.content
+          : '';
+
+      lastUserMessage.content = [
+        { type: 'text', text: textContent },
+        ...attachmentParts,
+      ];
+    }
+  }
+
+  // Add mentioned tables to the last message
+  if (mentions?.tables?.length) {
+    messages.unshift({
+      role: 'system',
+      content: `Tables mentioned in this conversation: ${mentions.tables.join(', ')}`,
+    });
+  }
+
+  // Initialize orchestrator with capability to call worker agents and generation config
+  const selectedModel = resolveModel(model);
+  const orchestrator = createOrchestratorAgent(
+    selectedModel,
+    subAgents,
+    generationConfig
+  );
+
+  // Use the orchestrator agent to stream the response
+  return orchestrator.stream({ messages, abortSignal });
 }

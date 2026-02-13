@@ -2,6 +2,7 @@
 @use './tailwind.css';
 @use 'primeicons/primeicons.css';
 @use 'leaflet/dist/leaflet.css';
+@use 'highlight.js/styles/atom-one-dark.css';
 
 html {
   font-size: 14px;
@@ -48,5 +49,27 @@ body {
 
   .p-drawer-title {
     font-size: 1.2rem;
+  }
+}
+
+.loading-text::after {
+  content: '.';
+  animation: dots 1.5s steps(5, end) infinite;
+}
+
+@keyframes dots {
+  0%,
+  20% {
+    content: '.';
+  }
+  40% {
+    content: '..';
+  }
+  60% {
+    content: '...';
+  }
+  80%,
+  100% {
+    content: '';
   }
 }

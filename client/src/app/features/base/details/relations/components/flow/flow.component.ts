@@ -65,7 +65,7 @@ export class FlowComponent {
   }
 
   protected onInitialized() {
-    setTimeout(() => this.fCanvasComponent()?.fitToScreen(new Point(140, 140), false), 17);
+    setTimeout(() => this.fCanvasComponent()?.fitToScreen(new Point(140, 140), false), 100);
   }
 
   private getSpiralPosition(index: number) {

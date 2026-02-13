@@ -1,5 +1,21 @@
-<div class="w-full h-full bg-white">
-  <div class="w-full h-full max-w-250 relative mx-auto">
+<div
+  class="w-full h-full bg-white relative"
+  (dragenter)="onDragEnter($event)"
+  (dragover)="$event.preventDefault()"
+>
+  @if (isDragging()) {
+    <div
+      class="absolute inset-0 z-50 bg-white/95 flex flex-col items-center justify-center text-surface-900 border-2 border-dashed border-primary-500 rounded-xl m-4"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+      (dragover)="$event.preventDefault()"
+    >
+      <i class="icon icon-upload text-3xl! mb-4 text-primary-500 pointer-events-none"></i>
+      <h3 class="text-xl font-semibold pointer-events-none">Drop files here</h3>
+      <p class="text-surface-500 mt-2 pointer-events-none">Upload files to chat context</p>
+    </div>
+  }
+  <div class="flex flex-col w-full h-full max-w-250 mx-auto">
     <div class="flex items-center justify-between p-1">
       <p-button
         icon="icon icon-plus"
@@ -9,27 +25,28 @@
         size="small"
         (click)="startNewChat()"
       />
-      <div class="flex">
-        <p-button
-          icon="icon icon-maximize"
-          [text]="true"
-          severity="secondary"
-          size="small"
-          (click)="toggleFullscreen()"
-        />
-        <p-button
-          icon="icon icon-x"
-          [text]="true"
-          severity="secondary"
-          size="small"
-          (click)="closeChatbot()"
-        />
-      </div>
+      <div class="flex-1 min-w-0"></div>
+      <p-button
+        icon="icon icon-maximize"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        size="small"
+        (click)="toggleFullscreen()"
+      />
+      <p-button
+        icon="icon icon-x"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        size="small"
+        (click)="closeChatbot()"
+      />
     </div>
 
-    <p-scrollpanel #scrollContainer class="w-full h-full">
+    <p-scrollpanel #scrollContainer class="w-full h-full min-h-0">
       @if (messages().length) {
-        <div class="px-6 py-8 mb-30">
+        <div class="px-4 py-6">
           <div class="flex flex-col gap-8">
             @for (msg of messages(); track msg.timestamp) {
               <div
@@ -39,41 +56,93 @@
                 }"
               >
                 @if (msg.role === 'user') {
-                  <div class="p-4 rounded-2xl bg-primary text-primary-contrast">
-                    <p class="m-0 white-space-pre-wrap">{{ msg.content }}</p>
+                  <div class="flex flex-col items-end group">
+                    <div class="p-2.5 rounded-xl bg-primary text-primary-contrast">
+                      <p class="m-0 whitespace-pre-wrap text-sm" style="word-break: break-word">
+                        {{ msg.content }}
+                      </p>
+                    </div>
+                    <div
+                      class="flex items-center gap-0.5 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <p-button
+                        icon="icon icon-copy"
+                        [text]="true"
+                        severity="secondary"
+                        size="small"
+                        (click)="copyToClipboard(msg.content)"
+                        pTooltip="Copy"
+                        tooltipPosition="bottom"
+                      />
+                      <p-button
+                        icon="icon icon-refresh-cw"
+                        [text]="true"
+                        severity="secondary"
+                        size="small"
+                        (click)="retryMessage(msg)"
+                        pTooltip="Retry"
+                        tooltipPosition="bottom"
+                      />
+                    </div>
+                    @for (file of $any(msg)._selectedFiles; track file.name) {
+                      <div
+                        class="flex items-center gap-2 p-2 rounded-md mt-2 text-[0.85rem] border border-slate-200 bg-slate-50 text-slate-700"
+                      >
+                        <i class="icon icon-file text-sm"></i>
+                        <span>{{ file.name }}</span>
+                      </div>
+                    }
                   </div>
                 } @else {
-                  <div class="flex gap-2 leading-6">
-                    <i class="icon icon-sparkles" style="color: var(--p-primary-color)"></i>
-                    <p class="m-0 white-space-pre-wrap" [innerHTML]="msg.content | safeHtml"></p>
+                  <div class="flex gap-2 leading-6 w-full">
+                    <i
+                      class="icon icon-sparkles mt-[-2.5px]"
+                      style="color: var(--p-primary-color)"
+                    ></i>
+                    @if ($any(msg)._isGenerating) {
+                      <p class="text-surface-500 text-sm italic">
+                        <span class="loading-text">Generating</span>
+                      </p>
+                    } @else {
+                      <div class="space-y-2 flex-1 min-w-0">
+                        @if (msg.content) {
+                          <div>
+                            <div
+                              class="chatbot-prose text-sm"
+                              [innerHTML]="msg.content | markdown"
+                            ></div>
+                            @if (!$any(msg)._isStreaming) {
+                              <div class="flex items-center gap-0.5 mt-0.5">
+                                <p-button
+                                  icon="icon icon-copy"
+                                  [text]="true"
+                                  severity="secondary"
+                                  size="small"
+                                  (click)="copyToClipboard(msg.content)"
+                                  pTooltip="Copy"
+                                  tooltipPosition="bottom"
+                                />
+                              </div>
+                            }
+                          </div>
+                        }
+
+                        @if ($any(msg)._toolCallId; as toolCallId) {
+                          <p class="text-surface-500 text-sm italic">
+                            Tool calling:
+                            <span class="font-medium loading-text">{{ toolCallId }}</span>
+                          </p>
+                        }
+                      </div>
+                    }
                   </div>
                 }
               </div>
             }
           </div>
-
-          @if (isTyping()) {
-            <div class="mt-4">
-              <p-progress-spinner
-                strokeWidth="8"
-                fill="transparent"
-                animationDuration=".5s"
-                [style]="{ width: '20px', height: '20px' }"
-              />
-            </div>
-          }
-
-          @if (callingTool()) {
-            <div class="mt-4">
-              <p class="text-sm text-gray-700 italic">
-                Tool calling: <span class="font-medium">{{ callingTool() }}</span
-                >...
-              </p>
-            </div>
-          }
         </div>
       } @else {
-        <div class="w-full h-full flex items-center pt-30 flex flex-col">
+        <div class="flex flex-col items-center">
           <video
             autoplay
             muted
@@ -81,32 +150,248 @@
             class="w-64 h-64"
             src="assets/animations/chatbot-animation.mp4"
           ></video>
-          <div class="text-center" style="margin-top: -40px">
-            <p class="text-2xl font-medium">Ask about your database</p>
-            <p class="text-sm text-surface-500">AI responses may be inaccurate.</p>
+          <div class="text-center mt-[-20px]">
+            <h2 class="text-xl font-semibold tracking-tight text-color">
+              How can I assist your data?
+            </h2>
+            <p class="text-sm text-surface-500 mb-4">
+              Choose a starting point or type your own request below.
+            </p>
+
+            <p-tabs [value]="0">
+              <p-tablist class="w-fit self-center">
+                @for (promptTmp of promptTemplates; track promptTmp.label; let i = $index) {
+                  <p-tab [value]="i" class="text-sm">{{ promptTmp.label }}</p-tab>
+                }
+              </p-tablist>
+              <p-tabpanels>
+                @for (promptTmp of promptTemplates; track promptTmp.label; let i = $index) {
+                  <p-tabpanel [value]="i">
+                    <div class="flex flex-wrap gap-3 justify-center max-w-2xl">
+                      @for (prompt of promptTmp.prompts; track prompt) {
+                        <p-button
+                          [label]="prompt"
+                          icon="icon icon-sparkles"
+                          [text]="true"
+                          severity="secondary"
+                          size="small"
+                          (click)="setPrompt(prompt)"
+                        />
+                      }
+                    </div>
+                  </p-tabpanel>
+                }
+              </p-tabpanels>
+            </p-tabs>
           </div>
         </div>
       }
     </p-scrollpanel>
 
-    <div
-      class="px-4 py-2 bg-white rounded-4xl border-1 border-surface-300 absolute z-1 bottom-8 left-6 right-6 flex gap-3 items-center"
-    >
-      <p-button icon="icon icon-paperclip" [rounded]="true" [text]="true" severity="secondary" />
-      <div
-        #editor
-        contenteditable="plaintext-only"
-        data-placeholder="How can I help?"
-        class="w-full min-w-0 h-fit outline-0 empty:before:content-[attr(data-placeholder)] empty:before:text-surface-500 empty:before:pointer-events-none"
-        (input)="onInput($any($event))"
-        (keydown.enter)="!isStreaming() ? onEnter($any($event)) : false"
-      ></div>
-      <p-button
-        icon="icon icon-send"
-        [rounded]="true"
-        [disabled]="!inputText.length || isStreaming()"
-        (click)="sendMessage()"
+    <div class="px-4 py-2">
+      <p-contextmenu
+        #mentionContextMenu
+        [model]="mentionMenuItems"
+        (onShow)="onMentionContextMenuShow()"
+        appendTo="body"
       />
+      <p-popover #agentSelector appendTo="body">
+        <ng-template #content>
+          <div class="text-xs mb-2 font-semibold text-surface-500 uppercase tracking-wide">
+            Agents
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-sm font-medium">Builder</p>
+                <p class="text-xs text-surface-500">Manage tables and database schema.</p>
+              </div>
+              <p-toggleswitch
+                [(ngModel)]="subAgents.builder"
+                (ngModelChange)="saveSubAgents()"
+                size="small"
+                class="scale-80"
+              />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-sm font-medium">Editor</p>
+                <p class="text-xs text-surface-500">Insert, update, and delete records.</p>
+              </div>
+              <p-toggleswitch
+                [(ngModel)]="subAgents.editor"
+                (ngModelChange)="saveSubAgents()"
+                size="small"
+                class="scale-80"
+              />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-sm font-medium">Query</p>
+                <p class="text-xs text-surface-500">Search, filter, and analyze data.</p>
+              </div>
+              <p-toggleswitch
+                [(ngModel)]="subAgents.query"
+                (ngModelChange)="saveSubAgents()"
+                size="small"
+                class="scale-80"
+              />
+            </div>
+          </div>
+
+          <p-divider />
+
+          <div class="text-xs mb-2 font-semibold text-surface-500 uppercase tracking-wide">
+            Generation
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <label class="text-sm font-medium">Temperature</label>
+              <p-inputnumber
+                [(ngModel)]="generationConfig.temperature"
+                (ngModelChange)="saveGenerationConfig()"
+                mode="decimal"
+                [min]="0"
+                [max]="2"
+                [step]="0.1"
+                [showButtons]="true"
+                buttonLayout="horizontal"
+                incrementButtonIcon="icon icon-plus"
+                decrementButtonIcon="icon icon-minus"
+                size="small"
+                inputStyleClass="w-16 text-center"
+              />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <label class="text-sm font-medium">Top P</label>
+              <p-inputnumber
+                [(ngModel)]="generationConfig.topP"
+                (ngModelChange)="saveGenerationConfig()"
+                mode="decimal"
+                [min]="0"
+                [max]="1"
+                [step]="0.1"
+                [showButtons]="true"
+                buttonLayout="horizontal"
+                incrementButtonIcon="icon icon-plus"
+                decrementButtonIcon="icon icon-minus"
+                size="small"
+                inputStyleClass="w-16 text-center"
+              />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <label class="text-sm font-medium">Top K</label>
+              <p-inputnumber
+                [(ngModel)]="generationConfig.topK"
+                (ngModelChange)="saveGenerationConfig()"
+                mode="decimal"
+                [min]="0"
+                [showButtons]="true"
+                buttonLayout="horizontal"
+                incrementButtonIcon="icon icon-plus"
+                decrementButtonIcon="icon icon-minus"
+                size="small"
+                inputStyleClass="w-16 text-center"
+              />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <label class="text-sm font-medium">Max Tokens</label>
+              <p-inputnumber
+                [(ngModel)]="generationConfig.maxOutputTokens"
+                (ngModelChange)="saveGenerationConfig()"
+                mode="decimal"
+                [min]="1"
+                [useGrouping]="false"
+                size="small"
+                inputStyleClass="w-36 text-center"
+                placeholder="Unlimited"
+              />
+            </div>
+          </div>
+        </ng-template>
+      </p-popover>
+      <p-menu #modelMenu [model]="modelMenuItems" [popup]="true" appendTo="body" />
+      <div class="px-2 py-1.5 bg-white rounded-lg border-1 border-surface-300 flex flex-col gap-1">
+        <div
+          #editor
+          contenteditable="plaintext-only"
+          data-placeholder="Ask anything, @ to mention a table"
+          class="min-w-0 min-h-8 max-h-32 overflow-y-auto p-1 outline-0 text-sm empty:before:content-[attr(data-placeholder)] empty:before:text-surface-400 empty:before:pointer-events-none"
+          (input)="onInput($any($event))"
+          (keydown.enter)="!isChatting() ? onEnter($any($event)) : false"
+          (contextmenu)="onEditorContextMenu($event)"
+        ></div>
+        @if (selectedFiles().length) {
+          <div class="flex flex-wrap items-center gap-1 overflow-x-auto">
+            @for (file of selectedFiles(); track file) {
+              <div
+                class="flex items-center gap-1 text-xs bg-surface-100 px-2 py-1 rounded border-1 border-surface-200"
+              >
+                <i class="icon icon-file text-sm"></i>
+                {{ file.name }}
+                <i class="icon icon-x cursor-pointer" (click)="removeFile(file)"></i>
+              </div>
+            }
+          </div>
+        }
+        <div class="flex items-center gap-1 flex-wrap min-h-6">
+          <input
+            #fileInput
+            type="file"
+            class="hidden"
+            (change)="onFilesSelected($event)"
+            multiple
+          />
+          <p-button
+            icon="icon icon-paperclip"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (click)="fileInput.click()"
+          />
+          <p-button
+            [label]="selectedModelLabel || 'Default'"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            iconPos="right"
+            icon="icon icon-chevron-down"
+            (click)="modelMenu.show($event)"
+          />
+          <span class="flex-1 min-w-0"></span>
+          <p-button
+            [text]="true"
+            severity="secondary"
+            size="small"
+            icon="icon icon-settings-2"
+            (click)="agentSelector.show($event)"
+          />
+          @if (isChatting()) {
+            <p-button
+              icon="icon icon-circle-stop"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              size="small"
+              (click)="stopGeneration()"
+            />
+          } @else if (inputText.length) {
+            <p-button icon="icon icon-send" [rounded]="true" size="small" (click)="sendMessage()" />
+          } @else {
+            <p-button
+              icon="icon icon-mic"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              size="small"
+            />
+          }
+        </div>
+      </div>
+      <p class="text-xs text-surface-500 mt-2 text-center">
+        AI can make mistakes. Please verify the results.
+      </p>
     </div>
   </div>
 </div>

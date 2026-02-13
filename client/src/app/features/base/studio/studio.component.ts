@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  DestroyRef,
-  effect,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, effect, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -21,9 +14,13 @@ import { TableDetailComponent } from './table/pages/table-detail/table-detail.co
 import { TableService } from './table/services/table.service';
 import { TableRealtimeService } from './table/services/table-realtime.service';
 import { ChatBotComponent } from './chatbot/chatbot.component';
-import { AgentService } from './chatbot/agent.service';
+import { AgentService } from './chatbot/services/agent.service';
 
-const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
+const SIDEBAR_VISIBILITY_KEY = 'sidebar_visibility';
+const CHATBOT_VISIBILITY_KEY = 'chatbot_visibility';
+const CHATBOT_FULLSCREEN_KEY = 'chatbot_fullscreen';
+const CHATBOT_WIDTH_KEY = 'chatbot_width';
+const DEFAULT_CHATBOT_WIDTH = 480; // 30rem
 
 @Component({
   selector: 'base-studio',
@@ -43,8 +40,14 @@ const SIDEBAR_VISIBLE_KEY = 'sidebar_visible';
 })
 export class BaseStudioComponent {
   protected sidebarVisible = signal(true);
-  protected chatbotVisible = computed(() => this.agentService.openAIChatbot());
+  protected chatbotVisible = signal(false);
+  protected chatbotInitialized = signal(false);
   protected chatbotFullscreen = signal(false);
+  protected chatbotWidth = signal(DEFAULT_CHATBOT_WIDTH);
+
+  protected isResizing = signal(false);
+  private startX = 0;
+  private startWidth = 0;
 
   constructor(
     protected tableService: TableService,
@@ -54,9 +57,18 @@ export class BaseStudioComponent {
     private activatedRoute: ActivatedRoute,
     private agentService: AgentService,
   ) {
+    this.agentService.openAIChatbot = this.chatbotVisible;
+
     this.sidebarVisible.set(
-      Boolean(JSON.parse(localStorage.getItem(SIDEBAR_VISIBLE_KEY) || 'true')),
+      Boolean(JSON.parse(localStorage.getItem(SIDEBAR_VISIBILITY_KEY) || 'true')),
     );
+    this.chatbotVisible.set(
+      Boolean(JSON.parse(localStorage.getItem(CHATBOT_VISIBILITY_KEY) || 'false')),
+    );
+    this.chatbotFullscreen.set(
+      Boolean(JSON.parse(localStorage.getItem(CHATBOT_FULLSCREEN_KEY) || 'false')),
+    );
+    this.chatbotWidth.set(Number(localStorage.getItem(CHATBOT_WIDTH_KEY)) || DEFAULT_CHATBOT_WIDTH);
 
     effect(() => {
       const activeTable = this.tableService.activeTable();
@@ -65,6 +77,30 @@ export class BaseStudioComponent {
         queryParams: { table: activeTable?.name },
         queryParamsHandling: 'merge',
       });
+    });
+
+    effect(() => {
+      const sidebarVisible = this.sidebarVisible();
+      localStorage.setItem(SIDEBAR_VISIBILITY_KEY, sidebarVisible.toString());
+    });
+
+    effect(() => {
+      const chatbotVisible = this.chatbotVisible();
+      localStorage.setItem(CHATBOT_VISIBILITY_KEY, chatbotVisible.toString());
+
+      if (chatbotVisible) {
+        this.chatbotInitialized.set(true);
+      }
+    });
+
+    effect(() => {
+      const chatbotFullscreen = this.chatbotFullscreen();
+      localStorage.setItem(CHATBOT_FULLSCREEN_KEY, chatbotFullscreen.toString());
+    });
+
+    effect(() => {
+      const chatbotWidth = this.chatbotWidth();
+      localStorage.setItem(CHATBOT_WIDTH_KEY, chatbotWidth.toString());
     });
 
     this.router.events
@@ -84,15 +120,19 @@ export class BaseStudioComponent {
 
   protected toggleSidebar() {
     this.sidebarVisible.update((v) => !v);
-    localStorage.setItem(SIDEBAR_VISIBLE_KEY, this.sidebarVisible().toString());
   }
 
   protected toggleChatbot() {
-    this.agentService.openAIChatbot.update((v) => !v);
+    this.chatbotVisible.update((v) => !v);
+  }
+
+  protected toggleChatbotFullscreen() {
+    this.chatbotFullscreen.update((v) => !v);
   }
 
   protected onCloseChatbot() {
-    this.agentService.openAIChatbot.set(false);
+    this.chatbotVisible.set(false);
+    this.chatbotFullscreen.set(false);
   }
 
   protected onTabChange(tableName: string) {
@@ -113,4 +153,28 @@ export class BaseStudioComponent {
       }, 0);
     }
   }
+
+  protected onResizeStart(event: MouseEvent) {
+    this.isResizing.set(true);
+    this.startX = event.clientX;
+    this.startWidth = this.chatbotWidth();
+    document.addEventListener('mousemove', this.onResizing);
+    document.addEventListener('mouseup', this.onResizeEnd);
+    document.body.style.cursor = 'col-resize';
+    event.preventDefault();
+  }
+
+  private onResizing = (event: MouseEvent) => {
+    if (!this.isResizing()) return;
+    const diff = this.startX - event.clientX;
+    const newWidth = Math.max(320, Math.min(window.innerWidth * 0.8, this.startWidth + diff));
+    this.chatbotWidth.set(newWidth);
+  };
+
+  private onResizeEnd = () => {
+    this.isResizing.set(false);
+    document.removeEventListener('mousemove', this.onResizing);
+    document.removeEventListener('mouseup', this.onResizeEnd);
+    document.body.style.cursor = '';
+  };
 }

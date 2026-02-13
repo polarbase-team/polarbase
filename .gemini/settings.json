@@ -5,11 +5,14 @@
   },
   "mcpServers": {
     "polarbase-server": {
-      "httpUrl": "http://localhost:8080/mcp"
+      "httpUrl": "http://localhost:8080/mcp",
+      "headers": {
+        "x-api-key": "ak_0b13cb2bf04fc55cff3dab520eaccabca8d551a8922bd6b013455ab7a41ebccd"
+      }
     }
   },
   "model": {
-    "name": "gemini-2.5-flash"
+    "name": "gemini-3-pro-preview"
   },
   "mcp": {
     "discovery": true
