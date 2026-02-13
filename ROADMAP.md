@@ -13,12 +13,10 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Realtime for DB:** Dynamic data handling with real-time updates via WebSocket.
 - **Clean Architecture:** Metadata stored in SQLite to ensure **Zero Vendor Lock-in** for your main PostgreSQL database.
 - **Performance-First Runtime:** Built with **Bun**, **ElysiaJS**, and **PostgreSQL**.
-- **Relational Engine**: Support for Reference fields and Foreign Keys.
-- **Advanced Field Types**: GeoPoint, Email, URL, Multi-Select.
-- **System Fields**: AutoNumber, AutoDate.
 - **File Management**: Attachment field type with storage integration.
 - **Multi-View Foundation:** Building the core architecture to support switching between different data lenses (Spreadsheet, Calendar, Map,...).
 - **Advanced Filtering:** Support for single and group conditions for complex datasets.
+- **API Playground:** Built-in Swagger/OpenAPI interface for instant testing.
 
 ### 🖥️ Interface & Experience
 
@@ -28,22 +26,26 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **API Key Management:** Generate and manage keys for controlled access to REST API or AI features.
 - **Super Admin Control:** Secure administrative access via a dedicated Super Admin Key.
 - **Layout Configuration Persistence:** View configurations (column widths, filters, view states) are persisted via **LocalStorage** for a seamless client-side experience.
+- **Chatbot UI/UX Enhancements**: @mention tables, Bot/Retry buttons, template prompts, and rich markdown support.
 
 ### 🤖 AI & Integration
 
 - **MCP Server for DB:** Native Model Context Protocol server for streamlined database administration.
 - **AI Agent for DB:** Intelligent agent to assist with database operations without manual SQL generation.
 - **Multi-Provider Support:** Integration with Google Gemini (default) and OpenAI.
-- **Natural Language Schema:** Describe requirements and the Agent will update the DB schema.
-- **Local AI Support:** Integration with local inference servers like **LM Studio**.
+- **Local AI Support:** Integration with local inference servers like **LM Studio** via a two-level model menu.
 - **Agent Orchestration**: Specialized sub-agents (Builder, Query, Lookup, Editor) for improved task accuracy.
-- **Agent Call Approval:** Human-in-the-loop security for high-risk operations (Delete/Drop).
-- **Document Analysis:** Upload files to the Agent for data extraction and analysis.
+- **Agent Call Approval**: Human-in-the-loop security for high-risk operations (Delete/Drop).
+- **Document Analysis**: Upload files to the Agent for data extraction and analysis.
+- **Generation Controls**: Granular control over Temperature, Top P, Top K, and Max Tokens.
 
 ### ⚙️ Data & Schema Management
 
 - **Index Management:** Create and manage indexes for faster data retrieval.
 - **Relation Diagram:** Visual ERD representation of table relationships.
+- **Relational Engine**: Support for Reference fields and Foreign Keys.
+- **Advanced Field Types**: GeoPoint, Email, URL, Multi-Select.
+- **System Fields**: AutoNumber, AutoDate.
 - **Formula Fields:** Support for stored and virtual generated columns with a robust formula engine.
 
 ---
@@ -72,7 +74,6 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ### 🔗 Extensibility & Integration
 
 - **Webhooks Engine:** Trigger HTTP POST requests on data events.
-- **API Playground:** Built-in Swagger/OpenAPI interface for instant testing.
 - **SDKs:** Official client libraries for **JavaScript** and **Dart**.
 
 ---
