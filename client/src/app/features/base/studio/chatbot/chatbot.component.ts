@@ -25,6 +25,7 @@ import { PopoverModule } from 'primeng/popover';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DividerModule } from 'primeng/divider';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { TableService } from '../table/services/table.service';
 import { MarkdownPipe } from './pipes/markdown.pipe';
@@ -40,6 +41,7 @@ interface UserChatMessage extends ChatMessage {
 interface AssistantChatMessage extends ChatMessage {
   role: 'assistant';
   _isGenerating?: boolean;
+  _isStreaming?: boolean;
   _toolCallId?: string | null;
 }
 
@@ -65,6 +67,7 @@ const CHATBOT_GENERATION_CONFIG_KEY = 'chatbot_generation_config';
     ToggleSwitchModule,
     InputNumberModule,
     DividerModule,
+    TooltipModule,
     MarkdownPipe,
   ],
   providers: [AgentService],
@@ -84,7 +87,7 @@ export class ChatBotComponent {
   protected messages = signal<ChatMessage[]>([]);
   protected selectedFiles = signal<File[]>([]);
   protected isDragging = signal(false);
-  protected isStreaming = signal(false);
+  protected isChatting = signal(false);
   protected inputText = '';
   protected isFullscreen = false;
 
@@ -189,7 +192,7 @@ export class ChatBotComponent {
   }
 
   reset() {
-    this.isStreaming.set(false);
+    this.isChatting.set(false);
     this.messages.set([]);
     this.inputText = this.editor().nativeElement.innerHTML = '';
     this.mentions = { tables: [] };
@@ -283,8 +286,21 @@ export class ChatBotComponent {
     this.clearFiles();
   }
 
+  protected retryMessage(msg: ChatMessage) {
+    const index = this.messages().indexOf(msg);
+    if (index !== -1) {
+      this.messages.update((messages) => messages.slice(0, index));
+      const userMessage = msg as UserChatMessage;
+      this.startChat(userMessage);
+    }
+  }
+
+  protected copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text);
+  }
+
   private startChat(message: ChatMessage) {
-    this.isStreaming.set(true);
+    this.isChatting.set(true);
 
     const botMessage: AssistantChatMessage = {
       role: 'assistant',
@@ -310,6 +326,7 @@ export class ChatBotComponent {
           if (!events.length) return;
 
           botMessage._isGenerating = false;
+          botMessage._isStreaming = true;
           botMessage._toolCallId = null;
 
           events.forEach((event) => {
@@ -323,8 +340,9 @@ export class ChatBotComponent {
           });
         },
         complete: () => {
-          this.isStreaming.set(false);
+          this.isChatting.set(false);
           botMessage._isGenerating = false;
+          botMessage._isStreaming = false;
           botMessage._toolCallId = null;
           this.messages.update((messages) => [...messages]);
         },
@@ -336,7 +354,7 @@ export class ChatBotComponent {
       this.currentChatSubscription.unsubscribe();
       this.currentChatSubscription = undefined;
     }
-    this.isStreaming.set(false);
+    this.isChatting.set(false);
 
     // Update the last message state
     const messages = this.messages();

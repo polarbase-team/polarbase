@@ -56,11 +56,33 @@
                 }"
               >
                 @if (msg.role === 'user') {
-                  <div class="flex flex-col items-end">
+                  <div class="flex flex-col items-end group">
                     <div class="p-2.5 rounded-xl bg-primary text-primary-contrast">
                       <p class="m-0 whitespace-pre-wrap text-sm" style="word-break: break-word">
                         {{ msg.content }}
                       </p>
+                    </div>
+                    <div
+                      class="flex items-center gap-0.5 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <p-button
+                        icon="icon icon-copy"
+                        [text]="true"
+                        severity="secondary"
+                        size="small"
+                        (click)="copyToClipboard(msg.content)"
+                        pTooltip="Copy"
+                        tooltipPosition="bottom"
+                      />
+                      <p-button
+                        icon="icon icon-refresh-cw"
+                        [text]="true"
+                        severity="secondary"
+                        size="small"
+                        (click)="retryMessage(msg)"
+                        pTooltip="Retry"
+                        tooltipPosition="bottom"
+                      />
                     </div>
                     @for (file of $any(msg)._selectedFiles; track file.name) {
                       <div
@@ -84,10 +106,25 @@
                     } @else {
                       <div class="space-y-2 flex-1 min-w-0">
                         @if (msg.content) {
-                          <div
-                            class="chatbot-prose text-sm"
-                            [innerHTML]="msg.content | markdown"
-                          ></div>
+                          <div>
+                            <div
+                              class="chatbot-prose text-sm"
+                              [innerHTML]="msg.content | markdown"
+                            ></div>
+                            @if (!$any(msg)._isStreaming) {
+                              <div class="flex items-center gap-0.5 mt-0.5">
+                                <p-button
+                                  icon="icon icon-copy"
+                                  [text]="true"
+                                  severity="secondary"
+                                  size="small"
+                                  (click)="copyToClipboard(msg.content)"
+                                  pTooltip="Copy"
+                                  tooltipPosition="bottom"
+                                />
+                              </div>
+                            }
+                          </div>
                         }
 
                         @if ($any(msg)._toolCallId; as toolCallId) {
@@ -281,7 +318,7 @@
           data-placeholder="Ask anything, @ to mention a table"
           class="min-w-0 min-h-8 max-h-32 overflow-y-auto p-1 outline-0 text-sm empty:before:content-[attr(data-placeholder)] empty:before:text-surface-400 empty:before:pointer-events-none"
           (input)="onInput($any($event))"
-          (keydown.enter)="!isStreaming() ? onEnter($any($event)) : false"
+          (keydown.enter)="!isChatting() ? onEnter($any($event)) : false"
           (contextmenu)="onEditorContextMenu($event)"
         ></div>
         @if (selectedFiles().length) {
@@ -330,7 +367,7 @@
             icon="icon icon-settings-2"
             (click)="agentSelector.show($event)"
           />
-          @if (isStreaming()) {
+          @if (isChatting()) {
             <p-button
               icon="icon icon-circle-stop"
               [rounded]="true"
