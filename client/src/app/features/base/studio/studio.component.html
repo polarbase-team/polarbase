@@ -2,6 +2,8 @@
   class="base-studio w-full h-full"
   [class.sidebar--visible]="sidebarVisible()"
   [class.chatbot--visible]="chatbotVisible()"
+  [class.is-resizing]="isResizing()"
+  [style.padding-right.px]="chatbotVisible() && !chatbotFullscreen() ? chatbotWidth() : 0"
 >
   <div class="base-studio-sidebar border-r border-surface-200">
     <table-list />
@@ -68,7 +70,12 @@
   <div
     class="base-studio-chatbot border-l border-surface-200"
     [class.fullscreen]="chatbotFullscreen()"
+    [style.width.px]="chatbotFullscreen() ? null : chatbotWidth()"
+    [style.right.px]="chatbotFullscreen() ? 0 : chatbotVisible() ? 0 : -chatbotWidth()"
   >
+    @if (chatbotVisible() && !chatbotFullscreen()) {
+      <div class="chatbot-resize-handle" (mousedown)="onResizeStart($event)"></div>
+    }
     @if (chatbotInitialized()) {
       <chatbot
         [visible]="chatbotVisible()"

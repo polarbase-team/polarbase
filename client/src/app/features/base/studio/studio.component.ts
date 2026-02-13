@@ -19,6 +19,8 @@ import { AgentService } from './chatbot/services/agent.service';
 const SIDEBAR_VISIBILITY_KEY = 'sidebar_visibility';
 const CHATBOT_VISIBILITY_KEY = 'chatbot_visibility';
 const CHATBOT_FULLSCREEN_KEY = 'chatbot_fullscreen';
+const CHATBOT_WIDTH_KEY = 'chatbot_width';
+const DEFAULT_CHATBOT_WIDTH = 480; // 30rem
 
 @Component({
   selector: 'base-studio',
@@ -41,6 +43,11 @@ export class BaseStudioComponent {
   protected chatbotVisible = signal(false);
   protected chatbotInitialized = signal(false);
   protected chatbotFullscreen = signal(false);
+  protected chatbotWidth = signal(DEFAULT_CHATBOT_WIDTH);
+
+  protected isResizing = signal(false);
+  private startX = 0;
+  private startWidth = 0;
 
   constructor(
     protected tableService: TableService,
@@ -61,6 +68,7 @@ export class BaseStudioComponent {
     this.chatbotFullscreen.set(
       Boolean(JSON.parse(localStorage.getItem(CHATBOT_FULLSCREEN_KEY) || 'false')),
     );
+    this.chatbotWidth.set(Number(localStorage.getItem(CHATBOT_WIDTH_KEY)) || DEFAULT_CHATBOT_WIDTH);
 
     effect(() => {
       const activeTable = this.tableService.activeTable();
@@ -88,6 +96,11 @@ export class BaseStudioComponent {
     effect(() => {
       const chatbotFullscreen = this.chatbotFullscreen();
       localStorage.setItem(CHATBOT_FULLSCREEN_KEY, chatbotFullscreen.toString());
+    });
+
+    effect(() => {
+      const chatbotWidth = this.chatbotWidth();
+      localStorage.setItem(CHATBOT_WIDTH_KEY, chatbotWidth.toString());
     });
 
     this.router.events
@@ -140,4 +153,28 @@ export class BaseStudioComponent {
       }, 0);
     }
   }
+
+  protected onResizeStart(event: MouseEvent) {
+    this.isResizing.set(true);
+    this.startX = event.clientX;
+    this.startWidth = this.chatbotWidth();
+    document.addEventListener('mousemove', this.onResizing);
+    document.addEventListener('mouseup', this.onResizeEnd);
+    document.body.style.cursor = 'col-resize';
+    event.preventDefault();
+  }
+
+  private onResizing = (event: MouseEvent) => {
+    if (!this.isResizing()) return;
+    const diff = this.startX - event.clientX;
+    const newWidth = Math.max(320, Math.min(window.innerWidth * 0.8, this.startWidth + diff));
+    this.chatbotWidth.set(newWidth);
+  };
+
+  private onResizeEnd = () => {
+    this.isResizing.set(false);
+    document.removeEventListener('mousemove', this.onResizing);
+    document.removeEventListener('mouseup', this.onResizeEnd);
+    document.body.style.cursor = '';
+  };
 }
