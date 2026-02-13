@@ -10,7 +10,7 @@ services:
       # Core
       - NODE_ENV=production
       - NAME=PolarBase
-      - VERSION=v0.8.0-beta
+      - VERSION=v0.9.0-beta
       - HOSTNAME=0.0.0.0
       - PORT=3000
       - VERBOSE=false
@@ -51,12 +51,14 @@ services:
       - POSTGRES_SSL=false
       - POSTGRES_MAX_CONNECTIONS=20
 
-      # LLM
-      - LLM_DEFAULT_MODEL=gemini-2.5-flash
-      - OPENAI_API_KEY=
-      - GEMINI_API_KEY=
-      - ANTHROPIC_API_KEY=
-      - XAI_API_KEY=
+      # AI Agents (LLM)
+      - LLM_DEFAULT_MODEL=gemini-3-pro-preview
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - XAI_API_KEY=${XAI_API_KEY:-}
+      - LOCAL_LLM_BASE_URL=${LOCAL_LLM_BASE_URL:-http://localhost:1234/v1}
+      - LOCAL_LLM_API_KEY=${LOCAL_LLM_API_KEY:-not-needed}
 
     depends_on:
       db:

@@ -2,16 +2,13 @@ import { FastMCP } from 'fastmcp';
 
 import { log } from '../utils/logger';
 import { apiKeyAuth } from '../api-keys/auth';
-import instructions from '../agent/instructions';
-import registerTablesResource from './resources/tables';
-import registerColumnsResource from './resources/columns';
-import registerFindTablesTool from './tools/find-tables';
-import registerFindColumnsTool from './tools/find-columns';
-import registerListFromTableTool from './tools/list-from-table';
-import registerAggregateFromTableTool from './tools/aggregate-from-table';
-import registerInsertIntoTableTool from './tools/insert-into-table';
-import registerUpdateFromTableTool from './tools/update-from-table';
-import registerDeleteFromTableTool from './tools/delete-from-table';
+import instructions from './instructions';
+import registerTableResource from './resources/table';
+import registerSuggestTableStructurePrompt from './prompts/suggest-table-structure';
+import registerLookupTools from './tools/lookup';
+import registerBuilderTools from './tools/builder';
+import registerEditorTools from './tools/editor';
+import registerQueryTools from './tools/query';
 
 export const mcpServer = new FastMCP({
   name: 'PolarBase MCP Server',
@@ -39,16 +36,13 @@ export const mcpServer = new FastMCP({
 });
 
 // Register resources
-registerTablesResource(mcpServer);
-registerColumnsResource(mcpServer);
+registerTableResource(mcpServer);
 
 // Register prompts
+registerSuggestTableStructurePrompt(mcpServer);
 
 // Register tools
-registerFindTablesTool(mcpServer);
-registerFindColumnsTool(mcpServer);
-registerListFromTableTool(mcpServer);
-registerAggregateFromTableTool(mcpServer);
-registerInsertIntoTableTool(mcpServer);
-registerUpdateFromTableTool(mcpServer);
-registerDeleteFromTableTool(mcpServer);
+registerLookupTools(mcpServer);
+registerBuilderTools(mcpServer);
+registerEditorTools(mcpServer);
+registerQueryTools(mcpServer);

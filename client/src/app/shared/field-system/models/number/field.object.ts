@@ -7,6 +7,10 @@ import { Field, FieldValidationKey } from '../field.object';
 import { NumberData, NumberFieldConfig, NumberFormat } from './field.interface';
 
 export const formatNumber = (value: number, format?: NumberFormat, currency?: string) => {
+  if (_.isNil(value)) {
+    return value;
+  }
+
   if (format === NumberFormat.Comma) {
     return value.toLocaleString();
   }
