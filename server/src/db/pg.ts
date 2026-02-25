@@ -1,7 +1,7 @@
 import knex from 'knex';
 import { types } from 'pg';
 
-import { log } from '../utils/logger';
+import { log } from '../shared/utils/logger';
 
 export const pgConfig = {
   host: process.env.POSTGRES_HOST || '0.0.0.0',

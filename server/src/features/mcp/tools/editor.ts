@@ -14,7 +14,10 @@ export default function registerEditorTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        const response = await editorAgentTools.insertRecords.execute!(args as any, {} as any);
+        const response = await editorAgentTools.insertRecords.execute!(
+          args as any,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
@@ -32,7 +35,10 @@ export default function registerEditorTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        const response = await editorAgentTools.updateRecords.execute!(args, {} as any);
+        const response = await editorAgentTools.updateRecords.execute!(
+          args,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);
@@ -51,7 +57,10 @@ export default function registerEditorTools(server: FastMCP) {
     },
     async execute(args) {
       try {
-        const response = await editorAgentTools.deleteRecords.execute!(args, {} as any);
+        const response = await editorAgentTools.deleteRecords.execute!(
+          args,
+          {} as any
+        );
         return responseToContent(response);
       } catch (error) {
         throw new UserError((error as Error).message);

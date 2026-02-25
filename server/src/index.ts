@@ -4,13 +4,13 @@ import { staticPlugin } from '@elysiajs/static';
 import chalk from 'chalk';
 
 import { initDatabaseTypes } from './db/pg';
-import { compression } from './plugins/compression';
-import { authRoutes } from './auth/routes';
-import { apiKeyRoutes } from './api-keys/routes';
-import { enableRest } from './rest';
-import { enableAgent } from './agent';
-import { enableMCP } from './mcp';
-import { enableRealtime } from './realtime';
+import { compression } from './shared/plugins/compression';
+import { authRoutes } from './features/auth/routes';
+import { apiKeyRoutes } from './features/auth/api-key.routes';
+import { enableRest } from './features/rest';
+import { enableAgent } from './features/agent';
+import { enableMCP } from './features/mcp';
+import { enableRealtime } from './features/realtime';
 
 const logService = (name: string, status: boolean, extra?: string) => {
   const dot = status ? chalk.green('●') : chalk.red('●');

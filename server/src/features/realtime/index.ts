@@ -1,7 +1,7 @@
 import Elysia, { sse } from 'elysia';
 
-import { WebSocket } from '../plugins/web-socket';
-import { apiKeyAuth } from '../api-keys/auth';
+import { WebSocket } from '../../shared/plugins/web-socket';
+import { apiKeyAuth } from '../auth/api-key.auth';
 import { CDC_EVENTS, cdcEmitter, setupReplication, startCDC } from './cdc';
 
 const REALTIME_PATH = process.env.REALTIME_PATH || '/realtime';

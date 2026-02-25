@@ -1,8 +1,8 @@
 import { ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
-import { TableService } from '../../db/services/table.service';
-import { IndexService } from '../../db/services/index.service';
+import { TableService } from '../../../db/services/table.service';
+import { IndexService } from '../../../db/services/index.service';
 
 const tableService = new TableService();
 const indexService = new IndexService();

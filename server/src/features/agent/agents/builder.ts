@@ -1,14 +1,14 @@
 import { ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
-import { TableService } from '../../db/services/table.service';
-import { IndexService } from '../../db/services/index.service';
+import { TableService } from '../../../db/services/table.service';
+import { IndexService } from '../../../db/services/index.service';
 import {
   DataType,
   FormulaResultType,
   FormulaStrategy,
   ReferentialAction,
-} from '../../db/utils/column';
+} from '../../../db/utils/column';
 
 const tableService = new TableService();
 const indexService = new IndexService();

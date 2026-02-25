@@ -1,8 +1,8 @@
 import { Elysia, t } from 'elysia';
 
-import { checkRateLimit } from '../utils/rate-limit';
-import { err } from '../utils/api-response';
-import { apiKeyAuth } from '../api-keys/auth';
+import { checkRateLimit } from '../../shared/utils/rate-limit';
+import { err } from '../../shared/utils/api-response';
+import { apiKeyAuth } from '../auth/api-key.auth';
 import { generateAIResponse } from './model';
 
 const AGENT_RATE_LIMIT = Number(process.env.AGENT_RATE_LIMIT) || 10;

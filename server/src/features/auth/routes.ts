@@ -1,5 +1,5 @@
 import Elysia, { t } from 'elysia';
-import { apiKeyAuth } from '../api-keys/auth';
+import { apiKeyAuth } from './api-key.auth';
 
 export const authRoutes = new Elysia({ prefix: '/auth' }).post(
   '/validate',

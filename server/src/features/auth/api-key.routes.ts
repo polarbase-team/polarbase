@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 
-import { ApiKey, db } from './db';
-import { generateApiKey } from './auth';
+import { ApiKey, db } from './api-key.db';
+import { generateApiKey } from './api-key.auth';
 
 const SUPER_ADMIN_API_KEY = process.env.SUPER_ADMIN_API_KEY;
 

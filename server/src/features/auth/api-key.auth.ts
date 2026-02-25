@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-import { ApiKey } from './db';
+import { ApiKey } from './api-key.db';
 
 const SUPER_ADMIN_API_KEY = process.env.SUPER_ADMIN_API_KEY;
 
@@ -28,7 +28,7 @@ export const apiKeyAuth = async (apiKey: string) => {
   }
 
   // Dynamically import db (avoids circular imports)
-  const { db } = await import('./db');
+  const { db } = await import('./api-key.db');
   // Look up API key in the database (and make sure it's not revoked)
   const row = db
     .prepare('SELECT * FROM api_keys WHERE key = ? AND revoked = 0')

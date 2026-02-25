@@ -1,7 +1,7 @@
 import { FastMCP } from 'fastmcp';
 
-import { log } from '../utils/logger';
-import { apiKeyAuth } from '../api-keys/auth';
+import { log } from '../../shared/utils/logger';
+import { apiKeyAuth } from '../auth/api-key.auth';
 import instructions from './instructions';
 import registerTableResource from './resources/table';
 import registerSuggestTableStructurePrompt from './prompts/suggest-table-structure';
