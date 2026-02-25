@@ -5,7 +5,6 @@ services:
       dockerfile: server/Dockerfile
     ports:
       - '3000:3000'
-      - '8080:8080'
     environment:
       # Core
       - NODE_ENV=production
@@ -24,13 +23,11 @@ services:
       - REST_ENABLED=true
       - REST_PREFIX=/rest
       - REST_RATE_LIMIT=100
-      - REST_BLACKLISTED_TABLES=
 
       # AGENT API
       - AGENT_ENABLED=true
       - AGENT_PREFIX=/agent
       - AGENT_RATE_LIMIT=10
-      - AGENT_BLACKLISTED_TABLES=
 
       # MCP Server
       - MCP_ENABLED=true

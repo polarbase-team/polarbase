@@ -15,10 +15,7 @@ export const lookupAgentTools = {
     strict: true,
     execute: async () => {
       const tables = await tableService.getAll();
-      const blacklist = (process.env.AGENT_BLACKLISTED_TABLES || '').split(',');
-      return {
-        tables: tables.filter((t) => !blacklist.includes(t.name)),
-      };
+      return { tables };
     },
   }),
 

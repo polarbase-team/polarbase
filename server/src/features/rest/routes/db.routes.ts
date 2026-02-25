@@ -25,10 +25,8 @@ export const dbRoutes = new Elysia()
    */
   .get(
     '/tables',
-    async ({ query: { includeSchema } }) => {
-      const blacklist = (process.env.REST_BLACKLISTED_TABLES || '').split(',');
-      const tables = await tableService.getAll({ includeSchema });
-      return tables.filter((t) => !blacklist.includes(t.name));
+    ({ query: { includeSchema } }) => {
+      return tableService.getAll({ includeSchema });
     },
     {
       query: t.Object({

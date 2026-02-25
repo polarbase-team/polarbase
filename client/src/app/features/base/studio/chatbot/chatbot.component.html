@@ -95,10 +95,7 @@
                   </div>
                 } @else {
                   <div class="flex gap-2 leading-6 w-full">
-                    <i
-                      class="icon icon-sparkles mt-[-1px]"
-                      style="color: var(--p-primary-color)"
-                    ></i>
+                    <i class="icon icon-sparkles" style="color: var(--p-primary-color)"></i>
                     @if ($any(msg)._isGenerating) {
                       <p class="text-surface-500 text-sm leading-6 italic">
                         <span class="loading-text">Generating</span>
@@ -106,7 +103,7 @@
                     } @else {
                       <div class="space-y-2 flex-1 min-w-0">
                         @if (msg.content) {
-                          <div>
+                          <div class="leading-6">
                             <div
                               class="chatbot-prose text-sm"
                               [innerHTML]="msg.content | markdown"
@@ -159,7 +156,7 @@
           ></video>
           <div class="text-center mt-[-20px]">
             <h2 class="text-xl font-semibold tracking-tight text-color">
-              How can I assist your data?
+              How can I assist you today?
             </h2>
             <p class="text-sm text-surface-500 mb-4">
               Choose a starting point or type your own request below.
