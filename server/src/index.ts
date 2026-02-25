@@ -91,14 +91,13 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
   // MCP Server
   const MCP_ENABLED = process.env.MCP_ENABLED === 'true';
   const MCP_PATH = process.env.MCP_PATH || '/mcp';
-  const MCP_PORT = Number(process.env.MCP_PORT || '8080');
   if (MCP_ENABLED) {
     try {
       await enableMCP(app);
       logService(
         'MCP Server',
         true,
-        `http://${APP_HOSTNAME}:${MCP_PORT}${MCP_PATH}`
+        `http://${APP_HOSTNAME}:${APP_PORT}${MCP_PATH}`
       );
     } catch (err: any) {
       allGood = false;
@@ -141,21 +140,28 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
   }));
 
   // Start Elysia
-  app.listen(APP_PORT, ({ hostname, port }) => {
-    console.log('');
-    if (allGood) {
-      console.log(chalk.bold.green('   All services started successfully!'));
-    } else {
-      console.log(chalk.bold.yellow('   Some services failed to start'));
+  app.listen(
+    {
+      port: APP_PORT,
+      hostname: APP_HOSTNAME,
+      idleTimeout: 255,
+    },
+    ({ hostname, port }) => {
+      console.log('');
+      if (allGood) {
+        console.log(chalk.bold.green('   All services started successfully!'));
+      } else {
+        console.log(chalk.bold.yellow('   Some services failed to start'));
+      }
+      console.log(
+        chalk.gray('   ───────────────────────────────────────────────')
+      );
+      console.log(
+        `   ${chalk.bold.magenta(APP_NAME)} is running → ${chalk.underline.cyan(
+          `http://${hostname}:${port}`
+        )}`
+      );
+      console.log('');
     }
-    console.log(
-      chalk.gray('   ───────────────────────────────────────────────')
-    );
-    console.log(
-      `   ${chalk.bold.magenta(APP_NAME)} is running → ${chalk.underline.cyan(
-        `http://${hostname}:${port}`
-      )}`
-    );
-    console.log('');
-  });
+  );
 })();

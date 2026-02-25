@@ -205,7 +205,7 @@
       <p-popover #agentSelector appendTo="body">
         <ng-template #content>
           <div class="text-xs mb-2 font-semibold text-surface-500 uppercase tracking-wide">
-            Agents
+            Database Agents
           </div>
           <div class="space-y-3">
             <div class="flex items-center justify-between gap-2">
@@ -214,8 +214,8 @@
                 <p class="text-xs text-surface-500">Manage tables and database schema.</p>
               </div>
               <p-toggleswitch
-                [(ngModel)]="subAgents.builder"
-                (ngModelChange)="saveSubAgents()"
+                [(ngModel)]="agents.database.builder"
+                (ngModelChange)="saveAgents()"
                 size="small"
                 class="scale-80"
               />
@@ -226,8 +226,8 @@
                 <p class="text-xs text-surface-500">Insert, update, and delete records.</p>
               </div>
               <p-toggleswitch
-                [(ngModel)]="subAgents.editor"
-                (ngModelChange)="saveSubAgents()"
+                [(ngModel)]="agents.database.editor"
+                (ngModelChange)="saveAgents()"
                 size="small"
                 class="scale-80"
               />
@@ -238,8 +238,28 @@
                 <p class="text-xs text-surface-500">Search, filter, and analyze data.</p>
               </div>
               <p-toggleswitch
-                [(ngModel)]="subAgents.query"
-                (ngModelChange)="saveSubAgents()"
+                [(ngModel)]="agents.database.query"
+                (ngModelChange)="saveAgents()"
+                size="small"
+                class="scale-80"
+              />
+            </div>
+          </div>
+
+          <p-divider />
+
+          <div class="text-xs mb-2 font-semibold text-surface-500 uppercase tracking-wide">
+            Additional Agents
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-sm font-medium">Browser</p>
+                <p class="text-xs text-surface-500">Web automation & crawling.</p>
+              </div>
+              <p-toggleswitch
+                [(ngModel)]="agents.browser"
+                (ngModelChange)="saveAgents()"
                 size="small"
                 class="scale-80"
               />

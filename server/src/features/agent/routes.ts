@@ -51,7 +51,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
         attachments,
         mentions,
         model,
-        subAgents,
+        agents,
         generationConfig,
       },
     }) => {
@@ -60,7 +60,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
         attachments,
         mentions,
         model,
-        subAgents,
+        agents,
         generationConfig,
         abortSignal: signal,
       });
@@ -88,12 +88,22 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
             tables: t.Optional(t.Array(t.String())),
           })
         ),
-        model: t.Optional(t.String()),
-        subAgents: t.Optional(
+        model: t.Optional(
           t.Object({
-            builder: t.Optional(t.Boolean()),
-            editor: t.Optional(t.Boolean()),
-            query: t.Optional(t.Boolean()),
+            provider: t.String(),
+            name: t.String(),
+          })
+        ),
+        agents: t.Optional(
+          t.Object({
+            database: t.Optional(
+              t.Object({
+                builder: t.Optional(t.Boolean()),
+                editor: t.Optional(t.Boolean()),
+                query: t.Optional(t.Boolean()),
+              })
+            ),
+            browser: t.Optional(t.Boolean()),
           })
         ),
         generationConfig: t.Optional(

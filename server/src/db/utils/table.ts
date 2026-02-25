@@ -3,11 +3,11 @@ import { LRUCache } from 'lru-cache';
 import {
   getAllTableMetadata,
   getTableMetadata,
-} from '../metadata/table-metadata';
+} from '../metadata/table.metadata';
 import {
   getColumnMetadata,
   getMultiColumnMetadata,
-} from '../metadata/column-metadata';
+} from '../metadata/column.metadata';
 import {
   Column,
   LENGTH_CHECK_SUFFIX,

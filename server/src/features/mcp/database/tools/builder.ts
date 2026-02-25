@@ -1,7 +1,7 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { builderAgentTools } from '../../agent/agents/builder';
-import { responseToContent } from '../utils';
+import { builderAgentTools } from '../../../agent/agents/database/subagents/builder';
+import { responseToContent } from '../../shared/utils';
 
 export default function registerBuilderTools(server: FastMCP) {
   // createMultipleTables

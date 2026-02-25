@@ -1,8 +1,8 @@
 import { ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
-import { TableRecordService } from '../../../db/services/table-record.service';
-import { whereFilterSchema } from '../schemas/where-filter';
+import { TableRecordService } from '../../../../../db/services/table-record.service';
+import { whereFilterSchema } from '../schemas/where-filter.schema';
 
 const recordService = new TableRecordService();
 

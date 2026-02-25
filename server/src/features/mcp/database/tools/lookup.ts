@@ -1,7 +1,7 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { lookupAgentTools } from '../../agent/agents/lookup';
-import { responseToContent } from '../utils';
+import { lookupAgentTools } from '../../../agent/agents/database/subagents/lookup';
+import { responseToContent } from '../../shared/utils';
 
 export default function registerLookupTools(server: FastMCP) {
   // listTables

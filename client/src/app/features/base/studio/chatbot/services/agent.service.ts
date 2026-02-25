@@ -11,6 +11,11 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
+export interface Model {
+  provider: string;
+  name: string;
+}
+
 export interface StreamEvent {
   type: 'text' | 'tool';
   value: string;
@@ -27,7 +32,7 @@ export class AgentService {
     attachments,
     mentions,
     model,
-    subAgents,
+    agents,
     generationConfig,
   }: {
     messages: ChatMessage[];
@@ -35,11 +40,14 @@ export class AgentService {
     mentions?: {
       tables: string[];
     };
-    model?: string;
-    subAgents?: {
-      builder: boolean;
-      editor: boolean;
-      query: boolean;
+    model?: Model;
+    agents?: {
+      database?: {
+        builder?: boolean;
+        editor?: boolean;
+        query?: boolean;
+      };
+      browser?: boolean;
     };
     generationConfig?: {
       temperature?: number;
@@ -58,10 +66,10 @@ export class AgentService {
         formData.append('mentions', JSON.stringify(mentions));
       }
       if (model) {
-        formData.append('model', model);
+        formData.append('model', JSON.stringify(model));
       }
-      if (subAgents) {
-        formData.append('subAgents', JSON.stringify(subAgents));
+      if (agents) {
+        formData.append('agents', JSON.stringify(agents));
       }
       if (generationConfig) {
         formData.append('generationConfig', JSON.stringify(generationConfig));

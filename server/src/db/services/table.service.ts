@@ -31,8 +31,8 @@ import {
   FormulaStrategy,
   FormulaResultType,
 } from '../utils/column';
-import { setTableMetadata } from '../metadata/table-metadata';
-import { setColumnMetadata } from '../metadata/column-metadata';
+import { setTableMetadata } from '../metadata/table.metadata';
+import { setColumnMetadata } from '../metadata/column.metadata';
 
 export class TableService {
   async getAll({

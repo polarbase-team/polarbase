@@ -29,7 +29,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { TableService } from '../table/services/table.service';
 import { MarkdownPipe } from './pipes/markdown.pipe';
-import { AgentService, ChatMessage, StreamEvent } from './services/agent.service';
+import { AgentService, ChatMessage, Model, StreamEvent } from './services/agent.service';
 import { modelGroups } from './resources/models';
 import { promptTemplates } from './resources/prompt-templates';
 
@@ -46,7 +46,7 @@ interface AssistantChatMessage extends ChatMessage {
 }
 
 const CHATBOT_SELECTED_MODEL_KEY = 'chatbot_selected_model';
-const CHATBOT_SUB_AGENTS_KEY = 'chatbot_sub_agents';
+const CHATBOT_AGENTS_KEY = 'chatbot_agents';
 const CHATBOT_GENERATION_CONFIG_KEY = 'chatbot_generation_config';
 
 @Component({
@@ -94,7 +94,7 @@ export class ChatBotComponent {
   protected mentionMenuItems: MenuItem[];
   protected mentions: { tables: string[] } = { tables: [] };
 
-  protected selectedModel: string;
+  protected selectedModel: Model | undefined;
   protected selectedModelLabel: string;
   protected modelMenuItems: MenuItem[] = [
     {
@@ -126,10 +126,13 @@ export class ChatBotComponent {
     })),
   ];
 
-  protected subAgents = {
-    builder: true,
-    editor: true,
-    query: true,
+  protected agents = {
+    database: {
+      builder: true,
+      editor: true,
+      query: true,
+    },
+    browser: true,
   };
 
   protected generationConfig = {
@@ -140,10 +143,8 @@ export class ChatBotComponent {
   };
 
   protected agentNameMap: Record<string, string> = {
-    callLookupAgent: 'Lookup Agent',
-    callBuilderAgent: 'Builder Agent',
-    callEditorAgent: 'Editor Agent',
-    callQueryAgent: 'Query Agent',
+    callDatabaseAgent: 'Database Agent',
+    callBrowserAgent: 'Browser Agent',
   };
 
   private currentChatSubscription?: Subscription;
@@ -157,9 +158,14 @@ export class ChatBotComponent {
     this.selectedModel = model.value;
     this.selectedModelLabel = model.label;
 
-    this.subAgents = {
-      ...this.subAgents,
-      ...JSON.parse(localStorage.getItem(CHATBOT_SUB_AGENTS_KEY) || '{}'),
+    const savedAgents = JSON.parse(localStorage.getItem(CHATBOT_AGENTS_KEY) || '{}');
+    this.agents = {
+      database: {
+        builder: savedAgents.database?.builder ?? this.agents.database.builder,
+        editor: savedAgents.database?.editor ?? this.agents.database.editor,
+        query: savedAgents.database?.query ?? this.agents.database.query,
+      },
+      browser: savedAgents.browser ?? this.agents.browser,
     };
     this.generationConfig = {
       ...this.generationConfig,
@@ -268,8 +274,8 @@ export class ChatBotComponent {
     this.fileInput().nativeElement.value = '';
   }
 
-  protected saveSubAgents() {
-    localStorage.setItem(CHATBOT_SUB_AGENTS_KEY, JSON.stringify(this.subAgents));
+  protected saveAgents() {
+    localStorage.setItem(CHATBOT_AGENTS_KEY, JSON.stringify(this.agents));
   }
 
   protected saveGenerationConfig() {
@@ -334,7 +340,7 @@ export class ChatBotComponent {
         attachments: this.selectedFiles(),
         mentions: this.mentions,
         model: this.selectedModel,
-        subAgents: this.subAgents,
+        agents: this.agents,
         generationConfig: this.generationConfig,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))

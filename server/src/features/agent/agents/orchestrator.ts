@@ -1,17 +1,17 @@
 import { ToolLoopAgent, tool, readUIMessageStream } from 'ai';
 import { z } from 'zod';
 
-import { createLookupAgent } from './lookup';
-import { createBuilderAgent } from './builder';
-import { createEditorAgent } from './editor';
-import { createQueryAgent } from './query';
+import { createOrchestratorAgent as createDatabaseAgent } from './database/orchestrator';
 
-export function createOrchestratorAgent(
+export function createRootOrchestrator(
   model: any,
-  subAgents?: {
-    builder?: boolean;
-    editor?: boolean;
-    query?: boolean;
+  agents?: {
+    database?: {
+      builder?: boolean;
+      editor?: boolean;
+      query?: boolean;
+    };
+    browser?: boolean;
   },
   generationConfig?: {
     temperature?: number;
@@ -20,76 +20,33 @@ export function createOrchestratorAgent(
     maxOutputTokens?: number;
   }
 ) {
-  const lookupAgentTools = createLookupAgent(model, generationConfig);
-  const tools: any = {
-    callLookupAgent: tool({
+  const tools: any = {};
+
+  // Database Agent Tool
+  if (agents?.database) {
+    const databaseAgent = createDatabaseAgent(
+      model,
+      agents.database,
+      generationConfig
+    );
+    tools.callDatabaseAgent = tool({
       description:
-        'Call the Lookup Agent for information about the database schema (tables, columns, indexes).',
+        'Call the Database Agent to perform database operations like reading schema, querying data, creating structures, or managing records.',
       inputSchema: z.object({
-        task: z
-          .string()
-          .describe('The specific database schema task to perform'),
+        task: z.string().describe('The specific database task to perform'),
       }),
       inputExamples: [
-        { input: { task: 'List all tables in the database' } },
-        { input: { task: 'Show me the index for the users table' } },
-        { input: { task: 'What columns does the products table have?' } },
-        { input: { task: 'List all indexes' } },
+        { input: { task: 'List all tables and create a new users table' } },
+        { input: { task: 'Search the products table for laptops' } },
+        { input: { task: 'Update John Doe email to john.doe@example.com' } },
       ],
       strict: true,
       execute: async function* ({ task }, { abortSignal, messages }) {
-        const result = await (lookupAgentTools as any).stream({
+        const result = await (databaseAgent as any).stream({
           messages: [...messages, { role: 'user', content: task }],
           abortSignal,
         });
 
-        // Each iteration yields a complete, accumulated UIMessage
-        for await (const message of readUIMessageStream({
-          stream: result.toUIMessageStream(),
-        })) {
-          yield message;
-        }
-      },
-      toModelOutput: ({ output: message }: any) => {
-        const lastTextPart = message?.parts.findLast(
-          (p: any) => p.type === 'text'
-        );
-        return {
-          type: 'text',
-          value: lastTextPart?.text ?? 'Task completed.',
-        };
-      },
-    }),
-  };
-
-  if (subAgents?.builder) {
-    const builderAgent = createBuilderAgent(model, generationConfig);
-    tools.callBuilderAgent = tool({
-      description:
-        'Call the Builder Agent for schema management (creating/updating tables, columns, and indexes).',
-      inputSchema: z.object({
-        task: z
-          .string()
-          .describe('The specific database schema task to perform'),
-      }),
-      inputExamples: [
-        { input: { task: 'Create a users table with email and name columns' } },
-        { input: { task: 'Add a bio column to the users table' } },
-        {
-          input: {
-            task: 'Create a unique index on the email column of users table',
-          },
-        },
-        { input: { task: 'Delete the idx_old_index' } },
-      ],
-      strict: true,
-      execute: async function* ({ task }, { abortSignal, messages }) {
-        const result = await (builderAgent as any).stream({
-          messages: [...messages, { role: 'user', content: task }],
-          abortSignal,
-        });
-
-        // Each iteration yields a complete, accumulated UIMessage
         for await (const message of readUIMessageStream({
           stream: result.toUIMessageStream(),
         })) {
@@ -108,118 +65,44 @@ export function createOrchestratorAgent(
     });
   }
 
-  if (subAgents?.editor) {
-    const editorAgent = createEditorAgent(model, generationConfig);
-    tools.callEditorAgent = tool({
+  // Browser Agent Placeholder
+  if (agents?.browser) {
+    tools.callBrowserAgent = tool({
       description:
-        'Call the Editor Agent for data manipulation (insert, update, delete records).',
+        'Call the Browser Agent for web automation, crawling, or scraping.',
       inputSchema: z.object({
-        task: z
-          .string()
-          .describe('The specific data manipulation task to perform'),
+        task: z.string().describe('The browser automation task to perform'),
       }),
-      inputExamples: [
-        { input: { task: 'Insert a new user with email john@example.com' } },
-        { input: { task: 'Update all inactive products to active status' } },
-        { input: { task: 'Delete all logs older than 2024-01-01' } },
-      ],
       strict: true,
-      execute: async function* ({ task }, { abortSignal, messages }) {
-        const result = await (editorAgent as any).stream({
-          messages: [...messages, { role: 'user', content: task }],
-          abortSignal,
-        });
-
-        // Each iteration yields a complete, accumulated UIMessage
-        for await (const message of readUIMessageStream({
-          stream: result.toUIMessageStream(),
-        })) {
-          yield message;
-        }
-      },
-      toModelOutput: ({ output: message }: any) => {
-        const lastTextPart = message?.parts.findLast(
-          (p: any) => p.type === 'text'
-        );
+      execute: async ({ task }) => {
         return {
-          type: 'text',
-          value: lastTextPart?.text ?? 'Task completed.',
-        };
-      },
-    });
-  }
-
-  if (subAgents?.query) {
-    const queryAgent = createQueryAgent(model, generationConfig);
-    tools.callQueryAgent = tool({
-      description: 'Call the Query Agent for data analysis and querying.',
-      inputSchema: z.object({
-        task: z
-          .string()
-          .describe('The specific data query or analysis task to perform'),
-      }),
-      inputExamples: [
-        { input: { task: 'Show me all active users' } },
-        { input: { task: 'Count total orders by status' } },
-        { input: { task: 'Find the top 10 products by revenue' } },
-        { input: { task: 'Search for products containing laptop' } },
-      ],
-      strict: true,
-      execute: async function* ({ task }, { abortSignal, messages }) {
-        const result = await (queryAgent as any).stream({
-          messages: [...messages, { role: 'user', content: task }],
-          abortSignal,
-        });
-
-        // Each iteration yields a complete, accumulated UIMessage
-        for await (const message of readUIMessageStream({
-          stream: result.toUIMessageStream(),
-        })) {
-          yield message;
-        }
-      },
-      toModelOutput: ({ output: message }: any) => {
-        const lastTextPart = message?.parts.findLast(
-          (p: any) => p.type === 'text'
-        );
-        return {
-          type: 'text',
-          value: lastTextPart?.text ?? 'Task completed.',
+          status: 'success',
+          message:
+            'Browser Agent is currently a placeholder. Task received: ' + task,
         };
       },
     });
   }
 
   return new ToolLoopAgent({
-    id: 'orchestrator-agent',
+    id: 'root-orchestrator',
     model,
     temperature: generationConfig?.temperature,
     topK: generationConfig?.topK,
     topP: generationConfig?.topP,
     maxOutputTokens: generationConfig?.maxOutputTokens,
-    instructions: `You are a professional Database Architect and Orchestrator. 
-    Your goal is to manage the database by routing user requests to specialized sub-agents.
-
-    ### OPERATIONAL PRIORITIES:
-    1. SCHEMA VERIFICATION: Before calling the "builder", "editor", or "query" agents, you MUST verify if the tables/columns exist using the "lookup" agent, unless the table names were explicitly provided in the recent conversation context.
-    2. AMBIGUITY RESOLUTION: If a user's request is vague (e.g., "add a field"), use the "lookup" agent to find the most relevant table before proceeding.
-    3. WORKFLOW CONTINUITY: If a sub-agent has previously been called and is awaiting confirmation or more information (e.g., Builder asking "Are you sure?"), you MUST continue to delegate to that same sub-agent to complete the operation.
-    4. DATA VS. SCHEMA: 
-      - Use "builder" ONLY for structural changes (CREATE, ALTER, DROP).
-      - Use "editor" ONLY for row-level changes (INSERT, UPDATE, DELETE records).
-      - Use "query" ONLY for reading or analyzing data.
-
-    ### SAFETY GUARDRAILS:
-    - NEVER guess table or column names. 
-    - NEVER claim a database modification was successful yourself. Success must be reported based on the tool output of the sub-agent you delegated to.
-    - If a sub-agent previously asked for confirmation and the user provides it, call that sub-agent again with the confirmation to trigger the actual tool execution.
-    - For destructive requests (dropping tables), the "builder" agent MUST be the one to perform the final execution after it receives the user's confirmation.
-
-    ### ROUTING LOGIC:
-    - lookup: Use when the user asks "What tables do I have?", "Show me the columns in X", or when you need to verify existence.
-    - builder: Use for any schema changes, including confirmations response related to schema changes.
-    - editor: Use for any data records changes, including confirmations response related to records.
-    - query: Use for data reading or analysis.`,
+    instructions: `You are the Root System Orchestrator. 
+    Your job is to understand the user's ultimate goal and route requests to the correct domain-specific sub-agent.
+    
+    Available Sub-Agents (if enabled):
+    - Database Agent: Use for ANY database queries, schema modifications, lookups, row inserts/updates.
+    - Browser Agent: Use for opening web pages, searching the web, or scraping web content.
+    
+    ### ROUTING INSTRUCTIONS:
+    - Determine which sub-agent is most appropriate for the user's task.
+    - If a task involves multiple domains (e.g. scrape a website and save to database), call the Browser Agent first, then call the Database Agent with the extracted information.
+    - DO NOT attempt to answer queries directly if a sub-agent is better suited to gather the data or execute the action.
+    - Forward confirmations (e.g., "Yes, proceed") to the agent that last asked for confirmation.`,
     tools,
   });
 }

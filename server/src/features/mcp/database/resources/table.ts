@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { lookupAgentTools } from '../../agent/agents/lookup';
+import { lookupAgentTools } from '../../../agent/agents/database/subagents/lookup';
 
 export default function register(server: FastMCP) {
   server.addResource({

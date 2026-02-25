@@ -1,65 +1,28 @@
 import { FilePart, ImagePart, ModelMessage, wrapLanguageModel } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createXai } from '@ai-sdk/xai';
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { devToolsMiddleware } from '@ai-sdk/devtools';
 
-import { createOrchestratorAgent } from './agents/orchestrator';
+import { createRootOrchestrator } from './agents/orchestrator';
+import { providers } from './providers';
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const DEFAULT_MODEL = process.env.LLM_DEFAULT_MODEL || 'gemini-3-pro-preview';
+const DEFAULT_MODEL = {
+  provider: process.env.LLM_DEFAULT_PROVIDER || 'google',
+  name: process.env.LLM_DEFAULT_MODEL || 'gemini-3-pro-preview',
+};
 
-const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL,
-});
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  baseURL: process.env.GEMINI_API_BASE_URL,
-});
-const anthropic = createAnthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  baseURL: process.env.ANTHROPIC_BASE_URL,
-});
-const xai = createXai({
-  apiKey: process.env.XAI_API_KEY,
-  baseURL: process.env.XAI_BASE_URL,
-});
-const local = createOpenAICompatible({
-  name: 'local',
-  apiKey: process.env.LOCAL_LLM_API_KEY,
-  baseURL: process.env.LOCAL_LLM_BASE_URL || 'http://localhost:1234/v1',
-});
+export interface ModelConfig {
+  provider: string;
+  name: string;
+}
 
-export function resolveModel(modelId: string) {
-  const map: Record<string, any> = {
-    // OpenAI
-    'gpt-5': openai('gpt-5'),
-    'gpt-5.1': openai('gpt-5.1'),
+export function resolveModel(modelConfig: ModelConfig) {
+  const { provider, name } = modelConfig;
+  const modelFn = providers[provider];
+  if (!modelFn) {
+    throw new Error(`Unsupported model provider: ${provider}`);
+  }
 
-    // Google Gemini
-    'gemini-2.5-flash': google('gemini-2.5-flash'),
-    'gemini-2.5-pro': google('gemini-2.5-pro'),
-    'gemini-3-flash-preview': google('gemini-3-flash-preview'),
-    'gemini-3-pro-preview': google('gemini-3-pro-preview'),
-
-    // Anthropic
-    'claude-3-5-sonnet': anthropic('claude-3-5-sonnet-latest'),
-    'claude-sonnet-4-5': anthropic('claude-sonnet-4-5'),
-    'claude-opus-4-6': anthropic('claude-opus-4-6'),
-    'claude-3-5-haiku': anthropic('claude-3-5-haiku-latest'),
-
-    // xAI
-    'grok-3': xai('grok-3'),
-    'grok-4': xai('grok-4-1-fast-reasoning'),
-
-    // Local (LM Studio, etc)
-    local: local('local'),
-  };
-
-  const model = map[modelId];
+  const model = modelFn(name);
 
   if (NODE_ENV === 'development') {
     return wrapLanguageModel({
@@ -76,10 +39,13 @@ export async function generateAIResponse({
   attachments,
   mentions,
   model = DEFAULT_MODEL,
-  subAgents = {
-    builder: true,
-    editor: true,
-    query: true,
+  agents = {
+    database: {
+      builder: true,
+      editor: true,
+      query: true,
+    },
+    browser: true,
   },
   generationConfig = {
     temperature: 0.7,
@@ -91,14 +57,17 @@ export async function generateAIResponse({
 }: {
   messages: ModelMessage[];
   attachments?: File[];
-  model?: string;
+  model?: ModelConfig;
   mentions?: {
     tables?: string[];
   };
-  subAgents?: {
-    builder?: boolean;
-    editor?: boolean;
-    query?: boolean;
+  agents?: {
+    database?: {
+      builder?: boolean;
+      editor?: boolean;
+      query?: boolean;
+    };
+    browser?: boolean;
   };
   generationConfig?: {
     temperature?: number;
@@ -159,9 +128,9 @@ export async function generateAIResponse({
 
   // Initialize orchestrator with capability to call worker agents and generation config
   const selectedModel = resolveModel(model);
-  const orchestrator = createOrchestratorAgent(
+  const orchestrator = createRootOrchestrator(
     selectedModel,
-    subAgents,
+    agents,
     generationConfig
   );
 
