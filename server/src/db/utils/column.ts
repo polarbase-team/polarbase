@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
 
-import { getPostgresVersion } from '../../plugins/pg';
+import { getPostgresVersion } from '../../db/pg';
 
 export const DataType = {
   Text: 'text',

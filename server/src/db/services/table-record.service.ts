@@ -1,6 +1,4 @@
-import { Knex } from 'knex';
-
-import pg from '../../plugins/pg';
+import pg from '../../db/pg';
 import { getCachedTableSchema } from '../utils/table';
 import { DataType } from '../utils/column';
 import { buildWhereClause, WhereFilter } from '../utils/record';

@@ -1,10 +1,13 @@
 import { Knex } from 'knex';
 import { LRUCache } from 'lru-cache';
-import { getAllTableMetadata, getTableMetadata } from '../db/table-metadata';
+import {
+  getAllTableMetadata,
+  getTableMetadata,
+} from '../metadata/table-metadata';
 import {
   getColumnMetadata,
   getMultiColumnMetadata,
-} from '../db/column-metadata';
+} from '../metadata/column-metadata';
 import {
   Column,
   LENGTH_CHECK_SUFFIX,

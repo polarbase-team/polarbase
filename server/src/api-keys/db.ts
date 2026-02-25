@@ -1,4 +1,4 @@
-import sqlite from '../plugins/sqlite';
+import sqlite from '../db/sqlite';
 
 export interface ApiKey {
   id: number;

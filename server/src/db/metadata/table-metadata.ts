@@ -1,4 +1,4 @@
-import sqlite from '../../plugins/sqlite';
+import sqlite from '../sqlite';
 
 export interface TableMetadata {
   schemaName: string;

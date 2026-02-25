@@ -1,4 +1,4 @@
-import pg, { getPostgresVersion } from '../../plugins/pg';
+import pg, { getPostgresVersion } from '../../db/pg';
 import {
   getTable,
   getTableList,
@@ -31,8 +31,8 @@ import {
   FormulaStrategy,
   FormulaResultType,
 } from '../utils/column';
-import { setTableMetadata } from '../db/table-metadata';
-import { setColumnMetadata } from '../db/column-metadata';
+import { setTableMetadata } from '../metadata/table-metadata';
+import { setColumnMetadata } from '../metadata/column-metadata';
 
 export class TableService {
   async getAll({

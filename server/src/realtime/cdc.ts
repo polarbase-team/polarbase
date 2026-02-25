@@ -6,7 +6,7 @@ import {
 } from 'pg-logical-replication';
 
 import { log } from '../utils/logger';
-import { isPgVersionAtLeast, pgConfig } from '../plugins/pg';
+import { isPgVersionAtLeast, pgConfig } from '../db/pg';
 
 export const CDC_EVENTS = {
   CHANGE: 'cdc:change',

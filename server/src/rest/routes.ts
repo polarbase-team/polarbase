@@ -1,22 +1,22 @@
 import { Elysia, t } from 'elysia';
 import { openapi, fromTypes } from '@elysiajs/openapi';
 
-import pg from '../plugins/pg';
-import { LocalStorageProvider } from '../plugins/storage/local-storage';
-import { checkRateLimit } from '../utils/rate-limit';
-import { err, json } from '../utils/api-response';
-import { apiKeyAuth } from '../api-keys/auth';
-import { TableService } from './services/table.service';
-import { TableRecordService } from './services/table-record.service';
-import { IndexService } from './services/index.service';
+import pg from '../db/pg';
+import { TableService } from '../db/services/table.service';
+import { TableRecordService } from '../db/services/table-record.service';
+import { IndexService } from '../db/services/index.service';
 import {
   Column,
   DataType,
   FormulaResultType,
   FormulaStrategy,
   ReferentialAction,
-} from './utils/column';
-import { WhereFilter } from './utils/record';
+} from '../db/utils/column';
+import { WhereFilter } from '../db/utils/record';
+import { LocalStorageProvider } from '../plugins/storage/local-storage';
+import { checkRateLimit } from '../utils/rate-limit';
+import { err, json } from '../utils/api-response';
+import { apiKeyAuth } from '../api-keys/auth';
 
 const REST_RATE_LIMIT = Number(process.env.REST_RATE_LIMIT) || 100;
 const REST_PREFIX = process.env.REST_PREFIX || '/rest';

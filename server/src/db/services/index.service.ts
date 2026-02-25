@@ -1,4 +1,4 @@
-import pg from '../../plugins/pg';
+import pg from '../../db/pg';
 
 export interface Index {
   name: string;

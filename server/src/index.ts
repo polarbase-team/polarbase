@@ -3,7 +3,7 @@ import { cors } from '@elysiajs/cors';
 import { staticPlugin } from '@elysiajs/static';
 import chalk from 'chalk';
 
-import { initDatabaseTypes } from './plugins/pg';
+import { initDatabaseTypes } from './db/pg';
 import { compression } from './plugins/compression';
 import { authRoutes } from './auth/routes';
 import { apiKeyRoutes } from './api-keys/routes';
