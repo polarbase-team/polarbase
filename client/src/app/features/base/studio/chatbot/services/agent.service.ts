@@ -3,14 +3,12 @@ import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
-import { FileMetadata } from '@app/shared/file/file-upload.service';
 import { getApiKey } from '@app/core/guards/api-key.guard';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  attachments?: FileMetadata[];
 }
 
 export interface StreamEvent {

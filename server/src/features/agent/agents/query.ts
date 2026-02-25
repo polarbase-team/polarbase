@@ -163,7 +163,10 @@ export function createQueryAgent(
       - For partial matches, use {"column": {"ilike": "%term%"}}.
       - For ranges, use {"column": {"gte": 10, "lte": 50}}.
       - For multiple values, use {"column": {"in": [1, 2, 3]}}.
-    3. **LOGIC**: Always use "and" or "or" arrays for combining multiple distinct conditions.`,
+    3. **LOGIC**: Always use "and" or "or" arrays for combining multiple distinct conditions.
+    
+    IMPORTANT: When you have finished, write a clear summary of your findings as your final response.
+    This summary will be returned to the main agent, so include all relevant information.`,
     tools: queryAgentTools,
   });
 }

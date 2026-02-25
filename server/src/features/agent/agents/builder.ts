@@ -695,7 +695,10 @@ export function createBuilderAgent(
     2. Select the correct system DataType from the allowed list.
     3. Propose the schema to the user.
     4. Call the appropriate tool(s) ONLY after the user has confirmed.
-    5. ONLY report success after the tool execution is complete.`,
+    5. ONLY report success after the tool execution is complete.
+    
+    IMPORTANT: When you have finished, write a clear summary of your actions and findings as your final response.
+    This summary will be returned to the main agent, so include all relevant information.`,
     tools: builderAgentTools,
   });
 }

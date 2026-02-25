@@ -50,6 +50,15 @@ export function createOrchestratorAgent(
           yield message;
         }
       },
+      toModelOutput: ({ output: message }: any) => {
+        const lastTextPart = message?.parts.findLast(
+          (p: any) => p.type === 'text'
+        );
+        return {
+          type: 'text',
+          value: lastTextPart?.text ?? 'Task completed.',
+        };
+      },
     }),
   };
 
@@ -87,6 +96,15 @@ export function createOrchestratorAgent(
           yield message;
         }
       },
+      toModelOutput: ({ output: message }: any) => {
+        const lastTextPart = message?.parts.findLast(
+          (p: any) => p.type === 'text'
+        );
+        return {
+          type: 'text',
+          value: lastTextPart?.text ?? 'Task completed.',
+        };
+      },
     });
   }
 
@@ -119,6 +137,15 @@ export function createOrchestratorAgent(
           yield message;
         }
       },
+      toModelOutput: ({ output: message }: any) => {
+        const lastTextPart = message?.parts.findLast(
+          (p: any) => p.type === 'text'
+        );
+        return {
+          type: 'text',
+          value: lastTextPart?.text ?? 'Task completed.',
+        };
+      },
     });
   }
 
@@ -150,6 +177,15 @@ export function createOrchestratorAgent(
         })) {
           yield message;
         }
+      },
+      toModelOutput: ({ output: message }: any) => {
+        const lastTextPart = message?.parts.findLast(
+          (p: any) => p.type === 'text'
+        );
+        return {
+          type: 'text',
+          value: lastTextPart?.text ?? 'Task completed.',
+        };
       },
     });
   }

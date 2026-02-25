@@ -100,7 +100,7 @@
                       style="color: var(--p-primary-color)"
                     ></i>
                     @if ($any(msg)._isGenerating) {
-                      <p class="text-surface-500 text-sm italic">
+                      <p class="text-surface-500 text-sm leading-6 italic">
                         <span class="loading-text">Generating</span>
                       </p>
                     } @else {
@@ -128,9 +128,16 @@
                         }
 
                         @if ($any(msg)._toolCallId; as toolCallId) {
-                          <p class="text-surface-500 text-sm italic">
-                            Tool calling:
-                            <span class="font-medium loading-text">{{ toolCallId }}</span>
+                          <p class="text-surface-500 text-sm leading-6 italic">
+                            @if (agentNameMap[toolCallId]) {
+                              Agent:
+                              <span class="font-medium loading-text">{{
+                                agentNameMap[toolCallId]
+                              }}</span>
+                            } @else {
+                              Tool calling:
+                              <span class="font-medium loading-text">{{ toolCallId }}</span>
+                            }
                           </p>
                         }
                       </div>

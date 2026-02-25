@@ -139,6 +139,13 @@ export class ChatBotComponent {
     maxOutputTokens: 2048,
   };
 
+  protected agentNameMap: Record<string, string> = {
+    callLookupAgent: 'Lookup Agent',
+    callBuilderAgent: 'Builder Agent',
+    callEditorAgent: 'Editor Agent',
+    callQueryAgent: 'Query Agent',
+  };
+
   private currentChatSubscription?: Subscription;
 
   constructor(
@@ -302,6 +309,9 @@ export class ChatBotComponent {
   private startChat(message: ChatMessage) {
     this.isChatting.set(true);
 
+    const messages = [...this.messages(), message];
+    this.messages.set(messages);
+
     const botMessage: AssistantChatMessage = {
       role: 'assistant',
       content: '',
@@ -309,11 +319,18 @@ export class ChatBotComponent {
       _isGenerating: true,
       _toolCallId: null,
     };
-    this.messages.update((messages) => [...messages, message, botMessage]);
+    this.messages.set([...messages, botMessage]);
 
     this.currentChatSubscription = this.agentService
       .chat({
-        messages: this.messages(),
+        messages: messages.reduce((acc, msg) => {
+          acc.push({
+            role: msg.role,
+            content: msg.content,
+            timestamp: msg.timestamp,
+          });
+          return acc;
+        }, [] as ChatMessage[]),
         attachments: this.selectedFiles(),
         mentions: this.mentions,
         model: this.selectedModel,
