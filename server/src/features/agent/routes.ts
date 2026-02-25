@@ -56,7 +56,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
       },
     }) => {
       const result = await generateAIResponse({
-        messages: messages as any,
+        messages,
         attachments,
         mentions,
         model,

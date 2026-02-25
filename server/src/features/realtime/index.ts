@@ -59,7 +59,7 @@ export async function enableRealtime(app: Elysia) {
       }
     },
     close(ws) {
-      const { id } = (ws as any).data.query || {};
+      const { id } = ws.data.query || {};
       if (id) WebSocket.removeClient(id);
     },
   });

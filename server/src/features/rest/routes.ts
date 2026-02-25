@@ -89,7 +89,7 @@ export const restRoutes = new Elysia({ prefix: REST_PREFIX })
     if (code === 'VALIDATION') {
       set.status = 400;
 
-      const allErrors = (error as any).all;
+      const allErrors = error.all;
       const firstError = allErrors?.[0];
       if (firstError) {
         const rawPath = firstError.path;

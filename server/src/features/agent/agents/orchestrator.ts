@@ -42,7 +42,7 @@ export function createRootOrchestrator(
       ],
       strict: true,
       execute: async function* ({ task }, { abortSignal, messages }) {
-        const result = await (databaseAgent as any).stream({
+        const result = await databaseAgent.stream({
           messages: [...messages, { role: 'user', content: task }],
           abortSignal,
         });

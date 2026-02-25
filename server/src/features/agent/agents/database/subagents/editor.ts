@@ -80,7 +80,7 @@ export const editorAgentTools = {
     ],
     strict: true,
     execute: async (args) => {
-      const result = await recordService.update(args as any);
+      const result = await recordService.update(args);
       return { status: 'success', ...result };
     },
   }),

@@ -38,7 +38,7 @@ export function createOrchestratorAgent(
       ],
       strict: true,
       execute: async function* ({ task }, { abortSignal, messages }) {
-        const result = await (lookupAgentTools as any).stream({
+        const result = await lookupAgentTools.stream({
           messages: [...messages, { role: 'user', content: task }],
           abortSignal,
         });
@@ -84,7 +84,7 @@ export function createOrchestratorAgent(
       ],
       strict: true,
       execute: async function* ({ task }, { abortSignal, messages }) {
-        const result = await (builderAgent as any).stream({
+        const result = await builderAgent.stream({
           messages: [...messages, { role: 'user', content: task }],
           abortSignal,
         });
@@ -125,7 +125,7 @@ export function createOrchestratorAgent(
       ],
       strict: true,
       execute: async function* ({ task }, { abortSignal, messages }) {
-        const result = await (editorAgent as any).stream({
+        const result = await editorAgent.stream({
           messages: [...messages, { role: 'user', content: task }],
           abortSignal,
         });
@@ -166,7 +166,7 @@ export function createOrchestratorAgent(
       ],
       strict: true,
       execute: async function* ({ task }, { abortSignal, messages }) {
-        const result = await (queryAgent as any).stream({
+        const result = await queryAgent.stream({
           messages: [...messages, { role: 'user', content: task }],
           abortSignal,
         });
@@ -191,7 +191,7 @@ export function createOrchestratorAgent(
   }
 
   return new ToolLoopAgent({
-    id: 'orchestrator-agent',
+    id: 'database-orchestrator-agent',
     model,
     temperature: generationConfig?.temperature,
     topK: generationConfig?.topK,
