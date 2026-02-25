@@ -1,7 +1,8 @@
 import { ToolLoopAgent, tool, readUIMessageStream } from 'ai';
 import { z } from 'zod';
 
-import { createOrchestratorAgent as createDatabaseAgent } from './database/orchestrator';
+import { createDatabaseAgent } from './database/agent';
+import { createBrowserAgent } from './browser/agent';
 
 export function createRootOrchestrator(
   model: any,
@@ -65,20 +66,48 @@ export function createRootOrchestrator(
     });
   }
 
-  // Browser Agent Placeholder
+  // Browser Agent
   if (agents?.browser) {
+    const browserAgent = createBrowserAgent(model, generationConfig);
     tools.callBrowserAgent = tool({
       description:
         'Call the Browser Agent for web automation, crawling, or scraping.',
       inputSchema: z.object({
         task: z.string().describe('The browser automation task to perform'),
       }),
+      inputExamples: [
+        {
+          input: {
+            task: 'Navigate to https://example.com and get the page title',
+          },
+        },
+        { input: { task: 'Search Google for "playwright web scraping"' } },
+        {
+          input: {
+            task: 'Extract all links from https://news.ycombinator.com',
+          },
+        },
+      ],
       strict: true,
-      execute: async ({ task }) => {
+      execute: async function* ({ task }, { abortSignal, messages }) {
+        const result = await browserAgent.stream({
+          messages: [...messages, { role: 'user', content: task }],
+          abortSignal,
+        });
+
+        for await (const message of readUIMessageStream({
+          stream: result.toUIMessageStream(),
+        })) {
+          yield message;
+        }
+      },
+      toModelOutput: ({ output: message }: any) => {
+        const lastTextPart = message?.parts.findLast(
+          (p: any) => p.type === 'text'
+        );
         return {
-          status: 'success',
-          message:
-            'Browser Agent is currently a placeholder. Task received: ' + task,
+          type: 'text',
+          value: lastTextPart?.text ?? 'Task completed.',
         };
       },
     });

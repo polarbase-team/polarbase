@@ -6,7 +6,7 @@ import { createBuilderAgent } from './subagents/builder';
 import { createEditorAgent } from './subagents/editor';
 import { createQueryAgent } from './subagents/query';
 
-export function createOrchestratorAgent(
+export function createDatabaseAgent(
   model: LanguageModel,
   agents?: {
     builder?: boolean;
@@ -191,7 +191,7 @@ export function createOrchestratorAgent(
   }
 
   return new ToolLoopAgent({
-    id: 'database-orchestrator-agent',
+    id: 'database-agent',
     model,
     temperature: generationConfig?.temperature,
     topK: generationConfig?.topK,

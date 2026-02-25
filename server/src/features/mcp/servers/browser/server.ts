@@ -2,6 +2,10 @@ import { FastMCP } from 'fastmcp';
 
 import { log } from '../../../../shared/utils/logger';
 import instructions from './instructions';
+import registerNavigationTools from './tools/navigation';
+import registerInteractionTools from './tools/interaction';
+import registerExtractionTools from './tools/extraction';
+import registerScreenshotTools from './tools/screenshot';
 
 export const browserMcpServer = new FastMCP({
   name: 'PolarBase Browser MCP Server',
@@ -10,4 +14,7 @@ export const browserMcpServer = new FastMCP({
   instructions,
 });
 
-// Register browser tools/resources/prompts here when available
+registerNavigationTools(browserMcpServer);
+registerInteractionTools(browserMcpServer);
+registerExtractionTools(browserMcpServer);
+registerScreenshotTools(browserMcpServer);
