@@ -33,8 +33,8 @@ export default function register(server: FastMCP) {
     async load({ prompt }) {
       try {
         const tablesResource = await server.embedded('db://tables');
-        const tables = JSON.parse(tablesResource.text || '[]') as any[];
-        const existingNames = tables.map((t) =>
+        const tables = JSON.parse(tablesResource.text || '[]');
+        const existingNames = tables.map((t: any) =>
           typeof t === 'string' ? t : t.name
         );
         return `

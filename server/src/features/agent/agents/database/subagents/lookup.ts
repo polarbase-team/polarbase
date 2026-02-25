@@ -1,4 +1,4 @@
-import { ToolLoopAgent, tool } from 'ai';
+import { LanguageModel, ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
 import { TableService } from '../../../../../db/services/table.service';
@@ -63,7 +63,7 @@ export const lookupAgentTools = {
 };
 
 export function createLookupAgent(
-  model: any,
+  model: LanguageModel,
   generationConfig?: {
     temperature?: number;
     topP?: number;

@@ -1,4 +1,4 @@
-import { ToolLoopAgent, tool, readUIMessageStream } from 'ai';
+import { ToolLoopAgent, tool, readUIMessageStream, LanguageModel } from 'ai';
 import { z } from 'zod';
 
 import { createLookupAgent } from './subagents/lookup';
@@ -7,7 +7,7 @@ import { createEditorAgent } from './subagents/editor';
 import { createQueryAgent } from './subagents/query';
 
 export function createOrchestratorAgent(
-  model: any,
+  model: LanguageModel,
   agents?: {
     builder?: boolean;
     editor?: boolean;

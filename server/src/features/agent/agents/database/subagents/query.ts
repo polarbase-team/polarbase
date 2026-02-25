@@ -1,4 +1,4 @@
-import { ToolLoopAgent, tool } from 'ai';
+import { LanguageModel, ToolLoopAgent, tool } from 'ai';
 import { z } from 'zod';
 
 import { TableRecordService } from '../../../../../db/services/table-record.service';
@@ -135,7 +135,7 @@ export const queryAgentTools = {
 };
 
 export function createQueryAgent(
-  model: any,
+  model: LanguageModel,
   generationConfig?: {
     temperature?: number;
     topP?: number;

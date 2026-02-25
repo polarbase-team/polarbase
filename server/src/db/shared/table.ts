@@ -232,7 +232,7 @@ const fetchSchemasInternal = async (
       .modify((qb) => {
         if (columnName) qb.where({ column_name: columnName });
       })
-      .orderBy(['table_name' as any, 'ordinal_position' as any]),
+      .orderBy(['table_name', 'ordinal_position']),
 
     // 2. Column descriptions (Postgres)
     pg('pg_description')
@@ -332,28 +332,26 @@ const fetchSchemasInternal = async (
   const results: Record<string, Column[]> = {};
 
   for (const tableName of tableNames) {
-    const tableColumns = (columns as any[]).filter(
-      (c) => c.table_name === tableName
-    );
+    const tableColumns = columns.filter((c: any) => c.table_name === tableName);
     if (!tableColumns.length && tableNames.length > 1) continue;
 
-    const tableComments = (comments as any[]).filter(
-      (c) => c.table_name === tableName
+    const tableComments = comments.filter(
+      (c: any) => c.table_name === tableName
     );
-    const tablePKs = (primaryKeys as any[]).filter(
-      (pk) => pk.table_name === tableName
+    const tablePKs = primaryKeys.filter(
+      (pk: any) => pk.table_name === tableName
     );
-    const tableFKs = (foreignKeys.rows as any[]).filter(
-      (fk) => fk.table_name === tableName
+    const tableFKs = foreignKeys.rows.filter(
+      (fk: any) => fk.table_name === tableName
     );
-    const tableUniques = (uniqueConstraints as any[]).filter(
-      (u) => u.table_name === tableName
+    const tableUniques = uniqueConstraints.filter(
+      (u: any) => u.table_name === tableName
     );
-    const tableChecks = (checkConstraints.rows as any[]).filter(
-      (cons) => cons.table_name === tableName
+    const tableChecks = checkConstraints.rows.filter(
+      (cons: any) => cons.table_name === tableName
     );
-    const tableMeta = (columnMetadata as any[]).filter(
-      (m) => m.tableName === tableName
+    const tableMeta = columnMetadata.filter(
+      (m: any) => m.tableName === tableName
     );
 
     results[tableName] = processTableSchema(
