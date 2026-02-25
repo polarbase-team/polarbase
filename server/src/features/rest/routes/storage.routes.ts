@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 
-import { LocalStorageProvider } from '../../shared/plugins/storage/local-storage';
+import { LocalStorageProvider } from '../../../shared/plugins/storage/local-storage';
 
 const storage = new LocalStorageProvider();
 

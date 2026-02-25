@@ -1,16 +1,16 @@
 import { Elysia, t } from 'elysia';
 
-import pg from '../../db/pg';
-import { TableService } from '../../db/services/table.service';
-import { IndexService } from '../../db/services/index.service';
+import pg from '../../../db/pg';
+import { TableService } from '../../../db/services/table.service';
+import { IndexService } from '../../../db/services/index.service';
 import {
   Column,
   DataType,
   FormulaResultType,
   FormulaStrategy,
   ReferentialAction,
-} from '../../db/utils/column';
-import { err } from '../../shared/utils/api-response';
+} from '../../../db/utils/column';
+import { err } from '../../../shared/utils/api-response';
 
 const tableService = new TableService();
 const indexService = new IndexService();

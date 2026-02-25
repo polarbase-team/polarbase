@@ -1,7 +1,6 @@
 import { FastMCP } from 'fastmcp';
 
-import { log } from '../../../shared/utils/logger';
-import { authenticate } from '../shared/auth';
+import { log } from '../../../../shared/utils/logger';
 import instructions from './instructions';
 import registerTableResource from './resources/table';
 import registerIndexResource from './resources/index';
@@ -16,7 +15,6 @@ export const databaseMcpServer = new FastMCP({
   version: '1.0.0',
   logger: log as any,
   instructions,
-  authenticate,
 });
 
 // Register resources
