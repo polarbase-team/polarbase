@@ -4,13 +4,13 @@ import { WebSocket } from '../../shared/plugins/web-socket';
 import { apiKeyAuth } from '../auth/api-key.auth';
 import { CDC_EVENTS, cdcEmitter, setupReplication, startCDC } from './cdc';
 
+const REALTIME_PATH = process.env.REALTIME_PATH || '/realtime';
+const REALTIME_MAX_CLIENTS = Number(process.env.REALTIME_MAX_CLIENTS) || 1000;
+const REALTIME_EVENT_NAME = 'db_change';
+
 export async function enableRealtime(app: Elysia) {
   await setupReplication();
   await startCDC();
-
-  const REALTIME_PATH = process.env.REALTIME_PATH || '/realtime';
-  const REALTIME_MAX_CLIENTS = Number(process.env.REALTIME_MAX_CLIENTS) || 1000;
-  const REALTIME_EVENT_NAME = 'db_change';
 
   const sseClients = new Set<(data: any) => void>();
 

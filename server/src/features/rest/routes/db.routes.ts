@@ -9,7 +9,7 @@ import {
   FormulaResultType,
   FormulaStrategy,
   ReferentialAction,
-} from '../../../db/utils/column';
+} from '../../../db/shared/column';
 import { err } from '../../../shared/utils/api-response';
 
 const tableService = new TableService();

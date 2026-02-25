@@ -1,7 +1,7 @@
 import pg from '../../db/pg';
-import { getCachedTableSchema } from '../utils/table';
-import { DataType } from '../utils/column';
-import { buildWhereClause, WhereFilter } from '../utils/record';
+import { getCachedTableSchema } from '../shared/table';
+import { DataType } from '../shared/column';
+import { buildWhereClause, WhereFilter } from '../shared/record';
 
 export class TableRecordService {
   async select({

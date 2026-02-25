@@ -8,7 +8,7 @@ import {
   FormulaResultType,
   FormulaStrategy,
   ReferentialAction,
-} from '../../../../../db/utils/column';
+} from '../../../../../db/shared/column';
 
 const tableService = new TableService();
 const indexService = new IndexService();

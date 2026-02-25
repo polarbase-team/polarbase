@@ -7,7 +7,7 @@ import {
   getColumnSchema,
   toPgArray,
   clearSchemaCache,
-} from '../utils/table';
+} from '../shared/table';
 import {
   addLengthCheck,
   addSizeCheck,
@@ -30,7 +30,7 @@ import {
   updateFormulaExpression,
   FormulaStrategy,
   FormulaResultType,
-} from '../utils/column';
+} from '../shared/column';
 import { setTableMetadata } from '../metadata/table.metadata';
 import { setColumnMetadata } from '../metadata/column.metadata';
 

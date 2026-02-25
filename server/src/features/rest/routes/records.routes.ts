@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 
 import { TableRecordService } from '../../../db/services/table-record.service';
-import { WhereFilter } from '../../../db/utils/record';
+import { WhereFilter } from '../../../db/shared/record';
 import { err } from '../../../shared/utils/api-response';
 
 const tableRecordService = new TableRecordService();
