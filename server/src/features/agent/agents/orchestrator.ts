@@ -1,11 +1,13 @@
 import { ToolLoopAgent, tool, readUIMessageStream } from 'ai';
 import { z } from 'zod';
 
+import { createMemoryTool, readCoreMemory } from '../memory';
 import { createDatabaseAgent } from './database/agent';
 import { createBrowserAgent } from './browser/agent';
 
 export function createRootOrchestrator(
   model: any,
+  sessionId: string,
   agents?: {
     database?: {
       builder?: boolean;
@@ -21,7 +23,9 @@ export function createRootOrchestrator(
     maxOutputTokens?: number;
   }
 ) {
-  const tools: any = {};
+  const tools: any = {
+    memory: createMemoryTool(sessionId),
+  };
 
   // Database Agent Tool
   if (agents?.database) {
@@ -113,6 +117,8 @@ export function createRootOrchestrator(
     });
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+
   return new ToolLoopAgent({
     id: 'root-orchestrator',
     model,
@@ -120,18 +126,39 @@ export function createRootOrchestrator(
     topK: generationConfig?.topK,
     topP: generationConfig?.topP,
     maxOutputTokens: generationConfig?.maxOutputTokens,
-    instructions: `You are the Root System Orchestrator. 
-    Your job is to understand the user's ultimate goal and route requests to the correct domain-specific sub-agent.
-    
-    Available Sub-Agents (if enabled):
-    - Database Agent: Use for ANY database queries, schema modifications, lookups, row inserts/updates.
-    - Browser Agent: Use for opening web pages, searching the web, or scraping web content.
-    
-    ### ROUTING INSTRUCTIONS:
-    - Determine which sub-agent is most appropriate for the user's task.
-    - If a task involves multiple domains (e.g. scrape a website and save to database), call the Browser Agent first, then call the Database Agent with the extracted information.
-    - DO NOT attempt to answer queries directly if a sub-agent is better suited to gather the data or execute the action.
-    - Forward confirmations (e.g., "Yes, proceed") to the agent that last asked for confirmation.`,
+    prepareCall: async (settings) => {
+      const coreMemory = readCoreMemory(sessionId);
+      const coreMemoryBlock = coreMemory
+        ? `\n\nCore Memory (known user facts):\n${coreMemory}`
+        : '';
+
+      return {
+        ...settings,
+        // Trim to last 20 messages to save tokens; older history is in recall memory
+        messages: (settings.messages ?? []).slice(-20),
+        instructions: `Today's date is ${today}.${coreMemoryBlock}
+
+You are the Root System Orchestrator. 
+Your job is to understand the user's ultimate goal and route requests to the correct domain-specific sub-agent.
+
+Available Sub-Agents (if enabled):
+- Database Agent: Use for ANY database queries, schema modifications, lookups, row inserts/updates.
+- Browser Agent: Use for opening web pages, searching the web, or scraping web content.
+
+### MEMORY:
+- You have a memory tool for storing and recalling information across conversations.
+- Before answering, consider if the query depends on user preferences or past context — if so, search memory first.
+- Store important user facts (name, preferences, constraints) as core memories.
+- Store detailed observations and summaries as notes.
+- Keep memory operations invisible in your user-facing replies.
+
+### ROUTING INSTRUCTIONS:
+- Determine which sub-agent is most appropriate for the user's task.
+- If a task involves multiple domains (e.g. scrape a website and save to database), call the Browser Agent first, then call the Database Agent with the extracted information.
+- DO NOT attempt to answer queries directly if a sub-agent is better suited to gather the data or execute the action.
+- Forward confirmations (e.g., "Yes, proceed") to the agent that last asked for confirmation.`,
+      };
+    },
     tools,
   });
 }

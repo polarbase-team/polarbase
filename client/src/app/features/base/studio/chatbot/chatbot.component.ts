@@ -84,12 +84,16 @@ export class ChatBotComponent {
   fileInput = viewChild<ElementRef>('fileInput');
 
   protected readonly promptTemplates = promptTemplates;
+  protected title = signal('');
   protected messages = signal<ChatMessage[]>([]);
+  protected currentSessionId = signal<string>(crypto.randomUUID());
   protected selectedFiles = signal<File[]>([]);
   protected isDragging = signal(false);
   protected isChatting = signal(false);
+  protected isFullscreen = signal(false);
   protected inputText = '';
-  protected isFullscreen = false;
+
+  protected historyMenuItems = signal<MenuItem[]>([]);
 
   protected mentionMenuItems: MenuItem[];
   protected mentions: { tables: string[] } = { tables: [] };
@@ -213,19 +217,71 @@ export class ChatBotComponent {
   }
 
   protected toggleFullscreen() {
-    this.isFullscreen = !this.isFullscreen;
-    this.fullscreen.emit(this.isFullscreen);
+    this.isFullscreen.update((v) => !v);
+    this.fullscreen.emit(this.isFullscreen());
   }
 
   protected closeChatbot() {
-    this.isFullscreen = false;
-    this.fullscreen.emit(this.isFullscreen);
+    this.isFullscreen.set(false);
+    this.fullscreen.emit(this.isFullscreen());
     this.onClose.emit();
   }
 
   protected startNewChat() {
+    const newId = crypto.randomUUID();
+    this.currentSessionId.set(newId);
     this.reset();
     this.focus();
+  }
+
+  protected async loadHistory(sessionId: string) {
+    try {
+      const history = await this.agentService.getHistory(sessionId);
+      this.messages.set(history);
+      setTimeout(() => this.scrollToBottom(), 100);
+    } catch (e) {
+      console.error('Failed to load history', e);
+    }
+  }
+
+  protected async loadSessions() {
+    try {
+      const sessions = await this.agentService.getSessions();
+      this.historyMenuItems.set([
+        {
+          label: 'Conversations',
+          items: sessions.map((s) => ({
+            label: s.title,
+            icon: 'icon icon-message-square',
+            command: () => {
+              this.title.set(s.title);
+              this.loadHistory(s.id);
+            },
+            data: {
+              sessionId: s.id,
+              delete: () => this.deleteSession(s.id),
+            },
+          })),
+        },
+      ]);
+    } catch (e) {
+      console.error('Failed to load sessions', e);
+    }
+  }
+
+  protected async deleteSession(sessionId: string) {
+    try {
+      await this.agentService.deleteSession(sessionId);
+      if (this.currentSessionId() === sessionId) {
+        this.startNewChat();
+      } else {
+        this.historyMenuItems.update((items) =>
+          items.filter((item) => item['data']?.sessionId !== sessionId),
+        );
+      }
+    } catch (e) {
+      console.error('Failed to delete session', e);
+    }
   }
 
   protected setPrompt(prompt: string) {
@@ -333,10 +389,10 @@ export class ChatBotComponent {
           acc.push({
             role: msg.role,
             content: msg.content,
-            timestamp: msg.timestamp,
           });
           return acc;
         }, [] as ChatMessage[]),
+        sessionId: this.currentSessionId(),
         attachments: this.selectedFiles(),
         mentions: this.mentions,
         model: this.selectedModel,

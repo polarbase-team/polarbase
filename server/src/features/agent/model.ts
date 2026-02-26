@@ -3,11 +3,26 @@ import { devToolsMiddleware } from '@ai-sdk/devtools';
 
 import { createRootOrchestrator } from './agents/orchestrator';
 import { providers } from './providers';
+import { appendConversation, generateSessionTitle } from './memory';
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const DEFAULT_MODEL = {
   provider: process.env.LLM_DEFAULT_PROVIDER || 'google',
   name: process.env.LLM_DEFAULT_MODEL || 'gemini-3-pro-preview',
+};
+const DEFAULT_AGENTS = {
+  database: {
+    builder: true,
+    editor: true,
+    query: true,
+  },
+  browser: true,
+};
+const DEFAULT_GENERATION_CONFIG = {
+  temperature: 0.7,
+  topP: 0.9,
+  topK: 40,
+  maxOutputTokens: 2048,
 };
 
 export interface ModelConfig {
@@ -15,7 +30,7 @@ export interface ModelConfig {
   name: string;
 }
 
-export function resolveModel(modelConfig: ModelConfig) {
+const resolveModel = (modelConfig: ModelConfig) => {
   const { provider, name } = modelConfig;
   const modelFn = providers[provider];
   if (!modelFn) {
@@ -32,30 +47,20 @@ export function resolveModel(modelConfig: ModelConfig) {
   }
 
   return model;
-}
+};
 
 export async function generateAIResponse({
   messages,
+  sessionId,
   attachments,
   mentions,
   model = DEFAULT_MODEL,
-  agents = {
-    database: {
-      builder: true,
-      editor: true,
-      query: true,
-    },
-    browser: true,
-  },
-  generationConfig = {
-    temperature: 0.7,
-    topP: 0.9,
-    topK: 40,
-    maxOutputTokens: 2048,
-  },
+  agents = DEFAULT_AGENTS,
+  generationConfig = DEFAULT_GENERATION_CONFIG,
   abortSignal,
 }: {
   messages: ModelMessage[];
+  sessionId: string;
   attachments?: File[];
   model?: ModelConfig;
   mentions?: {
@@ -130,10 +135,67 @@ export async function generateAIResponse({
   const selectedModel = resolveModel(model);
   const orchestrator = createRootOrchestrator(
     selectedModel,
+    sessionId,
     agents,
     generationConfig
   );
 
   // Use the orchestrator agent to stream the response
-  return orchestrator.stream({ messages, abortSignal });
+  const result = await orchestrator.stream({ messages, abortSignal });
+
+  // Record conversation for recall memory asynchronously
+  (async () => {
+    try {
+      // Record user message
+      const lastUserMessage = [...messages]
+        .reverse()
+        .find((m: any) => m.role === 'user');
+      if (lastUserMessage) {
+        let content = '';
+        if (typeof lastUserMessage.content === 'string') {
+          content = lastUserMessage.content;
+        } else if (Array.isArray(lastUserMessage.content)) {
+          content = lastUserMessage.content
+            .filter((p: any) => p.type === 'text')
+            .map((p: any) => p.text)
+            .join(' ');
+        }
+
+        if (content) {
+          appendConversation(sessionId, {
+            role: 'user',
+            content,
+            timestamp: new Date().toISOString(),
+          });
+
+          // Generate a title if it's the first message
+          await generateSessionTitle(selectedModel, sessionId, content);
+        }
+      }
+
+      // Record assistant message after it's complete
+      const finalResult = await result.response;
+      const lastAssistantMessage = [...finalResult.messages]
+        .reverse()
+        .find((m: any) => m.role === 'assistant');
+
+      const assistantText = Array.isArray(lastAssistantMessage?.content)
+        ? (lastAssistantMessage.content as any[]).find(
+            (p: any) => p.type === 'text'
+          )?.text
+        : lastAssistantMessage?.content;
+
+      if (assistantText) {
+        appendConversation(sessionId, {
+          role: 'assistant',
+          content: assistantText,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.error('Failed to record memory:', e);
+    }
+  })();
+
+  return result;
 }

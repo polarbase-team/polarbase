@@ -46,3 +46,8 @@ package-lock.json
 .env.local
 .env.*.local
 .devtools
+
+*.db
+*.db-shm
+*.db-wal
+uploads

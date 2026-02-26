@@ -1,5 +1,6 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable, WritableSignal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, lastValueFrom, map } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -8,7 +9,7 @@ import { getApiKey } from '@app/core/guards/api-key.guard';
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
+  timestamp?: Date;
 }
 
 export interface Model {
@@ -27,8 +28,11 @@ export class AgentService {
 
   private apiUrl = `${environment.apiUrl}/agent`;
 
+  constructor(private http: HttpClient) {}
+
   chat({
     messages,
+    sessionId,
     attachments,
     mentions,
     model,
@@ -36,6 +40,7 @@ export class AgentService {
     generationConfig,
   }: {
     messages: ChatMessage[];
+    sessionId: string;
     attachments?: File[];
     mentions?: {
       tables: string[];
@@ -59,6 +64,7 @@ export class AgentService {
     return new Observable((observer) => {
       const formData = new FormData();
       formData.append('messages', JSON.stringify(messages));
+      formData.append('sessionId', sessionId);
       if (attachments?.length) {
         attachments.forEach((file) => formData.append('attachments', file, file.name));
       }
@@ -155,5 +161,35 @@ export class AgentService {
 
       return () => abortController.abort();
     });
+  }
+
+  getSessions(): Promise<{ id: string; title: string; updated_at: string }[]> {
+    return lastValueFrom(
+      this.http.get<{ id: string; title: string; updated_at: string }[]>(`${this.apiUrl}/sessions`),
+    );
+  }
+
+  getHistory(sessionId: string): Promise<ChatMessage[]> {
+    return lastValueFrom(
+      this.http.get<any[]>(`${this.apiUrl}/history/${sessionId}`).pipe(
+        map((history) =>
+          history.map((h) => ({
+            role: h.role,
+            content: h.content,
+            timestamp: new Date(h.timestamp),
+          })),
+        ),
+      ),
+    );
+  }
+
+  updateSessionTitle(sessionId: string, title: string): Promise<any> {
+    return lastValueFrom(
+      this.http.post<any>(`${this.apiUrl}/sessions/${sessionId}/title`, { title }),
+    );
+  }
+
+  deleteSession(sessionId: string): Promise<any> {
+    return lastValueFrom(this.http.delete<any>(`${this.apiUrl}/sessions/${sessionId}`));
   }
 }
