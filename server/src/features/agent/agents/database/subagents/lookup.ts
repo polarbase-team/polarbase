@@ -80,10 +80,10 @@ export function createLookupAgent(
     maxOutputTokens: generationConfig?.maxOutputTokens,
     toolChoice: 'required',
     instructions: `You are a Database Schema Lookup Agent. 
-    You can find tables, columns and indexes in the database.
-    
-    IMPORTANT: When you have finished, write a clear summary of your findings as your final response.
-    This summary will be returned to the main agent, so include all relevant information.`,
+You can find tables, columns and indexes in the database.
+
+IMPORTANT: When you have finished, write a clear summary of your findings as your final response.
+This summary will be returned to the main agent, so include all relevant information.`,
     tools: lookupAgentTools,
   });
 }
