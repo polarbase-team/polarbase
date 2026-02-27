@@ -144,7 +144,7 @@
                 } @else {
                   <div class="space-y-4 flex-1 min-w-0">
                     @if ($any(msg)._isGenerating) {
-                      <p class="text-xs font-medium text-surface-500 leading-6">
+                      <p class="text-sm font-medium text-surface-500 leading-6">
                         <span class="loading-text">Generating</span>
                       </p>
                     } @else {
@@ -156,7 +156,7 @@
                             (click)="$any(msg)._thoughtExpanded = !$any(msg)._thoughtExpanded"
                           >
                             <i
-                              class="icon text-surface-400 text-xs transition-transform"
+                              class="icon text-surface-400 text-sm transition-transform"
                               [ngClass]="
                                 $any(msg)._thoughtExpanded
                                   ? 'icon-chevron-down'
@@ -164,7 +164,7 @@
                               "
                             ></i>
                             <p
-                              class="text-xs font-medium text-surface-500 leading-6 group-hover/thought:text-surface-700 transition-colors"
+                              class="text-sm font-medium text-surface-500 leading-6 group-hover/thought:text-surface-700 transition-colors"
                             >
                               @if ($any(msg)._isStreaming && !$any(msg).content) {
                                 <span class="loading-text">Thinking</span>
