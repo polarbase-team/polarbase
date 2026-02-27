@@ -1,4 +1,4 @@
-import sqlite from '../sqlite';
+import db from './metadata.db';
 
 export interface ColumnMetadata {
   schemaName: string;
@@ -6,35 +6,45 @@ export interface ColumnMetadata {
   columnName: string;
   uiName: string;
   format: any;
+  createdAt?: string;
+  updatedAt?: string;
 }
-
-export const db = sqlite;
 
 // Create column_metadata table if it does not exist
 db.exec(`
   CREATE TABLE IF NOT EXISTS column_metadata (
-    schemaName TEXT NOT NULL,
-    tableName TEXT NOT NULL,
-    columnName TEXT NOT NULL,
-    uiName TEXT,
+    schema_name TEXT NOT NULL,
+    table_name TEXT NOT NULL,
+    column_name TEXT NOT NULL,
+    ui_name TEXT,
     format TEXT,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (schemaName, tableName, columnName)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (schema_name, table_name, column_name)
   );
 `);
 
 // Create index on 'key' column for quick lookups
 db.exec(
-  `CREATE INDEX IF NOT EXISTS idx_column_metadata ON column_metadata(schemaName, tableName, columnName)`
+  `CREATE INDEX IF NOT EXISTS idx_column_metadata ON column_metadata(schema_name, table_name, column_name)`
 );
+
+const SELECT_COLS = `
+  schema_name AS schemaName, 
+  table_name AS tableName, 
+  column_name AS columnName, 
+  ui_name AS uiName, 
+  format AS format,
+  created_at AS createdAt,
+  updated_at AS updatedAt
+`;
 
 export function getAllColumnMetadata(schemaName: string, tableName: string) {
   const rows = db
     .query<
       ColumnMetadata,
       [string, string]
-    >(`SELECT * FROM column_metadata WHERE schemaName = ? AND tableName = ?`)
+    >(`SELECT ${SELECT_COLS} FROM column_metadata WHERE schema_name = ? AND table_name = ?`)
     .all(schemaName, tableName);
 
   return rows.map((row) => ({
@@ -54,7 +64,7 @@ export function getMultiColumnMetadata(
     .query<
       ColumnMetadata,
       any[]
-    >(`SELECT * FROM column_metadata WHERE schemaName = ? AND tableName IN (${placeholders})`)
+    >(`SELECT ${SELECT_COLS} FROM column_metadata WHERE schema_name = ? AND table_name IN (${placeholders})`)
     .all(schemaName, ...tableNames);
 
   return rows.map((row) => ({
@@ -72,7 +82,7 @@ export function getColumnMetadata(
     .query<
       ColumnMetadata,
       [string, string, string]
-    >(`SELECT * FROM column_metadata WHERE schemaName = ? AND tableName = ? AND columnName = ?`)
+    >(`SELECT ${SELECT_COLS} FROM column_metadata WHERE schema_name = ? AND table_name = ? AND column_name = ?`)
     .get(schemaName, tableName, columnName);
 
   return row
@@ -92,15 +102,15 @@ export function setColumnMetadata(
     format?: any | null;
   }
 ) {
-  const insertCols: string[] = ['schemaName', 'tableName', 'columnName'];
+  const insertCols: string[] = ['schema_name', 'table_name', 'column_name'];
   const insertVals: any[] = [schemaName, tableName, columnName];
   const updateSets: string[] = [];
 
   // Dynamically add only the fields provided in metadata
   if (metadata.uiName !== undefined) {
-    insertCols.push('uiName');
+    insertCols.push('ui_name');
     insertVals.push(metadata.uiName);
-    updateSets.push('uiName = excluded.uiName');
+    updateSets.push('ui_name = excluded.ui_name');
   }
 
   if (metadata.format !== undefined) {
@@ -110,16 +120,19 @@ export function setColumnMetadata(
     updateSets.push('format = excluded.format');
   }
 
+  // Update updatedAt
+  updateSets.push('updated_at = CURRENT_TIMESTAMP');
+
   // If no metadata fields are provided, just do nothing or a simple insert
-  if (updateSets.length === 0) {
-    const sql = `INSERT OR IGNORE INTO column_metadata (schemaName, tableName, columnName) VALUES (?, ?, ?)`;
+  if (updateSets.length === 1) {
+    const sql = `INSERT OR IGNORE INTO column_metadata (schema_name, table_name, column_name) VALUES (?, ?, ?)`;
     return db.query(sql).run(schemaName, tableName, columnName);
   }
 
   const sql = `
     INSERT INTO column_metadata (${insertCols.join(', ')})
     VALUES (${insertCols.map(() => '?').join(', ')})
-    ON CONFLICT(schemaName, tableName, columnName) 
+    ON CONFLICT(schema_name, table_name, column_name) 
     DO UPDATE SET ${updateSets.join(', ')};
   `;
 
@@ -133,7 +146,7 @@ export function deleteColumnMetadata(
 ) {
   return db
     .query(
-      `DELETE FROM column_metadata WHERE schemaName = ? AND tableName = ? AND columnName = ?`
+      `DELETE FROM column_metadata WHERE schema_name = ? AND table_name = ? AND column_name = ?`
     )
     .run(schemaName, tableName, columnName);
 }

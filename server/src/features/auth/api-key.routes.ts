@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 
-import { ApiKey, db } from './api-key.db';
-import { generateApiKey } from './api-key.auth';
+import db from './api-key.db';
+import { ApiKey, generateApiKey } from './api-key.auth';
 
 const SUPER_ADMIN_API_KEY = process.env.SUPER_ADMIN_API_KEY;
 
@@ -21,7 +21,7 @@ export const apiKeyRoutes = new Elysia({ prefix: '/api-keys' })
     ({ body }) => {
       const key = generateApiKey();
       const stmt = db.prepare(`
-        INSERT INTO api_keys (key, name, schemaName, scopes)
+        INSERT INTO api_keys (key, name, schema_name, scopes)
         VALUES (?, ?, ?, ?)
       `);
       const schemaName = body.schemaName ?? 'public';
@@ -51,7 +51,7 @@ export const apiKeyRoutes = new Elysia({ prefix: '/api-keys' })
   .get('/', () => {
     const rows = db
       .prepare(
-        'SELECT id, key, name, schemaName, scopes, createdAt, revoked FROM api_keys'
+        'SELECT id, key, name, schema_name as schemaName, scopes, created_at as createdAt, revoked FROM api_keys'
       )
       .all() as ApiKey[];
     return rows.map((r) => {
@@ -62,7 +62,7 @@ export const apiKeyRoutes = new Elysia({ prefix: '/api-keys' })
         realtime: boolean;
       };
       return {
-        keyId: r.id,
+        id: r.id,
         name: r.name,
         schemaName: r.schemaName,
         scopes,
