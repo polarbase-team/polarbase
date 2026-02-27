@@ -47,7 +47,11 @@ package-lock.json
 .env.*.local
 .devtools
 
+# uploads
+uploads
+
+# sqlite  
+data/*
 *.db
 *.db-shm
 *.db-wal
-uploads

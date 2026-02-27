@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite';
 
-const db = new Database('memory.db');
+const db = new Database('./data/agent-memory.db');
 
 // Enable WAL mode for better concurrent read/write performance
 db.exec('PRAGMA journal_mode = WAL;');

@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite';
 
-const db = new Database('api-keys.db');
+const db = new Database('./data/api-keys.db');
 
 // Create api_keys table if it does not exist
 db.exec(`
