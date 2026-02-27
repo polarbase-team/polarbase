@@ -9,10 +9,8 @@ import {
   ChangeDetectionStrategy,
   input,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { ScrollPanel, ScrollPanelModule } from 'primeng/scrollpanel';
@@ -151,7 +149,7 @@ export class ChatBotComponent {
     callBrowserAgent: 'Browser Agent',
   };
 
-  private currentChatSubscription?: Subscription;
+  private currentChatAbortController?: AbortController;
 
   constructor(
     private destroyRef: DestroyRef,
@@ -368,7 +366,7 @@ export class ChatBotComponent {
     navigator.clipboard.writeText(text);
   }
 
-  private startChat(message: ChatMessage) {
+  private async startChat(message: ChatMessage) {
     this.isChatting.set(true);
 
     const messages = [...this.messages(), message];
@@ -383,8 +381,10 @@ export class ChatBotComponent {
     };
     this.messages.set([...messages, botMessage]);
 
-    this.currentChatSubscription = this.agentService
-      .chat({
+    this.currentChatAbortController = new AbortController();
+
+    try {
+      await this.agentService.chat({
         messages: messages.reduce((acc, msg) => {
           acc.push({
             role: msg.role,
@@ -398,10 +398,8 @@ export class ChatBotComponent {
         model: this.selectedModel,
         agents: this.agents,
         generationConfig: this.generationConfig,
-      })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (events: StreamEvent[]) => {
+        signal: this.currentChatAbortController.signal,
+        onEvents: (events: StreamEvent[]) => {
           if (!events.length) return;
 
           botMessage._isGenerating = false;
@@ -414,24 +412,31 @@ export class ChatBotComponent {
             } else if (event.type === 'tool') {
               botMessage._toolCallId = event.value;
             }
-            this.messages.update((messages) => [...messages]);
-            this.scrollToBottom();
           });
-        },
-        complete: () => {
-          this.isChatting.set(false);
-          botMessage._isGenerating = false;
-          botMessage._isStreaming = false;
-          botMessage._toolCallId = null;
           this.messages.update((messages) => [...messages]);
+          this.scrollToBottom();
         },
       });
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('Generation aborted');
+      } else {
+        console.error('Generation failed', err);
+      }
+    } finally {
+      this.isChatting.set(false);
+      botMessage._isGenerating = false;
+      botMessage._isStreaming = false;
+      botMessage._toolCallId = null;
+      this.currentChatAbortController = undefined;
+      this.messages.update((messages) => [...messages]);
+    }
   }
 
-  protected stopGeneration() {
-    if (this.currentChatSubscription) {
-      this.currentChatSubscription.unsubscribe();
-      this.currentChatSubscription = undefined;
+  protected async stopGeneration() {
+    if (this.currentChatAbortController) {
+      this.currentChatAbortController.abort();
+      this.currentChatAbortController = undefined;
     }
     this.isChatting.set(false);
 

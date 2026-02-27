@@ -3,7 +3,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   effect,
   input,
   output,
@@ -11,9 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, NgForm } from '@angular/forms';
-import { finalize, Observable } from 'rxjs';
 
 import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
@@ -209,7 +206,6 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
   protected columnNames: string[] = [];
 
   constructor(
-    private destroyRef: DestroyRef,
     private confirmationService: ConfirmationService,
     private tableService: TableService,
   ) {
@@ -311,38 +307,34 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
         delete formData.formula;
     }
 
-    let fn: Observable<any>;
-    let allowPresentationSaveOnFailure = false;
-    if (this.mode() === 'edit') {
-      allowPresentationSaveOnFailure = true;
-      fn = this.tableService.updateColumn(
-        this.table().name,
-        this.column().name,
-        formData,
-        allowPresentationSaveOnFailure,
-      );
-    } else {
-      fn = this.tableService.createColumn(this.table().name, formData);
-    }
-
-    fn.pipe(
-      finalize(() => this.isSaving.set(false)),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe({
-      next: ({ data: column }) => {
-        this.onSave.emit(column);
+    try {
+      let resultData: any;
+      let allowPresentationSaveOnFailure = false;
+      if (this.mode() === 'edit') {
+        allowPresentationSaveOnFailure = true;
+        resultData = await this.tableService.updateColumn(
+          this.table().name,
+          this.column().name,
+          formData,
+          allowPresentationSaveOnFailure,
+        );
+      } else {
+        resultData = await this.tableService.createColumn(this.table().name, formData);
+      }
+      this.onSave.emit(resultData.data);
+      this.close();
+    } catch (error) {
+      const allowPresentationSaveOnFailure = this.mode() === 'edit';
+      if (
+        allowPresentationSaveOnFailure &&
+        !_.isEqual(this.column().presentation, this.columnFormData.presentation)
+      ) {
+        this.onSave.emit({ ...this.column(), presentation: this.columnFormData.presentation });
         this.close();
-      },
-      error: (error) => {
-        if (
-          allowPresentationSaveOnFailure &&
-          !_.isEqual(this.column().presentation, this.columnFormData.presentation)
-        ) {
-          this.onSave.emit({ ...this.column(), presentation: this.columnFormData.presentation });
-          this.close();
-        }
-      },
-    });
+      }
+    } finally {
+      this.isSaving.set(false);
+    }
   }
 
   protected onDataTypeSelect(dataType: DataType) {
@@ -353,12 +345,14 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.columnFormData.foreignKey = { ...DEFAULT_VALUE.foreignKey };
 
     if (dataType === DataType.Formula) {
-      this.tableService
-        .getTableSchema(this.table().name)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe((columns) => {
+      (async () => {
+        try {
+          const columns = await this.tableService.getTableSchema(this.table().name);
           this.columnNames = columns.map((c) => c.name);
-        });
+        } catch (err) {
+          console.error('Failed to get table schema for formula', err);
+        }
+      })();
     }
   }
 
@@ -385,17 +379,18 @@ export class ColumnEditorDrawerComponent extends DrawerComponent {
     this.columnFormData.foreignKey.column = table.primaryKey;
   }
 
-  protected loadReferenceDisplayColumnOptions() {
+  protected async loadReferenceDisplayColumnOptions() {
     if (!this.columnFormData.foreignKey.table) {
       this.referenceDisplayColumnOptions = [];
       return;
     }
 
-    this.tableService
-      .getTableSchema(this.columnFormData.foreignKey.table)
-      .subscribe((columns: ColumnDefinition[]) => {
-        this.referenceDisplayColumnOptions = columns;
-      });
+    try {
+      const columns = await this.tableService.getTableSchema(this.columnFormData.foreignKey.table);
+      this.referenceDisplayColumnOptions = columns;
+    } catch (err) {
+      console.error('Failed to load reference display columns', err);
+    }
   }
 
   private onOptionsUpdate() {

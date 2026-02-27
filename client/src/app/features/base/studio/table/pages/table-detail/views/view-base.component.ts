@@ -9,7 +9,7 @@ import {
   TemplateRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { delay, finalize } from 'rxjs';
+import { delay } from 'rxjs';
 
 import {
   ColumnDefinition,
@@ -116,48 +116,34 @@ export class ViewBaseComponent<T = any> {
     await this.loadTableData();
   }
 
-  protected loadTableSchema() {
-    return new Promise((resolve, reject) => {
-      this.isColumnsLoading.set(true);
-      this.tableService
-        .getTableSchema(this.table().name)
-        .pipe(
-          finalize(() => this.isColumnsLoading.set(false)),
-          takeUntilDestroyed(this.destroyRef),
-        )
-        .subscribe({
-          next: (columns) => {
-            this.columns.set(columns);
-            this.onColumnsLoaded(columns);
-            resolve(columns);
-          },
-          error: (error) => {
-            reject(error);
-          },
-        });
-    });
+  protected async loadTableSchema() {
+    this.isColumnsLoading.set(true);
+    try {
+      const columns = await this.tableService.getTableSchema(this.table().name);
+      this.columns.set(columns);
+      this.onColumnsLoaded(columns);
+      return columns;
+    } catch (error) {
+      console.error('Failed to load table schema', error);
+      throw error;
+    } finally {
+      this.isColumnsLoading.set(false);
+    }
   }
 
-  protected loadTableData(filter?: Record<string, any>) {
-    return new Promise((resolve, reject) => {
-      this.isRecordsLoading.set(true);
-      this.tableService
-        .getRecords(this.table().name, { filter })
-        .pipe(
-          finalize(() => this.isRecordsLoading.set(false)),
-          takeUntilDestroyed(this.destroyRef),
-        )
-        .subscribe({
-          next: (records) => {
-            this.records.set(records);
-            this.onRecordsLoaded(records);
-            resolve(records);
-          },
-          error: (error) => {
-            reject(error);
-          },
-        });
-    });
+  protected async loadTableData(filter?: Record<string, any>) {
+    this.isRecordsLoading.set(true);
+    try {
+      const records = await this.tableService.getRecords(this.table().name, { filter });
+      this.records.set(records);
+      this.onRecordsLoaded(records);
+      return records;
+    } catch (error) {
+      console.error('Failed to load table data', error);
+      throw error;
+    } finally {
+      this.isRecordsLoading.set(false);
+    }
   }
 
   protected getViewConfiguration() {
