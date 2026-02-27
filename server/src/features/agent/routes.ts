@@ -153,15 +153,6 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
     }
   )
   .delete('/sessions/:sessionId', ({ params: { sessionId } }) => {
-    // Perform cleanup in all memory tables
-    db.transaction(() => {
-      db.query('DELETE FROM memory_conversations WHERE session_id = ?').run(
-        sessionId
-      );
-      db.query('DELETE FROM memory_core WHERE session_id = ?').run(sessionId);
-      db.query('DELETE FROM memory_notes WHERE session_id = ?').run(sessionId);
-      db.query('DELETE FROM memory_sessions WHERE id = ?').run(sessionId);
-    })();
-
+    db.query('DELETE FROM memory_sessions WHERE id = ?').run(sessionId);
     return { success: true };
   });

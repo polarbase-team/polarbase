@@ -4,6 +4,8 @@ const db = new Database('memory.db');
 
 // Enable WAL mode for better concurrent read/write performance
 db.exec('PRAGMA journal_mode = WAL;');
+// Enable foreign key constraint
+db.exec('PRAGMA foreign_keys = ON;');
 
 // Create tables
 db.exec(`
@@ -19,7 +21,8 @@ db.exec(`
     key TEXT NOT NULL,
     value TEXT NOT NULL,
     updated_at TEXT DEFAULT (datetime('now')),
-    PRIMARY KEY (session_id, key)
+    PRIMARY KEY (session_id, key),
+    FOREIGN KEY (session_id) REFERENCES memory_sessions(id) ON DELETE CASCADE
   );
 
   CREATE TABLE IF NOT EXISTS memory_notes (
@@ -27,7 +30,8 @@ db.exec(`
     session_id TEXT NOT NULL,
     title TEXT,
     content TEXT NOT NULL,
-    created_at TEXT DEFAULT (datetime('now'))
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (session_id) REFERENCES memory_sessions(id) ON DELETE CASCADE
   );
 
   CREATE TABLE IF NOT EXISTS memory_conversations (
@@ -35,7 +39,8 @@ db.exec(`
     session_id TEXT NOT NULL,
     role TEXT NOT NULL,
     content TEXT NOT NULL,
-    timestamp TEXT NOT NULL
+    timestamp TEXT NOT NULL,
+    FOREIGN KEY (session_id) REFERENCES memory_sessions(id) ON DELETE CASCADE
   );
 
   CREATE INDEX IF NOT EXISTS idx_memory_sessions_updated ON memory_sessions(updated_at);
