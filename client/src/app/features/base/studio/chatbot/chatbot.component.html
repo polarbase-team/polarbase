@@ -67,13 +67,13 @@
         tooltipStyleClass="text-xs"
       />
       <p-button
-        [icon]="isFullscreen() ? 'icon icon-minimize' : 'icon icon-maximize'"
+        [icon]="fullscreen() ? 'icon icon-minimize' : 'icon icon-maximize'"
         [rounded]="true"
         [text]="true"
         severity="secondary"
         size="small"
         (click)="toggleFullscreen()"
-        [pTooltip]="isFullscreen() ? 'Exit Fullscreen' : 'Fullscreen'"
+        [pTooltip]="fullscreen() ? 'Exit Fullscreen' : 'Fullscreen'"
         tooltipPosition="bottom"
         tooltipStyleClass="text-xs"
       />

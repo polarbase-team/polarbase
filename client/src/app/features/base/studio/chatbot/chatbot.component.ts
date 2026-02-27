@@ -7,6 +7,7 @@ import {
   output,
   ChangeDetectionStrategy,
   input,
+  model,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -86,10 +87,8 @@ const CHATBOT_GENERATION_CONFIG_KEY = 'chatbot_generation_config';
   providers: [AgentService],
 })
 export class ChatBotComponent {
-  visible = input(false);
-
-  fullscreen = output<boolean>();
-  onClose = output<void>();
+  visible = model(false);
+  fullscreen = model(false);
 
   scrollContainer = viewChild<ScrollPanel>('scrollContainer');
   editor = viewChild<ElementRef>('editor');
@@ -103,7 +102,6 @@ export class ChatBotComponent {
   protected selectedFiles = signal<File[]>([]);
   protected isDragging = signal(false);
   protected isChatting = signal(false);
-  protected isFullscreen = signal(false);
   protected inputText = '';
 
   protected sessions = signal<Session[]>([]);
@@ -256,14 +254,12 @@ export class ChatBotComponent {
   }
 
   protected toggleFullscreen() {
-    this.isFullscreen.update((v) => !v);
-    this.fullscreen.emit(this.isFullscreen());
+    this.fullscreen.update((v) => !v);
   }
 
   protected closeChatbot() {
-    this.isFullscreen.set(false);
-    this.fullscreen.emit(this.isFullscreen());
-    this.onClose.emit();
+    this.fullscreen.set(false);
+    this.visible.set(false);
   }
 
   protected startNewChat() {
