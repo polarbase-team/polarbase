@@ -18,8 +18,8 @@ export interface Model {
 }
 
 export interface StreamEvent {
-  type: 'text' | 'tool';
-  value: string;
+  type: 'text' | 'tool' | 'tool-input' | 'tool-output' | 'reasoning';
+  value: any;
 }
 
 @Injectable()
@@ -126,15 +126,22 @@ export class AgentService {
         }
 
         if (found) {
-          const jsonStr = buffer.substring(0, lastIndex + 1);
+          const startIndex = buffer.indexOf('{');
+          const jsonStr = buffer.substring(startIndex, lastIndex + 1);
           buffer = buffer.substring(lastIndex + 1); // Remove processed part from buffer
 
           try {
             const obj = JSON.parse(jsonStr);
             if (obj.type === 'text-delta') {
               events.push({ type: 'text', value: obj.delta });
-            } else if (obj.type === 'tool-input-start' || obj.type === 'tool-call') {
-              events.push({ type: 'tool', value: obj.toolName ?? obj.method });
+            } else if (obj.type === 'reasoning-delta' || obj.type === 'reasoning') {
+              events.push({ type: 'reasoning', value: obj.delta ?? obj.reasoning });
+            } else if (obj.type === 'tool-input-start') {
+              events.push({ type: 'tool', value: obj });
+            } else if (obj.type === 'tool-input-available') {
+              events.push({ type: 'tool-input', value: obj });
+            } else if (obj.type === 'tool-output-available') {
+              events.push({ type: 'tool-output', value: obj });
             } else if (obj.type === 'error') {
               events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
             }

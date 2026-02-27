@@ -4,7 +4,6 @@ import {
   effect,
   viewChild,
   ElementRef,
-  DestroyRef,
   output,
   ChangeDetectionStrategy,
   input,
@@ -36,11 +35,22 @@ interface UserChatMessage extends ChatMessage {
   _selectedFiles?: File[];
 }
 
+interface ToolCall {
+  id: string;
+  name: string;
+  input?: any;
+  output?: any;
+}
+
 interface AssistantChatMessage extends ChatMessage {
   role: 'assistant';
   _isGenerating?: boolean;
   _isStreaming?: boolean;
-  _toolCallId?: string | null;
+  _toolCalls?: ToolCall[];
+  _reasoning?: string;
+  _thoughtExpanded?: boolean;
+  _thoughtStartTime?: number;
+  _thoughtTime?: number;
 }
 
 const CHATBOT_SELECTED_MODEL_KEY = 'chatbot_selected_model';
@@ -152,7 +162,6 @@ export class ChatBotComponent {
   private currentChatAbortController?: AbortController;
 
   constructor(
-    private destroyRef: DestroyRef,
     private agentService: AgentService,
     private tableService: TableService,
   ) {
@@ -377,7 +386,6 @@ export class ChatBotComponent {
       content: '',
       timestamp: new Date(),
       _isGenerating: true,
-      _toolCallId: null,
     };
     this.messages.set([...messages, botMessage]);
 
@@ -404,13 +412,53 @@ export class ChatBotComponent {
 
           botMessage._isGenerating = false;
           botMessage._isStreaming = true;
-          botMessage._toolCallId = null;
+
+          if (!botMessage._thoughtStartTime) {
+            botMessage._thoughtStartTime = performance.now();
+          }
 
           events.forEach((event) => {
             if (event.type === 'text') {
+              if (botMessage._thoughtStartTime && !botMessage._thoughtTime) {
+                botMessage._thoughtTime = (performance.now() - botMessage._thoughtStartTime) / 1000;
+              }
               botMessage.content += event.value;
             } else if (event.type === 'tool') {
-              botMessage._toolCallId = event.value;
+              const toolName = event.value.toolName ?? event.value.method;
+              const toolCallId = event.value.toolCallId;
+
+              if (toolCallId) {
+                if (!botMessage._toolCalls) botMessage._toolCalls = [];
+                if (!botMessage._toolCalls.find((t) => t.id === toolCallId)) {
+                  botMessage._toolCalls.push({ id: toolCallId, name: toolName });
+                }
+              }
+            } else if (event.type === 'tool-input') {
+              const { toolCallId, input } = event.value;
+              if (!botMessage._toolCalls) botMessage._toolCalls = [];
+              let tool = botMessage._toolCalls.find((t) => t.id === toolCallId);
+              if (!tool) {
+                tool = { id: toolCallId, name: event.value.toolName, input };
+                botMessage._toolCalls.push(tool);
+              } else {
+                tool.input = input;
+              }
+            } else if (event.type === 'tool-output') {
+              const { toolCallId, output } = event.value;
+              if (!botMessage._toolCalls) botMessage._toolCalls = [];
+              let tool = botMessage._toolCalls.find((t) => t.id === toolCallId);
+              if (!tool) {
+                tool = { id: toolCallId, name: 'Unknown', output };
+                botMessage._toolCalls.push(tool);
+              } else {
+                tool.output = output;
+              }
+            } else if (event.type === 'reasoning') {
+              if (botMessage._reasoning === undefined) {
+                botMessage._reasoning = '';
+                botMessage._thoughtExpanded = true;
+              }
+              botMessage._reasoning += event.value;
             }
           });
           this.messages.update((messages) => [...messages]);
@@ -427,7 +475,9 @@ export class ChatBotComponent {
       this.isChatting.set(false);
       botMessage._isGenerating = false;
       botMessage._isStreaming = false;
-      botMessage._toolCallId = null;
+      if (botMessage._thoughtStartTime && !botMessage._thoughtTime) {
+        botMessage._thoughtTime = (performance.now() - botMessage._thoughtStartTime) / 1000;
+      }
       this.currentChatAbortController = undefined;
       this.messages.update((messages) => [...messages]);
     }
@@ -448,7 +498,6 @@ export class ChatBotComponent {
         messages.pop();
       } else {
         lastMessage._isGenerating = false;
-        lastMessage._toolCallId = null;
       }
       this.messages.set(messages);
     }
