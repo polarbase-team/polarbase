@@ -1,21 +1,25 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable, WritableSignal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, lastValueFrom, map } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
-import { FileMetadata } from '@app/shared/file/file-upload.service';
 import { getApiKey } from '@app/core/guards/api-key.guard';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
-  attachments?: FileMetadata[];
+  timestamp?: Date;
+}
+
+export interface Model {
+  provider: string;
+  name: string;
 }
 
 export interface StreamEvent {
-  type: 'text' | 'tool';
-  value: string;
+  type: 'text' | 'tool' | 'tool-input' | 'tool-output' | 'reasoning';
+  value: any;
 }
 
 @Injectable()
@@ -24,24 +28,33 @@ export class AgentService {
 
   private apiUrl = `${environment.apiUrl}/agent`;
 
-  chat({
+  constructor(private http: HttpClient) {}
+
+  async chat({
     messages,
+    sessionId,
     attachments,
     mentions,
     model,
-    subAgents,
+    agents,
     generationConfig,
+    onEvents,
+    signal,
   }: {
     messages: ChatMessage[];
+    sessionId: string;
     attachments?: File[];
     mentions?: {
       tables: string[];
     };
-    model?: string;
-    subAgents?: {
-      builder: boolean;
-      editor: boolean;
-      query: boolean;
+    model?: Model;
+    agents?: {
+      database?: {
+        builder?: boolean;
+        editor?: boolean;
+        query?: boolean;
+      };
+      browser?: boolean;
     };
     generationConfig?: {
       temperature?: number;
@@ -49,105 +62,132 @@ export class AgentService {
       topK?: number;
       maxOutputTokens?: number;
     };
-  }): Observable<StreamEvent[]> {
-    return new Observable((observer) => {
-      const formData = new FormData();
-      formData.append('messages', JSON.stringify(messages));
-      if (attachments?.length) {
-        attachments.forEach((file) => formData.append('attachments', file, file.name));
-      }
-      if (mentions?.tables?.length) {
-        formData.append('mentions', JSON.stringify(mentions));
-      }
-      if (model) {
-        formData.append('model', model);
-      }
-      if (subAgents) {
-        formData.append('subAgents', JSON.stringify(subAgents));
-      }
-      if (generationConfig) {
-        formData.append('generationConfig', JSON.stringify(generationConfig));
-      }
+    onEvents: (events: StreamEvent[]) => void;
+    signal?: AbortSignal;
+  }): Promise<void> {
+    const formData = new FormData();
+    formData.append('messages', JSON.stringify(messages));
+    formData.append('sessionId', sessionId);
+    if (attachments?.length) {
+      attachments.forEach((file) => formData.append('attachments', file, file.name));
+    }
+    if (mentions?.tables?.length) {
+      formData.append('mentions', JSON.stringify(mentions));
+    }
+    if (model) {
+      formData.append('model', JSON.stringify(model));
+    }
+    if (agents) {
+      formData.append('agents', JSON.stringify(agents));
+    }
+    if (generationConfig) {
+      formData.append('generationConfig', JSON.stringify(generationConfig));
+    }
 
-      const abortController = new AbortController();
+    const apiKey = getApiKey();
+    const response = await fetch(`${this.apiUrl}/chat`, {
+      method: 'POST',
+      body: formData,
+      signal,
+      headers: { 'x-api-key': apiKey },
+    });
 
-      (async () => {
-        try {
-          const apiKey = getApiKey();
-          const response = await fetch(`${this.apiUrl}/chat`, {
-            method: 'POST',
-            body: formData,
-            signal: abortController.signal,
-            headers: { 'x-api-key': apiKey },
-          });
+    if (!response.body) throw new Error('No response body');
 
-          if (!response.body) throw new Error('No response body');
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
 
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
-          let buffer = '';
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
 
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
+      buffer += decoder.decode(value, { stream: true });
 
-            buffer += decoder.decode(value, { stream: true });
+      const events: StreamEvent[] = [];
 
-            const events: StreamEvent[] = [];
+      // Attempt to extract all complete JSON objects from the buffer
+      while (buffer.includes('{') && buffer.includes('}')) {
+        let lastIndex = -1;
+        let depth = 0;
+        let found = false;
 
-            // Attempt to extract all complete JSON objects from the buffer
-            while (buffer.includes('{') && buffer.includes('}')) {
-              let lastIndex = -1;
-              let depth = 0;
-              let found = false;
-
-              // Find the bounds of the FIRST complete JSON object
-              for (let i = 0; i < buffer.length; i++) {
-                if (buffer[i] === '{') depth++;
-                if (buffer[i] === '}') {
-                  depth--;
-                  if (depth === 0) {
-                    lastIndex = i;
-                    found = true;
-                    break;
-                  }
-                }
-              }
-
-              if (found) {
-                const jsonStr = buffer.substring(0, lastIndex + 1);
-                buffer = buffer.substring(lastIndex + 1); // Remove processed part from buffer
-
-                try {
-                  const obj = JSON.parse(jsonStr);
-                  if (obj.type === 'text-delta') {
-                    events.push({ type: 'text', value: obj.delta });
-                  } else if (obj.type === 'tool-input-start' || obj.type === 'tool-call') {
-                    events.push({ type: 'tool', value: obj.toolName ?? obj.method });
-                  } else if (obj.type === 'error') {
-                    events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
-                  }
-                } catch (e) {
-                  // If it fails, it's likely a partial chunk; log it and keep moving
-                  console.warn('Skipping invalid chunk:', jsonStr);
-                }
-              } else {
-                // If we have braces but depth never hit 0, we're waiting for more data
-                break;
-              }
-            }
-
-            if (events.length > 0) {
-              observer.next(events);
+        // Find the bounds of the FIRST complete JSON object
+        for (let i = 0; i < buffer.length; i++) {
+          if (buffer[i] === '{') depth++;
+          if (buffer[i] === '}') {
+            depth--;
+            if (depth === 0) {
+              lastIndex = i;
+              found = true;
+              break;
             }
           }
-          observer.complete();
-        } catch (error) {
-          observer.error(error);
         }
-      })();
 
-      return () => abortController.abort();
-    });
+        if (found) {
+          const startIndex = buffer.indexOf('{');
+          const jsonStr = buffer.substring(startIndex, lastIndex + 1);
+          buffer = buffer.substring(lastIndex + 1); // Remove processed part from buffer
+
+          try {
+            const obj = JSON.parse(jsonStr);
+            if (obj.type === 'text-delta') {
+              events.push({ type: 'text', value: obj.delta });
+            } else if (obj.type === 'reasoning-delta' || obj.type === 'reasoning') {
+              events.push({ type: 'reasoning', value: obj.delta ?? obj.reasoning });
+            } else if (obj.type === 'tool-input-start') {
+              events.push({ type: 'tool', value: obj });
+            } else if (obj.type === 'tool-input-available') {
+              events.push({ type: 'tool-input', value: obj });
+            } else if (obj.type === 'tool-output-available') {
+              events.push({ type: 'tool-output', value: obj });
+            } else if (obj.type === 'error') {
+              events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
+            }
+          } catch (e) {
+            // If it fails, it's likely a partial chunk; log it and keep moving
+            console.warn('Skipping invalid chunk:', jsonStr);
+          }
+        } else {
+          // If we have braces but depth never hit 0, we're waiting for more data
+          break;
+        }
+      }
+
+      if (events.length > 0) {
+        onEvents(events);
+      }
+    }
+  }
+
+  getSessions(): Promise<{ id: string; title: string; updated_at: string }[]> {
+    return lastValueFrom(
+      this.http.get<{ id: string; title: string; updated_at: string }[]>(`${this.apiUrl}/sessions`),
+    );
+  }
+
+  getHistory(sessionId: string): Promise<ChatMessage[]> {
+    return lastValueFrom(
+      this.http.get<any[]>(`${this.apiUrl}/history/${sessionId}`).pipe(
+        map((history) =>
+          history.map((h) => ({
+            role: h.role,
+            content: h.content,
+            timestamp: new Date(h.timestamp),
+          })),
+        ),
+      ),
+    );
+  }
+
+  updateSessionTitle(sessionId: string, title: string): Promise<any> {
+    return lastValueFrom(
+      this.http.post<any>(`${this.apiUrl}/sessions/${sessionId}/title`, { title }),
+    );
+  }
+
+  deleteSession(sessionId: string): Promise<any> {
+    return lastValueFrom(this.http.delete<any>(`${this.apiUrl}/sessions/${sessionId}`));
   }
 }

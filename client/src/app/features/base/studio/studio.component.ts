@@ -126,15 +126,6 @@ export class BaseStudioComponent {
     this.chatbotVisible.update((v) => !v);
   }
 
-  protected toggleChatbotFullscreen() {
-    this.chatbotFullscreen.update((v) => !v);
-  }
-
-  protected onCloseChatbot() {
-    this.chatbotVisible.set(false);
-    this.chatbotFullscreen.set(false);
-  }
-
   protected onTabChange(tableName: string) {
     this.tableService.selectTable(tableName);
   }

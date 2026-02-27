@@ -1,6 +1,6 @@
 import { effect, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, shareReplay } from 'rxjs';
+import { Observable, lastValueFrom, map, shareReplay } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -155,15 +155,17 @@ export class TableService {
   }
 
   getTables(includeSchema = false) {
-    return this.http
-      .get<ApiResponse<TableDefinition[]>>(`${this.apiUrl}/tables?includeSchema=${includeSchema}`)
-      .pipe(
-        map((res) => {
-          const tables = res.data;
-          this.tables.set(tables);
-          return tables;
-        }),
-      );
+    return lastValueFrom(
+      this.http
+        .get<ApiResponse<TableDefinition[]>>(`${this.apiUrl}/tables?includeSchema=${includeSchema}`)
+        .pipe(
+          map((res) => {
+            const tables = res.data;
+            this.tables.set(tables);
+            return tables;
+          }),
+        ),
+    );
   }
 
   getTableSchema(tableName: string) {
@@ -178,35 +180,38 @@ export class TableService {
       this.schemaCache.set(tableName, request$);
     }
 
-    return this.schemaCache.get(tableName)!;
+    return lastValueFrom(this.schemaCache.get(tableName)!);
   }
 
   createTable(table: TableFormData) {
-    return this.http.post<ApiResponse<TableDefinition>>(`${this.apiUrl}/tables`, table);
+    return lastValueFrom(
+      this.http.post<ApiResponse<TableDefinition>>(`${this.apiUrl}/tables`, table),
+    );
   }
 
   updateTable(tableName: string, table: Pick<TableFormData, 'name' | 'comment'>) {
-    return this.http.patch<ApiResponse<TableDefinition>>(
-      `${this.apiUrl}/tables/${tableName}`,
-      table,
+    return lastValueFrom(
+      this.http.patch<ApiResponse<TableDefinition>>(`${this.apiUrl}/tables/${tableName}`, table),
     );
   }
 
   deleteTable(tableName: string, casecade = false) {
-    return this.http
-      .delete<ApiResponse>(`${this.apiUrl}/tables/${tableName}?cascade=${casecade}`)
-      .pipe(
+    return lastValueFrom(
+      this.http.delete<ApiResponse>(`${this.apiUrl}/tables/${tableName}?cascade=${casecade}`).pipe(
         map((res) => {
           this.removeTable(tableName);
           return res;
         }),
-      );
+      ),
+    );
   }
 
   createColumn(tableName: string, column: ColumnFormData) {
-    return this.http.post<ApiResponse<ColumnDefinition>>(
-      `${this.apiUrl}/tables/${tableName}/columns`,
-      column,
+    return lastValueFrom(
+      this.http.post<ApiResponse<ColumnDefinition>>(
+        `${this.apiUrl}/tables/${tableName}/columns`,
+        column,
+      ),
     );
   }
 
@@ -216,14 +221,18 @@ export class TableService {
     column: ColumnFormData,
     allowPresentationSaveOnFailure = false,
   ) {
-    return this.http.put<ApiResponse<ColumnDefinition>>(
-      `${this.apiUrl}/tables/${tableName}/columns/${columnName}?allowPresentationSaveOnFailure=${allowPresentationSaveOnFailure}`,
-      column,
+    return lastValueFrom(
+      this.http.put<ApiResponse<ColumnDefinition>>(
+        `${this.apiUrl}/tables/${tableName}/columns/${columnName}?allowPresentationSaveOnFailure=${allowPresentationSaveOnFailure}`,
+        column,
+      ),
     );
   }
 
   deleteColumn(tableName: string, columnName: string) {
-    return this.http.delete(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`);
+    return lastValueFrom(
+      this.http.delete(`${this.apiUrl}/tables/${tableName}/columns/${columnName}`),
+    );
   }
 
   getRecords(
@@ -237,33 +246,41 @@ export class TableService {
     if (filter) {
       url += `&filter=${JSON.stringify(filter)}`;
     }
-    return this.http.get(url).pipe(map((res) => res['data'].rows));
+    return lastValueFrom(this.http.get(url).pipe(map((res) => res['data'].rows)));
   }
 
-  getRecord(tableName: string, recordId: number | string): Observable<RecordData> {
-    return this.http
-      .get(`${this.apiUrl}/${tableName}/${recordId}?expand=all`)
-      .pipe(map((res) => res['data']));
+  getRecord(tableName: string, recordId: number | string): Promise<RecordData> {
+    return lastValueFrom(
+      this.http
+        .get(`${this.apiUrl}/${tableName}/${recordId}?expand=all`)
+        .pipe(map((res) => res['data'])),
+    );
   }
 
   createRecords(tableName: string, records: RecordData[]) {
-    return this.http.post<ApiResponse<{ insertedCount: number; returning: RecordData[] }>>(
-      `${this.apiUrl}/${tableName}/bulk-create`,
-      records,
+    return lastValueFrom(
+      this.http.post<ApiResponse<{ insertedCount: number; returning: RecordData[] }>>(
+        `${this.apiUrl}/${tableName}/bulk-create`,
+        records,
+      ),
     );
   }
 
   updateRecords(tableName: string, recordUpdates: { id: string | number; data: RecordData }[]) {
-    return this.http.patch<ApiResponse<{ updatedCount: number; returning: RecordData[] }>>(
-      `${this.apiUrl}/${tableName}/bulk-update`,
-      recordUpdates,
+    return lastValueFrom(
+      this.http.patch<ApiResponse<{ updatedCount: number; returning: RecordData[] }>>(
+        `${this.apiUrl}/${tableName}/bulk-update`,
+        recordUpdates,
+      ),
     );
   }
 
   deleteRecords(tableName: string, recordIds: (string | number)[]) {
-    return this.http.post<ApiResponse<{ deletedCount: number }>>(
-      `${this.apiUrl}/${tableName}/bulk-delete`,
-      { ids: recordIds },
+    return lastValueFrom(
+      this.http.post<ApiResponse<{ deletedCount: number }>>(
+        `${this.apiUrl}/${tableName}/bulk-delete`,
+        { ids: recordIds },
+      ),
     );
   }
 

@@ -1,5 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 
 import { TableDefinition, TableService } from '../../studio/table/services/table.service';
 import { FlowComponent } from './components/flow/flow.component';
@@ -14,17 +13,14 @@ import { FlowComponent } from './components/flow/flow.component';
 export class RelationsComponent implements OnInit {
   protected tables = signal<TableDefinition[]>([]);
 
-  constructor(
-    private destroyRef: DestroyRef,
-    private tableService: TableService,
-  ) {}
+  constructor(private tableService: TableService) {}
 
-  ngOnInit() {
-    this.tableService
-      .getTables(true)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((tables) => {
-        this.tables.set(tables);
-      });
+  async ngOnInit() {
+    try {
+      const tables = await this.tableService.getTables(true);
+      this.tables.set(tables);
+    } catch (err) {
+      console.error('Failed to load tables for relations', err);
+    }
   }
 }
