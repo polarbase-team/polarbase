@@ -1,10 +1,4 @@
-<p-menu
-  #historyMenu
-  [model]="historyMenuItems()"
-  [popup]="true"
-  appendTo="body"
-  styleClass="max-w-60"
->
+<p-menu #sessionMenu [model]="sessionMenuItems()" [popup]="true" appendTo="body" styleClass="w-60">
   <ng-template #item let-item>
     <div
       class="flex items-center justify-between gap-2 w-full pl-3 pr-1 py-1 cursor-pointer hover:bg-surface-100 group transition-colors"
@@ -67,7 +61,7 @@
         [text]="true"
         severity="secondary"
         size="small"
-        (click)="loadSessions(); historyMenu.toggle($event)"
+        (click)="loadSessions(); sessionMenu.toggle($event)"
         pTooltip="Past Conversation"
         tooltipPosition="bottom"
         tooltipStyleClass="text-xs"

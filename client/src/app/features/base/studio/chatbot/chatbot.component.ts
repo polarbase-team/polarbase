@@ -53,6 +53,11 @@ interface AssistantChatMessage extends ChatMessage {
   _thoughtTime?: number;
 }
 
+interface Session {
+  id: string;
+  title: string;
+}
+
 const CHATBOT_SELECTED_MODEL_KEY = 'chatbot_selected_model';
 const CHATBOT_AGENTS_KEY = 'chatbot_agents';
 const CHATBOT_GENERATION_CONFIG_KEY = 'chatbot_generation_config';
@@ -101,10 +106,11 @@ export class ChatBotComponent {
   protected isFullscreen = signal(false);
   protected inputText = '';
 
-  protected historyMenuItems = signal<MenuItem[]>([]);
+  protected sessions = signal<Session[]>([]);
+  protected sessionMenuItems = signal<MenuItem[]>([]);
 
-  protected mentionMenuItems: MenuItem[];
   protected mentions: { tables: string[] } = { tables: [] };
+  protected mentionMenuItems: MenuItem[];
 
   protected selectedModel: Model | undefined;
   protected selectedModelLabel: string;
@@ -197,6 +203,32 @@ export class ChatBotComponent {
         }, 100);
       }
     });
+
+    effect(
+      () => {
+        this.sessionMenuItems.set([
+          {
+            label: 'Past Conversations',
+            items:
+              this.sessions().length > 0
+                ? this.sessions().map((s) => ({
+                    label: s.title,
+                    icon: 'icon icon-message-square',
+                    command: () => {
+                      this.title.set(s.title);
+                      this.loadHistory(s.id);
+                    },
+                    data: {
+                      sessionId: s.id,
+                      delete: () => this.deleteSession(s.id),
+                    },
+                  }))
+                : [{ label: 'No items available', disabled: true }],
+          },
+        ]);
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   scrollToBottom() {
@@ -254,23 +286,7 @@ export class ChatBotComponent {
   protected async loadSessions() {
     try {
       const sessions = await this.agentService.getSessions();
-      this.historyMenuItems.set([
-        {
-          label: 'Conversations',
-          items: sessions.map((s) => ({
-            label: s.title,
-            icon: 'icon icon-message-square',
-            command: () => {
-              this.title.set(s.title);
-              this.loadHistory(s.id);
-            },
-            data: {
-              sessionId: s.id,
-              delete: () => this.deleteSession(s.id),
-            },
-          })),
-        },
-      ]);
+      this.sessions.set(sessions);
     } catch (e) {
       console.error('Failed to load sessions', e);
     }
@@ -282,9 +298,7 @@ export class ChatBotComponent {
       if (this.currentSessionId() === sessionId) {
         this.startNewChat();
       } else {
-        this.historyMenuItems.update((items) =>
-          items.filter((item) => item['data']?.sessionId !== sessionId),
-        );
+        this.sessions.update((sessions) => sessions.filter((s) => s.id !== sessionId));
       }
     } catch (e) {
       console.error('Failed to delete session', e);
