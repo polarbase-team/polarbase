@@ -38,6 +38,9 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Agent Call Approval**: Human-in-the-loop security for high-risk operations (Delete/Drop).
 - **Document Analysis**: Upload files to the Agent for data extraction and analysis.
 - **Generation Controls**: Granular control over Temperature, Top P, Top K, and Max Tokens.
+- **Agent Long-Term Memory**: Conversation history management with client-side UI and server-side core memories.
+- **Agent Reasoning UI**: Real-time visualization of agent thoughts and tool interactions (inputs/outputs) within the chat.
+- **Browser Agent Integration**: Specialized capabilities for web navigation, interaction, extraction, and automated screenshots.
 
 ### ⚙️ Data & Schema Management
 
@@ -60,7 +63,6 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ### 🤖 Agentic Backend (AI & MCP)
 
 - **AI Query View:** Dedicated UI to view full result sets from AI queries.
-- **History:** Chat history for AI sessions.
 
 ### ⚙️ Data & Schema Management
 
