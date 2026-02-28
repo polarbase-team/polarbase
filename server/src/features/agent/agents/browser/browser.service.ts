@@ -1,4 +1,8 @@
-import { chromium, Browser, Page } from 'playwright';
+import { Browser, Page } from 'playwright';
+import { chromium } from 'playwright-extra';
+import stealth from 'puppeteer-extra-plugin-stealth';
+
+chromium.use(stealth());
 
 class BrowserService {
   private browser: Browser | null = null;
