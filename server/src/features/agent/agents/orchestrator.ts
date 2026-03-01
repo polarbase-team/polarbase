@@ -138,7 +138,7 @@ export function createRootOrchestrator(
         messages: (settings.messages ?? []).slice(-20),
         instructions: `Today's date is ${today}.${coreMemoryBlock}
 
-You are the Root System Orchestrator. 
+You are the PolarBase System Orchestrator. 
 Your job is to understand the user's ultimate goal and route requests to the correct domain-specific sub-agent.
 
 Available Sub-Agents (if enabled):

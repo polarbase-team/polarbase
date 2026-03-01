@@ -47,4 +47,10 @@ export const modelGroups = [
       { label: 'Grok 4', value: { provider: 'xai', name: 'grok-4-1-fast-reasoning' } },
     ],
   },
+  {
+    label: 'OpenRouter',
+    items: [
+      { label: 'StepFun', value: { provider: 'openrouter', name: 'stepfun/step-3.5-flash:free' } },
+    ],
+  },
 ];

@@ -134,8 +134,8 @@ export class AgentService {
             const obj = JSON.parse(jsonStr);
             if (obj.type === 'text-delta') {
               events.push({ type: 'text', value: obj.delta });
-            } else if (obj.type === 'reasoning-delta' || obj.type === 'reasoning') {
-              events.push({ type: 'reasoning', value: obj.delta ?? obj.reasoning });
+            } else if (obj.type === 'reasoning-delta') {
+              events.push({ type: 'reasoning', value: obj.delta });
             } else if (obj.type === 'tool-input-start') {
               events.push({ type: 'tool', value: obj });
             } else if (obj.type === 'tool-input-available') {

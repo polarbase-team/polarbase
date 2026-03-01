@@ -48,6 +48,7 @@ interface AssistantChatMessage extends ChatMessage {
   _isGenerating?: boolean;
   _isStreaming?: boolean;
   _toolCalls?: ToolCall[];
+  _toolCallsExpanded?: boolean;
   _reasoning?: string;
   _thoughtExpanded?: boolean;
   _thoughtStartTime?: number;
