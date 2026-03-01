@@ -1,7 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { MenuItem } from 'primeng/api';
@@ -154,10 +152,11 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
 
     if (!shouldReloadRecords) return;
 
-    this.tableService
-      .getRecords(this.table()?.name, { fields: ['id', columnName] })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((records) => {
+    (async () => {
+      try {
+        const records = await this.tableService.getRecords(this.table()?.name, {
+          fields: ['id', columnName],
+        });
         const recordsMap = records.reduce(
           (acc, record) => {
             acc[record.id] = record;
@@ -171,7 +170,10 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
             data: { ...row.data, [columnName]: recordsMap[row.id]?.[columnName] },
           })),
         );
-      });
+      } catch (err) {
+        console.error('Failed to reload records', err);
+      }
+    })();
   }
 
   override onRecordSave(
@@ -350,11 +352,17 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
         break;
       case TableColumnActionType.Delete: {
         const columns = action.payload as TableColumn[];
-        const obs = {};
-        for (const column of columns) {
-          obs[column.id] = this.tableService.deleteColumn(this.table().name, column.id as string);
-        }
-        forkJoin(obs).subscribe();
+        (async () => {
+          try {
+            await Promise.all(
+              columns.map((column) =>
+                this.tableService.deleteColumn(this.table().name, column.id as string),
+              ),
+            );
+          } catch (err) {
+            console.error('Failed to delete columns', err);
+          }
+        })();
         break;
       }
       case TableColumnActionType.Hide: {
@@ -421,30 +429,31 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
   protected onRowAction(action: TableRowAction) {
     switch (action.type) {
       case TableRowActionType.Add:
-        const rows = [];
-        const records = [];
-        for (const { row } of action.payload as TableRowAddedEvent[]) {
-          rows.push(row);
-          records.push(row.data || {});
-        }
-        this.tableService
-          .createRecords(this.table().name, records)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe(({ data }) => {
+        (async () => {
+          const rows = [];
+          const records = [];
+          for (const { row } of action.payload as TableRowAddedEvent[]) {
+            rows.push(row);
+            records.push(row.data || {});
+          }
+          try {
+            const { data } = await this.tableService.createRecords(this.table().name, records);
             for (let i = 0; i < rows.length; i++) {
               const row = rows[i];
               row.id = data.returning[i].id;
               row.data = data.returning[i];
             }
             this.ssRows.update((arr) => [...arr]);
-          });
+          } catch (err) {
+            console.error('Failed to create records', err);
+          }
+        })();
         break;
       case TableRowActionType.Delete:
         const recordIds = (action.payload as TableRow[]).map((row) => row.id);
-        this.tableService
-          .deleteRecords(this.table().name, recordIds)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe();
+        this.tableService.deleteRecords(this.table().name, recordIds).catch((err) => {
+          console.error('Failed to delete records', err);
+        });
         break;
       case TableRowActionType.Expand:
         this.onUpdateRecord.emit({
@@ -469,10 +478,9 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
         for (const { row, newData } of action.payload as TableCellEditedEvent[]) {
           recordUpdates.push({ id: row.id, data: newData });
         }
-        this.tableService
-          .updateRecords(this.table().name, recordUpdates)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe();
+        this.tableService.updateRecords(this.table().name, recordUpdates).catch((err) => {
+          console.error('Failed to update records', err);
+        });
         break;
       case TableCellActionType.ViewReferenceDetail: {
         const { field, data } = action.payload as ReferenceViewDetailEvent;
@@ -480,21 +488,19 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
         const table = this.tableService.tables().find((t) => t.name === tableName);
         if (!table) return;
 
-        this.tableService
-          .getTableSchema(tableName)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((columns) => {
+        (async () => {
+          try {
+            const columns = await this.tableService.getTableSchema(tableName);
             const fields = columns.map((c) => this.tableService.buildField(c));
-            this.tableService
-              .getRecord(tableName, getReferenceValue(data))
-              .pipe(takeUntilDestroyed(this.destroyRef))
-              .subscribe((record) => {
-                this.onUpdateRecord.emit({
-                  record: { table, fields, data: record },
-                  mode: 'edit',
-                });
-              });
-          });
+            const record = await this.tableService.getRecord(tableName, getReferenceValue(data));
+            this.onUpdateRecord.emit({
+              record: { table, fields, data: record },
+              mode: 'edit',
+            });
+          } catch (err) {
+            console.error('Failed to view reference detail', err);
+          }
+        })();
         break;
       }
     }

@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0-beta] - 2026-02-28
+
+### Added
+
+- **Agent Memory & Sessions**: Implemented long-term memory for agents and chat session management. Features include a client-side history UI and server-side memory tools (core memories and notes).
+- **Agent Reasoning Display**: The chatbot UI now displays the agent's detailed reasoning process and tool calls, including inputs and outputs.
+- **Browser Agent Capabilities**: Extended agent orchestration by equipping the browser agent with tools for navigation, interaction, extraction, and screenshot functionalities.
+- **Multi-Database Architecture**: Migrated metadata and API keys into their own separate SQLite databases for improved isolation and standardized database columns to `snake_case`.
+
+### Changed
+
+- **Agent Orchestration**: Enhanced sub-agent communication by instructing them to summarize findings, which the orchestrator then processes. Removed `any` type casts for better type safety with `LanguageModel`.
+- **Backend Architecture**: Major refactoring of the backend directory structure. Centralized database utilities under `db/`, organized MCP components and REST routes into `features/`, resulting in to a more modular architecture.
+- **Asynchronous Patterns**: Refactored the codebase to migrate cross-service asynchronous operations from RxJS Observables to `async/await` Promises.
+- **REST & Agents**: Removed table blacklisting from REST and agent APIs, allowing unrestricted data access where appropriate.
+- **Architectural Cleanup**: Relocated all SQLite databases to a dedicated `data/` directory and excluded them from version control to maintain a clean root.
+
+## [0.9.1-beta] - 2026-02-13
+
+### Added
+
+- **Table Schema Lookup**: Added a new `findTable` tool to refine table schema lookup capabilities for agents.
+
+### Changed
+
+- **Index Management**: Refactored index management capabilities.
+- **Configuration**: Updated Angular dependencies and budget settings.
+
 ## [0.9.0-beta] - 2026-02-13
 
 ### Added
@@ -262,4 +290,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_See [ROADMAP.md](./ROADMAP.md) for upcoming features like Multi-view, Reference Fields, and SDKs._
+_See [ROADMAP.md](./ROADMAP.md) for upcoming features such as Multi-Schema Management, Webhooks, and official SDKs._

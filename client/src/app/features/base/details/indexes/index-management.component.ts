@@ -2,16 +2,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   effect,
   OnInit,
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ClipboardModule } from '@angular/cdk/clipboard';
-import { finalize } from 'rxjs';
 
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -114,7 +111,6 @@ export class IndexManagementComponent implements OnInit {
   ];
 
   constructor(
-    private destroyRef: DestroyRef,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private tableService: TableService,
@@ -130,13 +126,13 @@ export class IndexManagementComponent implements OnInit {
     this.loadIndexes();
   }
 
-  protected loadIndexes() {
-    this.indexService
-      .getIndexes()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((indexes) => {
-        this.indexes.set(indexes);
-      });
+  protected async loadIndexes() {
+    try {
+      const indexes = await this.indexService.getIndexes();
+      this.indexes.set(indexes);
+    } catch (err) {
+      console.error('Failed to load indexes', err);
+    }
   }
 
   protected searchByName() {
@@ -175,35 +171,33 @@ export class IndexManagementComponent implements OnInit {
         label: 'Delete',
         severity: 'danger',
       },
-      accept: () => {
-        this.indexService.deleteIndex(index).subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: 'Index has been deleted',
-            });
-            this.indexes.update((arr) => arr.filter((key) => key.name !== index.name));
-          },
-          error: () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Could not delete index',
-            });
-          },
-        });
+      accept: async () => {
+        try {
+          await this.indexService.deleteIndex(index);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Index has been deleted',
+          });
+          this.indexes.update((arr) => arr.filter((key) => key.name !== index.name));
+        } catch (err) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Could not delete index',
+          });
+        }
       },
     });
   }
 
-  protected onEditorOpen() {
-    this.tableService
-      .getTables()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((tables) => {
-        this.tables.set(tables);
-      });
+  protected async onEditorOpen() {
+    try {
+      const tables = await this.tableService.getTables();
+      this.tables.set(tables);
+    } catch (err) {
+      console.error('Failed to load tables', err);
+    }
   }
 
   protected onEditorClose() {
@@ -213,32 +207,31 @@ export class IndexManagementComponent implements OnInit {
     this.columns.set([]);
   }
 
-  protected onTableChange() {
+  protected async onTableChange() {
     const tableName = this.activeIndex.tableName;
     if (!tableName) {
       this.columns.set([]);
       return;
     }
 
-    this.tableService
-      .getTableSchema(tableName)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((columns) => {
-        this.columns.set(columns);
-      });
+    try {
+      const columns = await this.tableService.getTableSchema(tableName);
+      this.columns.set(columns);
+    } catch (err) {
+      console.error('Failed to load columns', err);
+    }
   }
 
-  protected onIndexFormSubmit() {
+  protected async onIndexFormSubmit() {
     this.isSaving.set(true);
-    this.indexService
-      .createIndex(this.activeIndex)
-      .pipe(
-        finalize(() => this.isSaving.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(() => {
-        this.isDrawerVisible = false;
-        this.loadIndexes();
-      });
+    try {
+      await this.indexService.createIndex(this.activeIndex);
+      this.isDrawerVisible = false;
+      this.loadIndexes();
+    } catch (err) {
+      console.error('Failed to create index', err);
+    } finally {
+      this.isSaving.set(false);
+    }
   }
 }

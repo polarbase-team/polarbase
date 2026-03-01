@@ -4,8 +4,8 @@ import { FieldConfig } from '../field.interface';
 import { Field } from '../field.object';
 
 export type ReferenceResources<S = any, R = any> = {
-  loadSchema: (...args) => Observable<S>;
-  loadRecords: (...args) => Observable<R>;
+  loadSchema: (...args) => Observable<S> | Promise<S>;
+  loadRecords: (...args) => Observable<R> | Promise<R>;
   buildField: (...args) => Field;
 };
 export type ReferenceData = string | number | { id: string | number };

@@ -38,6 +38,9 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Agent Call Approval**: Human-in-the-loop security for high-risk operations (Delete/Drop).
 - **Document Analysis**: Upload files to the Agent for data extraction and analysis.
 - **Generation Controls**: Granular control over Temperature, Top P, Top K, and Max Tokens.
+- **Agent Long-Term Memory**: Conversation history management with client-side UI and server-side core memories.
+- **Agent Reasoning UI**: Real-time visualization of agent thoughts and tool interactions (inputs/outputs) within the chat.
+- **Browser Agent Integration**: Specialized capabilities for web navigation, interaction, extraction, and automated screenshots.
 
 ### ⚙️ Data & Schema Management
 
@@ -60,7 +63,9 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ### 🤖 Agentic Backend (AI & MCP)
 
 - **AI Query View:** Dedicated UI to view full result sets from AI queries.
-- **History:** Chat history for AI sessions.
+- **AI Agent Skills Management:** Interface to define, enable, and manage specific capabilities and tools for AI agents.
+- **Raw SQL Agent:** A specialized AI agent capable of generating and executing raw SQL queries for complex data operations.
+- **Multi-channel Integration:** Extending AI Agent reach to platforms like Slack, Discord, Telegram, and WhatsApp.
 
 ### ⚙️ Data & Schema Management
 
@@ -84,6 +89,8 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ### 🗄️ Multi-Schema Management
 
 - **Schema Migrations:** Visual tools to track and manage versioning for individual schemas.
+- **Locking Mechanisms:** Ability to Lock Tables & Columns to prevent accidental schema modifications or data loss.
+- **Advanced Constraints:** Granular management for complex PostgreSQL constraints (Check, Unique, Exclusion).
 
 ### 🖼️ Advanced Views & UI
 

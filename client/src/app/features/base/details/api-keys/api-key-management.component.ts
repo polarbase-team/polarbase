@@ -1,17 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   effect,
   OnInit,
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, SlicePipe } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ClipboardModule } from '@angular/cdk/clipboard';
-import { finalize } from 'rxjs';
 
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -80,7 +77,6 @@ export class ApiKeyManagementComponent implements OnInit {
   protected isViewMode = signal(false);
 
   constructor(
-    private destroyRef: DestroyRef,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private apiKeyService: ApiKeyService,
@@ -105,13 +101,13 @@ export class ApiKeyManagementComponent implements OnInit {
     this.isViewMode.set(false);
   }
 
-  protected loadApiKeys() {
-    this.apiKeyService
-      .getKeys()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((apiKeys) => {
-        this.apiKeys.set(apiKeys);
-      });
+  protected async loadApiKeys() {
+    try {
+      const apiKeys = await this.apiKeyService.getKeys();
+      this.apiKeys.set(apiKeys);
+    } catch (err) {
+      console.error('Failed to load API keys', err);
+    }
   }
 
   protected viewApiKey(apiKey: ApiKey) {
@@ -149,26 +145,24 @@ export class ApiKeyManagementComponent implements OnInit {
         label: 'Revoke',
         severity: 'danger',
       },
-      accept: () => {
-        this.apiKeyService.revokeKey(apiKey).subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: 'Key has been revoked',
-            });
-            this.apiKeys.update((arr) =>
-              arr.map((key) => (key.id === apiKey.id ? { ...key, revoked: true } : key)),
-            );
-          },
-          error: () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Could not revoke key',
-            });
-          },
-        });
+      accept: async () => {
+        try {
+          await this.apiKeyService.revokeKey(apiKey);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Key has been revoked',
+          });
+          this.apiKeys.update((arr) =>
+            arr.map((key) => (key.id === apiKey.id ? { ...key, revoked: true } : key)),
+          );
+        } catch (err) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Could not revoke key',
+          });
+        }
       },
     });
   }
@@ -181,17 +175,16 @@ export class ApiKeyManagementComponent implements OnInit {
     });
   }
 
-  protected onApiKeyFormSubmit() {
+  protected async onApiKeyFormSubmit() {
     this.isSaving.set(true);
-    this.apiKeyService
-      .createKey(this.activeApiKey)
-      .pipe(
-        finalize(() => this.isSaving.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(() => {
-        this.isDrawerVisible = false;
-        this.loadApiKeys();
-      });
+    try {
+      await this.apiKeyService.createKey(this.activeApiKey);
+      this.isDrawerVisible = false;
+      this.loadApiKeys();
+    } catch (err) {
+      console.error('Failed to create API key', err);
+    } finally {
+      this.isSaving.set(false);
+    }
   }
 }
