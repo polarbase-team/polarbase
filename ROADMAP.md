@@ -63,6 +63,9 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ### 🤖 Agentic Backend (AI & MCP)
 
 - **AI Query View:** Dedicated UI to view full result sets from AI queries.
+- **AI Agent Skills Management:** Interface to define, enable, and manage specific capabilities and tools for AI agents.
+- **Raw SQL Agent:** A specialized AI agent capable of generating and executing raw SQL queries for complex data operations.
+- **Multi-channel Integration:** Extending AI Agent reach to platforms like Slack, Discord, Telegram, and WhatsApp.
 
 ### ⚙️ Data & Schema Management
 
@@ -86,6 +89,8 @@ Our mission is to build the most extensible open-source backend engine for Postg
 ### 🗄️ Multi-Schema Management
 
 - **Schema Migrations:** Visual tools to track and manage versioning for individual schemas.
+- **Locking Mechanisms:** Ability to Lock Tables & Columns to prevent accidental schema modifications or data loss.
+- **Advanced Constraints:** Granular management for complex PostgreSQL constraints (Check, Unique, Exclusion).
 
 ### 🖼️ Advanced Views & UI
 
