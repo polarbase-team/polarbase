@@ -16,8 +16,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { take } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { lastValueFrom } from 'rxjs';
 import * as L from 'leaflet';
 
 import { InputGroupModule } from 'primeng/inputgroup';
@@ -112,17 +111,17 @@ export class OpenMapComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  protected searchAddress(event: AutoCompleteCompleteEvent) {
+  protected async searchAddress(event: AutoCompleteCompleteEvent) {
     const query = event.query;
     const email = environment.openStreetMap.email;
     const url = `${environment.openStreetMap.nominatimUrl}?format=json&q=${query}&limit=5&email=${email}`;
 
-    this.http
-      .get<any[]>(url)
-      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe((data) => {
-        this.suggestions.set(data);
-      });
+    try {
+      const data = await lastValueFrom(this.http.get<any[]>(url));
+      this.suggestions.set(data);
+    } catch (err) {
+      console.error('Failed to search address', err);
+    }
   }
 
   protected onSelectAddress(event: AutoCompleteSelectEvent) {

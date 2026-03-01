@@ -4,15 +4,13 @@ import {
   effect,
   viewChild,
   ElementRef,
-  DestroyRef,
   output,
   ChangeDetectionStrategy,
   input,
+  model,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { ScrollPanel, ScrollPanelModule } from 'primeng/scrollpanel';
@@ -29,7 +27,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { TableService } from '../table/services/table.service';
 import { MarkdownPipe } from './pipes/markdown.pipe';
-import { AgentService, ChatMessage, StreamEvent } from './services/agent.service';
+import { AgentService, ChatMessage, Model, StreamEvent } from './services/agent.service';
 import { modelGroups } from './resources/models';
 import { promptTemplates } from './resources/prompt-templates';
 
@@ -38,15 +36,32 @@ interface UserChatMessage extends ChatMessage {
   _selectedFiles?: File[];
 }
 
+interface ToolCall {
+  id: string;
+  name: string;
+  input?: any;
+  output?: any;
+}
+
 interface AssistantChatMessage extends ChatMessage {
   role: 'assistant';
   _isGenerating?: boolean;
   _isStreaming?: boolean;
-  _toolCallId?: string | null;
+  _toolCalls?: ToolCall[];
+  _toolCallsExpanded?: boolean;
+  _reasoning?: string;
+  _thoughtExpanded?: boolean;
+  _thoughtStartTime?: number;
+  _thoughtTime?: number;
+}
+
+interface Session {
+  id: string;
+  title: string;
 }
 
 const CHATBOT_SELECTED_MODEL_KEY = 'chatbot_selected_model';
-const CHATBOT_SUB_AGENTS_KEY = 'chatbot_sub_agents';
+const CHATBOT_AGENTS_KEY = 'chatbot_agents';
 const CHATBOT_GENERATION_CONFIG_KEY = 'chatbot_generation_config';
 
 @Component({
@@ -73,10 +88,8 @@ const CHATBOT_GENERATION_CONFIG_KEY = 'chatbot_generation_config';
   providers: [AgentService],
 })
 export class ChatBotComponent {
-  visible = input(false);
-
-  fullscreen = output<boolean>();
-  onClose = output<void>();
+  visible = model(false);
+  fullscreen = model(false);
 
   scrollContainer = viewChild<ScrollPanel>('scrollContainer');
   editor = viewChild<ElementRef>('editor');
@@ -84,17 +97,21 @@ export class ChatBotComponent {
   fileInput = viewChild<ElementRef>('fileInput');
 
   protected readonly promptTemplates = promptTemplates;
+  protected title = signal('');
   protected messages = signal<ChatMessage[]>([]);
+  protected currentSessionId = signal<string>(crypto.randomUUID());
   protected selectedFiles = signal<File[]>([]);
   protected isDragging = signal(false);
   protected isChatting = signal(false);
   protected inputText = '';
-  protected isFullscreen = false;
 
-  protected mentionMenuItems: MenuItem[];
+  protected sessions = signal<Session[]>([]);
+  protected sessionMenuItems = signal<MenuItem[]>([]);
+
   protected mentions: { tables: string[] } = { tables: [] };
+  protected mentionMenuItems: MenuItem[];
 
-  protected selectedModel: string;
+  protected selectedModel: Model | undefined;
   protected selectedModelLabel: string;
   protected modelMenuItems: MenuItem[] = [
     {
@@ -126,10 +143,13 @@ export class ChatBotComponent {
     })),
   ];
 
-  protected subAgents = {
-    builder: true,
-    editor: true,
-    query: true,
+  protected agents = {
+    database: {
+      builder: true,
+      editor: true,
+      query: true,
+    },
+    browser: true,
   };
 
   protected generationConfig = {
@@ -139,10 +159,14 @@ export class ChatBotComponent {
     maxOutputTokens: 2048,
   };
 
-  private currentChatSubscription?: Subscription;
+  protected agentNameMap: Record<string, string> = {
+    callDatabaseAgent: 'Database Agent',
+    callBrowserAgent: 'Browser Agent',
+  };
+
+  private currentChatAbortController?: AbortController;
 
   constructor(
-    private destroyRef: DestroyRef,
     private agentService: AgentService,
     private tableService: TableService,
   ) {
@@ -150,9 +174,14 @@ export class ChatBotComponent {
     this.selectedModel = model.value;
     this.selectedModelLabel = model.label;
 
-    this.subAgents = {
-      ...this.subAgents,
-      ...JSON.parse(localStorage.getItem(CHATBOT_SUB_AGENTS_KEY) || '{}'),
+    const savedAgents = JSON.parse(localStorage.getItem(CHATBOT_AGENTS_KEY) || '{}');
+    this.agents = {
+      database: {
+        builder: savedAgents.database?.builder ?? this.agents.database.builder,
+        editor: savedAgents.database?.editor ?? this.agents.database.editor,
+        query: savedAgents.database?.query ?? this.agents.database.query,
+      },
+      browser: savedAgents.browser ?? this.agents.browser,
     };
     this.generationConfig = {
       ...this.generationConfig,
@@ -173,6 +202,32 @@ export class ChatBotComponent {
         }, 100);
       }
     });
+
+    effect(
+      () => {
+        this.sessionMenuItems.set([
+          {
+            label: 'Past Conversations',
+            items:
+              this.sessions().length > 0
+                ? this.sessions().map((s) => ({
+                    label: s.title,
+                    icon: 'icon icon-message-square',
+                    command: () => {
+                      this.title.set(s.title);
+                      this.loadHistory(s.id);
+                    },
+                    data: {
+                      sessionId: s.id,
+                      delete: () => this.deleteSession(s.id),
+                    },
+                  }))
+                : [{ label: 'No items available', disabled: true }],
+          },
+        ]);
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   scrollToBottom() {
@@ -200,19 +255,51 @@ export class ChatBotComponent {
   }
 
   protected toggleFullscreen() {
-    this.isFullscreen = !this.isFullscreen;
-    this.fullscreen.emit(this.isFullscreen);
+    this.fullscreen.update((v) => !v);
   }
 
   protected closeChatbot() {
-    this.isFullscreen = false;
-    this.fullscreen.emit(this.isFullscreen);
-    this.onClose.emit();
+    this.fullscreen.set(false);
+    this.visible.set(false);
   }
 
   protected startNewChat() {
+    const newId = crypto.randomUUID();
+    this.currentSessionId.set(newId);
     this.reset();
     this.focus();
+  }
+
+  protected async loadHistory(sessionId: string) {
+    try {
+      const history = await this.agentService.getHistory(sessionId);
+      this.messages.set(history);
+      setTimeout(() => this.scrollToBottom(), 100);
+    } catch (e) {
+      console.error('Failed to load history', e);
+    }
+  }
+
+  protected async loadSessions() {
+    try {
+      const sessions = await this.agentService.getSessions();
+      this.sessions.set(sessions);
+    } catch (e) {
+      console.error('Failed to load sessions', e);
+    }
+  }
+
+  protected async deleteSession(sessionId: string) {
+    try {
+      await this.agentService.deleteSession(sessionId);
+      if (this.currentSessionId() === sessionId) {
+        this.startNewChat();
+      } else {
+        this.sessions.update((sessions) => sessions.filter((s) => s.id !== sessionId));
+      }
+    } catch (e) {
+      console.error('Failed to delete session', e);
+    }
   }
 
   protected setPrompt(prompt: string) {
@@ -261,8 +348,8 @@ export class ChatBotComponent {
     this.fileInput().nativeElement.value = '';
   }
 
-  protected saveSubAgents() {
-    localStorage.setItem(CHATBOT_SUB_AGENTS_KEY, JSON.stringify(this.subAgents));
+  protected saveAgents() {
+    localStorage.setItem(CHATBOT_AGENTS_KEY, JSON.stringify(this.agents));
   }
 
   protected saveGenerationConfig() {
@@ -299,60 +386,118 @@ export class ChatBotComponent {
     navigator.clipboard.writeText(text);
   }
 
-  private startChat(message: ChatMessage) {
+  private async startChat(message: ChatMessage) {
     this.isChatting.set(true);
+
+    const messages = [...this.messages(), message];
+    this.messages.set(messages);
 
     const botMessage: AssistantChatMessage = {
       role: 'assistant',
       content: '',
       timestamp: new Date(),
       _isGenerating: true,
-      _toolCallId: null,
     };
-    this.messages.update((messages) => [...messages, message, botMessage]);
+    this.messages.set([...messages, botMessage]);
 
-    this.currentChatSubscription = this.agentService
-      .chat({
-        messages: this.messages(),
+    this.currentChatAbortController = new AbortController();
+
+    try {
+      await this.agentService.chat({
+        messages: messages.reduce((acc, msg) => {
+          acc.push({
+            role: msg.role,
+            content: msg.content,
+          });
+          return acc;
+        }, [] as ChatMessage[]),
+        sessionId: this.currentSessionId(),
         attachments: this.selectedFiles(),
         mentions: this.mentions,
         model: this.selectedModel,
-        subAgents: this.subAgents,
+        agents: this.agents,
         generationConfig: this.generationConfig,
-      })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (events: StreamEvent[]) => {
+        signal: this.currentChatAbortController.signal,
+        onEvents: (events: StreamEvent[]) => {
           if (!events.length) return;
 
           botMessage._isGenerating = false;
           botMessage._isStreaming = true;
-          botMessage._toolCallId = null;
+
+          if (!botMessage._thoughtStartTime) {
+            botMessage._thoughtStartTime = performance.now();
+          }
 
           events.forEach((event) => {
             if (event.type === 'text') {
+              if (botMessage._thoughtStartTime && !botMessage._thoughtTime) {
+                botMessage._thoughtTime = (performance.now() - botMessage._thoughtStartTime) / 1000;
+              }
               botMessage.content += event.value;
             } else if (event.type === 'tool') {
-              botMessage._toolCallId = event.value;
+              const toolName = event.value.toolName ?? event.value.method;
+              const toolCallId = event.value.toolCallId;
+
+              if (toolCallId) {
+                if (!botMessage._toolCalls) botMessage._toolCalls = [];
+                if (!botMessage._toolCalls.find((t) => t.id === toolCallId)) {
+                  botMessage._toolCalls.push({ id: toolCallId, name: toolName });
+                }
+              }
+            } else if (event.type === 'tool-input') {
+              const { toolCallId, input } = event.value;
+              if (!botMessage._toolCalls) botMessage._toolCalls = [];
+              let tool = botMessage._toolCalls.find((t) => t.id === toolCallId);
+              if (!tool) {
+                tool = { id: toolCallId, name: event.value.toolName, input };
+                botMessage._toolCalls.push(tool);
+              } else {
+                tool.input = input;
+              }
+            } else if (event.type === 'tool-output') {
+              const { toolCallId, output } = event.value;
+              if (!botMessage._toolCalls) botMessage._toolCalls = [];
+              let tool = botMessage._toolCalls.find((t) => t.id === toolCallId);
+              if (!tool) {
+                tool = { id: toolCallId, name: 'Unknown', output };
+                botMessage._toolCalls.push(tool);
+              } else {
+                tool.output = output;
+              }
+            } else if (event.type === 'reasoning') {
+              if (botMessage._reasoning === undefined) {
+                botMessage._reasoning = '';
+                botMessage._thoughtExpanded = true;
+              }
+              botMessage._reasoning += event.value;
             }
-            this.messages.update((messages) => [...messages]);
-            this.scrollToBottom();
           });
-        },
-        complete: () => {
-          this.isChatting.set(false);
-          botMessage._isGenerating = false;
-          botMessage._isStreaming = false;
-          botMessage._toolCallId = null;
           this.messages.update((messages) => [...messages]);
+          this.scrollToBottom();
         },
       });
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('Generation aborted');
+      } else {
+        console.error('Generation failed', err);
+      }
+    } finally {
+      this.isChatting.set(false);
+      botMessage._isGenerating = false;
+      botMessage._isStreaming = false;
+      if (botMessage._thoughtStartTime && !botMessage._thoughtTime) {
+        botMessage._thoughtTime = (performance.now() - botMessage._thoughtStartTime) / 1000;
+      }
+      this.currentChatAbortController = undefined;
+      this.messages.update((messages) => [...messages]);
+    }
   }
 
-  protected stopGeneration() {
-    if (this.currentChatSubscription) {
-      this.currentChatSubscription.unsubscribe();
-      this.currentChatSubscription = undefined;
+  protected async stopGeneration() {
+    if (this.currentChatAbortController) {
+      this.currentChatAbortController.abort();
+      this.currentChatAbortController = undefined;
     }
     this.isChatting.set(false);
 
@@ -364,7 +509,6 @@ export class ChatBotComponent {
         messages.pop();
       } else {
         lastMessage._isGenerating = false;
-        lastMessage._toolCallId = null;
       }
       this.messages.set(messages);
     }

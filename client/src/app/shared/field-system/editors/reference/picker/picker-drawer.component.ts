@@ -1,13 +1,4 @@
-import {
-  Component,
-  ChangeDetectionStrategy,
-  input,
-  DestroyRef,
-  signal,
-  output,
-  model,
-} from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, ChangeDetectionStrategy, input, signal, output, model } from '@angular/core';
 
 import { DrawerComponent, usingModules } from '@app/core/components/drawer/drawer.component';
 import { TableRowAction, TableRowActionType } from '@app/shared/spreadsheet/events/table-row';
@@ -73,10 +64,6 @@ export class ReferencePickerDrawerComponent extends DrawerComponent {
 
   private pickedEvent: ReferencePickedEvent | null;
 
-  constructor(private destroyRef: DestroyRef) {
-    super();
-  }
-
   protected override onShow() {
     super.onShow();
     this.loadTable();
@@ -122,68 +109,71 @@ export class ReferencePickerDrawerComponent extends DrawerComponent {
     this.loadTableSchema();
   }
 
-  private loadTableSchema() {
+  private async loadTableSchema() {
     const field = this.field();
     if (!field.resources) return;
 
     const { referenceTo, resources } = field;
     const { loadSchema, buildField } = resources;
-    loadSchema(referenceTo)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((columnDefs) => {
-        this.columns.set(null);
 
-        if (!columnDefs.length) return;
+    try {
+      const columnDefs = await loadSchema(referenceTo);
+      this.columns.set(null);
 
-        const columns: TableColumn[] = [];
-        const references = new Map<string, string>();
-        for (const c of columnDefs) {
-          columns.push({
-            id: c.name,
-            name: c.presentation?.uiName || c.name,
-            primary: c.primary,
-            editable: !c.primary,
-            field: buildField(c),
-          });
-          if (c.dataType === DataType.Reference) {
-            references.set(c.name, c.foreignKey.table);
-          }
-        }
-        setTimeout(() => {
-          this.columns.set(columns);
-          this.isReady.set(true);
+      if (!columnDefs || !columnDefs.length) return;
+
+      const columns: TableColumn[] = [];
+      const references = new Map<string, string>();
+      for (const c of columnDefs) {
+        columns.push({
+          id: c.name,
+          name: c.presentation?.uiName || c.name,
+          primary: c.primary,
+          editable: !c.primary,
+          field: buildField(c),
         });
+        if (c.dataType === DataType.Reference) {
+          references.set(c.name, c.foreignKey.table);
+        }
+      }
 
-        this.loadTableData(references);
-      });
+      this.columns.set(columns);
+      this.isReady.set(true);
+
+      this.loadTableData(references);
+    } catch (err) {
+      console.error('Failed to load table schema in picker', err);
+    }
   }
 
-  private loadTableData(references: Map<string, string>) {
+  private async loadTableData(references: Map<string, string>) {
     const field = this.field();
     if (!field.resources) return;
 
     const { referenceTo, resources } = field;
     const { loadRecords } = resources;
-    loadRecords(referenceTo)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((records) => {
-        this.rows.set(null);
 
-        if (!records) return;
+    try {
+      const records = await loadRecords(referenceTo);
+      this.rows.set(null);
 
-        const rows: TableRow[] = records.map((it: any) => ({
-          id: it.id,
-          data: {
-            ...it,
-            ...Object.fromEntries(
-              Array.from(references.entries())
-                .filter(([key]) => key in it)
-                .map(([key, refKey]) => [key, it[refKey]]),
-            ),
-          },
-          selected: it.id === this.value(),
-        }));
-        setTimeout(() => this.rows.set(rows));
-      });
+      if (!records) return;
+
+      const rows: TableRow[] = records.map((it: any) => ({
+        id: it.id,
+        data: {
+          ...it,
+          ...Object.fromEntries(
+            Array.from(references.entries())
+              .filter(([key]) => key in it)
+              .map(([key, refKey]) => [key, it[refKey]]),
+          ),
+        },
+        selected: it.id === this.value(),
+      }));
+      this.rows.set(rows);
+    } catch (err) {
+      console.error('Failed to load table data in picker', err);
+    }
   }
 }

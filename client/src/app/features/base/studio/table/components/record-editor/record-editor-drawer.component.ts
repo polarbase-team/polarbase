@@ -1,18 +1,7 @@
 import _ from 'lodash';
-
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  DestroyRef,
-  input,
-  output,
-  signal,
-} from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { finalize, Observable, map } from 'rxjs';
 
 import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
@@ -96,7 +85,6 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
   protected isDataChanged = false;
 
   constructor(
-    private destroyRef: DestroyRef,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private tableService: TableService,
@@ -161,7 +149,7 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
     this.isDataChanged = false;
   }
 
-  protected save() {
+  protected async save() {
     const isInvalid = !!this.requiredFields().find(
       (field) =>
         !field.params.primary &&
@@ -190,25 +178,25 @@ export class RecordEditorDrawerComponent extends DrawerComponent {
       return acc;
     }, {} as RecordData);
 
-    let fn: Observable<any>;
-    switch (this.mode()) {
-      case 'add':
-        fn = this.tableService.createRecords(tableName, [data]);
-        break;
-      case 'edit':
-        fn = this.tableService.updateRecords(tableName, [{ id, data }]);
-        break;
-    }
-
     this.isSaving.set(true);
-    fn.pipe(
-      map(({ data }) => data.returning[0]),
-      finalize(() => this.isSaving.set(false)),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe((record) => {
+    try {
+      let resultData: any;
+      switch (this.mode()) {
+        case 'add':
+          resultData = await this.tableService.createRecords(tableName, [data]);
+          break;
+        case 'edit':
+          resultData = await this.tableService.updateRecords(tableName, [{ id, data }]);
+          break;
+      }
+      const record = resultData.data.returning[0];
       this.visible.set(false);
       this.onSave.emit(record);
-    });
+    } catch (err) {
+      console.error('Failed to save record', err);
+    } finally {
+      this.isSaving.set(false);
+    }
   }
 
   protected cancel() {

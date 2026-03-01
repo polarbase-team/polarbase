@@ -1,15 +1,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   input,
   output,
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, NgForm } from '@angular/forms';
-import { finalize, Observable } from 'rxjs';
 
 import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
@@ -81,7 +78,6 @@ export class TableEditorDrawerComponent extends DrawerComponent {
   ];
 
   constructor(
-    private destroyRef: DestroyRef,
     private confirmationService: ConfirmationService,
     private tableService: TableService,
   ) {
@@ -132,24 +128,23 @@ export class TableEditorDrawerComponent extends DrawerComponent {
     if (!this.tableForm().valid) return;
 
     this.isSaving.set(true);
-
     // Sanitize the table form data by removing empty values
     const formData = sanitizeEmptyValues(this.tableFormData);
 
-    let fn: Observable<any>;
-    if (this.mode() === 'edit') {
-      fn = this.tableService.updateTable(this.table().name, formData);
-    } else {
-      fn = this.tableService.createTable(formData);
-    }
-
-    fn.pipe(
-      finalize(() => this.isSaving.set(false)),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe(({ data: table }) => {
-      this.onSave.emit(table);
+    try {
+      let result: any;
+      if (this.mode() === 'edit') {
+        result = await this.tableService.updateTable(this.table().name, formData);
+      } else {
+        result = await this.tableService.createTable(formData);
+      }
+      this.onSave.emit(result.data);
       this.close();
-    });
+    } catch (err) {
+      console.error('Failed to save table', err);
+    } finally {
+      this.isSaving.set(false);
+    }
   }
 
   protected save() {

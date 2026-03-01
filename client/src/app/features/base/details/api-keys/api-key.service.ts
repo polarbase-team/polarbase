@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -24,14 +25,14 @@ export class ApiKeyService {
   constructor(private http: HttpClient) {}
 
   getKeys() {
-    return this.http.get<ApiKey[]>(this.apiUrl);
+    return lastValueFrom(this.http.get<ApiKey[]>(this.apiUrl));
   }
 
   createKey(key: ApiKey) {
-    return this.http.post<ApiKey>(this.apiUrl, key);
+    return lastValueFrom(this.http.post<ApiKey>(this.apiUrl, key));
   }
 
   revokeKey(key: ApiKey) {
-    return this.http.delete(`${this.apiUrl}/${key.id}`);
+    return lastValueFrom(this.http.delete(`${this.apiUrl}/${key.id}`));
   }
 }

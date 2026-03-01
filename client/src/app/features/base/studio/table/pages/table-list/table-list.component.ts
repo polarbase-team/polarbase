@@ -1,11 +1,10 @@
 import _ from 'lodash';
 
-import { ChangeDetectionStrategy, Component, DestroyRef, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { finalize, take } from 'rxjs';
+import { take } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -64,7 +63,6 @@ export class TableListComponent {
   protected refreshTables = _.debounce(() => this.getTables(), 1000, { leading: true });
 
   constructor(
-    private destroyRef: DestroyRef,
     private activatedRoute: ActivatedRoute,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
@@ -72,14 +70,12 @@ export class TableListComponent {
   ) {
     let tableFromQueryParam: string;
 
-    this.activatedRoute.queryParams
-      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe((params) => {
-        tableFromQueryParam = params['table'];
-        if (!this.tables().length) {
-          this.getTables(tableFromQueryParam);
-        }
-      });
+    this.activatedRoute.queryParams.pipe(take(1)).subscribe((params) => {
+      tableFromQueryParam = params['table'];
+      if (!this.tables().length) {
+        this.getTables(tableFromQueryParam);
+      }
+    });
   }
 
   protected arrangeTableList(event: CdkDragDrop<any>) {
@@ -144,7 +140,7 @@ export class TableListComponent {
         label: 'Delete',
         severity: 'danger',
       },
-      accept: () => {
+      accept: async () => {
         if (this.tableToDelete !== this.tableToConfirm) {
           this.messageService.add({
             severity: 'error',
@@ -155,16 +151,15 @@ export class TableListComponent {
           return;
         }
         this.isLoading.set(true);
-        this.tableService
-          .deleteTable(this.tableToConfirm, this.isCascadeDeleteEnabled)
-          .pipe(
-            finalize(() => this.isLoading.set(false)),
-            takeUntilDestroyed(this.destroyRef),
-          )
-          .subscribe(() => {
-            this.refreshTables();
-          });
-        this.isCascadeDeleteEnabled = false;
+        try {
+          await this.tableService.deleteTable(this.tableToConfirm, this.isCascadeDeleteEnabled);
+          this.refreshTables();
+        } catch (err) {
+          console.error('Failed to delete table', err);
+        } finally {
+          this.isLoading.set(false);
+          this.isCascadeDeleteEnabled = false;
+        }
       },
     });
   }
@@ -190,32 +185,31 @@ export class TableListComponent {
     this.getTables(savedTable.name);
   }
 
-  private getTables(tableNameWillSelect?: string) {
+  private async getTables(tableNameWillSelect?: string) {
     this.isLoading.set(true);
-    this.tableService
-      .getTables()
-      .pipe(
-        finalize(() => this.isLoading.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((tables) => {
-        const tableOrder = localStorage.getItem(TABLE_ORDER_KEY);
-        if (tableOrder) {
-          tables = tables.sort((a, b) => {
-            const aIndex = tableOrder.indexOf(a.name);
-            const bIndex = tableOrder.indexOf(b.name);
-            return aIndex - bIndex;
-          });
-        }
-        this.tables.set(tables);
-        this.filteredTables.set(tables);
-        this.searchQuery = '';
+    try {
+      let tables = await this.tableService.getTables();
+      const tableOrder = localStorage.getItem(TABLE_ORDER_KEY);
+      if (tableOrder) {
+        tables = tables.sort((a, b) => {
+          const aIndex = tableOrder.indexOf(a.name);
+          const bIndex = tableOrder.indexOf(b.name);
+          return aIndex - bIndex;
+        });
+      }
+      this.tables.set(tables);
+      this.filteredTables.set(tables);
+      this.searchQuery = '';
 
-        this.selectTable(
-          tableNameWillSelect ||
-            this.tableService.selectedTables()[0]?.name ||
-            this.tables()[0]?.name,
-        );
-      });
+      this.selectTable(
+        tableNameWillSelect ||
+          this.tableService.selectedTables()[0]?.name ||
+          this.tables()[0]?.name,
+      );
+    } catch (err) {
+      console.error('Failed to fetch tables', err);
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 }

@@ -77,11 +77,7 @@
       <div class="chatbot-resize-handle" (mousedown)="onResizeStart($event)"></div>
     }
     @if (chatbotInitialized()) {
-      <chatbot
-        [visible]="chatbotVisible()"
-        (fullscreen)="toggleChatbotFullscreen()"
-        (onClose)="onCloseChatbot()"
-      />
+      <chatbot [(visible)]="chatbotVisible" [(fullscreen)]="chatbotFullscreen" />
     }
   </div>
 </div>

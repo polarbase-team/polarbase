@@ -2,22 +2,6 @@
 # Node modules
 # ========================
 node_modules/
-# Server node_modules
-/server/node_modules/
-# Client node_modules
-/client/node_modules/
-
-# ========================
-# Build / Output
-# ========================
-# Angular build output
-/client/dist/
-/client/out-tsc/
-/client/.angular
-/client/.angular/cache
-# Optional server build/output if any
-/server/dist/
-/server/build/
 
 # ========================
 # Environment / Config
@@ -55,6 +39,3 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 Desktop.ini
-
-*.db
-uploads

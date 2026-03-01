@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map } from 'rxjs';
+import { lastValueFrom, map } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -21,14 +21,18 @@ export class IndexService {
   constructor(private http: HttpClient) {}
 
   getIndexes() {
-    return this.http.get<ApiResponse<Index[]>>(this.apiUrl).pipe(map((res) => res.data));
+    return lastValueFrom(
+      this.http.get<ApiResponse<Index[]>>(this.apiUrl).pipe(map((res) => res.data)),
+    );
   }
 
   createIndex(index: Index) {
-    return this.http.post<ApiResponse<Index>>(this.apiUrl, index).pipe(map((res) => res.data));
+    return lastValueFrom(
+      this.http.post<ApiResponse<Index>>(this.apiUrl, index).pipe(map((res) => res.data)),
+    );
   }
 
   deleteIndex(index: Index) {
-    return this.http.delete(`${this.apiUrl}/${index.name}`);
+    return lastValueFrom(this.http.delete(`${this.apiUrl}/${index.name}`));
   }
 }
