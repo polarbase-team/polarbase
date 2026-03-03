@@ -89,51 +89,6 @@ export class GanttViewComponent
     this.loadTable();
   }
 
-  override onRecordSave(
-    savedRecord: RecordData,
-    mode: UpdatedRecordMode,
-    currentRecord?: RecordData,
-  ) {
-    super.onRecordSave(savedRecord, mode, currentRecord);
-
-    const recordId = currentRecord?.id;
-
-    if (mode === 'add') {
-      const start = savedRecord[this.selectedStartField];
-      const end = savedRecord[this.selectedEndField] ?? start;
-
-      this.tasks.update((tasks) => [
-        ...tasks,
-        {
-          id: String(savedRecord.id),
-          name: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
-          progress: getRecordDisplayProgress(savedRecord, this.selectedProgressField),
-          dependencies: savedRecord[this.selectedParentField],
-          start,
-          end,
-        },
-      ]);
-    } else if (mode === 'edit' && recordId !== undefined) {
-      const start = savedRecord[this.selectedStartField];
-      const end = savedRecord[this.selectedEndField] ?? start;
-
-      this.tasks.update((tasks) =>
-        tasks.map((e) =>
-          e.id === recordId
-            ? {
-                ...e,
-                title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
-                progress: getRecordDisplayProgress(savedRecord, this.selectedProgressField),
-                dependencies: savedRecord[this.selectedParentField],
-                start,
-                end,
-              }
-            : e,
-        ),
-      );
-    }
-  }
-
   protected override async loadTable() {
     this.saveViewConfiguration();
 
@@ -185,7 +140,7 @@ export class GanttViewComponent
     const { action, record } = message;
 
     switch (action) {
-      case 'insert':
+      case 'insert': {
         this.tasks.update((tasks) => {
           if (tasks.some((e) => e.id === String(record.new.id))) return tasks;
 
@@ -207,10 +162,11 @@ export class GanttViewComponent
           ];
         });
         break;
+      }
 
-      case 'update':
-        if (record.new[this.selectedStartField]) {
-          const start = record.new[this.selectedStartField];
+      case 'update': {
+        const start = record.new[this.selectedStartField];
+        if (start) {
           const end = record.new[this.selectedEndField] ?? start;
 
           this.tasks.update((tasks) =>
@@ -231,10 +187,12 @@ export class GanttViewComponent
           this.tasks.update((tasks) => tasks.filter((e) => e.id !== String(record.new.id)));
         }
         break;
+      }
 
-      case 'delete':
+      case 'delete': {
         this.tasks.update((tasks) => tasks.filter((e) => e.id !== String(record.key.id)));
         break;
+      }
     }
   }
 
@@ -258,6 +216,57 @@ export class GanttViewComponent
       },
       mode: 'add',
     });
+  }
+
+  override onRecordSave(
+    savedRecord: RecordData,
+    mode: UpdatedRecordMode,
+    currentRecord?: RecordData,
+  ) {
+    super.onRecordSave(savedRecord, mode, currentRecord);
+
+    const recordId = currentRecord?.id;
+
+    if (mode === 'add') {
+      const start = savedRecord[this.selectedStartField];
+      if (start) {
+        const end = savedRecord[this.selectedEndField] ?? start;
+
+        this.tasks.update((tasks) => [
+          ...tasks,
+          {
+            id: String(savedRecord.id),
+            name: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
+            progress: getRecordDisplayProgress(savedRecord, this.selectedProgressField),
+            dependencies: savedRecord[this.selectedParentField],
+            start,
+            end,
+          },
+        ]);
+      }
+    } else if (mode === 'edit' && recordId !== undefined) {
+      const start = savedRecord[this.selectedStartField];
+      if (start) {
+        const end = savedRecord[this.selectedEndField] ?? start;
+
+        this.tasks.update((tasks) =>
+          tasks.map((e) =>
+            e.id === recordId
+              ? {
+                  ...e,
+                  title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
+                  progress: getRecordDisplayProgress(savedRecord, this.selectedProgressField),
+                  dependencies: savedRecord[this.selectedParentField],
+                  start,
+                  end,
+                }
+              : e,
+          ),
+        );
+      } else {
+        this.tasks.update((tasks) => tasks.filter((e) => e.id !== String(recordId)));
+      }
+    }
   }
 
   protected onTaskDateChange(e: GanttDateChangeEvent) {

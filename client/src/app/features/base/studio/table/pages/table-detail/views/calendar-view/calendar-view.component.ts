@@ -79,41 +79,6 @@ export class CalendarViewComponent
     this.loadTable();
   }
 
-  override onRecordSave(
-    savedRecord: RecordData,
-    mode: UpdatedRecordMode,
-    currentRecord?: RecordData,
-  ) {
-    super.onRecordSave(savedRecord, mode, currentRecord);
-
-    const recordId = currentRecord?.id;
-
-    if (mode === 'add') {
-      this.events.update((events) => [
-        ...events,
-        {
-          id: String(savedRecord.id),
-          title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
-          start: savedRecord[this.selectedStartField],
-          end: savedRecord[this.selectedEndField],
-        },
-      ]);
-    } else if (mode === 'edit' && recordId !== undefined) {
-      this.events.update((events) =>
-        events.map((e) =>
-          e.id === String(recordId)
-            ? {
-                ...e,
-                title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
-                start: savedRecord[this.selectedStartField],
-                end: savedRecord[this.selectedEndField],
-              }
-            : e,
-        ),
-      );
-    }
-  }
-
   protected override async loadTable() {
     this.saveViewConfiguration();
 
@@ -172,28 +137,36 @@ export class CalendarViewComponent
         this.events.update((events) => {
           if (events.some((e) => e.id === String(record.new.id))) return events;
 
+          const start = record.new[this.selectedStartField];
+          if (!start) return events;
+
+          const end = record.new[this.selectedEndField] ?? start;
+
           return [
             ...events,
             {
               id: String(record.new.id),
               title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
-              start: record.new[this.selectedStartField],
-              end: record.new[this.selectedEndField],
+              start,
+              end,
             },
           ];
         });
         break;
 
       case 'update':
-        if (record.new[this.selectedStartField]) {
+        const start = record.new[this.selectedStartField];
+        if (start) {
+          const end = record.new[this.selectedEndField] ?? start;
+
           this.events.update((events) =>
             events.map((e) =>
               e.id === String(record.new.id)
                 ? {
                     ...e,
                     title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
-                    start: record.new[this.selectedStartField],
-                    end: record.new[this.selectedEndField],
+                    start,
+                    end,
                   }
                 : e,
             ),
@@ -231,6 +204,53 @@ export class CalendarViewComponent
       },
       mode: 'add',
     });
+  }
+
+  override onRecordSave(
+    savedRecord: RecordData,
+    mode: UpdatedRecordMode,
+    currentRecord?: RecordData,
+  ) {
+    super.onRecordSave(savedRecord, mode, currentRecord);
+
+    const recordId = currentRecord?.id;
+
+    if (mode === 'add') {
+      const start = savedRecord[this.selectedStartField];
+      if (start) {
+        const end = savedRecord[this.selectedEndField] ?? start;
+
+        this.events.update((events) => [
+          ...events,
+          {
+            id: String(savedRecord.id),
+            title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
+            start,
+            end,
+          },
+        ]);
+      }
+    } else if (mode === 'edit' && recordId !== undefined) {
+      const start = savedRecord[this.selectedStartField];
+      if (start) {
+        const end = savedRecord[this.selectedEndField] ?? start;
+
+        this.events.update((events) =>
+          events.map((e) =>
+            e.id === String(recordId)
+              ? {
+                  ...e,
+                  title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
+                  start,
+                  end,
+                }
+              : e,
+          ),
+        );
+      } else {
+        this.events.update((events) => events.filter((e) => e.id !== String(recordId)));
+      }
+    }
   }
 
   protected onChangeDateRange = _.debounce(

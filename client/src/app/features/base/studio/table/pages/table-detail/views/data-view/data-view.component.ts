@@ -109,95 +109,6 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
     this.loadTable();
   }
 
-  override onColumnSave(
-    savedColumn: ColumnDefinition,
-    mode: UpdatedColumnMode,
-    currentColumn?: ColumnDefinition,
-  ) {
-    super.onColumnSave(savedColumn, mode, currentColumn);
-
-    const columnName = savedColumn.name;
-    const columnUiName = savedColumn.presentation?.uiName || savedColumn.name;
-    const currentColumnId = currentColumn?.name;
-
-    let shouldReloadRecords = false;
-
-    if (mode === 'add') {
-      const newColumn: TableColumn = {
-        id: columnName,
-        name: columnUiName,
-        field: this.tableService.buildField(savedColumn),
-      };
-      this.ssColumns.update((arr) => [...arr, newColumn]);
-
-      shouldReloadRecords =
-        savedColumn.dataType === DataType.Formula || savedColumn.defaultValue !== undefined;
-    } else if (mode === 'edit' && currentColumnId !== undefined) {
-      const updatedColumn: TableColumn = {
-        id: columnName,
-        name: columnUiName,
-        field: this.tableService.buildField(savedColumn),
-      };
-
-      this.ssColumns.update((columns) =>
-        columns.map((col) => (col.id === currentColumnId ? updatedColumn : col)),
-      );
-
-      shouldReloadRecords =
-        (savedColumn.dataType === DataType.Formula &&
-          savedColumn.formula !== currentColumn?.formula) ||
-        savedColumn.dataType !== currentColumn?.dataType ||
-        savedColumn.defaultValue !== currentColumn?.defaultValue;
-    }
-
-    if (!shouldReloadRecords) return;
-
-    (async () => {
-      try {
-        const records = await this.tableService.getRecords(this.table()?.name, {
-          fields: ['id', columnName],
-        });
-        const recordsMap = records.reduce(
-          (acc, record) => {
-            acc[record.id] = record;
-            return acc;
-          },
-          {} as Record<string, RecordData>,
-        );
-        this.ssRows.update((rows) =>
-          rows.map((row) => ({
-            ...row,
-            data: { ...row.data, [columnName]: recordsMap[row.id]?.[columnName] },
-          })),
-        );
-      } catch (err) {
-        console.error('Failed to reload records', err);
-      }
-    })();
-  }
-
-  override onRecordSave(
-    savedRecord: RecordData,
-    mode: UpdatedRecordMode,
-    currentRecord?: RecordData,
-  ) {
-    const recordId = mode === 'add' ? savedRecord.id : currentRecord?.id;
-
-    if (mode === 'add') {
-      this.ssRows.update((arr) => {
-        if (arr.some((row) => row.id === recordId)) return arr;
-
-        return [...arr, { id: recordId, data: savedRecord }];
-      });
-    } else if (mode === 'edit' && recordId !== undefined) {
-      this.ssRows.update((rows) =>
-        rows.map((row) =>
-          row.id === recordId ? { ...row, data: { ...row.data, ...savedRecord } } : row,
-        ),
-      );
-    }
-  }
-
   protected override onColumnsLoaded(columns: ColumnDefinition[]) {
     this.ssColumns.set(null);
 
@@ -529,5 +440,94 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
       },
       mode: 'add',
     });
+  }
+
+  override onColumnSave(
+    savedColumn: ColumnDefinition,
+    mode: UpdatedColumnMode,
+    currentColumn?: ColumnDefinition,
+  ) {
+    super.onColumnSave(savedColumn, mode, currentColumn);
+
+    const columnName = savedColumn.name;
+    const columnUiName = savedColumn.presentation?.uiName || savedColumn.name;
+    const currentColumnId = currentColumn?.name;
+
+    let shouldReloadRecords = false;
+
+    if (mode === 'add') {
+      const newColumn: TableColumn = {
+        id: columnName,
+        name: columnUiName,
+        field: this.tableService.buildField(savedColumn),
+      };
+      this.ssColumns.update((arr) => [...arr, newColumn]);
+
+      shouldReloadRecords =
+        savedColumn.dataType === DataType.Formula || savedColumn.defaultValue !== undefined;
+    } else if (mode === 'edit' && currentColumnId !== undefined) {
+      const updatedColumn: TableColumn = {
+        id: columnName,
+        name: columnUiName,
+        field: this.tableService.buildField(savedColumn),
+      };
+
+      this.ssColumns.update((columns) =>
+        columns.map((col) => (col.id === currentColumnId ? updatedColumn : col)),
+      );
+
+      shouldReloadRecords =
+        (savedColumn.dataType === DataType.Formula &&
+          savedColumn.formula !== currentColumn?.formula) ||
+        savedColumn.dataType !== currentColumn?.dataType ||
+        savedColumn.defaultValue !== currentColumn?.defaultValue;
+    }
+
+    if (!shouldReloadRecords) return;
+
+    (async () => {
+      try {
+        const records = await this.tableService.getRecords(this.table()?.name, {
+          fields: ['id', columnName],
+        });
+        const recordsMap = records.reduce(
+          (acc, record) => {
+            acc[record.id] = record;
+            return acc;
+          },
+          {} as Record<string, RecordData>,
+        );
+        this.ssRows.update((rows) =>
+          rows.map((row) => ({
+            ...row,
+            data: { ...row.data, [columnName]: recordsMap[row.id]?.[columnName] },
+          })),
+        );
+      } catch (err) {
+        console.error('Failed to reload records', err);
+      }
+    })();
+  }
+
+  override onRecordSave(
+    savedRecord: RecordData,
+    mode: UpdatedRecordMode,
+    currentRecord?: RecordData,
+  ) {
+    const recordId = mode === 'add' ? savedRecord.id : currentRecord?.id;
+
+    if (mode === 'add') {
+      this.ssRows.update((arr) => {
+        if (arr.some((row) => row.id === recordId)) return arr;
+
+        return [...arr, { id: recordId, data: savedRecord }];
+      });
+    } else if (mode === 'edit' && recordId !== undefined) {
+      this.ssRows.update((rows) =>
+        rows.map((row) =>
+          row.id === recordId ? { ...row, data: { ...row.data, ...savedRecord } } : row,
+        ),
+      );
+    }
   }
 }
