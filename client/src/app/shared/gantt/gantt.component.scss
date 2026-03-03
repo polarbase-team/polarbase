@@ -1,0 +1,13 @@
+::ng-deep {
+  .gantt-container {
+    .side-header {
+      display: none !important;
+    }
+
+    .current-date-highlight,
+    .current-ball-highlight,
+    .current-highlight {
+      background: var(--p-primary-color);
+    }
+  }
+}

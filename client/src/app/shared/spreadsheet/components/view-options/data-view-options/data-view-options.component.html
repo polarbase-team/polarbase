@@ -114,7 +114,7 @@
     "
     icon="icon icon-list-collapse"
     variant="text"
-    [severity]="totalRules() ? 'help' : 'secondary'"
+    [severity]="totalRules() ? 'primary' : 'secondary'"
     (click)="popover.show($event)"
   />
 } @else {
@@ -128,7 +128,7 @@
     "
     icon="icon icon-arrow-down-up"
     variant="text"
-    [severity]="totalRules() ? 'warn' : 'secondary'"
+    [severity]="totalRules() ? 'primary' : 'secondary'"
     (click)="popover.show($event)"
   />
 }

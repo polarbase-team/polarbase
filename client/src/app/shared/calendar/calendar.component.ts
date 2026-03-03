@@ -42,6 +42,7 @@ export interface CalendarEventClickArg extends EventClickArg {}
 @Component({
   selector: 'calendar',
   templateUrl: './calendar.component.html',
+  styleUrl: './calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -97,7 +98,8 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
       value: CalendarView.DAY,
     },
   ];
-  protected resizeObserver: ResizeObserver | null = null;
+
+  private resizeObserver: ResizeObserver | null = null;
 
   ngAfterViewInit() {
     this.resizeObserver = new ResizeObserver(() => {

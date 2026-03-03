@@ -1,9 +1,6 @@
-import _ from 'lodash';
-
 import { ChangeDetectionStrategy, Component, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import dayjs, { Dayjs } from 'dayjs';
 
 import { ButtonModule } from 'primeng/button';
 import { PopoverModule } from 'primeng/popover';
@@ -14,31 +11,39 @@ import { FluidModule } from 'primeng/fluid';
 
 import { getRecordDisplayLabel } from '@app/core/utils';
 import {
-  CalendarComponent,
-  CalendarDateClickArg,
-  CalendarEvent,
-  CalendarEventClickArg,
-} from '@app/shared/calendar/calendar.component';
+  GanttComponent,
+  GanttDateChangeEvent,
+  GanttProgressChangeEvent,
+} from '@app/shared/gantt/gantt.component';
 import { DataType } from '@app/shared/field-system/models/field.interface';
 import { FilterOptionComponent } from '@app/shared/field-system/filter/filter-option/filter-option.component';
 import { FilterGroup } from '@app/shared/field-system/filter/models';
 import { FieldIconPipe } from '@app/shared/field-system/pipes/field-icon.pipe';
+import { GanttTask } from '@app/shared/gantt/gantt.component';
 import { ColumnDefinition, RecordData } from '../../../../services/table.service';
 import { TableRealtimeMessage } from '../../../../services/table-realtime.service';
 import { ViewLayoutService } from '../../../../services/view-layout.service';
 import { UpdatedRecordMode } from '../../table-detail.component';
 import { ViewBaseComponent } from '../view-base.component';
 
-interface CalendarViewConfiguration {
+interface GanttViewConfiguration {
   selectedStartField?: string;
   selectedEndField?: string;
   selectedDisplayField?: string;
+  selectedProgressField?: string;
+  selectedParentField?: string;
   filterQuery?: FilterGroup;
 }
 
+const getRecordDisplayProgress = (record: RecordData, field: string) => {
+  const value = record[field];
+  if (value === undefined || value === null) return 0;
+  return value;
+};
+
 @Component({
-  selector: 'calendar-view',
-  templateUrl: './calendar-view.component.html',
+  selector: 'gantt-view',
+  templateUrl: './gantt-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -49,24 +54,27 @@ interface CalendarViewConfiguration {
     DividerModule,
     SkeletonModule,
     FluidModule,
-    CalendarComponent,
+    GanttComponent,
     FilterOptionComponent,
     FieldIconPipe,
   ],
   providers: [ViewLayoutService],
 })
-export class CalendarViewComponent
-  extends ViewBaseComponent<CalendarViewConfiguration>
+export class GanttViewComponent
+  extends ViewBaseComponent<GanttViewConfiguration>
   implements OnInit
 {
-  calendar = viewChild<CalendarComponent>('calendar');
+  gantt = viewChild<GanttComponent>('gantt');
   filterOption = viewChild<FilterOptionComponent>('filterOption');
 
   protected dateColumns: ColumnDefinition[] = [];
-  protected events = signal<CalendarEvent[]>([]);
+  protected numberColumns: ColumnDefinition[] = [];
+  protected tasks = signal<GanttTask[]>([]);
   protected selectedStartField: string;
   protected selectedEndField: string;
   protected selectedDisplayField: string;
+  protected selectedProgressField: string;
+  protected selectedParentField: string;
   protected filterQuery: FilterGroup;
 
   ngOnInit() {
@@ -74,6 +82,8 @@ export class CalendarViewComponent
     this.selectedStartField = configuration.selectedStartField;
     this.selectedEndField = configuration.selectedEndField;
     this.selectedDisplayField = configuration.selectedDisplayField;
+    this.selectedProgressField = configuration.selectedProgressField;
+    this.selectedParentField = configuration.selectedParentField;
     this.filterQuery = configuration.filterQuery;
 
     this.loadTable();
@@ -91,33 +101,30 @@ export class CalendarViewComponent
     }
   }
 
-  protected override async loadTableData(start?: Dayjs, end?: Dayjs) {
+  protected override async loadTableData() {
     if (!this.selectedStartField || !this.selectedEndField) {
       return;
     }
 
-    const currentDate = this.calendar().getCurrentDate();
-    if (!start || !end) {
-      start = dayjs(currentDate).startOf('month');
-      end = dayjs(currentDate).endOf('month');
-    }
-
-    const filter = {};
-
-    if (this.selectedStartField === this.selectedEndField) {
-      filter[this.selectedStartField] = { gte: start, lte: end };
-    } else {
-      filter[this.selectedStartField] = { lte: end };
-      filter[this.selectedEndField] = { gte: start };
-    }
-
-    await super.loadTableData(filter);
+    await super.loadTableData();
   }
 
   protected override onColumnsLoaded(columns: ColumnDefinition[]) {
-    this.dateColumns = columns.filter(
-      (c) => c.dataType === DataType.AutoDate || c.dataType === DataType.Date,
-    );
+    this.dateColumns = [];
+    this.numberColumns = [];
+
+    for (const column of columns) {
+      switch (column.dataType) {
+        case DataType.AutoDate:
+        case DataType.Date:
+          this.dateColumns.push(column);
+          break;
+        case DataType.Integer:
+        case DataType.Number:
+          this.numberColumns.push(column);
+          break;
+      }
+    }
   }
 
   protected override onRecordsLoaded(records: RecordData[]) {
@@ -126,45 +133,50 @@ export class CalendarViewComponent
 
   protected onRecordsFiltered(records: RecordData[]) {
     this.saveViewConfiguration();
-    this.buildEvents(records);
+    this.buildTasks(records);
   }
 
   protected override onRealtimeMessage(message: TableRealtimeMessage) {
     const { action, record } = message;
 
     switch (action) {
-      case 'insert':
-        this.events.update((events) => {
-          if (events.some((e) => e.id === String(record.new.id))) return events;
+      case 'insert': {
+        this.tasks.update((tasks) => {
+          if (tasks.some((e) => e.id === String(record.new.id))) return tasks;
 
           const start = record.new[this.selectedStartField];
-          if (!start) return events;
+          if (!start) return tasks;
 
           const end = record.new[this.selectedEndField] ?? start;
 
           return [
-            ...events,
+            ...tasks,
             {
               id: String(record.new.id),
-              title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
+              name: getRecordDisplayLabel(record.new, this.selectedDisplayField),
+              progress: getRecordDisplayProgress(record.new, this.selectedProgressField),
+              dependencies: record.new[this.selectedParentField],
               start,
               end,
             },
           ];
         });
         break;
+      }
 
-      case 'update':
+      case 'update': {
         const start = record.new[this.selectedStartField];
         if (start) {
           const end = record.new[this.selectedEndField] ?? start;
 
-          this.events.update((events) =>
-            events.map((e) =>
+          this.tasks.update((tasks) =>
+            tasks.map((e) =>
               e.id === String(record.new.id)
                 ? {
                     ...e,
                     title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
+                    progress: getRecordDisplayProgress(record.new, this.selectedProgressField),
+                    dependencies: record.new[this.selectedParentField],
                     start,
                     end,
                   }
@@ -172,13 +184,15 @@ export class CalendarViewComponent
             ),
           );
         } else {
-          this.events.update((events) => events.filter((e) => e.id !== String(record.new.id)));
+          this.tasks.update((tasks) => tasks.filter((e) => e.id !== String(record.new.id)));
         }
         break;
+      }
 
-      case 'delete':
-        this.events.update((events) => events.filter((e) => e.id !== String(record.key.id)));
+      case 'delete': {
+        this.tasks.update((tasks) => tasks.filter((e) => e.id !== String(record.key.id)));
         break;
+      }
     }
   }
 
@@ -187,20 +201,18 @@ export class CalendarViewComponent
       selectedStartField: this.selectedStartField,
       selectedEndField: this.selectedEndField,
       selectedDisplayField: this.selectedDisplayField,
+      selectedProgressField: this.selectedProgressField,
+      selectedParentField: this.selectedParentField,
       filterQuery: this.filterQuery,
     });
   }
 
-  protected addNewRecord(date?: Dayjs) {
+  protected addNewRecord() {
     this.onUpdateRecord.emit({
       record: {
         table: this.table(),
         fields: this.fields(),
-        data: {
-          id: undefined,
-          [this.selectedStartField]: date,
-          [this.selectedEndField]: date,
-        },
+        data: { id: undefined },
       },
       mode: 'add',
     });
@@ -220,11 +232,13 @@ export class CalendarViewComponent
       if (start) {
         const end = savedRecord[this.selectedEndField] ?? start;
 
-        this.events.update((events) => [
-          ...events,
+        this.tasks.update((tasks) => [
+          ...tasks,
           {
             id: String(savedRecord.id),
-            title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
+            name: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
+            progress: getRecordDisplayProgress(savedRecord, this.selectedProgressField),
+            dependencies: savedRecord[this.selectedParentField],
             start,
             end,
           },
@@ -235,12 +249,14 @@ export class CalendarViewComponent
       if (start) {
         const end = savedRecord[this.selectedEndField] ?? start;
 
-        this.events.update((events) =>
-          events.map((e) =>
-            e.id === String(recordId)
+        this.tasks.update((tasks) =>
+          tasks.map((e) =>
+            e.id === recordId
               ? {
                   ...e,
                   title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
+                  progress: getRecordDisplayProgress(savedRecord, this.selectedProgressField),
+                  dependencies: savedRecord[this.selectedParentField],
                   start,
                   end,
                 }
@@ -248,55 +264,70 @@ export class CalendarViewComponent
           ),
         );
       } else {
-        this.events.update((events) => events.filter((e) => e.id !== String(recordId)));
+        this.tasks.update((tasks) => tasks.filter((e) => e.id !== String(recordId)));
       }
     }
   }
 
-  protected onChangeDateRange = _.debounce(
-    ([start, end]: [Dayjs, Dayjs]) => {
-      this.loadTableData(start, end);
-    },
-    500,
-    { leading: true },
-  );
-
-  protected onDateClick(e: CalendarDateClickArg) {
-    this.addNewRecord(dayjs(e.date));
+  protected onTaskDateChange(e: GanttDateChangeEvent) {
+    this.tableService.updateRecords(this.table().name, [
+      {
+        id: e.task.id,
+        data: {
+          id: e.task.id,
+          [this.selectedStartField]: e.start,
+          [this.selectedEndField]: e.end,
+        },
+      },
+    ]);
   }
 
-  protected onEventClick(e: CalendarEventClickArg) {
+  protected onTaskProgressChange(e: GanttProgressChangeEvent) {
+    this.tableService.updateRecords(this.table().name, [
+      {
+        id: e.task.id,
+        data: {
+          id: e.task.id,
+          [this.selectedProgressField]: e.progress,
+        },
+      },
+    ]);
+  }
+
+  protected onTaskClick(e: GanttTask) {
     this.onUpdateRecord.emit({
       record: {
         table: this.table(),
         fields: this.fields(),
-        data: this.records().find((r) => String(r.id) === e.event.id),
+        data: this.records().find((r) => String(r.id) === e.id),
       },
       mode: 'edit',
     });
   }
 
-  private buildEvents(records: RecordData[]) {
+  private buildTasks(records: RecordData[]) {
     if (!this.selectedStartField || !this.selectedEndField) {
-      this.events.set([]);
+      this.tasks.set([]);
       return;
     }
 
-    this.events.set(
-      records.reduce<CalendarEvent[]>((events, record) => {
+    this.tasks.set(
+      records.reduce<GanttTask[]>((tasks, record) => {
         const start = record[this.selectedStartField];
-        if (!start) return events;
+        if (!start) return tasks;
 
-        const end = record[this.selectedEndField];
+        const end = record[this.selectedEndField] ?? start;
 
-        events.push({
+        tasks.push({
           id: String(record.id),
-          title: getRecordDisplayLabel(record, this.selectedDisplayField),
+          name: getRecordDisplayLabel(record, this.selectedDisplayField),
+          progress: getRecordDisplayProgress(record, this.selectedProgressField),
+          dependencies: record[this.selectedParentField],
           start,
           end,
         });
 
-        return events;
+        return tasks;
       }, []),
     );
   }
