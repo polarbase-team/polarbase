@@ -140,17 +140,10 @@ export class CalendarViewComponent
     const filter = {};
 
     if (this.selectedStartField === this.selectedEndField) {
-      filter[this.selectedStartField] = {
-        gte: start,
-        lte: end,
-      };
+      filter[this.selectedStartField] = { gte: start, lte: end };
     } else {
-      filter[this.selectedStartField] = {
-        gte: start,
-      };
-      filter[this.selectedEndField] = {
-        lte: end,
-      };
+      filter[this.selectedStartField] = { lte: end };
+      filter[this.selectedEndField] = { gte: start };
     }
 
     await super.loadTableData(filter);
