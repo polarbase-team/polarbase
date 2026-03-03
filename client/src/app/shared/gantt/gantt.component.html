@@ -1,0 +1,29 @@
+<div class="flex flex-col gap-4 w-full h-full">
+  <div class="flex flex-wrap justify-between gap-2" [class]="toolbarStyleClass()">
+    <div class="flex">
+      <div class="flex items-start">
+        <ng-container *ngTemplateOutlet="toolbarTmpl()"></ng-container>
+        <ng-container *ngTemplateOutlet="leftToolbarTmpl()"></ng-container>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-y-2">
+      <ng-container *ngTemplateOutlet="rightToolbarTmpl()"></ng-container>
+      <div class="flex">
+        <p-divider layout="vertical" class="scale-80" />
+        <p-selectbutton
+          [options]="viewOptions"
+          [allowEmpty]="false"
+          [(ngModel)]="view"
+          (ngModelChange)="changeView($event)"
+        />
+      </div>
+      <div class="flex">
+        <p-divider layout="vertical" class="scale-80" />
+        <p-button label="Today" severity="secondary" (click)="today()" />
+      </div>
+    </div>
+  </div>
+  <div #container class="flex-1" [class]="contentStyleClass()">
+    <div id="gantt"></div>
+  </div>
+</div>

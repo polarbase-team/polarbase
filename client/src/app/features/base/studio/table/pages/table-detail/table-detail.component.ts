@@ -25,9 +25,10 @@ import {
 import { ViewLayoutService } from '../../services/view-layout.service';
 import { DataViewComponent } from './views/data-view/data-view.component';
 import { CalendarViewComponent } from './views/calendar-view/calendar-view.component';
+import { GanttViewComponent } from './views/gantt-view/gantt-view.component';
 import { MapViewComponent } from './views/map-view/map-view.component';
 
-export type DisplayMode = 'data-view' | 'calendar-view' | 'map-view';
+export type DisplayMode = 'data-view' | 'calendar-view' | 'gantt-view' | 'map-view';
 
 interface UpdatedRecord {
   table: TableDefinition;
@@ -61,6 +62,7 @@ export interface UpdateRecordEvent {
     ColumnEditorDrawerComponent,
     DataViewComponent,
     CalendarViewComponent,
+    GanttViewComponent,
     MapViewComponent,
   ],
   providers: [ViewLayoutService],
@@ -68,7 +70,9 @@ export interface UpdateRecordEvent {
 export class TableDetailComponent implements OnInit {
   table = input<TableDefinition>();
 
-  view = viewChild<DataViewComponent | CalendarViewComponent | MapViewComponent>('view');
+  view = viewChild<
+    DataViewComponent | CalendarViewComponent | GanttViewComponent | MapViewComponent
+  >('view');
 
   protected displayMode = signal<DisplayMode>(null);
   protected displayModeMenuItems: MenuItem[] = [
@@ -84,6 +88,13 @@ export class TableDetailComponent implements OnInit {
       icon: 'icon icon-calendar-days',
       command: () => {
         this.selectDisplayMode('calendar-view');
+      },
+    },
+    {
+      label: 'Gantt View',
+      icon: 'icon icon-chart-gantt',
+      command: () => {
+        this.selectDisplayMode('gantt-view');
       },
     },
     {

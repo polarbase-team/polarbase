@@ -28,6 +28,10 @@
             <i pButtonIcon class="icon icon-calendar-days"></i>
             <span pButtonLabel class="whitespace-nowrap">Calendar View</span>
           }
+          @case ('gantt-view') {
+            <i pButtonIcon class="icon icon-chart-gantt"></i>
+            <span pButtonLabel class="whitespace-nowrap">Gantt View</span>
+          }
           @case ('map-view') {
             <i pButtonIcon class="icon icon-map-pin"></i>
             <span pButtonLabel class="whitespace-nowrap">Map View</span>
@@ -52,6 +56,15 @@
   }
   @case ('calendar-view') {
     <calendar-view
+      #view
+      [table]="table()"
+      [displayModeTmpl]="displayModeTmpl"
+      (onUpdateColumn)="onUpdateColumn($event)"
+      (onUpdateRecord)="onUpdateRecord($event)"
+    />
+  }
+  @case ('gantt-view') {
+    <gantt-view
       #view
       [table]="table()"
       [displayModeTmpl]="displayModeTmpl"
