@@ -18,6 +18,7 @@ import { FieldIconPipe } from '@app/shared/field-system/pipes/field-icon.pipe';
 import { ColumnDefinition, RecordData } from '../../../../services/table.service';
 import { TableRealtimeMessage } from '../../../../services/table-realtime.service';
 import { ViewLayoutService } from '../../../../services/view-layout.service';
+import { UpdatedRecordMode } from '../../table-detail.component';
 import { ViewBaseComponent } from '../view-base.component';
 
 interface MapViewConfiguration {
@@ -97,28 +98,35 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
     const { action, record } = message;
 
     switch (action) {
-      case 'insert':
-        this.locations.update((l) => [
-          ...l,
-          {
-            id: record.new.id,
-            title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
-            lat: record.new[this.selectedGeoPointField].x,
-            lng: record.new[this.selectedGeoPointField].y,
-          },
-        ]);
+      case 'insert': {
+        const lat = record.new[this.selectedGeoPointField]?.x;
+        const lng = record.new[this.selectedGeoPointField]?.y;
+        if (lat && lng) {
+          this.locations.update((l) => [
+            ...l,
+            {
+              id: record.new.id,
+              title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
+              lat,
+              lng,
+            },
+          ]);
+        }
         break;
+      }
 
-      case 'update':
-        if (record.new[this.selectedGeoPointField]) {
+      case 'update': {
+        const lat = record.new[this.selectedGeoPointField]?.x;
+        const lng = record.new[this.selectedGeoPointField]?.y;
+        if (lat && lng) {
           this.locations.update((l) =>
             l.map((l) =>
               l.id === record.new.id
                 ? {
                     id: record.new.id,
                     title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
-                    lat: record.new[this.selectedGeoPointField].x,
-                    lng: record.new[this.selectedGeoPointField].y,
+                    lat,
+                    lng,
                   }
                 : l,
             ),
@@ -127,10 +135,12 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
           this.locations.update((l) => l.filter((l) => l.id !== record.new.id));
         }
         break;
+      }
 
-      case 'delete':
+      case 'delete': {
         this.locations.update((l) => l.filter((l) => l.id !== record.key.id));
         break;
+      }
     }
   }
 
@@ -156,6 +166,49 @@ export class MapViewComponent extends ViewBaseComponent<MapViewConfiguration> im
       },
       mode: 'add',
     });
+  }
+
+  override onRecordSave(
+    savedRecord: RecordData,
+    mode: UpdatedRecordMode,
+    currentRecord?: RecordData,
+  ) {
+    super.onRecordSave(savedRecord, mode, currentRecord);
+
+    const recordId = currentRecord?.id;
+
+    if (mode === 'add') {
+      const location = savedRecord[this.selectedGeoPointField];
+      if (location) {
+        this.locations.update((locations) => [
+          ...locations,
+          {
+            id: String(savedRecord.id),
+            name: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
+            lat: location.x,
+            lng: location.y,
+          },
+        ]);
+      }
+    } else if (mode === 'edit' && recordId !== undefined) {
+      const location = savedRecord[this.selectedGeoPointField];
+      if (location) {
+        this.locations.update((locations) =>
+          locations.map((e) =>
+            e.id === recordId
+              ? {
+                  ...e,
+                  name: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
+                  lat: location.x,
+                  lng: location.y,
+                }
+              : e,
+          ),
+        );
+      } else {
+        this.locations.update((locations) => locations.filter((e) => e.id !== String(recordId)));
+      }
+    }
   }
 
   protected onMapMove() {

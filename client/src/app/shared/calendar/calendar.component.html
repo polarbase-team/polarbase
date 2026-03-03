@@ -6,33 +6,34 @@
         <ng-container *ngTemplateOutlet="leftToolbarTmpl()"></ng-container>
       </div>
     </div>
-    <div class="flex flex-wrap gap-y-2">
+    <div class="flex flex-wrap gap-y-2 h-fit">
       <ng-container *ngTemplateOutlet="rightToolbarTmpl()"></ng-container>
+      <p-divider layout="vertical" class="scale-80" />
       <div class="flex items-center">
         <p>
           @switch (view) {
             @case (CV.MONTH) {
-              {{ fullCalendar.getApi()?.getDate() | date: 'MMM, y' }}
+              {{ getCurrentDate() | date: 'MMM, y' }}
             }
             @case (CV.WEEK) {
-              {{ fullCalendar.getApi()?.getDate() | date: 'E, MMM d, y' }}
+              {{ getCurrentDate() | date: 'E, MMM d, y' }}
             }
             @case (CV.DAY) {
-              {{ fullCalendar.getApi()?.getDate() | date: 'MMM d, y' }}
+              {{ getCurrentDate() | date: 'MMM d, y' }}
             }
           }
         </p>
-        <p-divider layout="vertical" class="scale-80" />
       </div>
-      <div class="flex">
+      <p-divider layout="vertical" class="scale-80" />
+      <div class="flex items-center">
         <p-selectbutton
           [options]="viewOptions"
           [allowEmpty]="false"
           [(ngModel)]="view"
           (ngModelChange)="changeView($event)"
         />
-        <p-divider layout="vertical" class="scale-80" />
       </div>
+      <p-divider layout="vertical" class="scale-80" />
       <div class="flex gap-2">
         <p-button label="Today" severity="secondary" (click)="today()" />
         <p-button icon="icon icon-chevron-left" severity="secondary" (click)="prev()" />

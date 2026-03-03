@@ -14,7 +14,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Clean Architecture:** Metadata stored in SQLite to ensure **Zero Vendor Lock-in** for your main PostgreSQL database.
 - **Performance-First Runtime:** Built with **Bun**, **ElysiaJS**, and **PostgreSQL**.
 - **File Management**: Attachment field type with storage integration.
-- **Multi-View Foundation:** Building the core architecture to support switching between different data lenses (Spreadsheet, Calendar, Map,...).
+- **Multi-View Foundation:** Building the core architecture to support switching between different data lenses (Spreadsheet, Calendar, Map, Gantt, ...).
 - **Advanced Filtering:** Support for single and group conditions for complex datasets.
 - **API Playground:** Built-in Swagger/OpenAPI interface for instant testing.
 
@@ -23,6 +23,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Spreadsheet-UI:** A user-friendly, Excel-like interface for intuitive data visualization and manipulation.
 - **Calendar View:** Visualize records with date fields on a calendar.
 - **Map View:** Visualize records with GeoPoint fields on a map.
+- **Gantt Chart View:** Visualize records and timelines with specialized Gantt chart support.
 - **API Key Management:** Generate and manage keys for controlled access to REST API or AI features.
 - **Super Admin Control:** Secure administrative access via a dedicated Super Admin Key.
 - **Layout Configuration Persistence:** View configurations (column widths, filters, view states) are persisted via **LocalStorage** for a seamless client-side experience.
@@ -32,7 +33,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 
 - **MCP Server for DB:** Native Model Context Protocol server for streamlined database administration.
 - **AI Agent for DB:** Intelligent agent to assist with database operations without manual SQL generation.
-- **Multi-Provider Support:** Integration with Google Gemini (default) and OpenAI.
+- **Multi-Provider Support:** Integration with Google Gemini (default), OpenAI, and **OpenRouter**.
 - **Local AI Support:** Integration with local inference servers like **LM Studio** via a two-level model menu.
 - **Agent Orchestration**: Specialized sub-agents (Builder, Query, Lookup, Editor) for improved task accuracy.
 - **Agent Call Approval**: Human-in-the-loop security for high-risk operations (Delete/Drop).
@@ -40,7 +41,7 @@ Our mission is to build the most extensible open-source backend engine for Postg
 - **Generation Controls**: Granular control over Temperature, Top P, Top K, and Max Tokens.
 - **Agent Long-Term Memory**: Conversation history management with client-side UI and server-side core memories.
 - **Agent Reasoning UI**: Real-time visualization of agent thoughts and tool interactions (inputs/outputs) within the chat.
-- **Browser Agent Integration**: Specialized capabilities for web navigation, interaction, extraction, and automated screenshots.
+- **Browser Agent Integration**: Specialized capabilities for web navigation, interaction, extraction, and automated screenshots with **Stealth Plugin** support.
 
 ### ⚙️ Data & Schema Management
 

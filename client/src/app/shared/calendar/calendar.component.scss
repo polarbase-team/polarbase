@@ -1,0 +1,12 @@
+::ng-deep {
+  .fc {
+    .fc-daygrid-event-dot {
+      border-color: var(--p-primary-color);
+    }
+
+    .fc-h-event {
+      background-color: var(--p-primary-color);
+      border-color: var(--p-primary-color);
+    }
+  }
+}
