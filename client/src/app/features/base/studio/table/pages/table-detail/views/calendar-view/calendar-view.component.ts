@@ -101,7 +101,7 @@ export class CalendarViewComponent
     } else if (mode === 'edit' && recordId !== undefined) {
       this.events.update((events) =>
         events.map((e) =>
-          e.id === recordId
+          e.id === String(recordId)
             ? {
                 ...e,
                 title: getRecordDisplayLabel(savedRecord, this.selectedDisplayField),
@@ -170,7 +170,7 @@ export class CalendarViewComponent
     switch (action) {
       case 'insert':
         this.events.update((events) => {
-          if (events.some((e) => e.id === record.new.id)) return events;
+          if (events.some((e) => e.id === String(record.new.id))) return events;
 
           return [
             ...events,
@@ -188,7 +188,7 @@ export class CalendarViewComponent
         if (record.new[this.selectedStartField]) {
           this.events.update((events) =>
             events.map((e) =>
-              e.id === record.new.id
+              e.id === String(record.new.id)
                 ? {
                     ...e,
                     title: getRecordDisplayLabel(record.new, this.selectedDisplayField),
@@ -199,12 +199,12 @@ export class CalendarViewComponent
             ),
           );
         } else {
-          this.events.update((events) => events.filter((e) => e.id !== record.new.id));
+          this.events.update((events) => events.filter((e) => e.id !== String(record.new.id)));
         }
         break;
 
       case 'delete':
-        this.events.update((events) => events.filter((e) => e.id !== record.key.id));
+        this.events.update((events) => events.filter((e) => e.id !== String(record.key.id)));
         break;
     }
   }
