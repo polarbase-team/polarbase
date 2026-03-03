@@ -36,7 +36,7 @@
                 "output": "./media/"
               }
             ],
-            "styles": ["src/styles.scss"],
+            "styles": ["src/styles.scss", "../node_modules/frappe-gantt/dist/frappe-gantt.css"],
             "allowedCommonJsDependencies": [
               "ace-builds",
               "dayjs",

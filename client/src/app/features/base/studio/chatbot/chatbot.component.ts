@@ -4,9 +4,7 @@ import {
   effect,
   viewChild,
   ElementRef,
-  output,
   ChangeDetectionStrategy,
-  input,
   model,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -131,6 +129,7 @@ export class ChatBotComponent {
       label: group.label,
       items: group.items.map((opt) => ({
         label: opt.label,
+        disabled: opt.disabled,
         command: () => {
           this.selectedModel = opt.value;
           this.selectedModelLabel = opt.label;

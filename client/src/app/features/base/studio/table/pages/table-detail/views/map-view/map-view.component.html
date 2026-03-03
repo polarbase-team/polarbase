@@ -96,7 +96,7 @@
   (onMove)="onMapMove()"
   (onZoom)="onMapZoom()"
   (onMarkerClick)="onMarkerClick($event)"
-  toolbarStyleClass="pt-[16px] px-[20px]"
+  toolbarStyleClass="px-[20px] pt-[16px]"
 >
   <ng-template #leftToolbar>
     <div class="flex flex-wrap gap-2">
@@ -119,7 +119,6 @@
         <p-skeleton width="90px" height="33px" />
         <div class="flex items-center">
           <p-skeleton width="90px" height="33px" />
-          <p-divider layout="vertical" class="scale-80" />
         </div>
       } @else {
         <p-button severity="secondary" [text]="true" (click)="popover.show($event)">
@@ -142,7 +141,6 @@
             [items]="records()"
             (onFilter)="onRecordsFiltered($event)"
           />
-          <p-divider layout="vertical" class="scale-80" />
         </div>
       }
     </div>
