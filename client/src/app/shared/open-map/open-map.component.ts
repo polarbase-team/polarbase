@@ -29,6 +29,7 @@ import {
 } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { DividerModule } from 'primeng/divider';
 
 import { environment } from '@environments/environment';
 
@@ -54,6 +55,7 @@ export interface Location extends Position {
     AutoCompleteModule,
     ButtonModule,
     TooltipModule,
+    DividerModule,
   ],
 })
 export class OpenMapComponent implements AfterViewInit, OnDestroy {
