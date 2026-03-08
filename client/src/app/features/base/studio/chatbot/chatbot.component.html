@@ -1,4 +1,10 @@
-<p-menu #sessionMenu [model]="sessionMenuItems()" [popup]="true" appendTo="body" styleClass="w-60">
+<p-menu
+  #sessionMenu
+  [model]="sessionMenuItems()"
+  [popup]="true"
+  appendTo="body"
+  styleClass="w-60 max-h-60 overflow-y-auto"
+>
   <ng-template #item let-item>
     <div
       class="flex items-center justify-between gap-2 w-full pl-3 pr-1 py-1 cursor-pointer hover:bg-surface-100 group transition-colors"
@@ -16,7 +22,7 @@
           class="opacity-0 group-hover:opacity-100 transition-opacity p-0!"
           (click)="$event.stopPropagation(); item.data.delete()"
           pTooltip="Delete chat"
-          tooltipPosition="left"
+          tooltipPosition="bottom"
         />
       }
     </div>
@@ -93,6 +99,25 @@
     <p-divider class="m-0!" />
 
     <p-scrollpanel #scrollContainer class="w-full h-full min-h-0">
+      <ng-template #contentTmpl let-content="content" let-canCopy="canCopy">
+        <div class="leading-6 mb-4">
+          <div class="chatbot-prose text-sm" [innerHTML]="content | markdown"></div>
+          @if (canCopy) {
+            <div class="flex items-center gap-0.5 mt-0.5">
+              <p-button
+                icon="icon icon-copy"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                (click)="copyToClipboard(content)"
+                pTooltip="Copy"
+                tooltipPosition="bottom"
+              />
+            </div>
+          }
+        </div>
+      </ng-template>
+
       @if (messages().length) {
         <div class="px-4 py-6">
           <div class="flex flex-col gap-8">
@@ -148,73 +173,68 @@
                         <span class="loading-text">Generating</span>
                       </p>
                     } @else {
-                      <!-- Thinking Block -->
-                      @if ($any(msg)._reasoning) {
-                        <div class="flex flex-col gap-2 mb-4">
-                          <div
-                            class="flex items-center gap-2 cursor-pointer group/thought select-none"
-                            (click)="$any(msg)._thoughtExpanded = !$any(msg)._thoughtExpanded"
-                          >
-                            <i
-                              class="icon text-surface-400 text-sm transition-transform"
-                              [ngClass]="
-                                $any(msg)._thoughtExpanded
-                                  ? 'icon-chevron-down'
-                                  : 'icon-chevron-right'
-                              "
-                            ></i>
-                            <p
-                              class="text-sm font-medium text-surface-500 leading-6 group-hover/thought:text-surface-700 transition-colors"
+                      @for (part of $any(msg)._parts; track $index; let lastPart = $last) {
+                        @if (part.type === 'reasoning') {
+                          <div class="flex flex-col gap-2 mb-4">
+                            <div
+                              class="flex items-center gap-2 cursor-pointer group/thought select-none"
+                              (click)="part._expanded = !part._expanded"
                             >
-                              @if ($any(msg)._isStreaming && !$any(msg).content) {
-                                <span class="loading-text">Thinking</span>
-                              } @else {
-                                Thought
-                                @if ($any(msg)._thoughtTime) {
-                                  <span class="text-surface-400 font-normal ml-1"
-                                    >({{ $any(msg)._thoughtTime | number: '1.1-1' }}s)</span
-                                  >
+                              <i
+                                class="icon text-surface-400 text-sm transition-transform"
+                                [ngClass]="
+                                  part._expanded ? 'icon-chevron-down' : 'icon-chevron-right'
+                                "
+                              ></i>
+                              <p
+                                class="text-sm font-medium text-surface-500 leading-6 group-hover/thought:text-surface-700 transition-colors"
+                              >
+                                @if ($any(msg)._isStreaming && lastPart) {
+                                  <span class="loading-text">Thinking</span>
+                                } @else {
+                                  Thought
                                 }
-                              }
-                            </p>
-                          </div>
-
-                          @if ($any(msg)._thoughtExpanded) {
-                            <div class="ml-3 pl-3 border-l-2 border-surface-100">
-                              <div
-                                class="text-xs text-surface-500 italic chatbot-prose-thought leading-relaxed"
-                                [innerHTML]="$any(msg)._reasoning | markdown"
-                              ></div>
+                              </p>
                             </div>
-                          }
-                        </div>
-                      }
 
-                      <!-- Tool Calls Block -->
-                      @if ($any(msg)._toolCalls; as toolCalls) {
-                        <div class="flex flex-col gap-3 mb-4">
-                          <div
-                            class="flex items-center gap-2 cursor-pointer group/tool select-none"
-                            (click)="$any(msg)._toolCallsExpanded = !$any(msg)._toolCallsExpanded"
-                          >
-                            <i
-                              class="icon text-surface-400 text-sm transition-transform"
-                              [ngClass]="
-                                $any(msg)._toolCallsExpanded
-                                  ? 'icon-chevron-down'
-                                  : 'icon-chevron-right'
-                              "
-                            ></i>
-                            <p
-                              class="text-sm font-medium text-surface-500 leading-6 group-hover/thought:text-surface-700 transition-colors"
-                            >
-                              Tools Used
-                            </p>
+                            @if (part._expanded) {
+                              <div class="ml-3 pl-3 border-l-2 border-surface-100">
+                                <div
+                                  class="text-xs text-surface-500 italic chatbot-prose-thought leading-relaxed"
+                                  [innerHTML]="part.content | markdown"
+                                ></div>
+                              </div>
+                            }
                           </div>
+                        }
 
-                          @if ($any(msg)._toolCallsExpanded) {
-                            <div class="flex flex-col gap-2">
-                              @for (tool of toolCalls; track tool.id) {
+                        @if (part.type === 'tool-invocation') {
+                          <div class="flex flex-col gap-2 mb-4">
+                            <div
+                              class="flex items-center gap-2 cursor-pointer group/tool select-none"
+                              (click)="part._expanded = !part._expanded"
+                            >
+                              <i
+                                class="icon text-surface-400 text-sm transition-transform"
+                                [ngClass]="
+                                  part._expanded ? 'icon-chevron-down' : 'icon-chevron-right'
+                                "
+                              ></i>
+                              <p
+                                class="text-sm font-medium text-surface-500 leading-6 group-hover/tool:text-surface-700 transition-colors flex items-center gap-2"
+                              >
+                                @if ($any(msg)._isStreaming && lastPart) {
+                                  <span class="loading-text">Tools Executing</span>
+                                } @else {
+                                  <span>Tools Used</span>
+                                }
+                              </p>
+                            </div>
+
+                            @if (part._expanded) {
+                              <div
+                                class="ml-3 pl-3 border-l-2 border-surface-100 flex flex-col gap-2"
+                              >
                                 <div
                                   class="bg-surface-50 border border-surface-200 rounded-lg overflow-hidden text-xs"
                                 >
@@ -223,24 +243,12 @@
                                   >
                                     <div class="flex items-center gap-2">
                                       <span class="font-medium text-surface-700">
-                                        {{ agentNameMap[tool.name] || tool.name }}
+                                        {{ part.toolName }}
                                       </span>
                                     </div>
-                                    @if (!tool.output) {
-                                      <span class="text-primary-500 text-[10px] animate-pulse"
-                                        >Executing</span
-                                      >
-                                    } @else {
-                                      <span
-                                        class="text-green-500 flex items-center gap-1 text-[10px]"
-                                      >
-                                        <i class="icon icon-check-circle"></i>
-                                        Completed
-                                      </span>
-                                    }
                                   </div>
 
-                                  @if (tool.input) {
+                                  @if (part.args) {
                                     <div class="px-3 py-2 bg-white">
                                       <div
                                         class="text-[10px] uppercase text-surface-400 font-bold mb-1"
@@ -249,12 +257,12 @@
                                       </div>
                                       <pre
                                         class="m-0 overflow-x-auto whitespace-pre-wrap font-mono text-[11px] text-surface-600"
-                                        >{{ tool.input | json }}</pre
+                                        >{{ part.args | json }}</pre
                                       >
                                     </div>
                                   }
 
-                                  @if (tool.output) {
+                                  @if (part.result) {
                                     <div
                                       class="px-3 py-2 bg-surface-50/50 border-t border-surface-100"
                                     >
@@ -265,37 +273,36 @@
                                       </div>
                                       <pre
                                         class="m-0 overflow-x-auto whitespace-pre-wrap font-mono text-[11px] text-surface-600"
-                                        >{{ tool.output | json }}</pre
+                                        >{{ part.result | json }}</pre
                                       >
                                     </div>
                                   }
                                 </div>
-                              }
-                            </div>
-                          }
-                        </div>
-                      }
+                              </div>
+                            }
+                          </div>
+                        }
 
-                      @if (msg.content) {
-                        <div class="leading-6">
-                          <div
-                            class="chatbot-prose text-sm"
-                            [innerHTML]="msg.content | markdown"
-                          ></div>
-                          @if (!$any(msg)._isStreaming) {
-                            <div class="flex items-center gap-0.5 mt-0.5">
-                              <p-button
-                                icon="icon icon-copy"
-                                [text]="true"
-                                severity="secondary"
-                                size="small"
-                                (click)="copyToClipboard(msg.content)"
-                                pTooltip="Copy"
-                                tooltipPosition="bottom"
-                              />
-                            </div>
-                          }
-                        </div>
+                        @if (part.type === 'text') {
+                          <ng-container
+                            *ngTemplateOutlet="
+                              contentTmpl;
+                              context: {
+                                content: part.content,
+                                canCopy: !$any(msg)._isStreaming && lastPart,
+                              }
+                            "
+                          />
+                        }
+                      } @empty {
+                        @if (msg.content) {
+                          <ng-container
+                            *ngTemplateOutlet="
+                              contentTmpl;
+                              context: { content: msg.content, canCopy: true }
+                            "
+                          />
+                        }
                       }
                     }
                   </div>

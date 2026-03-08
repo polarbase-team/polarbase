@@ -8,7 +8,7 @@ const APP_HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
 const DATABASE_PORT = Number(process.env.MCP_DATABASE_PORT || '8081');
 const BROWSER_PORT = Number(process.env.MCP_BROWSER_PORT || '8082');
 
-export async function enableMCP(app: Elysia) {
+export function enableMCP(app: Elysia) {
   databaseMcpServer.start({
     transportType: 'httpStream',
     httpStream: {
