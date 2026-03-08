@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.2-beta] - 2026-03-08
+
+### Added
+
+- **Chatbot UI Enhancements**: Improved chatbot message rendering with structured reasoning and tool invocation parts. Enhanced session menu scrolling.
+
+### Fixed
+
+- **UI Styling**: Replaced `hide` class with `hidden` for virtual scroll track elements.
+
 ## [0.10.1-beta] - 2026-03-03
 
 ### Added
