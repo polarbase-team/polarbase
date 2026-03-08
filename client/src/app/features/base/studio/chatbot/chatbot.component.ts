@@ -34,23 +34,29 @@ interface UserChatMessage extends ChatMessage {
   _selectedFiles?: File[];
 }
 
-interface ToolCall {
-  id: string;
-  name: string;
-  input?: any;
-  output?: any;
+interface TextPart {
+  type: 'text';
+  content: string;
+}
+
+interface ReasoningPart {
+  type: 'reasoning';
+  content: string;
+}
+
+interface ToolInvocationPart {
+  type: 'tool-invocation';
+  toolCallId: string;
+  toolName: string;
+  args: any;
+  result?: any;
 }
 
 interface AssistantChatMessage extends ChatMessage {
   role: 'assistant';
+  _parts: (TextPart | ReasoningPart | ToolInvocationPart)[];
   _isGenerating?: boolean;
   _isStreaming?: boolean;
-  _toolCalls?: ToolCall[];
-  _toolCallsExpanded?: boolean;
-  _reasoning?: string;
-  _thoughtExpanded?: boolean;
-  _thoughtStartTime?: number;
-  _thoughtTime?: number;
 }
 
 interface Session {
@@ -156,11 +162,6 @@ export class ChatBotComponent {
     topP: 0.9,
     topK: 40,
     maxOutputTokens: 2048,
-  };
-
-  protected agentNameMap: Record<string, string> = {
-    callDatabaseAgent: 'Database Agent',
-    callBrowserAgent: 'Browser Agent',
   };
 
   private currentChatAbortController?: AbortController;
@@ -395,7 +396,9 @@ export class ChatBotComponent {
       role: 'assistant',
       content: '',
       timestamp: new Date(),
+      _parts: [],
       _isGenerating: true,
+      _isStreaming: false,
     };
     this.messages.set([...messages, botMessage]);
 
@@ -418,59 +421,51 @@ export class ChatBotComponent {
         generationConfig: this.generationConfig,
         signal: this.currentChatAbortController.signal,
         onEvents: (events: StreamEvent[]) => {
-          if (!events.length) return;
-
           botMessage._isGenerating = false;
           botMessage._isStreaming = true;
 
-          if (!botMessage._thoughtStartTime) {
-            botMessage._thoughtStartTime = performance.now();
-          }
-
           events.forEach((event) => {
-            if (event.type === 'text') {
-              if (botMessage._thoughtStartTime && !botMessage._thoughtTime) {
-                botMessage._thoughtTime = (performance.now() - botMessage._thoughtStartTime) / 1000;
-              }
-              botMessage.content += event.value;
-            } else if (event.type === 'tool') {
-              const toolName = event.value.toolName ?? event.value.method;
-              const toolCallId = event.value.toolCallId;
+            const parts = botMessage._parts;
 
-              if (toolCallId) {
-                if (!botMessage._toolCalls) botMessage._toolCalls = [];
-                if (!botMessage._toolCalls.find((t) => t.id === toolCallId)) {
-                  botMessage._toolCalls.push({ id: toolCallId, name: toolName });
-                }
+            if (event.type === 'text') {
+              let lastPart = parts[parts.length - 1] as TextPart;
+              if (lastPart?.type !== 'text') {
+                parts.push({ type: 'text', content: '' });
+                lastPart = parts[parts.length - 1] as TextPart;
               }
+              lastPart.content += event.value;
+              botMessage.content += event.value;
+            } else if (event.type === 'reasoning') {
+              let lastPart = parts[parts.length - 1] as ReasoningPart;
+              if (lastPart?.type !== 'reasoning') {
+                parts.push({ type: 'reasoning', content: '' });
+                lastPart = parts[parts.length - 1] as ReasoningPart;
+              }
+              lastPart.content += event.value;
+            } else if (event.type === 'tool') {
+              parts.push({
+                type: 'tool-invocation',
+                toolCallId: event.value.toolCallId,
+                toolName: event.value.toolName || event.value.method,
+                args: {},
+              });
             } else if (event.type === 'tool-input') {
-              const { toolCallId, input } = event.value;
-              if (!botMessage._toolCalls) botMessage._toolCalls = [];
-              let tool = botMessage._toolCalls.find((t) => t.id === toolCallId);
-              if (!tool) {
-                tool = { id: toolCallId, name: event.value.toolName, input };
-                botMessage._toolCalls.push(tool);
-              } else {
-                tool.input = input;
+              const part = (parts as ToolInvocationPart[]).find(
+                (p) => p.toolCallId === event.value.toolCallId,
+              );
+              if (part) {
+                part.args = event.value.input;
               }
             } else if (event.type === 'tool-output') {
-              const { toolCallId, output } = event.value;
-              if (!botMessage._toolCalls) botMessage._toolCalls = [];
-              let tool = botMessage._toolCalls.find((t) => t.id === toolCallId);
-              if (!tool) {
-                tool = { id: toolCallId, name: 'Unknown', output };
-                botMessage._toolCalls.push(tool);
-              } else {
-                tool.output = output;
+              const part = (parts as ToolInvocationPart[]).find(
+                (p) => p.toolCallId === event.value.toolCallId,
+              );
+              if (part) {
+                part.result = event.value.output;
               }
-            } else if (event.type === 'reasoning') {
-              if (botMessage._reasoning === undefined) {
-                botMessage._reasoning = '';
-                botMessage._thoughtExpanded = true;
-              }
-              botMessage._reasoning += event.value;
             }
           });
+
           this.messages.update((messages) => [...messages]);
           this.scrollToBottom();
         },
@@ -485,9 +480,6 @@ export class ChatBotComponent {
       this.isChatting.set(false);
       botMessage._isGenerating = false;
       botMessage._isStreaming = false;
-      if (botMessage._thoughtStartTime && !botMessage._thoughtTime) {
-        botMessage._thoughtTime = (performance.now() - botMessage._thoughtStartTime) / 1000;
-      }
       this.currentChatAbortController = undefined;
       this.messages.update((messages) => [...messages]);
     }
