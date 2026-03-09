@@ -55,6 +55,7 @@ export class AgentService {
         query?: boolean;
       };
       browser?: boolean;
+      fetchApi?: boolean;
     };
     generationConfig?: {
       temperature?: number;

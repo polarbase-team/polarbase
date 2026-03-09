@@ -11,6 +11,8 @@ const DATABASE_PORT = Number(process.env.MCP_DATABASE_PORT || '8081');
 const DATABASE_PATH = process.env.MCP_DATABASE_PATH || '/database';
 const BROWSER_PORT = Number(process.env.MCP_BROWSER_PORT || '8082');
 const BROWSER_PATH = process.env.MCP_BROWSER_PATH || '/browser';
+const FETCH_API_PORT = Number(process.env.MCP_FETCH_API_PORT || '8083');
+const FETCH_API_PATH = process.env.MCP_FETCH_API_PATH || '/fetch-api';
 
 const proxyHandler = async (targetUrl: string, request: Request) => {
   const response = await fetch(targetUrl, {
@@ -74,4 +76,7 @@ export const mcpRoutes = new Elysia({ prefix: MCP_PREFIX })
   )
   .all(`${BROWSER_PATH}*`, ({ request }) =>
     proxyHandler(`http://${APP_HOSTNAME}:${BROWSER_PORT}/mcp`, request)
+  )
+  .all(`${FETCH_API_PATH}*`, ({ request }) =>
+    proxyHandler(`http://${APP_HOSTNAME}:${FETCH_API_PORT}/mcp`, request)
   );

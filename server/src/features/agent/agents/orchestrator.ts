@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { createMemoryTool, readCoreMemory } from '../memory';
 import { createDatabaseAgent } from './database/agent';
 import { createBrowserAgent } from './browser/agent';
+import { createFetchApiAgent } from './fetch-api/agent';
 
 export function createRootOrchestrator(
   model: any,
@@ -15,6 +16,7 @@ export function createRootOrchestrator(
       query?: boolean;
     };
     browser?: boolean;
+    fetchApi?: boolean;
   },
   generationConfig?: {
     temperature?: number;
@@ -117,6 +119,56 @@ export function createRootOrchestrator(
     });
   }
 
+  // Fetch API Agent
+  if (agents?.fetchApi) {
+    const fetchApiAgent = createFetchApiAgent(model, generationConfig);
+    tools.callFetchApiAgent = tool({
+      description:
+        'Call the Fetch API Agent to make HTTP/HTTPS calls using the fetch API, useful for consuming external APIs.',
+      inputSchema: z.object({
+        task: z
+          .string()
+          .describe(
+            'The API automation task to perform (which API to call, with what parameters).'
+          ),
+      }),
+      inputExamples: [
+        {
+          input: {
+            task: 'Fetch the latest weather for London using wttr.in/London?format=j1',
+          },
+        },
+        {
+          input: {
+            task: 'POST a new issue titled "Bug report" to https://api.github.com/repos/USER/REPO/issues with body {"title": "Bug report"}',
+          },
+        },
+      ],
+      strict: true,
+      execute: async function* ({ task }, { abortSignal, messages }) {
+        const result = await fetchApiAgent.stream({
+          messages: [...messages, { role: 'user', content: task }],
+          abortSignal,
+        });
+
+        for await (const message of readUIMessageStream({
+          stream: result.toUIMessageStream(),
+        })) {
+          yield message;
+        }
+      },
+      toModelOutput: ({ output: message }: any) => {
+        const lastTextPart = message?.parts.findLast(
+          (p: any) => p.type === 'text'
+        );
+        return {
+          type: 'text',
+          value: lastTextPart?.text ?? 'Task completed.',
+        };
+      },
+    });
+  }
+
   const today = new Date().toISOString().slice(0, 10);
 
   return new ToolLoopAgent({
@@ -144,6 +196,7 @@ Your job is to understand the user's ultimate goal and route requests to the cor
 Available Sub-Agents (if enabled):
 - Database Agent: Use for ANY database queries, schema modifications, lookups, row inserts/updates.
 - Browser Agent: Use for opening web pages, searching the web, or scraping web content.
+- Fetch API Agent: Use for making fetch REST/HTTP requests to external APIs.
 
 ### MEMORY:
 - You have a memory tool for storing and recalling information across conversations.

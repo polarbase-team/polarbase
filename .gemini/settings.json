@@ -15,6 +15,12 @@
       "headers": {
         "x-api-key": "ak_demo_polarbase_2026"
       }
+    },
+    "polarbase-fetch-api": {
+      "httpUrl": "http://localhost:3000/mcp/fetch-api",
+      "headers": {
+        "x-api-key": "ak_demo_polarbase_2026"
+      }
     }
   },
   "model": {

@@ -427,6 +427,18 @@
                 class="scale-80"
               />
             </div>
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-sm font-medium">Fetch API</p>
+                <p class="text-xs text-surface-500">Automate external HTTP requests.</p>
+              </div>
+              <p-toggleswitch
+                [(ngModel)]="agents.fetchApi"
+                (ngModelChange)="saveAgents()"
+                size="small"
+                class="scale-80"
+              />
+            </div>
           </div>
 
           <p-divider />

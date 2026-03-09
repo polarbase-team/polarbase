@@ -155,6 +155,7 @@ export class ChatBotComponent {
       query: true,
     },
     browser: true,
+    fetchApi: true,
   };
 
   protected generationConfig = {
@@ -182,6 +183,7 @@ export class ChatBotComponent {
         query: savedAgents.database?.query ?? this.agents.database.query,
       },
       browser: savedAgents.browser ?? this.agents.browser,
+      fetchApi: savedAgents.fetchApi ?? this.agents.fetchApi,
     };
     this.generationConfig = {
       ...this.generationConfig,
