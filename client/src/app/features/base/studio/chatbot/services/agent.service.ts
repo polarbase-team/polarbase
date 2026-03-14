@@ -133,18 +133,25 @@ export class AgentService {
 
           try {
             const obj = JSON.parse(jsonStr);
-            if (obj.type === 'text-delta') {
-              events.push({ type: 'text', value: obj.delta });
-            } else if (obj.type === 'reasoning-delta') {
-              events.push({ type: 'reasoning', value: obj.delta });
-            } else if (obj.type === 'tool-input-start') {
-              events.push({ type: 'tool', value: obj });
-            } else if (obj.type === 'tool-input-available') {
-              events.push({ type: 'tool-input', value: obj });
-            } else if (obj.type === 'tool-output-available') {
-              events.push({ type: 'tool-output', value: obj });
-            } else if (obj.type === 'error') {
-              events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
+            switch (obj.type) {
+              case 'text-delta':
+                events.push({ type: 'text', value: obj.delta });
+                break;
+              case 'reasoning-delta':
+                events.push({ type: 'reasoning', value: obj.delta });
+                break;
+              case 'tool-input-start':
+                events.push({ type: 'tool', value: obj });
+                break;
+              case 'tool-input-available':
+                events.push({ type: 'tool-input', value: obj });
+                break;
+              case 'tool-output-available':
+                events.push({ type: 'tool-output', value: obj });
+                break;
+              case 'error':
+                events.push({ type: 'text', value: obj.errorText ?? 'An error occurred.' });
+                break;
             }
           } catch (e) {
             // If it fails, it's likely a partial chunk; log it and keep moving

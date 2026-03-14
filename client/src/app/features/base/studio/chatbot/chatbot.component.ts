@@ -42,6 +42,7 @@ interface TextPart {
 interface ReasoningPart {
   type: 'reasoning';
   content: string;
+  expanded?: boolean;
 }
 
 interface ToolInvocationPart {
@@ -50,6 +51,7 @@ interface ToolInvocationPart {
   toolName: string;
   args: any;
   result?: any;
+  expanded?: boolean;
 }
 
 interface AssistantChatMessage extends ChatMessage {
@@ -429,41 +431,52 @@ export class ChatBotComponent {
           events.forEach((event) => {
             const parts = botMessage._parts;
 
-            if (event.type === 'text') {
-              let lastPart = parts[parts.length - 1] as TextPart;
-              if (lastPart?.type !== 'text') {
-                parts.push({ type: 'text', content: '' });
-                lastPart = parts[parts.length - 1] as TextPart;
+            switch (event.type) {
+              case 'text': {
+                let lastPart = parts[parts.length - 1] as TextPart;
+                if (lastPart?.type !== 'text') {
+                  lastPart = { type: 'text', content: '' };
+                  parts.push(lastPart);
+                }
+                lastPart.content += event.value;
+                botMessage.content += event.value;
+                break;
               }
-              lastPart.content += event.value;
-              botMessage.content += event.value;
-            } else if (event.type === 'reasoning') {
-              let lastPart = parts[parts.length - 1] as ReasoningPart;
-              if (lastPart?.type !== 'reasoning') {
-                parts.push({ type: 'reasoning', content: '' });
-                lastPart = parts[parts.length - 1] as ReasoningPart;
+              case 'reasoning': {
+                let lastPart = parts[parts.length - 1] as ReasoningPart;
+                if (lastPart?.type !== 'reasoning') {
+                  lastPart = { type: 'reasoning', content: '', expanded: true };
+                  parts.push(lastPart);
+                }
+                lastPart.content += event.value;
+                break;
               }
-              lastPart.content += event.value;
-            } else if (event.type === 'tool') {
-              parts.push({
-                type: 'tool-invocation',
-                toolCallId: event.value.toolCallId,
-                toolName: event.value.toolName || event.value.method,
-                args: {},
-              });
-            } else if (event.type === 'tool-input') {
-              const part = (parts as ToolInvocationPart[]).find(
-                (p) => p.toolCallId === event.value.toolCallId,
-              );
-              if (part) {
-                part.args = event.value.input;
+              case 'tool': {
+                parts.push({
+                  type: 'tool-invocation',
+                  toolCallId: event.value.toolCallId,
+                  toolName: event.value.toolName || event.value.method,
+                  args: {},
+                });
+                break;
               }
-            } else if (event.type === 'tool-output') {
-              const part = (parts as ToolInvocationPart[]).find(
-                (p) => p.toolCallId === event.value.toolCallId,
-              );
-              if (part) {
-                part.result = event.value.output;
+              case 'tool-input': {
+                const part = (parts as ToolInvocationPart[]).find(
+                  (p) => p.toolCallId === event.value.toolCallId,
+                );
+                if (part) {
+                  part.args = event.value.input;
+                }
+                break;
+              }
+              case 'tool-output': {
+                const part = (parts as ToolInvocationPart[]).find(
+                  (p) => p.toolCallId === event.value.toolCallId,
+                );
+                if (part) {
+                  part.result = event.value.output;
+                }
+                break;
               }
             }
           });
