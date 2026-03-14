@@ -23,8 +23,8 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
 
+import { ChatbotProseComponent } from './components/chatbot-prose.component';
 import { TableService } from '../table/services/table.service';
-import { MarkdownPipe } from './pipes/markdown.pipe';
 import { AgentService, ChatMessage, Model, StreamEvent } from './services/agent.service';
 import { modelGroups } from './resources/models';
 import { promptTemplates } from './resources/prompt-templates';
@@ -89,7 +89,7 @@ const CHATBOT_GENERATION_CONFIG_KEY = 'chatbot_generation_config';
     InputNumberModule,
     DividerModule,
     TooltipModule,
-    MarkdownPipe,
+    ChatbotProseComponent,
   ],
   providers: [AgentService],
 })
