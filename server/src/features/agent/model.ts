@@ -73,6 +73,7 @@ export async function generateAIResponse({
       query?: boolean;
     };
     browser?: boolean;
+    fetchApi?: boolean;
   };
   generationConfig?: {
     temperature?: number;

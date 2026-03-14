@@ -101,7 +101,7 @@
     <p-scrollpanel #scrollContainer class="w-full h-full min-h-0">
       <ng-template #contentTmpl let-content="content" let-canCopy="canCopy">
         <div class="leading-6 mb-4">
-          <div class="chatbot-prose text-sm" [innerHTML]="content | markdown"></div>
+          <chatbot-prose [content]="content" />
           @if (canCopy) {
             <div class="flex items-center gap-0.5 mt-0.5">
               <p-button
@@ -178,12 +178,12 @@
                           <div class="flex flex-col gap-2 mb-4">
                             <div
                               class="flex items-center gap-2 cursor-pointer group/thought select-none"
-                              (click)="part._expanded = !part._expanded"
+                              (click)="part.expanded = !part.expanded"
                             >
                               <i
                                 class="icon text-surface-400 text-sm transition-transform"
                                 [ngClass]="
-                                  part._expanded ? 'icon-chevron-down' : 'icon-chevron-right'
+                                  part.expanded ? 'icon-chevron-down' : 'icon-chevron-right'
                                 "
                               ></i>
                               <p
@@ -197,12 +197,9 @@
                               </p>
                             </div>
 
-                            @if (part._expanded) {
-                              <div class="ml-3 pl-3 border-l-2 border-surface-100">
-                                <div
-                                  class="text-xs text-surface-500 italic chatbot-prose-thought leading-relaxed"
-                                  [innerHTML]="part.content | markdown"
-                                ></div>
+                            @if (part.expanded) {
+                              <div class="ml-2 pl-3 border-l-2 border-surface-100">
+                                <chatbot-prose [content]="part.content" [thought]="true" />
                               </div>
                             }
                           </div>
@@ -212,12 +209,12 @@
                           <div class="flex flex-col gap-2 mb-4">
                             <div
                               class="flex items-center gap-2 cursor-pointer group/tool select-none"
-                              (click)="part._expanded = !part._expanded"
+                              (click)="part.expanded = !part.expanded"
                             >
                               <i
                                 class="icon text-surface-400 text-sm transition-transform"
                                 [ngClass]="
-                                  part._expanded ? 'icon-chevron-down' : 'icon-chevron-right'
+                                  part.expanded ? 'icon-chevron-down' : 'icon-chevron-right'
                                 "
                               ></i>
                               <p
@@ -231,9 +228,9 @@
                               </p>
                             </div>
 
-                            @if (part._expanded) {
+                            @if (part.expanded) {
                               <div
-                                class="ml-3 pl-3 border-l-2 border-surface-100 flex flex-col gap-2"
+                                class="ml-2 pl-3 border-l-2 border-surface-100 flex flex-col gap-2"
                               >
                                 <div
                                   class="bg-surface-50 border border-surface-200 rounded-lg overflow-hidden text-xs"
@@ -422,6 +419,18 @@
               </div>
               <p-toggleswitch
                 [(ngModel)]="agents.browser"
+                (ngModelChange)="saveAgents()"
+                size="small"
+                class="scale-80"
+              />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-sm font-medium">Fetch API</p>
+                <p class="text-xs text-surface-500">Automate external HTTP requests.</p>
+              </div>
+              <p-toggleswitch
+                [(ngModel)]="agents.fetchApi"
                 (ngModelChange)="saveAgents()"
                 size="small"
                 class="scale-80"

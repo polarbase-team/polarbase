@@ -1,0 +1,5 @@
+<div
+  class="chatbot-prose"
+  [ngClass]="{ 'chatbot-prose-thought': thought() }"
+  [innerHTML]="content() | markdown"
+></div>

@@ -111,6 +111,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
               })
             ),
             browser: t.Optional(t.Boolean()),
+            fetchApi: t.Optional(t.Boolean()), 
           })
         ),
         generationConfig: t.Optional(

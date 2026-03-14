@@ -36,6 +36,8 @@ services:
       - MCP_DATABASE_PATH=/database
       - MCP_BROWSER_PORT=8082
       - MCP_BROWSER_PATH=/browser
+      - MCP_FETCH_API_PORT=8083
+      - MCP_FETCH_API_PATH=/fetch-api
 
       # Realtime Engine
       - REALTIME_ENABLED=true
