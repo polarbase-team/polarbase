@@ -65,6 +65,7 @@ export async function generateAIResponse({
   model?: ModelConfig;
   mentions?: {
     tables?: string[];
+    skills?: string[];
   };
   agents?: {
     database?: {
@@ -129,6 +130,13 @@ export async function generateAIResponse({
     messages.unshift({
       role: 'system',
       content: `Tables mentioned in this conversation: ${mentions.tables.join(', ')}`,
+    });
+  }
+
+  if (mentions?.skills?.length) {
+    messages.unshift({
+      role: 'system',
+      content: `Skills explicitly mentioned by user: ${mentions.skills.join(', ')}. Load these skills to get specialised instructions.`,
     });
   }
 

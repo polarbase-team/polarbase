@@ -514,7 +514,7 @@
         <div
           #editor
           contenteditable="plaintext-only"
-          data-placeholder="Ask anything, @ to mention a table"
+          data-placeholder="Ask anything, @ to mention a table or skill"
           class="min-w-0 min-h-8 max-h-32 overflow-y-auto p-1 outline-0 text-sm empty:before:content-[attr(data-placeholder)] empty:before:text-surface-400 empty:before:pointer-events-none"
           (input)="onInput($any($event))"
           (keydown.enter)="!isChatting() ? onEnter($any($event)) : false"

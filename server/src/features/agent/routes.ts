@@ -5,6 +5,7 @@ import { err } from '../../shared/utils/api-response';
 import { apiKeyAuth } from '../auth/api-key.auth';
 import { generateAIResponse } from './model';
 import db from './memory/memory.db';
+import { getDiscoveredSkills } from './skill';
 
 const AGENT_RATE_LIMIT = Number(process.env.AGENT_RATE_LIMIT) || 10;
 const AGENT_PREFIX = process.env.AGENT_PREFIX || '/agent';
@@ -93,6 +94,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
         mentions: t.Optional(
           t.Object({
             tables: t.Optional(t.Array(t.String())),
+            skills: t.Optional(t.Array(t.String())),
           })
         ),
         model: t.Optional(
@@ -111,7 +113,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
               })
             ),
             browser: t.Optional(t.Boolean()),
-            fetchApi: t.Optional(t.Boolean()), 
+            fetchApi: t.Optional(t.Boolean()),
           })
         ),
         generationConfig: t.Optional(
@@ -125,6 +127,8 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
       }),
     }
   )
+
+  // Session management
   .get('/sessions', () => {
     return db
       .query(
@@ -132,7 +136,7 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
       )
       .all();
   })
-  .get('/history/:sessionId', ({ params: { sessionId } }) => {
+  .get('/sessions/:sessionId/history', ({ params: { sessionId } }) => {
     return db
       .query(
         'SELECT role, content, timestamp FROM memory_conversations WHERE session_id = ? ORDER BY timestamp ASC'
@@ -156,4 +160,13 @@ export const agentRoutes = new Elysia({ prefix: AGENT_PREFIX })
   .delete('/sessions/:sessionId', ({ params: { sessionId } }) => {
     db.query('DELETE FROM memory_sessions WHERE id = ?').run(sessionId);
     return { success: true };
+  })
+
+  // Skill Management
+  .get('/skills', async () => {
+    const skills = await getDiscoveredSkills();
+    return skills.map((s) => ({
+      name: s.name,
+      description: s.description,
+    }));
   });

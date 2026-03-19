@@ -25,7 +25,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { ChatbotProseComponent } from './components/chatbot-prose.component';
 import { TableService } from '../table/services/table.service';
-import { AgentService, ChatMessage, Model, StreamEvent } from './services/agent.service';
+import { AgentService, ChatMessage, Model, Session, StreamEvent } from './services/agent.service';
 import { modelGroups } from './resources/models';
 import { promptTemplates } from './resources/prompt-templates';
 
@@ -59,11 +59,6 @@ interface AssistantChatMessage extends ChatMessage {
   _parts: (TextPart | ReasoningPart | ToolInvocationPart)[];
   _isGenerating?: boolean;
   _isStreaming?: boolean;
-}
-
-interface Session {
-  id: string;
-  title: string;
 }
 
 const CHATBOT_SELECTED_MODEL_KEY = 'chatbot_selected_model';
@@ -114,7 +109,7 @@ export class ChatBotComponent {
   protected sessions = signal<Session[]>([]);
   protected sessionMenuItems = signal<MenuItem[]>([]);
 
-  protected mentions: { tables: string[] } = { tables: [] };
+  protected mentions: { tables: string[]; skills: string[] } = { tables: [], skills: [] };
   protected mentionMenuItems: MenuItem[];
 
   protected selectedModel: Model | undefined;
@@ -219,7 +214,7 @@ export class ChatBotComponent {
                     icon: 'icon icon-message-square',
                     command: () => {
                       this.title.set(s.title);
-                      this.loadHistory(s.id);
+                      this.loadSessionHistory(s.id);
                     },
                     data: {
                       sessionId: s.id,
@@ -254,7 +249,7 @@ export class ChatBotComponent {
     this.isChatting.set(false);
     this.messages.set([]);
     this.inputText = this.editor().nativeElement.innerHTML = '';
-    this.mentions = { tables: [] };
+    this.mentions = { tables: [], skills: [] };
     this.clearFiles();
   }
 
@@ -274,22 +269,22 @@ export class ChatBotComponent {
     this.focus();
   }
 
-  protected async loadHistory(sessionId: string) {
-    try {
-      const history = await this.agentService.getHistory(sessionId);
-      this.messages.set(history);
-      setTimeout(() => this.scrollToBottom(), 100);
-    } catch (e) {
-      console.error('Failed to load history', e);
-    }
-  }
-
   protected async loadSessions() {
     try {
       const sessions = await this.agentService.getSessions();
       this.sessions.set(sessions);
     } catch (e) {
       console.error('Failed to load sessions', e);
+    }
+  }
+
+  protected async loadSessionHistory(sessionId: string) {
+    try {
+      const history = await this.agentService.getSessionHistory(sessionId);
+      this.messages.set(history);
+      setTimeout(() => this.scrollToBottom(), 100);
+    } catch (e) {
+      console.error('Failed to load session history', e);
     }
   }
 
@@ -373,7 +368,7 @@ export class ChatBotComponent {
     this.startChat(userMessage);
 
     this.inputText = this.editor().nativeElement.innerHTML = '';
-    this.mentions = { tables: [] };
+    this.mentions = { tables: [], skills: [] };
     this.clearFiles();
   }
 
@@ -546,14 +541,40 @@ export class ChatBotComponent {
     this.mentionContextMenu()?.show(event);
   }
 
-  protected onMentionContextMenuShow() {
-    this.mentionMenuItems = this.tableService.tables().map((table) => ({
+  protected async onMentionContextMenuShow() {
+    const tableItems: MenuItem[] = this.tableService.tables().map((table) => ({
       label: table.presentation?.uiName ?? table.name,
       icon: 'icon icon-table-2',
       command: () => {
-        this.insertTableMention(table.name);
+        this.insertMention(table.name, 'table');
       },
     }));
+
+    let skillItems: MenuItem[] = [];
+    try {
+      const skills = await this.agentService.getSkills();
+      skillItems = skills.map((skill) => ({
+        label: skill.name,
+        icon: 'icon icon-zap',
+        title: skill.description,
+        command: () => {
+          this.insertMention(skill.name, 'skill');
+        },
+      }));
+    } catch {
+      // Silently fail — skills menu just won't show
+    }
+
+    this.mentionMenuItems = [];
+    if (tableItems.length > 0) {
+      this.mentionMenuItems.push({ label: 'Tables', items: tableItems });
+    }
+    if (skillItems.length > 0) {
+      this.mentionMenuItems.push({ label: 'Skills', items: skillItems });
+    }
+    if (this.mentionMenuItems.length === 0) {
+      this.mentionMenuItems = [{ label: 'No items available', disabled: true }];
+    }
   }
 
   private showMentionContextMenu() {
@@ -589,7 +610,7 @@ export class ChatBotComponent {
     this.mentionContextMenu()?.show(ev);
   }
 
-  private insertTableMention(tableName: string) {
+  private insertMention(content: string, type: 'table' | 'skill') {
     const el = this.editor()?.nativeElement;
     if (!el) return;
 
@@ -612,8 +633,9 @@ export class ChatBotComponent {
     }
 
     const mentionSpan = document.createElement('span');
-    mentionSpan.className = 'mention-chip';
-    mentionSpan.textContent = tableName;
+    const icon = `<i class="icon icon-${type === 'table' ? 'table-2' : 'zap'}"></i>`;
+    mentionSpan.innerHTML = icon + content;
+    mentionSpan.className = `mention-chip mention-${type}`;
     mentionSpan.setAttribute('contenteditable', 'false');
     range.insertNode(mentionSpan);
     range.collapse(false);
@@ -644,10 +666,17 @@ export class ChatBotComponent {
   private syncMentions() {
     const el = this.editor()?.nativeElement as HTMLElement;
     if (!el) return;
-    const chips = el.querySelectorAll('.mention-chip') as NodeListOf<HTMLElement>;
-    const tableNames = Array.from(chips)
+
+    const tableChips = el.querySelectorAll('.mention-table') as NodeListOf<HTMLElement>;
+    const tableNames = Array.from(tableChips)
       .map((chip) => chip.textContent || '')
       .filter((name) => !!name);
     this.mentions.tables = [...new Set(tableNames)];
+
+    const skillChips = el.querySelectorAll('.mention-skill') as NodeListOf<HTMLElement>;
+    const skillNames = Array.from(skillChips)
+      .map((chip) => chip.textContent || '')
+      .filter((name) => !!name);
+    this.mentions.skills = [...new Set(skillNames)];
   }
 }
