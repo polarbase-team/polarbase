@@ -8,7 +8,7 @@ export interface Sandbox {
     dirPath: string,
     opts: { withFileTypes: true }
   ): Promise<{ name: string; isDirectory(): boolean }[]>;
-  execCode(
+  execScript(
     code: string,
     context?: Record<string, unknown>
   ): Promise<{ stdout: string; stderr: string }>;
@@ -21,7 +21,7 @@ export interface Sandbox {
  */
 export function createSandbox(
   baseDir: string,
-  execCodeMode: 'fs' | 'vm' = 'fs'
+  execScriptMode: 'fs' | 'vm' = 'fs'
 ): Sandbox {
   const resolve = (p: string) => {
     const resolved = path.resolve(baseDir, p);
@@ -44,8 +44,8 @@ export function createSandbox(
       }));
     },
 
-    async execCode(code: string, context: Record<string, unknown> = {}) {
-      if (execCodeMode === 'vm') {
+    async execScript(code: string, context: Record<string, unknown> = {}) {
+      if (execScriptMode === 'vm') {
         return execWithVM(code, context);
       }
       return execWithFunction(code, context);

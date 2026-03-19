@@ -90,7 +90,7 @@ const executeSkillScript = tool({
     try {
       const scriptFile = `${skill.path}/${scriptPath}`;
       const code = await sandbox.readFile(scriptFile, 'utf-8');
-      const result = await sandbox.execCode(code, context || {});
+      const result = await sandbox.execScript(code, context || {});
       return result;
     } catch (err: any) {
       return { error: err.message || String(err) };
