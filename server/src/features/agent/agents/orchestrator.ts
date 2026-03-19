@@ -229,7 +229,8 @@ ${buildSkillsPrompt(skills)}
 - Determine which sub-agent is most appropriate for the user's task.
 - If a task involves multiple domains (e.g. scrape a website and save to database), call the Browser Agent first, then call the Database Agent with the extracted information.
 - DO NOT attempt to answer queries directly if a sub-agent is better suited to gather the data or execute the action.
-- Forward confirmations (e.g., "Yes, proceed") to the agent that last asked for confirmation.`,
+- Forward confirmations (e.g., "Yes, proceed") to the agent that last asked for confirmation.
+- NEVER use SQL raw query. Always rely on the provided sub-agents to perform operations safely.`,
       };
     },
     tools,
