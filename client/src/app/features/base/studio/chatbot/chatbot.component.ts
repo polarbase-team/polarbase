@@ -633,8 +633,9 @@ export class ChatBotComponent {
     }
 
     const mentionSpan = document.createElement('span');
+    const icon = `<i class="icon icon-${type === 'table' ? 'table-2' : 'zap'}"></i>`;
+    mentionSpan.innerHTML = icon + content;
     mentionSpan.className = `mention-chip mention-${type}`;
-    mentionSpan.textContent = content;
     mentionSpan.setAttribute('contenteditable', 'false');
     range.insertNode(mentionSpan);
     range.collapse(false);
