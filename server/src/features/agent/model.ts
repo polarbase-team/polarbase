@@ -144,13 +144,16 @@ export async function generateAIResponse({
   const selectedModel = resolveModel(model);
   const orchestrator = createRootOrchestrator(
     selectedModel,
-    sessionId,
     agents,
     generationConfig
   );
 
   // Use the orchestrator agent to stream the response
-  const result = await orchestrator.stream({ messages, abortSignal });
+  const result = await orchestrator.stream({
+    messages,
+    abortSignal,
+    options: { sessionId },
+  });
 
   // Record conversation for recall memory asynchronously
   (async () => {

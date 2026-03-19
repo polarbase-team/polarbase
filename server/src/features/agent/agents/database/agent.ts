@@ -1,10 +1,10 @@
 import { ToolLoopAgent, tool, readUIMessageStream, LanguageModel } from 'ai';
 import { z } from 'zod';
 
-import { createLookupAgent } from './subagents/lookup';
-import { createBuilderAgent } from './subagents/builder';
-import { createEditorAgent } from './subagents/editor';
-import { createQueryAgent } from './subagents/query';
+import { createLookupAgent } from './subagents/lookup.agent';
+import { createBuilderAgent } from './subagents/builder.agent';
+import { createEditorAgent } from './subagents/editor.agent';
+import { createQueryAgent } from './subagents/query.agent';
 
 export function createDatabaseAgent(
   model: LanguageModel,

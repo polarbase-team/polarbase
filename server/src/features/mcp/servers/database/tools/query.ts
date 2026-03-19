@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { queryAgentTools } from '../../../../agent/agents/database/subagents/query';
+import { queryAgentTools } from '../../../../agent/agents/database/subagents/query.agent';
 import { responseToContent } from '../../../shared/utils';
 
 export default function registerQueryTools(server: FastMCP) {

@@ -1,6 +1,6 @@
-export { createMemoryTool } from './memory.tool';
+export { memoryTools } from './tools';
 export {
   readCoreMemory,
   appendConversation,
   generateSessionTitle,
-} from './memory.helpers';
+} from './helpers';

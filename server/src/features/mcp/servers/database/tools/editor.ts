@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { editorAgentTools } from '../../../../agent/agents/database/subagents/editor';
+import { editorAgentTools } from '../../../../agent/agents/database/subagents/editor.agent';
 import { responseToContent } from '../../../shared/utils';
 
 export default function registerEditorTools(server: FastMCP) {

@@ -1,6 +1,6 @@
 import { FastMCP, UserError } from 'fastmcp';
 
-import { builderAgentTools } from '../../../../agent/agents/database/subagents/builder';
+import { builderAgentTools } from '../../../../agent/agents/database/subagents/builder.agent';
 import { responseToContent } from '../../../shared/utils';
 
 export default function registerBuilderTools(server: FastMCP) {

@@ -1,16 +1,16 @@
 import { ToolLoopAgent, tool, readUIMessageStream } from 'ai';
 import { z } from 'zod';
 
-import { createMemoryTool, readCoreMemory } from '../memory';
-import { createDatabaseAgent } from './database/agent';
-import { createBrowserAgent } from './browser/agent';
-import { createFetchApiAgent } from './fetch-api/agent';
+import { memoryTools, readCoreMemory } from '../memory';
 import {
   buildSkillsPrompt,
   skillTools,
   createSandbox,
   getDiscoveredSkills,
 } from '../skill';
+import { createDatabaseAgent } from './database/agent';
+import { createBrowserAgent } from './browser/agent';
+import { createFetchApiAgent } from './fetch-api/agent';
 
 const WORKING_DIR = process.env.AGENT_SANDBOX_WORKING_DIR || '.agents';
 const SANDBOX_MODE: 'fs' | 'vm' =
@@ -18,7 +18,6 @@ const SANDBOX_MODE: 'fs' | 'vm' =
 
 export function createRootOrchestrator(
   model: any,
-  sessionId: string,
   agents?: {
     database?: {
       builder?: boolean;
@@ -36,7 +35,7 @@ export function createRootOrchestrator(
   }
 ) {
   const tools: any = {
-    memory: createMemoryTool(sessionId),
+    ...memoryTools,
   };
 
   // Database Agent Tool
@@ -188,7 +187,9 @@ export function createRootOrchestrator(
     topK: generationConfig?.topK,
     topP: generationConfig?.topP,
     maxOutputTokens: generationConfig?.maxOutputTokens,
-    prepareCall: async (settings) => {
+    callOptionsSchema: z.object({ sessionId: z.string() }),
+    prepareCall: async ({ options, ...settings }) => {
+      const sessionId = options.sessionId;
       const coreMemory = readCoreMemory(sessionId);
       const coreMemoryBlock = coreMemory
         ? `\n\nCore Memory (known user facts):\n${coreMemory}`
@@ -204,7 +205,7 @@ export function createRootOrchestrator(
         ...settings,
         // Trim to last 20 messages to save tokens; older history is in recall memory
         messages: (settings.messages ?? []).slice(-20),
-        experimental_context: { sandbox, skills },
+        experimental_context: { sessionId, sandbox, skills },
         instructions: `Today's date is ${today}.${coreMemoryBlock}
 
 You are the PolarBase System Orchestrator. 
