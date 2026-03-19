@@ -24,7 +24,7 @@ services:
       - REST_PREFIX=/rest
       - REST_RATE_LIMIT=100
 
-      # AGENT API
+      # AI Agents
       - AGENT_ENABLED=true
       - AGENT_PREFIX=/agent
       - AGENT_RATE_LIMIT=10
@@ -55,7 +55,7 @@ services:
       - POSTGRES_SSL=false
       - POSTGRES_MAX_CONNECTIONS=20
 
-      # AI Agents (LLM)
+      # LLM Configuration
       - LLM_DEFAULT_PROVIDER=google
       - LLM_DEFAULT_MODEL=gemini-3-pro-preview
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
