@@ -8,17 +8,21 @@ export interface Sandbox {
     dirPath: string,
     opts: { withFileTypes: true }
   ): Promise<{ name: string; isDirectory(): boolean }[]>;
-  exec(
+  execCode(
     code: string,
     context?: Record<string, unknown>
   ): Promise<{ stdout: string; stderr: string }>;
+  execBash(command: string): Promise<{ stdout: string; stderr: string }>;
 }
 
 /**
  * Create a sandbox scoped to a base directory.
  * All file operations are restricted to `baseDir` and below.
  */
-export function createSandbox(baseDir: string, mode: 'fs' | 'vm' = 'fs'): Sandbox {
+export function createSandbox(
+  baseDir: string,
+  execCodeMode: 'fs' | 'vm' = 'fs'
+): Sandbox {
   const resolve = (p: string) => {
     const resolved = path.resolve(baseDir, p);
     if (!resolved.startsWith(path.resolve(baseDir))) {
@@ -40,11 +44,27 @@ export function createSandbox(baseDir: string, mode: 'fs' | 'vm' = 'fs'): Sandbo
       }));
     },
 
-    async exec(code: string, context: Record<string, unknown> = {}) {
-      if (mode === 'vm') {
+    async execCode(code: string, context: Record<string, unknown> = {}) {
+      if (execCodeMode === 'vm') {
         return execWithVM(code, context);
       }
       return execWithFunction(code, context);
+    },
+
+    async execBash(command: string) {
+      const { exec } = await import('child_process');
+      const { promisify } = await import('util');
+      const execAsync = promisify(exec);
+
+      try {
+        const { stdout, stderr } = await execAsync(command, { cwd: baseDir });
+        return { stdout, stderr };
+      } catch (err: any) {
+        return {
+          stdout: err.stdout || '',
+          stderr: err.stderr || err.message || String(err),
+        };
+      }
     },
   };
 }

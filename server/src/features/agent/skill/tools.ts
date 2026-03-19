@@ -90,7 +90,7 @@ const executeSkillScript = tool({
     try {
       const scriptFile = `${skill.path}/${scriptPath}`;
       const code = await sandbox.readFile(scriptFile, 'utf-8');
-      const result = await sandbox.exec(code, context || {});
+      const result = await sandbox.execCode(code, context || {});
       return result;
     } catch (err: any) {
       return { error: err.message || String(err) };
@@ -98,8 +98,24 @@ const executeSkillScript = tool({
   },
 });
 
+/**
+ * Tool to execute a bash command inside a sandboxed environment.
+ */
+const execBash = tool({
+  description: 'Execute a bash command inside a sandboxed environment',
+  inputSchema: z.object({
+    command: z.string().describe('The bash command to execute'),
+  }),
+  strict: true,
+  execute: async ({ command }, { experimental_context }) => {
+    const { sandbox } = experimental_context as { sandbox: Sandbox };
+    return sandbox.execBash(command);
+  },
+});
+
 export const skillTools = {
   loadSkill,
   readFile,
   executeSkillScript,
+  execBash,
 };
