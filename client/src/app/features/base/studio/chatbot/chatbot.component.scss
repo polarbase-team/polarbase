@@ -17,11 +17,17 @@
       border-color: var(--p-primary-200);
     }
 
-    &::before {
-      content: '@';
+    &.mention-table::before {
+      content: '#';
       color: var(--p-primary-400);
       font-weight: 400;
       margin-right: 1px;
+    }
+
+    &.mention-skill::before {
+      content: '⚡';
+      font-size: 0.8em;
+      margin-right: 2px;
     }
   }
 }

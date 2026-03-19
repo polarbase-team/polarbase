@@ -5,6 +5,16 @@ import { createMemoryTool, readCoreMemory } from '../memory';
 import { createDatabaseAgent } from './database/agent';
 import { createBrowserAgent } from './browser/agent';
 import { createFetchApiAgent } from './fetch-api/agent';
+import {
+  buildSkillsPrompt,
+  skillTools,
+  createSandbox,
+  getDiscoveredSkills,
+} from '../skill';
+
+const WORKING_DIR = process.env.AGENT_SANDBOX_WORKING_DIR || '.agents';
+const SANDBOX_MODE: 'fs' | 'vm' =
+  (process.env.AGENT_SANDBOX_MODE as 'fs' | 'vm') || 'fs';
 
 export function createRootOrchestrator(
   model: any,
@@ -184,10 +194,17 @@ export function createRootOrchestrator(
         ? `\n\nCore Memory (known user facts):\n${coreMemory}`
         : '';
 
+      const sandbox = createSandbox(WORKING_DIR, SANDBOX_MODE);
+      const skills = await getDiscoveredSkills();
+      if (skills.length > 0) {
+        settings.tools = Object.assign(settings.tools, skillTools);
+      }
+
       return {
         ...settings,
         // Trim to last 20 messages to save tokens; older history is in recall memory
         messages: (settings.messages ?? []).slice(-20),
+        experimental_context: { sandbox, skills },
         instructions: `Today's date is ${today}.${coreMemoryBlock}
 
 You are the PolarBase System Orchestrator. 
@@ -197,6 +214,8 @@ Available Sub-Agents (if enabled):
 - Database Agent: Use for ANY database queries, schema modifications, lookups, row inserts/updates.
 - Browser Agent: Use for opening web pages, searching the web, or scraping web content.
 - Fetch API Agent: Use for making fetch REST/HTTP requests to external APIs.
+
+${buildSkillsPrompt(skills)}
 
 ### MEMORY:
 - You have a memory tool for storing and recalling information across conversations.

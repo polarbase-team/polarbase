@@ -22,11 +22,23 @@ export interface StreamEvent {
   value: any;
 }
 
+export interface Session {
+  id: string;
+  title: string;
+  updatedAt: Date;
+}
+
+export interface SkillInfo {
+  name: string;
+  description: string;
+}
+
 @Injectable()
 export class AgentService {
   openAIChatbot: WritableSignal<boolean>;
 
   private apiUrl = `${environment.apiUrl}/agent`;
+  private cachedSkills: SkillInfo[] | null = null;
 
   constructor(private http: HttpClient) {}
 
@@ -46,6 +58,7 @@ export class AgentService {
     attachments?: File[];
     mentions?: {
       tables: string[];
+      skills: string[];
     };
     model?: Model;
     agents?: {
@@ -65,14 +78,14 @@ export class AgentService {
     };
     onEvents: (events: StreamEvent[]) => void;
     signal?: AbortSignal;
-  }): Promise<void> {
+  }) {
     const formData = new FormData();
     formData.append('messages', JSON.stringify(messages));
     formData.append('sessionId', sessionId);
     if (attachments?.length) {
       attachments.forEach((file) => formData.append('attachments', file, file.name));
     }
-    if (mentions?.tables?.length) {
+    if (mentions?.tables?.length || mentions?.skills?.length) {
       formData.append('mentions', JSON.stringify(mentions));
     }
     if (model) {
@@ -169,15 +182,14 @@ export class AgentService {
     }
   }
 
-  getSessions(): Promise<{ id: string; title: string; updated_at: string }[]> {
-    return lastValueFrom(
-      this.http.get<{ id: string; title: string; updated_at: string }[]>(`${this.apiUrl}/sessions`),
-    );
+  // Session Management
+  getSessions() {
+    return lastValueFrom(this.http.get<Session[]>(`${this.apiUrl}/sessions`));
   }
 
-  getHistory(sessionId: string): Promise<ChatMessage[]> {
+  getSessionHistory(sessionId: string): Promise<ChatMessage[]> {
     return lastValueFrom(
-      this.http.get<any[]>(`${this.apiUrl}/history/${sessionId}`).pipe(
+      this.http.get<any[]>(`${this.apiUrl}/sessions/${sessionId}/history`).pipe(
         map((history) =>
           history.map((h) => ({
             role: h.role,
@@ -189,13 +201,23 @@ export class AgentService {
     );
   }
 
-  updateSessionTitle(sessionId: string, title: string): Promise<any> {
+  updateSessionTitle(sessionId: string, title: string) {
     return lastValueFrom(
       this.http.post<any>(`${this.apiUrl}/sessions/${sessionId}/title`, { title }),
     );
   }
 
-  deleteSession(sessionId: string): Promise<any> {
+  deleteSession(sessionId: string) {
     return lastValueFrom(this.http.delete<any>(`${this.apiUrl}/sessions/${sessionId}`));
+  }
+
+  // Skill Management
+  async getSkills() {
+    if (this.cachedSkills) {
+      return this.cachedSkills;
+    }
+    const skills = await lastValueFrom(this.http.get<SkillInfo[]>(`${this.apiUrl}/skills`));
+    this.cachedSkills = skills;
+    return skills;
   }
 }
