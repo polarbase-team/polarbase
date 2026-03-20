@@ -321,20 +321,42 @@ export class SpreadsheetComponent
     this.clipboard.destroy();
   }
 
-  setColumns(columns: TableColumn[]) {
-    this.tableColumnService.setColumns(columns);
-  }
-
-  setRows(rows: TableRow[]) {
-    this.tableRowService.setRows(rows);
-  }
-
   detectChanges() {
     this.cdRef.detectChanges();
   }
 
   markForCheck() {
     this.cdRef.markForCheck();
+  }
+
+  addColumn(column: TableColumn) {
+    this.tableColumnService.columns.update((columns) => [...columns, column]);
+  }
+
+  updateColumn(column: TableColumn) {
+    this.tableColumnService.columns.update((columns) =>
+      columns.map((c) => (c.id === column.id ? { ...c, ...column } : c)),
+    );
+  }
+
+  deleteColumn(column: TableColumn) {
+    this.tableColumnService.columns.update((columns) => columns.filter((c) => c.id !== column.id));
+  }
+
+  addRow(row: TableRow) {
+    this.tableRowService.rows.update((rows) =>
+      rows.find((r) => r.id === row.id) ? rows : [...rows, row],
+    );
+  }
+
+  updateRow(row: TableRow) {
+    this.tableRowService.rows.update((rows) =>
+      rows.map((r) => (r.id === row.id ? { ...r, data: { ...r.data, ...row.data } } : r)),
+    );
+  }
+
+  deleteRow(row: TableRow) {
+    this.tableRowService.rows.update((rows) => rows.filter((r) => r.id !== row.id));
   }
 
   deleteConfirmation(

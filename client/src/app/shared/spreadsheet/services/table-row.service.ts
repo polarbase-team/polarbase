@@ -179,20 +179,6 @@ export class TableRowService extends TableBaseService {
     this.draggingRows.clear();
   }
 
-  setRows(rows: TableRow[]) {
-    if (this.tableService.isFiltering) {
-      const currRows = this.rows();
-      const rowsMap = new Map(rows.map((row) => [row.id, row]));
-      const intersection = currRows
-        .filter((row) => rowsMap.has(row.id))
-        .map((row) => rowsMap.get(row.id));
-      this.rows.set(intersection);
-      return;
-    }
-
-    this.rows.set(rows);
-  }
-
   setRowSize(size: TableRowSize) {
     this.rowSize.set(size);
     if (this.tableGroupService.isGrouped()) {

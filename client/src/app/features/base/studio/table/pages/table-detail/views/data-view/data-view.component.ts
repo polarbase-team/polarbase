@@ -171,28 +171,20 @@ export class DataViewComponent extends ViewBaseComponent<DataViewConfiguration> 
 
   protected override onRealtimeMessage(message: TableRealtimeMessage) {
     const { action, record } = message;
-    const currentRows = this.ssRows();
 
     switch (action) {
       case 'insert': {
-        if (currentRows.some((row) => row.id === record.new.id)) return;
-        const newRow = { id: record.new.id, data: record.new };
-        this.spreadsheet().setRows([...currentRows, newRow]);
+        this.spreadsheet().addRow({ id: record.new.id, data: record.new });
         break;
       }
 
       case 'update': {
-        const updatedRows = currentRows.map((row) =>
-          row.id === record.new.id ? { ...row, data: { ...row.data, ...record.new } } : row,
-        );
-        this.spreadsheet().setRows(updatedRows);
+        this.spreadsheet().updateRow({ id: record.new.id, data: record.new });
         break;
       }
 
       case 'delete': {
-        const filteredRows = currentRows.filter((row) => row.id !== record.key.id);
-        if (filteredRows.length === currentRows.length) return;
-        this.spreadsheet().setRows(filteredRows);
+        this.spreadsheet().deleteRow({ id: record.key.id } as TableRow);
         break;
       }
     }

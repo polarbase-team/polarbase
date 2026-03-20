@@ -159,10 +159,6 @@ export class TableColumnService extends TableBaseService {
     });
   }
 
-  setColumns(columns: TableColumn[]) {
-    this.columns.set(columns);
-  }
-
   addColumn() {
     this.host.columnAction.emit({
       type: TableColumnActionType.Add,
